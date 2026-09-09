@@ -1203,8 +1203,8 @@ private class ArrayJsonCodec<T> <: GeneratedCodecV1<Array<T>> &
     }
 
     public func readFastDirect(reader: JsonFastReader): Array<T> {
-        match (directFastInner) {
-            case Some(_) => ()
+        let directFast = match (directFastInner) {
+            case Some(value) => value
             case None => return readFastWithCursor(reader, GeneratedSupportV1.readCursor(reader))
         }
         let context = reader.generatedReadStateV1()
@@ -1223,27 +1223,19 @@ private class ArrayJsonCodec<T> <: GeneratedCodecV1<Array<T>> &
             }
             var first = true
             var index: Int64 = 0
-            if (reader.hasRawArrayItem(first)) {
-                context.pushIndex(index)
-                try {
-                    while (true) {
-                        reader.beforeRawArrayItem(first)
-                        if (!first) {
-                            context.updateLastIndex(index)
-                        }
-                        match (directFastInner) {
-                            case Some(fast) => result.add(fast.readFastDirect(reader))
-                            case None => result.add(fastInner.readFast(reader))
-                        }
-                        first = false
-                        index++
-                        if (!reader.hasRawArrayItem(first)) {
-                            break
-                        }
+            context.pushIndex(index)
+            try {
+                while (reader.hasRawArrayItem(first)) {
+                    reader.beforeRawArrayItem(first)
+                    if (!first) {
+                        context.updateLastIndex(index)
                     }
-                } finally {
-                    context.popPath()
+                    result.add(directFast.readFastDirect(reader))
+                    first = false
+                    index++
                 }
+            } finally {
+                context.popPath()
             }
             reader.endRawArray()
             return result.toArray()
@@ -1506,8 +1498,8 @@ private class ArrayListJsonCodec<T> <: GeneratedCodecV1<ArrayList<T>> &
     }
 
     public func readFastDirect(reader: JsonFastReader): ArrayList<T> {
-        match (directFastInner) {
-            case Some(_) => ()
+        let directFast = match (directFastInner) {
+            case Some(value) => value
             case None => return readFastWithCursor(reader, GeneratedSupportV1.readCursor(reader))
         }
         let context = reader.generatedReadStateV1()
@@ -1526,27 +1518,19 @@ private class ArrayListJsonCodec<T> <: GeneratedCodecV1<ArrayList<T>> &
             }
             var first = true
             var index: Int64 = 0
-            if (reader.hasRawArrayItem(first)) {
-                context.pushIndex(index)
-                try {
-                    while (true) {
-                        reader.beforeRawArrayItem(first)
-                        if (!first) {
-                            context.updateLastIndex(index)
-                        }
-                        match (directFastInner) {
-                            case Some(fast) => result.add(fast.readFastDirect(reader))
-                            case None => result.add(fastInner.readFast(reader))
-                        }
-                        first = false
-                        index++
-                        if (!reader.hasRawArrayItem(first)) {
-                            break
-                        }
+            context.pushIndex(index)
+            try {
+                while (reader.hasRawArrayItem(first)) {
+                    reader.beforeRawArrayItem(first)
+                    if (!first) {
+                        context.updateLastIndex(index)
                     }
-                } finally {
-                    context.popPath()
+                    result.add(directFast.readFastDirect(reader))
+                    first = false
+                    index++
                 }
+            } finally {
+                context.popPath()
             }
             reader.endRawArray()
             return result
@@ -2116,8 +2100,8 @@ private class HashMapJsonCodec<T> <: GeneratedCodecV1<HashMap<String, T>> &
     }
 
     public func readFastDirect(reader: JsonFastReader): HashMap<String, T> {
-        match (directFastInner) {
-            case Some(_) => ()
+        let directFast = match (directFastInner) {
+            case Some(value) => value
             case None => return readFastWithCursor(reader, GeneratedSupportV1.readCursor(reader))
         }
         let context = reader.generatedReadStateV1()
@@ -2133,24 +2117,13 @@ private class HashMapJsonCodec<T> <: GeneratedCodecV1<HashMap<String, T>> &
             let firstName = reader.readRawName(true)
             context.pushField(firstName)
             try {
-                let decodedFirst = match (directFastInner) {
-                    case Some(fast) => fast.readFastDirect(reader)
-                    case None => fastInner.readFast(reader)
-                }
-                match (result.add(firstName, decodedFirst)) {
-                    case Some(_) =>
-                        throw JsonException("Duplicate object key '${firstName}'", code: "duplicate_key",
-                            path: context.currentPath())
-                    case None => ()
-                }
+                let decodedFirst = directFast.readFastDirect(reader)
+                result[firstName] = decodedFirst
                 first = false
                 while (reader.hasRawObjectField(first)) {
                     let name = reader.readRawName(first)
                     context.updateLastField(name)
-                    let decoded = match (directFastInner) {
-                        case Some(fast) => fast.readFastDirect(reader)
-                        case None => fastInner.readFast(reader)
-                    }
+                    let decoded = directFast.readFastDirect(reader)
                     match (result.add(name, decoded)) {
                         case Some(_) =>
                             throw JsonException("Duplicate object key '${name}'", code: "duplicate_key",
