@@ -602,6 +602,14 @@ def read_metadata_and_validate(
 
 def stable_identity(metadata: dict[str, Any], key: str) -> object:
     value = metadata[key]
+    if key == "lscpu" and isinstance(value, str):
+        # lscpu reports the instantaneous frequency governor state. It can
+        # change between otherwise identical batches on the same runner.
+        return "\n".join(
+            line
+            for line in value.splitlines()
+            if not line.startswith("CPU(s) scaling MHz:")
+        )
     if key != "versions":
         return value
     versions = dict(value)

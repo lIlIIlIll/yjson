@@ -498,6 +498,15 @@ class SevenLibraryEvidenceTests(unittest.TestCase):
         with self.assertRaisesRegex(checker.EvidenceError, "identity mismatch: api_policy"):
             checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=True)
 
+    def test_two_batches_allow_lscpu_scaling_drift(self) -> None:
+        self.fixture.write_evidence(
+            second_metadata={"lscpu": "fixture CPU\nCPU(s) scaling MHz: 129%"}
+        )
+        self.assertEqual(
+            checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=True),
+            2,
+        )
+
     def test_strict_mode_rejects_non_ancestor_measurement(self) -> None:
         tree = git(self.root, "rev-parse", "HEAD^{tree}")
         unrelated = git(self.root, "commit-tree", tree, input_text="unrelated\n")
