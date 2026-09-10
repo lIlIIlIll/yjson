@@ -13,7 +13,7 @@ SDK、runner、命令和校验和；不把本地结果写成 hosted 结果，也
 | Candidate tree | `9f852a1f1897eb63124a187e007f9e61be759746` |
 | Package manifest | 九个 package，版本均为 `0.1.0` |
 | Release graph | `release/release-graph.toml`；status=`migration` |
-| Evidence updated | `2026-09-10T05:54:41Z` |
+| Evidence updated | `2026-09-10T06:03:58Z` |
 | Local qualification host | Linux Arch `7.2.3-Arch1-3`, x86_64；Intel Core i7-8700 |
 | Local qualification SDK | Cangjie `1.1.0-alpha.20260829040003 (cjnative)`；cjpm `1.1.3` |
 | Hosted PR SDK | `1.3.0-alpha.20260829010011`；resolution=`pinned-known-good` |
