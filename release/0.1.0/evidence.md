@@ -9,11 +9,11 @@ SDK、runner、命令和校验和；不把本地结果写成 hosted 结果，也
 | Field | Value |
 | --- | --- |
 | Planned release identity | `0.1.0` |
-| Candidate measured commit | `b0f16eb1f908908d61f55868b512e50e844345eb` |
-| Candidate tree | `862822f34a904d82fe256af36a6f9062694c07a3` |
+| Candidate measured commit | `13a997c6f5696814e5e860b3d3d39bbfc79d85bc` |
+| Candidate tree | `9f852a1f1897eb63124a187e007f9e61be759746` |
 | Package manifest | 九个 package，版本均为 `0.1.0` |
 | Release graph | `release/release-graph.toml`；status=`migration` |
-| Evidence updated | `2026-09-10T03:26:01Z` |
+| Evidence updated | `2026-09-10T05:54:41Z` |
 | Local qualification host | Linux Arch `7.2.3-Arch1-3`, x86_64；Intel Core i7-8700 |
 | Local qualification SDK | Cangjie `1.1.0-alpha.20260829040003 (cjnative)`；cjpm `1.1.3` |
 | Hosted PR SDK | `1.3.0-alpha.20260829010011`；resolution=`pinned-known-good` |
@@ -23,9 +23,11 @@ SDK、runner、命令和校验和；不把本地结果写成 hosted 结果，也
 `cjpm` SHA-256 为
 `b867fca2fd0d4bc19bf195e7872f6f13d5019fd3ba5f409291814f7c5bdfa313`。
 本地工具链为 `/home/elliot/cangjie_sdk/daily/cangjie`，clang=`22.1.8`，
-gcc=`16.2.1`。Hosted PR 为
-[#20](https://github.com/lIlIIlIll/yjson/pull/20)，最新成功 run 为
-[`34414477049`](https://github.com/lIlIIlIll/yjson/actions/runs/34414477049)。
+gcc=`16.2.1`。
+Hosted PR 为 [#20](https://github.com/lIlIIlIll/yjson/pull/20)，性能修复提交触发的最新
+run 为 [`34441789058`](https://github.com/lIlIIlIll/yjson/actions/runs/34441789058)；
+run conclusion=`failure`，原因是 `Seven-library evidence drift` 失败并连带 `CI Required`
+失败；不能记为 hosted PASS。
 
 ## 2. Gate 状态
 
@@ -33,23 +35,44 @@ gcc=`16.2.1`。Hosted PR 为
 | --- | --- | --- |
 | Public API/C ABI mechanical inventory | PASS | `1094` Cangjie declarations；九包 inventory；C ABI delta 全部 `reviewed-for-0.1.0` |
 | Public API migration review | **BLOCKING** | `release/public-cangjie-delta-bfd29.toml` 仍有 `unclassified` / `pending-migration-review` 组；发布图仍为 `migration` |
-| Local Linux fresh candidate | PASS | `zsh scripts/codex_cangjie_env bash scripts/ci_fresh_checkout.sh`；exit `0`；575 个 root tests、standards `2110/2110`，native、sanitizer、fuzz、consumer 和 registry rehearsal 均完成 |
-| Hosted PR CI | PASS | run `34414477049`；Linux required jobs、Core Coverage、API docs、registry rehearsal、Windows Pure、macOS Pure 和 Linux Native 均成功；PR Pages deployment 按 workflow 预期 skipped |
+| Local Linux fresh candidate | PASS | `zsh scripts/codex_cangjie_env bash scripts/ci_fresh_checkout.sh`；exit `0`；`576/576` root tests，标准集、native、sanitizer、fuzz、consumer 和 registry rehearsal 均完成 |
+| Hosted PR CI | **BLOCKING** | run `34441789058` conclusion=`failure`；`Seven-library evidence drift` 失败，因当前 product source 摘要与旧 marker 不一致；`CI Required` 随之失败，其余成功 jobs 不能覆盖该失败 |
 | Hosted main CI / Pages | NOT RUN | 发布阻断未关闭，尚未合并到 `main` |
-| Coverage | PASS | project line `8479/10329=82.1%`、branch `3705/5250=70.6%`；changed core line `115/115=100.0%`、branch `38/44=86.4%`；hosted Core Coverage 成功 |
+| Coverage | PASS | project line `8508/10345=82.2%`、branch `3722/5262=70.7%`；changed core line `26/26=100.0%`、branch `16/16=100.0%`；hosted Core Coverage 成功 |
 | Source-only staging | PASS | `stage_source_tree` 复制 `358` 个文件并通过 `--check`；`release_temp_tree --enforce-clean` 复制 `290` 个文件并通过 |
-| Package rehearsal | PASS | b0 fresh-checkout 的九包独立暂存、构建、registry-style consumer 和导出检查成功；最终 release assets 尚未生成 |
-| Seven-library matrix | DIAGNOSTIC | bddbe6 源码闭包，两批各 `770/770`；两批均 `0/10` 稳定，不作完整七库发布资格或精确比例声明 |
-| Three-library release performance | **BLOCKING** | 见第 3 节；完成两批 36 workload、11 轮测量后仍有大量 noisy 行 |
-| Pure baseline/candidate qualification | **BLOCKING** | 见第 3 节；正式 runner 的四个 `yjsonDocument*` case 与当前 benchmark 源码漂移；可用 24-case 子集未通过 enforce |
-| Native acceleration | PASS | b0 精确源码闭包、11 轮、CPU 4、128 MiB、RSS、checksum 全部通过 |
-| Release policy | **BLOCKING** | API migration review、Pure target/performance gate、main workflow 和 Pages 尚未关闭 |
+| Package rehearsal | PASS | 修复后 fresh-checkout 的九包独立暂存、构建、registry-style consumer 和导出检查成功；最终 release assets 尚未生成 |
+| Seven-library matrix | **BLOCKING / STALE** | `current-main.json` 仍绑定 `bddbe6e`；`check_seven_library_evidence.py` 报 current product source 摘要不匹配，修复后必须重跑完整矩阵 |
+| Three-library release performance | **BLOCKING** | 旧 b0 两批仍为 noisy；当前候选已修复 Deep Nested 热路径，但完整 36-workload 证据尚未按当前提交重跑 |
+| Pure baseline/candidate qualification | **BLOCKING** | 正式 runner 的四个 `yjsonDocument*` case 与当前 benchmark 源码漂移；修复后 target-only A/B 仍因 CV 超过 5% 而 exit `1`，不能作资格证据 |
+| Native acceleration | PASS (functional) / REVALIDATE (performance) | 修复后 fresh custom-native 通过；旧 native performance 资格绑定 b0，不作为当前候选的性能证据 |
+| Release policy | **BLOCKING** | API migration review、当前候选的完整性能证据、main workflow 和 Pages 尚未关闭 |
 | Annotated tag / GitHub Release | NOT RUN | 尚未创建 tag、release 或上传资产 |
 | Central package registry | NOT RUN | 未授权发布；没有执行 central publication |
 
 ## 3. 性能证据
 
+### Deep Nested 修复定向复核
+
+候选提交 `13a997c6f5696814e5e860b3d3d39bbfc79d85bc` 将 generated object-name
+解码的紧凑 ASCII 扫描移入 `JsonFastReader.readRawName`，保留转义、控制字符、
+非 ASCII 和非法输入的 checked fallback。回归测试覆盖 String/Bytes、空名称、
+畸形名称和未闭合名称。
+
+在本地 Linux x86_64、CPU 8、当前候选源码上，精确筛选
+`ComprehensiveJsonCompareBenchmarks.yjsonStringDecodeDeepNestedProfiles` 的
+`cjpm bench` 结果为 `86.20 us`，误差 `±10.22 us`、CV `11.9%`，命令 exit `0`。
+同一语料的独立单进程定向测量为：旧候选工作树 `120.5 us`，当前候选工作树
+`75.71 us`。这两项是修复方向的本地证据，不是交替 11 轮的 release
+qualification；受当前主机负载影响，target-only A/B 的 11 轮结果为 baseline
+`129.920 us`、candidate `136.596 us`、CV 分别 `9.58%/9.72%`，enforce exit `1`。
+
+上述数字不能与旧七库报告合并或推导跨主机比例。完整三库/七库矩阵和稳定性
+证据仍必须绑定 `13a997c` 重新生成。
+
 ### 三库共同 workload
+
+以下两批数据绑定旧候选 `b0f16eb`，仅作为修复前的历史阻断记录；它们不代表当前
+`13a997c` 的性能资格。
 
 两批均在 `ubuntu2223131`、Cangjie `1.1.0-alpha.20260803040049`、cjpm
 `1.1.3`、固定 CPU 8、128 MiB 堆上运行。每批包含完整 36 个 yjson、
@@ -107,17 +130,20 @@ Native 运行源码闭包 SHA-256 为
 ## 4. 决定
 
 ```text
-Local fresh-source simulation: PASS
-Hosted PR execution: PASS
-Coverage: PASS (project 82.1%/70.6%; changed core 100.0%/86.4%)
-Native acceleration qualification: PASS
-Three-library performance qualification: BLOCKING
-Pure baseline/candidate qualification: BLOCKING
+Local fresh-source simulation: PASS (candidate 13a997c; 576/576 root tests)
+Deep Nested target smoke: PASS (86.20 us; non-qualification evidence)
+Coverage: PASS (project 82.2%/70.7%; changed core 100.0%/100.0%)
+Hosted PR execution: BLOCKING (run 34441789058; stale seven-library evidence drift)
+Seven-library performance qualification: BLOCKING (evidence must be rerun for 13a997c)
+Three-library performance qualification: BLOCKING (full current-candidate matrix not run)
+Pure baseline/candidate qualification: BLOCKING (runner drift and noisy target-only A/B)
+Native acceleration: PASS functionally; performance qualification must be revalidated
 Public API migration review: BLOCKING
 Hosted main execution and Pages: NOT RUN
 Release decision: BLOCKED; no merge, tag, GitHub Release, or registry publication
 ```
 
-待关闭项：完成 `activateJsonNativePrimitivesV1` 与新增 native writer declarations
-的 migration review；修复或重新定义 Pure A/B runner 与当前 benchmark case contract；
-并提供满足方法门槛的完整性能证据。关闭前不得创建 `0.1.0` tag 或 GitHub Release。
+待关闭项：完成新增 native writer declarations 的 migration review；按当前候选
+`13a997c` 重新生成并通过完整三库/七库性能与稳定性证据；修复或重新定义 Pure
+A/B runner 与当前 benchmark case contract；合并 `main` 并通过 main workflow
+和 Pages。关闭前不得创建 `0.1.0` tag 或 GitHub Release。
