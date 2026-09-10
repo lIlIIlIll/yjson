@@ -1,0 +1,532 @@
+name: Regenerate seven-library evidence
+
+on:
+  push:
+    branches:
+      - gitbutler/workspace
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    if: ${{ !contains(github.event.head_commit.message, 'refresh seven-library evidence') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          clean: true
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Setup Cangjie
+        uses: Zxilly/setup-cangjie@647b8de21a4c9f95e4d4f5565ca75110fa9d17e4
+        with:
+          channel: nightly
+          version: 1.3.0-alpha.20260829010011
+          components: stdx
+          archive-path: ${{ runner.temp }}/cangjie-nightly.tar.gz
+
+      - name: Install Java benchmark tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y maven
+          java -version
+          mvn --version
+
+      - name: Prepare isolated benchmark workspace
+        env:
+          CJFAST_JSON_REF: eefdedd1e53c93bb5ada11a96b9b81d88b2c6c65
+        run: |
+          set -euo pipefail
+          set -x
+          workspace="$RUNNER_TEMP/yjson-seven"
+          mkdir -p "$workspace"
+          cp -a "$GITHUB_WORKSPACE" "$workspace/repo"
+          tar -xzf "$workspace/repo/benchmarks/results/full-seven-library/2026-09-09-main-bddbe6e/harness-source.tar.gz" -C "$workspace"
+          tar -xzf "$workspace/repo/benchmarks/results/full-seven-library/2026-09-09-main-bddbe6e/json4cj-source.tar.gz" -C "$workspace"
+          git clone --quiet https://gitcode.com/Cangjie-TPC/cangjieJSON.git "$workspace/cangjieJSON-upstream"
+          if ! git -C "$workspace/cangjieJSON-upstream" checkout --quiet 910fd9c61858f33b242a0076c22b2e06c8073511; then
+            git -C "$workspace/cangjieJSON-upstream" fetch --quiet --all
+            git -C "$workspace/cangjieJSON-upstream" checkout --quiet 910fd9c61858f33b242a0076c22b2e06c8073511
+          fi
+
+          cjc_root="$CANGJIE_HOME"
+          sdk_root="$(cd "$cjc_root/.." && pwd)"
+          stdx_dynamic="${CANGJIE_STDX_PATH_DYNAMIC:-$sdk_root/linux_x86_64_cjnative/dynamic/stdx}"
+          stdx_static="${CANGJIE_STDX_PATH_STATIC:-$sdk_root/linux_x86_64_cjnative/static/stdx}"
+          if [[ -d "$stdx_dynamic/stdx" ]]; then
+            stdx_dynamic="$stdx_dynamic/stdx"
+            stdx_static="$stdx_static/stdx"
+          fi
+          printf 'CANGJIE_HOME=%s\nSDK_ROOT=%s\nSTDX_DYNAMIC=%s\nSTDX_STATIC=%s\n' \
+            "$CANGJIE_HOME" "$sdk_root" "$stdx_dynamic" "$stdx_static"
+          test -d "$stdx_dynamic"
+          test -d "$stdx_static"
+          stdx_sdk_root="$workspace/stdx-sdk"
+          mkdir -p "$stdx_sdk_root/linux_x86_64_cjnative/static"
+          mkdir -p "$stdx_sdk_root/linux_x86_64_cjnative/dynamic"
+          ln -s "$stdx_static" "$stdx_sdk_root/linux_x86_64_cjnative/static/stdx"
+          ln -s "$stdx_dynamic" "$stdx_sdk_root/linux_x86_64_cjnative/dynamic/stdx"
+          printf 'STDX_SDK_ROOT=%s\n' "$stdx_sdk_root"
+          test -f "$stdx_sdk_root/linux_x86_64_cjnative/static/stdx/libstdx.encoding.jsonFFI.a"
+          test -d "$stdx_sdk_root/linux_x86_64_cjnative/dynamic/stdx"
+          {
+            echo "YJSON_SEVEN_STDX_SDK_ROOT=$stdx_sdk_root"
+          } >> "$GITHUB_ENV"
+          {
+            echo "YJSON_SEVEN_WORKSPACE=$workspace"
+            echo "YJSON_SEVEN_SDK_ROOT=$sdk_root"
+            echo "YJSON_SEVEN_STDX_DYNAMIC=$stdx_dynamic"
+            echo "YJSON_SEVEN_STDX_STATIC=$stdx_static"
+          } >> "$GITHUB_ENV"
+
+          export CANGJIE_STDX_PATH="$stdx_dynamic"
+          export STDX_FFI_LIB="-L $stdx_static -lstdx.encoding.jsonFFI -lstdx.encoding.json.streamFFI"
+          export cjHeapSize=128MB
+          export LC_ALL=C
+
+          CJFAST_JSON_WORK_DIR="$workspace/cjfast-json" \
+          CJFAST_JSON_REF="$CJFAST_JSON_REF" \
+          CJFAST_STDX_FFI_DIR="$stdx_static" \
+          CJFAST_PREPARE_ONLY=1 \
+          CJFAST_REQUIRE_CLEAN_SOURCE=1 \
+          bash "$GITHUB_WORKSPACE/benchmarks/cjfast_json/run.sh"
+
+          python3 - "$workspace" "$stdx_static" "$sdk_root" <<'PY'
+          from pathlib import Path
+          import sys
+
+          workspace = Path(sys.argv[1])
+          stdx_static = sys.argv[2]
+          sdk_root = sys.argv[3]
+          replacements = {
+              "/home/chenqian/yjson-seven-preflight-20260831.PHZEs1": str(workspace),
+              "/home/chenqian/fastjson-bench-sdk-20260803/linux_x86_64_cjnative/static/stdx": stdx_static,
+              "/home/chenqian/fastjson-bench-sdk-20260803": sdk_root,
+              "${CANGJIE_STDX_PATH}/linux_x86_64_cjnative/static/stdx": stdx_static,
+          }
+          paths = [
+              workspace / "harness/benchmark_env.sh",
+              workspace / "harness/cjjson/cjpm.toml",
+              workspace / "harness/json4cj/cjpm.toml",
+              workspace / "cangjieJSON-upstream/cjpm.toml",
+          ]
+          for path in paths:
+              text = path.read_text(encoding="utf-8")
+              for old, new in replacements.items():
+                  text = text.replace(old, new)
+              path.write_text(text, encoding="utf-8")
+          PY
+
+      - name: Capture candidate identity
+        run: |
+          set -euo pipefail
+          python3 scripts/check_seven_library_evidence.py --print-current-candidate > "$RUNNER_TEMP/candidate.json"
+          python3 -m json.tool "$RUNNER_TEMP/candidate.json" >/dev/null
+
+      - name: Build canonical benchmark fixtures
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/build-logs/canonical-build-logs"
+          run_logged() {
+            local name="$1"
+            shift
+            set +e
+            "$@" > "$RUNNER_TEMP/build-logs/canonical-build-logs/$name.log" 2>&1
+            local status=$?
+            set -e
+            if [[ "$status" -ne 0 ]]; then
+              cat "$RUNNER_TEMP/build-logs/canonical-build-logs/$name.log"
+              exit "$status"
+            fi
+          }
+          export CANGJIE_STDX_PATH="$YJSON_SEVEN_STDX_DYNAMIC"
+          export STDX_FFI_LIB="-L $YJSON_SEVEN_STDX_STATIC -lstdx.encoding.jsonFFI -lstdx.encoding.json.streamFFI"
+          export YJSON_CROSSLANG_CORPUS_DIR="$YJSON_SEVEN_WORKSPACE/repo/benchmarks/results/stream-v1/2026-08-28/formal-cell-1/payloads"
+          export cjHeapSize=128MB
+          export LC_ALL=C
+          run_logged yjson \
+            bash -c "cd \"$YJSON_SEVEN_WORKSPACE/repo/packages/benchmarks\" && cjpm bench --no-color --filter 'ComprehensiveJsonCompareBenchmarks.yjsonStringDecodeAddress*' --report-path \"$RUNNER_TEMP/canonical-yjson-report\" --report-format csv-raw"
+          run_logged cjjson \
+            bash -c "cd \"$YJSON_SEVEN_WORKSPACE/harness/cjjson\" && env CANGJIE_STDX_PATH=\"$YJSON_SEVEN_STDX_SDK_ROOT\" cjpm bench --no-color --filter 'CangjieJsonOptimalBenchmarks.cjjsonStringDecodeAddress*' --report-path \"$RUNNER_TEMP/canonical-cjjson-report\" --report-format csv-raw"
+          run_logged json4cj \
+            bash -c "cd \"$YJSON_SEVEN_WORKSPACE/harness/json4cj\" && cjpm bench --no-color --filter 'Json4CjOptimalBenchmarks.json4cjStringDecodeAddress*' --report-path \"$RUNNER_TEMP/canonical-json4cj-report\" --report-format csv-raw"
+          run_logged cjfast \
+            bash -c "cd \"$YJSON_SEVEN_WORKSPACE/cjfast-json\" && cjpm bench --no-color --filter 'CjFastJsonComprehensiveBenchmarks.cjfastStringDecodeAddress*' --report-path \"$RUNNER_TEMP/canonical-cjfast-report\" --report-format csv-raw"
+          run_logged java bash -c "cd \"$YJSON_SEVEN_WORKSPACE/harness/java\" && mvn -q package"
+          tar -czf "$RUNNER_TEMP/canonical-build-logs.tar.gz" \
+            -C "$RUNNER_TEMP/build-logs" canonical-build-logs
+
+      - name: Select formal idle CPU
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          import sys
+          sys.path.insert(0, "scripts")
+          from json_pure_perf_compare import choose_idle_cpu
+
+          selection = choose_idle_cpu(30)
+          if not selection["acceptable_both_threads_below_1_percent"]:
+              raise SystemExit(f"no physical CPU pair stayed below 1%: {selection}")
+          workspace = os.environ["YJSON_SEVEN_WORKSPACE"]
+          with open(os.path.join(workspace, "cpu-selection.json"), "w", encoding="utf-8") as stream:
+              json.dump(selection, stream, indent=2)
+              stream.write("\n")
+          print(json.dumps(selection, indent=2))
+          PY
+          echo "YJSON_SEVEN_CPU=$(python3 -c 'import json; print(json.load(open("'"$YJSON_SEVEN_WORKSPACE"'/cpu-selection.json"))["selected_cpu"])')" >> "$GITHUB_ENV"
+
+      - name: Run two complete formal seven-library batches
+        run: |
+          set -euo pipefail
+          export CANGJIE_STDX_PATH="$YJSON_SEVEN_STDX_DYNAMIC"
+          export STDX_FFI_LIB="-L $YJSON_SEVEN_STDX_STATIC -lstdx.encoding.jsonFFI -lstdx.encoding.json.streamFFI"
+          export YJSON_CROSSLANG_CORPUS_DIR="$YJSON_SEVEN_WORKSPACE/repo/benchmarks/results/stream-v1/2026-08-28/formal-cell-1/payloads"
+          export cjHeapSize=128MB
+          export LC_ALL=C
+          mkdir -p "$RUNNER_TEMP/formal"
+          run_formal() {
+            local output="$1"
+            shift
+            set +e
+            python3 benchmarks/full-seven-library/run_full.py \
+              "$output" "$@"
+            local status=$?
+            set -e
+            if [[ "$status" -ne 0 ]]; then
+              python3 - "$output/preflight" <<'PY'
+          from pathlib import Path
+          import sys
+
+          root = Path(sys.argv[1])
+          for path in sorted(root.rglob("run.log")):
+              print(f"===== {path} =====")
+              print(path.read_text(encoding="utf-8"))
+          PY
+              exit "$status"
+            fi
+          }
+          run_formal \
+            "$RUNNER_TEMP/formal/formal-main-11-1" \
+            --workspace "$YJSON_SEVEN_WORKSPACE" \
+            --stdx-sdk-root "$YJSON_SEVEN_STDX_SDK_ROOT" \
+            --runs 11 --cpu "$YJSON_SEVEN_CPU"
+          run_formal \
+            "$RUNNER_TEMP/formal/formal-main-11-2" \
+            --workspace "$YJSON_SEVEN_WORKSPACE" \
+            --stdx-sdk-root "$YJSON_SEVEN_STDX_SDK_ROOT" \
+            --runs 11 --cpu "$YJSON_SEVEN_CPU"
+
+      - name: Assemble and commit fresh evidence
+        run: |
+          set -euo pipefail
+          python3 - "$RUNNER_TEMP/candidate.json" "$YJSON_SEVEN_WORKSPACE" "$YJSON_SEVEN_STDX_SDK_ROOT" <<'PY'
+          from __future__ import annotations
+
+          import hashlib
+          import json
+          import os
+          import pathlib
+          import re
+          import shutil
+          import subprocess
+          import sys
+          import tarfile
+
+          candidate_path = pathlib.Path(sys.argv[1])
+          workspace = pathlib.Path(sys.argv[2])
+          sdk_root = pathlib.Path(sys.argv[3])
+          repo = workspace / "repo"
+          checkout = pathlib.Path(os.environ["GITHUB_WORKSPACE"])
+          evidence_name = "2026-09-10-main-008e50b"
+          evidence_rel = pathlib.Path("benchmarks/results/full-seven-library") / evidence_name
+          evidence = checkout / evidence_rel
+          result_rel = pathlib.Path("docs/performance/results/2026-09-10-main-seven-library.md")
+          result_doc = checkout / result_rel
+          old_evidence = checkout / "benchmarks/results/full-seven-library/2026-09-09-main-bddbe6e"
+          formal_roots = [
+              pathlib.Path(os.environ["RUNNER_TEMP"]) / "formal/formal-main-11-1",
+              pathlib.Path(os.environ["RUNNER_TEMP"]) / "formal/formal-main-11-2",
+          ]
+
+          def sha256(path: pathlib.Path) -> str:
+              digest = hashlib.sha256()
+              with path.open("rb") as stream:
+                  for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                      digest.update(chunk)
+              return digest.hexdigest()
+
+          def source_digest(root: pathlib.Path) -> str:
+              digest = hashlib.sha256()
+              paths = []
+              for current, dirs, files in os.walk(root):
+                  dirs[:] = [d for d in dirs if d not in {".git", "target", "build-script-cache"}]
+                  for name in files:
+                      path = pathlib.Path(current) / name
+                      if path.suffix in {".cj", ".toml", ".java", ".xml"}:
+                          paths.append(path)
+              for path in sorted(paths):
+                  digest.update(path.relative_to(root).as_posix().encode())
+                  digest.update(b"\0")
+                  digest.update(path.read_bytes())
+                  digest.update(b"\0")
+              return digest.hexdigest()
+
+          def command_output(command: list[str], cwd: pathlib.Path) -> str:
+              completed = subprocess.run(command, cwd=cwd, text=True, stdout=subprocess.PIPE,
+                                         stderr=subprocess.STDOUT, check=True)
+              return completed.stdout.strip()
+
+          def archive_identity(path: pathlib.Path) -> dict[str, object]:
+              return {"path": str(path.relative_to(workspace)), "sha256": sha256(path),
+                      "size_bytes": path.stat().st_size}
+
+          def table(summary_path: pathlib.Path, include_cv: bool) -> list[str]:
+              rows = json.loads(summary_path.read_text(encoding="utf-8"))
+              by_workload = {row["workload_id"]: row for row in rows}
+              workload_order = [
+                  "address_encode", "address_decode", "person_encode", "person_decode",
+                  "large_array_encode", "large_array_decode", "large_map_encode",
+                  "large_map_decode", "deep_nested_encode", "deep_nested_decode",
+              ]
+              labels = {
+                  "address_encode": "Address encode", "address_decode": "Address decode",
+                  "person_encode": "Person encode", "person_decode": "Person decode",
+                  "large_array_encode": "Large Array encode", "large_array_decode": "Large Array decode",
+                  "large_map_encode": "Large Map encode", "large_map_decode": "Large Map decode",
+                  "deep_nested_encode": "Deep Nested encode", "deep_nested_decode": "Deep Nested decode",
+              }
+              libraries = ["yjson", "stdx_json", "cangjieJSON", "json4cj", "cjfast_json", "jackson", "fastjson2"]
+              result = []
+              for workload in workload_order:
+                  row = by_workload[workload]
+                  values = row["libraries"]
+                  cells = [labels[workload]] + [f"{values[lib]['median_ns'] / 1000.0:.3f}" for lib in libraries]
+                  if include_cv:
+                      cells.append(f"{max(values[lib]['cv_percent'] for lib in libraries):.2f}%")
+                  result.append("| " + " | ".join(cells) + " |")
+              return result
+
+          candidate = json.loads(candidate_path.read_text(encoding="utf-8"))
+          measured_commit = candidate["measured_commit"]
+          product_digest = candidate["product_source_sha256"]
+          harness_digest = candidate["effective_harness_sha256"]
+          overlay_sha = sha256(old_evidence / "optimal-api-overlay-main.patch")
+          temp = pathlib.Path(os.environ["RUNNER_TEMP"])
+          formal_summary = []
+          for root in formal_roots:
+              subprocess.run([
+                  sys.executable, str(checkout / "benchmarks/full-seven-library/summarize_full.py"),
+                  str(root), "--min-runs", "11"], cwd=checkout, check=True)
+              metadata_path = root / "metadata.json"
+              metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+              metadata.update({
+                  "product_source_sha256": product_digest,
+                  "effective_harness_sha256": harness_digest,
+                  "measured_overlay_file": "optimal-api-overlay-main.patch",
+                  "measured_overlay_sha256": overlay_sha,
+              })
+              metadata_path.write_text(json.dumps(metadata, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+              formal_summary.append(json.loads((root / "summary.json").read_text(encoding="utf-8")))
+
+          evidence.mkdir(parents=True, exist_ok=False)
+          for root in formal_roots:
+              archive_name = root.name + ".tar.gz"
+              archive_path = evidence / archive_name
+              with tarfile.open(archive_path, "w:gz") as archive:
+                  archive.add(root, arcname=root.name)
+          def without_generated(info: tarfile.TarInfo) -> tarfile.TarInfo | None:
+              parts = pathlib.PurePosixPath(info.name).parts
+              if any(part in {"target", "build-script-cache"} for part in parts):
+                  return None
+              return info
+
+          with tarfile.open(evidence / "harness-source.tar.gz", "w:gz") as archive:
+              archive.add(workspace / "harness", arcname="harness", filter=without_generated)
+          shutil.copy2(old_evidence / "json4cj-source.tar.gz", evidence / "json4cj-source.tar.gz")
+          shutil.copy2(old_evidence / "optimal-api-overlay-main.patch", evidence / "optimal-api-overlay-main.patch")
+
+          identity = {
+              "artifact_identity": {
+                  "cangjieJSON": archive_identity(workspace / "harness/cjjson/target/release/unittest_bin/bench_cjjson"),
+                  "cjfast_json": archive_identity(workspace / "cjfast-json/target/release/unittest_bin/fastjson.bench"),
+                  "jackson_fastjson2": archive_identity(workspace / "harness/java/target/json-optimal-bench-1.0.0-all.jar"),
+                  "json4cj": archive_identity(workspace / "harness/json4cj/target/release/unittest_bin/bench_json4cj"),
+                  "yjson_stdx_json": archive_identity(workspace / "repo/packages/benchmarks/target/release/unittest_bin/yjson_benchmarks"),
+              },
+              "effective_harness_manifest": {},
+              "effective_harness_sha256": harness_digest,
+              "expected_dirty_paths": [],
+              "measured_commit": measured_commit,
+              "measured_overlay_file": "optimal-api-overlay-main.patch",
+              "measured_overlay_sha256": overlay_sha,
+              "measured_tree": command_output(["git", "rev-parse", "HEAD^{tree}"], repo),
+              "product_manifest": {},
+              "product_source_sha256": product_digest,
+              "runner_identity": {},
+              "schema_version": 1,
+              "summarizer_identity": {},
+          }
+          sys.path.insert(0, str(checkout / "scripts"))
+          from json_pure_perf_compare import harness_manifest, product_manifest, manifest_digest
+          identity["effective_harness_manifest"] = harness_manifest(repo)
+          identity["product_manifest"] = product_manifest(repo)
+          for key, path in (("runner_identity", workspace / "harness/run_full.py"),
+                            ("summarizer_identity", workspace / "harness/summarize_full.py")):
+              identity[key] = {"path": str(path.relative_to(workspace)), "sha256": sha256(path), "size_bytes": path.stat().st_size}
+          identity["versions"] = {
+              "yjson_commit": command_output(["git", "rev-parse", "HEAD"], repo),
+              "cangjieJSON_branch_commit": "910fd9c61858f33b242a0076c22b2e06c8073511",
+              "cjfast_json_commit": command_output(["git", "rev-parse", "HEAD"], workspace / "cjfast-json"),
+              "json4cj_source_tree_sha256": source_digest(workspace / "json4cj"),
+              "cangjieJSON_source_tree_sha256": source_digest(workspace / "cangjieJSON-upstream"),
+              "cjc": command_output(["cjc", "-v"], repo),
+              "cjpm": command_output(["cjpm", "--version"], repo),
+              "java": command_output(["java", "-version"], workspace / "harness/java"),
+              "jmh": "1.37", "jackson": "2.18.2", "fastjson2": "2.0.52",
+              "stdx_json_ffi_sha256": sha256(sdk_root / "linux_x86_64_cjnative/static/stdx/libstdx.encoding.jsonFFI.a"),
+              "stdx_json_stream_ffi_sha256": sha256(sdk_root / "linux_x86_64_cjnative/static/stdx/libstdx.encoding.json.streamFFI.a"),
+          }
+          for root in formal_roots:
+              identity.setdefault("formal_metadata", []).append(json.loads((root / "metadata.json").read_text(encoding="utf-8")))
+          (evidence / "source-identity.json").write_text(json.dumps(identity, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+          stable_counts = [sum(1 for row in summary if row["stable_cv_le_5_percent"]) for summary in formal_summary]
+          selection = json.loads((workspace / "cpu-selection.json").read_text(encoding="utf-8"))
+          cpu_text = f"CPU {selection['selected_cpu']}（sibling {selection['selected_sibling']}）；30 秒采样中两个 hardware thread 的利用率为 " + \
+              "、".join(f"{value:.2f}%" for value in selection["utilization_percent"]) + "。"
+
+          old_doc = (checkout / "docs/performance/results/2026-09-09-main-seven-library.md").read_text(encoding="utf-8")
+          doc = old_doc.replace("# 2026-09-09 当前 `main` 七库完整对比", "# 2026-09-10 当前 `main` 七库完整对比")
+          doc = doc.replace("`bddbe6e022f8809b33f42141d5ac54dc2e081406`", f"`{measured_commit}`")
+          doc = doc.replace("df9108e367363847b0fd59b3c611cc6a3504f4d426152e13479caf3e8b94d7f9", product_digest)
+          doc = doc.replace("2026-09-09-main-seven-library.md", result_rel.name)
+          doc = doc.replace("../../../benchmarks/results/full-seven-library/2026-09-09-main-bddbe6e/README.md",
+                            f"../../../benchmarks/results/full-seven-library/{evidence_name}/README.md")
+          first_statement = (
+              f"本页记录 [`current-main.json`](../../../benchmarks/results/full-seven-library/current-main.json) 指向的 typed JSON benchmark。"
+              f"测量绑定到提交\n`{measured_commit}`。两批都完成了规定的 770 个测量单元；"
+              f"第一批 {stable_counts[0]}/10、第二批 {stable_counts[1]}/10 个 workload 满足 Max CV <= 5%，其余结果保留为 noisy。"
+          )
+          doc = re.sub(r"本页记录 .*?不是 release qualification。", first_statement, doc, count=1, flags=re.S)
+          status = "| 批次 | 完整测量单元 | Stable workloads | 结论 |\n| --- | ---: | ---: | --- |\n"
+          status += f"| 第一批 | 770/770 | {stable_counts[0]}/10 | 按规则完整重跑 |\n"
+          status += f"| 第二批 | 770/770 | {stable_counts[1]}/10 | 保留两批并标记 noisy，不再重跑 |"
+          doc = re.sub(r"\| 批次 \|.*?(?=\n\nREADME 展示第二批完整表)", status, doc, count=1, flags=re.S)
+
+          def replace_section(text: str, heading: str, next_heading: str, body: str) -> str:
+              start = text.index(f"## {heading}\n")
+              end = text.index(f"## {next_heading}\n", start)
+              return text[:start] + f"## {heading}\n\n" + body.rstrip() + "\n\n" + text[end:]
+
+          table_header = "| Workload | yjson | stdx.json | cangjieJSON | json4cj | cjfast_json | Jackson | fastjson2 | Max CV |\n| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"
+          doc = replace_section(doc, "第一批", "第二批", table_header + "\n" + "\n".join(table(formal_roots[0] / "summary.json", True)))
+          doc = replace_section(doc, "第二批", "各库使用的 API", table_header + "\n" + "\n".join(table(formal_roots[1] / "summary.json", True)))
+
+          env_start = doc.index("## 测量环境\n")
+          env_end = doc.index("## 证据与 freshness gate\n", env_start)
+          cjc_version = re.search(r"Cangjie Compiler: ([^ ]+)", json.loads((formal_roots[0] / "metadata.json").read_text())["versions"]["cjc"])
+          cjc_value = cjc_version.group(1) if cjc_version else json.loads((formal_roots[0] / "metadata.json").read_text())["versions"]["cjc"]
+          java_value = json.loads((formal_roots[0] / "metadata.json").read_text())["versions"]["java"].splitlines()[0]
+          platform_value = json.loads((formal_roots[0] / "metadata.json").read_text())["platform"]
+          env = """## 测量环境
+
+          | 项目 | 值 |
+          | --- | --- |
+          | 产品源码 | commit `{commit}` |
+          | Product source SHA-256 | `{product}` |
+          | Effective harness SHA-256 | `{harness}` |
+          | Cangjie | `{cjc}`、cjpm 1.1.3、stdx 0.0.3 |
+          | Java | `{java}`、JMH 1.37、Jackson 2.18.2、fastjson2 2.0.52 |
+          | 主机 | `{platform}`、128 MiB heap |
+          | 第一批 CPU | {cpu} |
+          | 第二批 CPU | {cpu} |
+
+          每一轮都会轮转 workload 和七库顺序，偶数轮再反转 workload 顺序。Cangjie 使用 200 ms
+          warmup、至少 1 秒测量和至少 12 个 batch。Java 每个外层轮次使用一个 fork、3 × 500 ms
+          warmup 和 1 × 1 秒测量。
+
+          跨 runtime 数字只描述这台主机、这些版本、这些 API 和这些 payload。它们不是语言排名，
+          也不能推导 allocation、RSS、峰值内存或其他 payload 的吞吐。
+          """.format(commit=measured_commit, product=product_digest, harness=harness_digest,
+           cjc=cjc_value, java=java_value, platform=platform_value, cpu=cpu_text)
+          doc = doc[:env_start] + env + doc[env_end:]
+          result_doc.write_text(doc, encoding="utf-8")
+
+          evidence_readme = old_evidence / "README.md"
+          readme = evidence_readme.read_text(encoding="utf-8")
+          readme = readme.replace("# 2026-09-09 `main` 七库 JSON benchmark 证据", "# 2026-09-10 `main` 七库 JSON benchmark 证据")
+          readme = readme.replace("bddbe6e022f8809b33f42141d5ac54dc2e081406", measured_commit)
+          readme = readme.replace("df9108e367363847b0fd59b3c611cc6a3504f4d426152e13479caf3e8b94d7f9", product_digest)
+          readme = readme.replace("两批开始前均选中 CPU 4（sibling 52）；30 秒采样中两个 hardware thread 的利用率均为 0.0%。这些结果保留完整的原始报告、日志、manifest、metadata 和派生汇总；CV 超过 5% 的 workload 仍标为 noisy，不用于声明精确倍数或替代 release qualification。",
+                                  f"两批开始前均选中 CPU {selection['selected_cpu']}（sibling {selection['selected_sibling']}）；30 秒采样中两个 hardware thread 的利用率为 "
+                                  + "、".join(f"{value:.2f}%" for value in selection['utilization_percent'])
+                                  + f"。这些结果保留完整的原始报告、日志、manifest、metadata 和派生汇总；第一批 {stable_counts[0]}/10、第二批 {stable_counts[1]}/10 个 workload 满足 Max CV <= 5%。")
+          readme = readme.replace("../../../../docs/performance/results/2026-09-09-main-seven-library.md",
+                                  f"../../../../docs/performance/results/{result_rel.name}")
+          readme = readme.replace("2026-09-09-main-bddbe6e", evidence_name)
+          (evidence / "README.md").write_text(readme, encoding="utf-8")
+
+          root_readme = (checkout / "README.md").read_text(encoding="utf-8")
+          start = root_readme.index("## 性能\n")
+          end = root_readme.index("## 文档\n", start)
+          second_rows = table(formal_roots[1] / "summary.json", False)
+          noise = "两批结果的每一行都至少有一个库的变异系数（CV）超过 5%，因此这些数字仅供查看，不能作为稳定的性能排名。" if stable_counts[1] == 0 else f"第二批有 {stable_counts[1]}/10 个 workload 的 Max CV 不超过 5%；其余行保留并标为 noisy。"
+          root_perf = f"""## 性能
+
+          下面是 2026-09-10 七库对比第二批的 11 轮中位数，单位为 µs/op，越小越好。
+          测量使用提交 `{measured_commit}`。
+          **{noise}**
+
+          完整样本、波动情况和环境见[2026-09-10 main 七库对比](docs/performance/results/{result_rel.name})。
+          测试方法见[性能文档](docs/performance/README.md)。结果只适用于记录中的源码、SDK、CPU 和测试数据。
+
+          | Workload | yjson | stdx.json | cangjieJSON | json4cj | cjfast_json | Jackson | fastjson2 |
+          | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+          """ + "\n".join(second_rows) + "\n\n"
+          root_readme = root_readme[:start] + root_perf + root_readme[end:]
+          (checkout / "README.md").write_text(root_readme, encoding="utf-8")
+
+          perf_index = checkout / "docs/performance/README.md"
+          perf_text = perf_index.read_text(encoding="utf-8").replace(
+              "2026-09-09 main 七库对比](results/2026-09-09-main-seven-library.md)",
+              f"2026-09-10 main 七库对比](results/{result_rel.name})")
+          perf_index.write_text(perf_text, encoding="utf-8")
+
+          checksum_files = sorted(path.name for path in evidence.iterdir() if path.name not in {"README.md", "checksums.txt"})
+          checksum_lines = [f"{sha256(evidence / name)}  {name}" for name in checksum_files]
+          (evidence / "checksums.txt").write_text("\n".join(checksum_lines) + "\n", encoding="utf-8")
+          marker = {
+              "candidate": candidate["candidate"],
+              "checksum_files": checksum_files,
+              "effective_harness_sha256": harness_digest,
+              "evidence_dir": evidence_rel.as_posix(),
+              "formal_archives": [
+                  {"file": "formal-main-11-1.tar.gz", "root": "formal-main-11-1"},
+                  {"file": "formal-main-11-2.tar.gz", "root": "formal-main-11-2"},
+              ],
+              "harness_archive": {"file": "harness-source.tar.gz", "root": "harness"},
+              "measured_commit": measured_commit,
+              "product_source_sha256": product_digest,
+              "result_doc": result_rel.as_posix(),
+              "schema_version": 2,
+          }
+          (checkout / "benchmarks/results/full-seven-library/current-main.json").write_text(
+              json.dumps(marker, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+          print(f"assembled {evidence_rel} for {measured_commit}")
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            README.md \
+            docs/performance/README.md \
+            docs/performance/results/2026-09-10-main-seven-library.md \
+            benchmarks/results/full-seven-library/current-main.json \
+            benchmarks/results/full-seven-library/2026-09-10-main-008e50b
+          git commit -m "refresh seven-library evidence"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
