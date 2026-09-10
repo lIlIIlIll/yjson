@@ -135,7 +135,7 @@ Three-library performance qualification: BLOCKING (full current-candidate matrix
 Pure baseline/candidate qualification: BLOCKING (runner drift and noisy target-only A/B)
 Native acceleration: PASS functionally; performance qualification must be revalidated
 Public API migration review: BLOCKING
-Hosted main execution and Pages: PASS (run 34506441534; all 28 jobs passed)
+Hosted main execution and Pages: PASS (run 34511955542; all 28 jobs passed)
 Coverage: PASS (project 82.2%/70.7%; changed core 100.0%/100.0%)
 Release decision: BLOCKED; no tag, GitHub Release, or registry publication
 ```
