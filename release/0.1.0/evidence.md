@@ -9,6 +9,7 @@
 | Planned release identity | `0.1.0` |
 | Candidate source commit | `89c22a933cbd7e5cdc9b0f8df725ca6e1cda2372` |
 | Candidate source tree | `4f8df96188c021cb7ab2a82c7e236482ded90844` |
+| Release record commit | `54b4965dee0f0b96710cbc678ec5ec9a126b055c` (evidence-only merge after the package candidate) |
 | Source-only candidate | `304` files; `clean_enforced=true` |
 | Candidate manifest SHA-256 | `2b23daa959d44aa35a7824e751b479b79af35b0cc42cd441dd84bdf03365d54c` |
 | Candidate payload SHA-256 | `20259909f2201c43feea7b18f79be23b95539626f2764a1b5079c0445aa5e140` |
@@ -31,31 +32,33 @@ not substituted for this reproducible source-qualified path.
 | Release static checks | PASS | API inventory, stage tree, release-temp-tree, STS, CI wiring, cjdoc qualification and release-graph test suites all passed |
 | Markdown link check | PASS | `check_local_markdown_links.py docs/maintainers/releasing.md`: 2 links |
 | cjdoc qualification | PASS | local `cjdoc-qualification` gate passed under STS `1.1.3`; hosted API Documentation also passed |
-| Pure Cangjie core | PASS | hosted main CI run `35142368048`, all 28 jobs passed |
-| Core coverage | PASS | `Core Coverage` job `104952834869` passed in run `35142368048` |
-| Native, yyjson, sanitizer, fuzz and cross-platform gates | PASS | all corresponding jobs passed in hosted main CI run `35142368048` |
-| API documentation and Pages | PASS | API Documentation job `104952779188`; Deploy API Documentation job `104954117865`; <https://liliilill.github.io/yjson/> |
-| Package rehearsal | PASS | local registry-style rehearsal: 9 modules, 579 tests passed; hosted `registry-rehearsal` also passed |
-| Performance evidence drift | PASS | `bash scripts/ci_job.sh perf-evidence-drift strict`: 25 tests passed; frozen evidence checksums, manifests, identities and summaries are consistent |
+| Local fresh-checkout simulation | PASS | `scripts/ci_fresh_checkout.sh`; 17 release jobs completed, including source staging and registry rehearsal |
+| Pure Cangjie core | PASS | hosted main CI run `35149045188`, all 28 jobs passed |
+| Core coverage | PASS | `Core Coverage` job `104972440310` passed in run `35149045188` |
+| Native, yyjson, sanitizer, fuzz and cross-platform gates | PASS | all corresponding jobs passed in hosted main CI run `35149045188` |
+| API documentation and Pages | PASS | API Documentation job `104972440372`; Deploy API Documentation job `104974551665`; <https://liliilill.github.io/yjson/> |
+| Package rehearsal | PASS | local fresh-checkout rehearsal passed 9 modules; hosted `registry-rehearsal` job `104972440688` also passed |
+| Performance evidence drift | PASS | hosted `Seven-library evidence drift` job `104972375139` passed; local strict run also passed 25 tests |
 | New release benchmark | NOT RUN | no new performance benchmark was run for commit `89c22a93`; frozen evidence is not presented as a new measurement |
 | Native acceleration claim | NOT CLAIMED | no precise Native acceleration claim is made for this release |
 | Hosted PR CI | PASS | yjson PR [#1](https://github.com/lIlIIlIll/yjson/pull/1), run [35141341924](https://github.com/lIlIIlIll/yjson/actions/runs/35141341924), 27/27 jobs passed |
-| Hosted main CI | PASS | post-merge run [35142368048](https://github.com/lIlIIlIll/yjson/actions/runs/35142368048), merge commit `89c22a93`, 28/28 jobs passed |
-| Annotated tag | NOT RUN | tag creation is intentionally after evidence review |
-| GitHub Release | NOT RUN | assets are built locally but not yet uploaded |
+| Hosted main CI | PASS | post-merge run [35149045188](https://github.com/lIlIIlIll/yjson/actions/runs/35149045188), merge commit `54b4965d`, 28/28 jobs passed |
+| Annotated tag | PASS | tag object `c91859feb77aeba392a1fad0f99d731df66be831`; target commit `54b4965dee0f0b96710cbc678ec5ec9a126b055c` |
+| GitHub Release | PASS | [0.1.0](https://github.com/lIlIIlIll/yjson/releases/tag/0.1.0), published `2026-09-16T21:01:48Z`, 12 assets uploaded |
 | Central package registry | NOT RUN | no separate registry endpoint was invoked |
 
 The first post-merge Pages attempt failed because the repository Pages site was not enabled.
-Pages was then enabled for workflow deployment and the failed jobs were rerun; run
-`35142368048` completed with all 28 jobs passed. This is recorded as resolved setup, not as an
-initially passing run.
+Pages was then enabled for workflow deployment and the failed jobs were rerun; run `35142368048`
+completed with all 28 jobs passed. The final evidence-record merge `54b4965d` was then verified by
+run `35149045188`, including the Pages deployment job `104974551665`. These setup and rerun facts
+are recorded separately from the final main CI result.
 
 ## 3. 发布资产
 
 The package assets were generated from the source-only candidate commit `89c22a933cbd7e5cdc9b0f8df725ca6e1cda2372` with
 `scripts/release_registry_rehearsal.py` through the registry rehearsal path. The rehearsal
-reported `registry-style rehearsal passed modules=9`; all nine archives are unpublished at this
-stage.
+reported `registry-style rehearsal passed modules=9`; all nine archives are attached to the
+GitHub Release. The tag `0.1.0` targets the evidence-record commit `54b4965dee0f0b96710cbc678ec5ec9a126b055c`; the package archive manifest intentionally binds artifacts to the earlier package candidate `89c22a933cbd7e5cdc9b0f8df725ca6e1cda2372`, whose package source inputs are unchanged by the evidence-only merge.
 
 | Package | Asset | SHA-256 |
 | --- | --- | --- |
@@ -69,9 +72,12 @@ stage.
 | `yjson_schema_formats` | `yjson_schema_formats-0.1.0.cjp` | `6faf008a1e91d6243497b91d7dec822b513fa4c21adee0841d4de944d2b35c8f` |
 | `yjson_yyjson` | `yjson_yyjson-0.1.0.cjp` | `37824422d743e35d5a933532adb0c096978a8307ca36c813f6b20560dae9bcc7` |
 
-The release asset bundle also contains `checksums.txt`, `manifest.json` and
-`environment.json`. The local checksum inventory validates all nine `.cjp` files and both JSON
-metadata files; the inventory itself is not included in its own checksum list.
+The release asset bundle also contains `checksums.txt`, `manifest.json` and `environment.json`.
+The local checksum inventory validates all nine `.cjp` files and both JSON metadata files; the
+inventory itself is not included in its own checksum list. The uploaded metadata digests are:
+`checksums.txt` = `c3372e1f54d929aeec1423a3725902daa9e0ed56456798721930841c4fbbeaa0`,
+`manifest.json` = `10af1123fb7c437270cc7f2cc3f6bf0a8b533ab00f40ad5dd17f212264209fc3`, and
+`environment.json` = `e94f2b99e2a822e8ad441b8283bb0f63f38d0481caab10796d5ef94b9b08a455`.
 
 ## 4. 性能与回退
 
@@ -89,11 +95,13 @@ Source-only staging: PASS
 STS 1.1.3 validation: PASS
 Local registry-style rehearsal: PASS (9 modules, 579 tests)
 Hosted PR CI: PASS (27/27)
-Hosted main CI and Pages: PASS (28/28)
+Hosted main CI and Pages: PASS (run 35149045188, 28/28)
+Annotated tag: PASS (tag object c91859feb77aeba392a1fad0f99d731df66be831)
+GitHub Release: PASS (12 assets)
 Frozen performance evidence drift: PASS
 Native acceleration claim: NOT CLAIMED
-Release decision: CANDIDATE VERIFIED; TAG AND GITHUB RELEASE PENDING
+Release decision: PUBLISHED (tag `0.1.0` and GitHub Release assets)
 ```
 
-发布流程和未执行动作见
+发布流程和中心包仓库未执行动作见
 [`docs/maintainers/releasing.md`](../../docs/maintainers/releasing.md)。
