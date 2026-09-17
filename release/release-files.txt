@@ -278,6 +278,7 @@ packages/yjson_algorithms/src/json_path_test.cj
 packages/yjson_algorithms/src/json_pointer_patch_test.cj
 packages/yjson_algorithms/src/json_schema_test.cj
 packages/yjson_algorithms/src/linear_regex_test.cj
+packages/yjson_algorithms/src/schema_orchestration_contract_test.cj
 packages/yjson_algorithms/src/work_limits_test.cj
 packages/yjson_algorithms/README.md
 packages/yjson_schema_formats/cjpm.toml

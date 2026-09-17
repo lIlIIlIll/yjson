@@ -353,6 +353,20 @@ public class JsonSchemaValidator {
         }
         context.baseUriStack.add(effectiveBase)
         context.resourceStack.add(effectiveResource)
+
+        validateReferenceKeywords(context, objectSchema, instance, jsonPath, schemaPath, errors, refStack)
+        validateValueKeywords(context, objectSchema, instance, jsonPath, schemaPath, errors)
+        validateObjectKeywords(context, objectSchema, instance, jsonPath, schemaPath, errors, refStack)
+        validateArrayKeywords(context, objectSchema, instance, jsonPath, schemaPath, errors, refStack)
+        validateApplicatorKeywords(context, objectSchema, instance, jsonPath, schemaPath, errors, refStack)
+
+        context.baseUriStack.remove(at: context.baseUriStack.size - 1)
+        context.resourceStack.remove(at: context.resourceStack.size - 1)
+    }
+
+    private func validateReferenceKeywords(context: ValidationContext, objectSchema: JsonObject,
+        instance: JsonValueView, jsonPath: String, schemaPath: String,
+        errors: ArrayList<JsonSchemaViolation>, refStack: ArrayList<String>): Unit {
         match (objectSchema.get("$ref")) {
             case Some(refValue) =>
                 let refText = refValue.asString()
@@ -402,7 +416,11 @@ public class JsonSchemaValidator {
                 }
             case None => ()
         }
+    }
 
+    private func validateValueKeywords(context: ValidationContext, objectSchema: JsonObject,
+        instance: JsonValueView, jsonPath: String, schemaPath: String,
+        errors: ArrayList<JsonSchemaViolation>): Unit {
         if (schema.validationVocabulary) { match (objectSchema.get("type")) {
             case Some(typeSchema) => validateType(context, typeSchema, instance, jsonPath, appendSchemaPath(schemaPath, "type"), errors)
             case None => ()
@@ -452,28 +470,11 @@ public class JsonSchemaValidator {
                 appendSchemaPath(schemaPath, "format"), errors)
             case None => ()
         }
+    }
 
-        match (objectSchema.get("required")) {
-            case Some(requiredSchema) => validateRequired(context, requiredSchema, instance, jsonPath, appendSchemaPath(schemaPath, "required"), errors)
-            case None => ()
-        }
-
-        match (objectSchema.get("properties")) {
-            case Some(propertiesSchema) => validateProperties(context, propertiesSchema, instance, jsonPath, appendSchemaPath(schemaPath, "properties"), errors, refStack)
-            case None => ()
-        }
-
-        validateObjectKeywords(context, objectSchema, instance, jsonPath, schemaPath, errors, refStack)
-
-        if (objectSchema.get("prefixItems").isNone()) {
-            match (objectSchema.get("items")) {
-                case Some(itemsSchema) => validateItems(context, itemsSchema, instance, jsonPath, appendSchemaPath(schemaPath, "items"), errors, refStack)
-                case None => ()
-            }
-        }
-
-        validateArrayKeywords(context, objectSchema, instance, jsonPath, schemaPath, errors, refStack)
-
+    private func validateApplicatorKeywords(context: ValidationContext, objectSchema: JsonObject,
+        instance: JsonValueView, jsonPath: String, schemaPath: String,
+        errors: ArrayList<JsonSchemaViolation>, refStack: ArrayList<String>): Unit {
         match (objectSchema.get("allOf")) {
             case Some(combinatorSchema) => validateAllOf(context, combinatorSchema, instance, jsonPath, appendSchemaPath(schemaPath, "allOf"), errors, refStack)
             case None => ()
@@ -494,7 +495,6 @@ public class JsonSchemaValidator {
             case None => ()
         }
 
-
         match (objectSchema.get("if")) {
             case Some(ifSchema) =>
                 let conditionMatches = probeSchemaValue(context, ifSchema, instance, jsonPath,
@@ -507,8 +507,6 @@ public class JsonSchemaValidator {
                 }
             case None => ()
         }
-        context.baseUriStack.remove(at: context.baseUriStack.size - 1)
-        context.resourceStack.remove(at: context.resourceStack.size - 1)
     }
 
     private func validateExtendedNumericKeywords(context: ValidationContext, objectSchema: JsonObject, instance: JsonValueView,
@@ -564,6 +562,16 @@ public class JsonSchemaValidator {
     private func validateObjectKeywords(context: ValidationContext, objectSchema: JsonObject, instance: JsonValueView,
         jsonPath: String, schemaPath: String, errors: ArrayList<JsonSchemaViolation>,
         refStack: ArrayList<String>): Unit {
+        match (objectSchema.get("required")) {
+            case Some(requiredSchema) => validateRequired(context, requiredSchema, instance, jsonPath, appendSchemaPath(schemaPath, "required"), errors)
+            case None => ()
+        }
+
+        match (objectSchema.get("properties")) {
+            case Some(propertiesSchema) => validateProperties(context, propertiesSchema, instance, jsonPath, appendSchemaPath(schemaPath, "properties"), errors, refStack)
+            case None => ()
+        }
+
         if (instance.kind() != JsonKind.Object) { return }
         let objectValue = instance
         validateObjectSizeKeyword(context, objectSchema, objectValue, jsonPath, schemaPath, "minProperties", true, errors)
@@ -797,6 +805,13 @@ public class JsonSchemaValidator {
     private func validateArrayKeywords(context: ValidationContext, objectSchema: JsonObject, instance: JsonValueView,
         jsonPath: String, schemaPath: String, errors: ArrayList<JsonSchemaViolation>,
         refStack: ArrayList<String>): Unit {
+        if (objectSchema.get("prefixItems").isNone()) {
+            match (objectSchema.get("items")) {
+                case Some(itemsSchema) => validateItems(context, itemsSchema, instance, jsonPath, appendSchemaPath(schemaPath, "items"), errors, refStack)
+                case None => ()
+            }
+        }
+
         if (instance.kind() == JsonKind.Array) {
                 let arrayValue = instance
                 validateArraySizeKeyword(context, objectSchema, arrayValue, jsonPath, schemaPath, "minItems", true, errors)
