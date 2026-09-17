@@ -1945,73 +1945,67 @@ private func validateJsonSchemaDocument(schemaValue: JsonNode, schemaPath: Strin
                 case Some(requiredSchema) => validateJsonSchemaStringArray(requiredSchema, appendSchemaPath(schemaPath, "required"))
                 case None => ()
             }
-            match (objectValue.get("properties")) {
-                case Some(propertiesSchema) =>
-                    let properties = propertiesSchema.asObject()
-                    for (index in 0..properties.size()) {
-                        let field = properties.nameAt(index)
-                        let childSchema = properties.valueAt(index)
-                        validateJsonSchemaDocument(childSchema, appendSchemaPath(appendSchemaPath(schemaPath, "properties"), field))
-                    }
-                case None => ()
-            }
+            validateJsonSchemaDocumentMap(objectValue, "properties", schemaPath)
             match (objectValue.get("items")) {
                 case Some(itemsSchema) => validateJsonSchemaDocument(itemsSchema, appendSchemaPath(schemaPath, "items"))
                 case None => ()
             }
-            match (objectValue.get("enum")) {
-                case Some(enumSchema) =>
-                    let _ = enumSchema.asArray()
-                case None => ()
-            }
-            match (objectValue.get("minimum")) {
-                case Some(limitSchema) =>
-                    let _ = requireSchemaDecimal(limitSchema, appendSchemaPath(schemaPath, "minimum"))
-                case None => ()
-            }
-            match (objectValue.get("maximum")) {
-                case Some(limitSchema) =>
-                    let _ = requireSchemaDecimal(limitSchema, appendSchemaPath(schemaPath, "maximum"))
-                case None => ()
-            }
-            match (objectValue.get("minLength")) {
-                case Some(lengthSchema) =>
-                    let _ = requireSchemaNonNegativeInt(lengthSchema, appendSchemaPath(schemaPath, "minLength"))
-                case None => ()
-            }
-            match (objectValue.get("maxLength")) {
-                case Some(lengthSchema) =>
-                    let _ = requireSchemaNonNegativeInt(lengthSchema, appendSchemaPath(schemaPath, "maxLength"))
-                case None => ()
-            }
-            validateJsonSchemaDocumentArray(objectValue, "allOf", schemaPath)
-            validateJsonSchemaDocumentArray(objectValue, "anyOf", schemaPath)
-            validateJsonSchemaDocumentArray(objectValue, "oneOf", schemaPath)
-            match (objectValue.get("not")) {
-                case Some(notSchema) => validateJsonSchemaDocument(notSchema, appendSchemaPath(schemaPath, "not"))
-                case None => ()
-            }
-            match (objectValue.get("$defs")) {
-                case Some(defsSchema) =>
-                    let defs = defsSchema.asObject()
-                    for (index in 0..defs.size()) {
-                        let name = defs.nameAt(index)
-                        let defSchema = defs.valueAt(index)
-                        validateJsonSchemaDocument(defSchema, appendSchemaPath(appendSchemaPath(schemaPath, "$defs"), name))
-                    }
-                case None => ()
-            }
-            match (objectValue.get("definitions")) {
-                case Some(defsSchema) =>
-                    let defs = defsSchema.asObject()
-                    for (index in 0..defs.size()) {
-                        let name = defs.nameAt(index)
-                        let defSchema = defs.valueAt(index)
-                        validateJsonSchemaDocument(defSchema, appendSchemaPath(appendSchemaPath(schemaPath, "definitions"), name))
-                    }
-                case None => ()
-            }
+            validateJsonSchemaDocumentValueKeywords(objectValue, schemaPath)
+            validateJsonSchemaDocumentApplicators(objectValue, schemaPath)
+            validateJsonSchemaDocumentMap(objectValue, "$defs", schemaPath)
+            validateJsonSchemaDocumentMap(objectValue, "definitions", schemaPath)
         case _ => throw JsonException("${schemaPath}: schema must be a boolean or object")
+    }
+}
+
+private func validateJsonSchemaDocumentValueKeywords(objectValue: JsonObject, schemaPath: String): Unit {
+    match (objectValue.get("enum")) {
+        case Some(enumSchema) =>
+            let _ = enumSchema.asArray()
+        case None => ()
+    }
+    match (objectValue.get("minimum")) {
+        case Some(limitSchema) =>
+            let _ = requireSchemaDecimal(limitSchema, appendSchemaPath(schemaPath, "minimum"))
+        case None => ()
+    }
+    match (objectValue.get("maximum")) {
+        case Some(limitSchema) =>
+            let _ = requireSchemaDecimal(limitSchema, appendSchemaPath(schemaPath, "maximum"))
+        case None => ()
+    }
+    match (objectValue.get("minLength")) {
+        case Some(lengthSchema) =>
+            let _ = requireSchemaNonNegativeInt(lengthSchema, appendSchemaPath(schemaPath, "minLength"))
+        case None => ()
+    }
+    match (objectValue.get("maxLength")) {
+        case Some(lengthSchema) =>
+            let _ = requireSchemaNonNegativeInt(lengthSchema, appendSchemaPath(schemaPath, "maxLength"))
+        case None => ()
+    }
+}
+
+private func validateJsonSchemaDocumentApplicators(objectValue: JsonObject, schemaPath: String): Unit {
+    validateJsonSchemaDocumentArray(objectValue, "allOf", schemaPath)
+    validateJsonSchemaDocumentArray(objectValue, "anyOf", schemaPath)
+    validateJsonSchemaDocumentArray(objectValue, "oneOf", schemaPath)
+    match (objectValue.get("not")) {
+        case Some(notSchema) => validateJsonSchemaDocument(notSchema, appendSchemaPath(schemaPath, "not"))
+        case None => ()
+    }
+}
+
+private func validateJsonSchemaDocumentMap(objectValue: JsonObject, keyword: String, schemaPath: String): Unit {
+    match (objectValue.get(keyword)) {
+        case Some(value) =>
+            let schemas = value.asObject()
+            for (index in 0..schemas.size()) {
+                let name = schemas.nameAt(index)
+                let childSchema = schemas.valueAt(index)
+                validateJsonSchemaDocument(childSchema, appendSchemaPath(appendSchemaPath(schemaPath, keyword), name))
+            }
+        case None => ()
     }
 }
 

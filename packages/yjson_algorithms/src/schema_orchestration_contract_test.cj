@@ -43,4 +43,23 @@ class SchemaOrchestrationContractTest {
         @Expect(invalid[0].code, "schema_validation")
         @Expect(schema.validate(JsonNode.parse("{\"id\":1}")).valid, true)
     }
+
+    @TestCase
+    func malformedUnusedChildSchemasAreRejectedDuringConstruction(): Unit {
+        @AssertThrows[JsonException](JsonSchema.parse(
+            "{\"properties\":{\"unused\":{\"required\":[1]}}}"))
+        @AssertThrows[JsonException](JsonSchema.parse(
+            "{\"$defs\":{\"unused\":{\"type\":17}}}"))
+        @AssertThrows[JsonException](JsonSchema.parse(
+            "{\"definitions\":{\"unused\":{\"allOf\":[17]}}}"))
+    }
+
+    @TestCase
+    func booleanChildSchemasRemainValidSchemas(): Unit {
+        let schema = JsonSchema.parse(
+            "{\"properties\":{\"items/~\":false}," +
+            "\"$defs\":{\"unused\":false},\"definitions\":{\"unused\":true}}")
+        @Expect(schema.isValid(JsonNode.parse("{}")), true)
+        @Expect(schema.isValid(JsonNode.parse("{\"items/~\":1}")), false)
+    }
 }
