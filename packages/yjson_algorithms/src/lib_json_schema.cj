@@ -577,6 +577,15 @@ public class JsonSchemaValidator {
         validateObjectSizeKeyword(context, objectSchema, objectValue, jsonPath, schemaPath, "minProperties", true, errors)
         validateObjectSizeKeyword(context, objectSchema, objectValue, jsonPath, schemaPath, "maxProperties", false, errors)
         let matched = HashSet<String>()
+        validateMatchingProperties(context, objectSchema, objectValue, jsonPath, schemaPath, errors, refStack, matched)
+        validatePropertyNames(context, objectSchema, objectValue, jsonPath, schemaPath, errors, refStack)
+        validatePropertyDependencies(context, objectSchema, objectValue, jsonPath, schemaPath, errors, refStack)
+        validateRemainingProperties(context, objectSchema, objectValue, jsonPath, schemaPath, errors, refStack, matched)
+    }
+
+    private func validateMatchingProperties(context: ValidationContext, objectSchema: JsonObject, objectValue: JsonValueView,
+        jsonPath: String, schemaPath: String, errors: ArrayList<JsonSchemaViolation>,
+        refStack: ArrayList<String>, matched: HashSet<String>): Unit {
         match (objectSchema.get("properties")) {
             case Some(value) =>
                 let properties = value.asObject()
@@ -604,6 +613,11 @@ public class JsonSchemaValidator {
                 }
             case None => ()
         }
+    }
+
+    private func validatePropertyNames(context: ValidationContext, objectSchema: JsonObject, objectValue: JsonValueView,
+        jsonPath: String, schemaPath: String, errors: ArrayList<JsonSchemaViolation>,
+        refStack: ArrayList<String>): Unit {
         match (objectSchema.get("propertyNames")) {
             case Some(nameSchema) => for (index in 0..objectValue.size()) {
                         let name = objectValue.memberName(index)
@@ -612,6 +626,11 @@ public class JsonSchemaValidator {
                     }
             case None => ()
         }
+    }
+
+    private func validatePropertyDependencies(context: ValidationContext, objectSchema: JsonObject, objectValue: JsonValueView,
+        jsonPath: String, schemaPath: String, errors: ArrayList<JsonSchemaViolation>,
+        refStack: ArrayList<String>): Unit {
         match (objectSchema.get("dependentRequired")) {
             case Some(value) =>
                 let dependencies = value.asObject()
@@ -635,16 +654,17 @@ public class JsonSchemaValidator {
                 for (index in 0..dependencies.size()) {
                     let trigger = dependencies.nameAt(index)
                     let childSchema = dependencies.valueAt(index)
-                        if (schemaObjectContains(objectValue, trigger)) { validateSchemaValue(context, childSchema, instance, jsonPath,
+                        if (schemaObjectContains(objectValue, trigger)) { validateSchemaValue(context, childSchema, objectValue, jsonPath,
                             appendSchemaPath(appendSchemaPath(schemaPath, "dependentSchemas"), trigger), errors, refStack) }
                 }
             case None => ()
         }
-        let extraSchema = match (objectSchema.get("additionalProperties")) {
-            case Some(value) => Some(value)
-            case None => None<JsonNode>
-        }
-        match (extraSchema) {
+    }
+
+    private func validateRemainingProperties(context: ValidationContext, objectSchema: JsonObject, objectValue: JsonValueView,
+        jsonPath: String, schemaPath: String, errors: ArrayList<JsonSchemaViolation>,
+        refStack: ArrayList<String>, matched: HashSet<String>): Unit {
+        match (objectSchema.get("additionalProperties")) {
             case Some(childSchema) => for (index in 0..objectValue.size()) {
                         let name = objectValue.memberName(index)
                         let child = objectValue.memberValue(index)

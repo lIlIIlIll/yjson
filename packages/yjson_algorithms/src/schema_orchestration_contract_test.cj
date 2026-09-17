@@ -62,4 +62,38 @@ class SchemaOrchestrationContractTest {
         @Expect(schema.isValid(JsonNode.parse("{}")), true)
         @Expect(schema.isValid(JsonNode.parse("{\"items/~\":1}")), false)
     }
+
+    @TestCase
+    func objectKeywordFamiliesPreserveViolationOrderAndEscapedPaths(): Unit {
+        let schema = JsonSchema.parse(
+            "{\"required\":[\"missing\"],\"properties\":{\"a/~\":{\"type\":\"integer\"}}," +
+            "\"minProperties\":3,\"patternProperties\":{\"^a\":{\"minimum\":2}}," +
+            "\"propertyNames\":{\"minLength\":4},\"dependentRequired\":{\"a/~\":[\"other\"]}," +
+            "\"dependentSchemas\":{\"a/~\":{\"required\":[\"dep\"]}},\"additionalProperties\":false}")
+        let instance = JsonNode.parse("{\"a/~\":0,\"extra\":true}")
+        let result = schema.validate(instance)
+        @Expect(schema.isValid(instance), false)
+        @Assert(result.size, 7)
+        let schemaPaths = ["#/required/0", "#/minProperties", "#/patternProperties/^a/minimum",
+            "#/propertyNames/minLength", "#/dependentRequired/a~1~0",
+            "#/dependentSchemas/a~1~0/required/0", "#/additionalProperties"]
+        let instancePaths = ["", "", "/a~1~0", "/a~1~0", "", "", "/extra"]
+        for (index in 0..result.size) {
+            @Expect(result[index].schemaPath, schemaPaths[index])
+            @Expect(result[index].instancePath, instancePaths[index])
+            @Expect(result[index].code, "schema_validation")
+        }
+    }
+
+    @TestCase
+    func explicitAndPatternPropertiesAreNotAdditionalProperties(): Unit {
+        let schema = JsonSchema.parse(
+            "{\"properties\":{\"fixed\":true},\"patternProperties\":{\"^x\":true}," +
+            "\"additionalProperties\":false}")
+        @Expect(schema.isValid(JsonNode.parse("{\"fixed\":1,\"x-one\":2}")), true)
+        let result = schema.validate(JsonNode.parse("{\"fixed\":1,\"x-one\":2,\"other/~\":3}"))
+        @Assert(result.size, 1)
+        @Expect(result[0].schemaPath, "#/additionalProperties")
+        @Expect(result[0].instancePath, "/other~1~0")
+    }
 }
