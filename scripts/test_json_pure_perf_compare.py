@@ -104,11 +104,17 @@ class PurePerfProvenanceTest(unittest.TestCase):
             self.assertEqual(
                 MODULE.manifest_digest(MODULE.product_manifest(root)), initial
             )
-            codec = root / "packages/yjson_macros/src/json_codec.cj"
-            codec.write_text("changed codec\n", encoding="utf-8")
-            self.assertNotEqual(
-                MODULE.manifest_digest(MODULE.product_manifest(root)), initial
-            )
+            for name in ("json_codec.cj", "codec_decode_plan.cj"):
+                codec = root / "packages/yjson_macros/src" / name
+                original = codec.read_bytes() if codec.exists() else None
+                codec.write_text("changed codec\n", encoding="utf-8")
+                self.assertNotEqual(
+                    MODULE.manifest_digest(MODULE.product_manifest(root)), initial, name
+                )
+                if original is None:
+                    codec.unlink()
+                else:
+                    codec.write_bytes(original)
 
     def test_standalone_macro_dependency_is_canonicalized(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -116,6 +122,20 @@ class PurePerfProvenanceTest(unittest.TestCase):
             data = (
                 "[dependencies]\n"
                 f'yjson_macros = {{ {MODULE.STANDALONE_MACRO_GIT} }}\n'
+            ).encode("utf-8")
+            normalized = MODULE.canonical_benchmark_input_bytes(
+                root, "packages/benchmarks/cjpm.toml", data
+            ).decode("utf-8")
+            self.assertIn('yjson_macros = { path = "../yjson_macros" }', normalized)
+            self.assertNotIn("commitId", normalized)
+
+    def test_previous_standalone_macro_dependency_is_canonicalized(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            data = (
+                "[dependencies]\n"
+                'yjson_macros = { git = "https://github.com/lIlIIlIll/yjson_macros.git", '
+                'commitId = "fec0adce41f73d037d876cbac7a28aee8108bb5c" }\n'
             ).encode("utf-8")
             normalized = MODULE.canonical_benchmark_input_bytes(
                 root, "packages/benchmarks/cjpm.toml", data
