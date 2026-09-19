@@ -892,6 +892,20 @@ private class CompactJsonParser {
         Some(document.addNode(COMPACT_STRING_ARRAY, firstValue: start, secondValue: document.strings.size - start))
     }
 
+    private func rollbackCompactNumericStorage(intStart: Int64, numberStart: Int64,
+        stringStart: Int64): Unit {
+        while (document.intValues.size > intStart) {
+            document.intValues.remove(at: document.intValues.size - 1)
+        }
+        while (document.numberPayloads.size > numberStart) {
+            document.numberPayloads.remove(at: document.numberPayloads.size - 1)
+            document.numberKinds.remove(at: document.numberKinds.size - 1)
+        }
+        while (document.strings.size > stringStart) {
+            document.strings.remove(at: document.strings.size - 1)
+        }
+    }
+
     private func tryParseCompactNumericArray(contentStart: Int64): Option<Int64> {
         if (let Some(result) <- tryParseNativeCompactNumericArray(contentStart)) { return Some(result) }
         let intStart = document.intValues.size
@@ -902,12 +916,7 @@ private class CompactJsonParser {
         while (reader.hasRawArrayItem(first)) {
             reader.beforeRawArrayItem(first)
             if (!tryReadNumberFromTape() && !reader.tryReadRawNumberToken()) {
-                while (document.intValues.size > intStart) { document.intValues.remove(at: document.intValues.size - 1) }
-                while (document.numberPayloads.size > numberStart) {
-                    document.numberPayloads.remove(at: document.numberPayloads.size - 1)
-                    document.numberKinds.remove(at: document.numberKinds.size - 1)
-                }
-                while (document.strings.size > stringStart) { document.strings.remove(at: document.strings.size - 1) }
+                rollbackCompactNumericStorage(intStart, numberStart, stringStart)
                 reader.rewind(contentStart); return None<Int64>
             }
             var storedInt = false
@@ -980,12 +989,7 @@ private class CompactJsonParser {
                 document.source, next, true, COMPACT_NUMERIC_BULK_CAP)) {
                 case Some(value) => value
                 case None =>
-                    while (document.intValues.size > intStart) { document.intValues.remove(at: document.intValues.size - 1) }
-                    while (document.numberPayloads.size > numberStart) {
-                        document.numberPayloads.remove(at: document.numberPayloads.size - 1)
-                        document.numberKinds.remove(at: document.numberKinds.size - 1)
-                    }
-                    while (document.strings.size > stringStart) { document.strings.remove(at: document.strings.size - 1) }
+                    rollbackCompactNumericStorage(intStart, numberStart, stringStart)
                     reader.rewind(contentStart)
                     return None<Int64>
             }
