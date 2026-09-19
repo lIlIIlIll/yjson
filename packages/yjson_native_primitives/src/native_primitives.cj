@@ -128,8 +128,6 @@ private class CJsonNativeScannerBackend <: JsonNativeAccelerationPrimitivesV1 {
 
 }
 
-private var yJsonNativeEnabled: Bool = false
-
 // Package-local test support. Keeping this out of the public surface lets the
 // optional package verify that the linked scanner archive is callable without
 // making the low-level C ABI part of yjson's API.
@@ -145,10 +143,16 @@ private class CustomNativeAccelerationProviderV1 <: JsonNativePrimitivesProvider
         CJsonNativeScannerBackend()
     }
     public func activate(): Unit {
-        // The runtime validates the scanner archive (probe, SIMD caps)
-        // before calling this method, so no C FFI is needed here. Just
-        // mark the provider as active.
-        yJsonNativeEnabled = true
+        let probe = unsafe { YJ_JSON_ProbeV1() }
+        if (probe != 0x594A0101u32) {
+            throw JsonException("Native acceleration ABI probe mismatch",
+                code: "acceleration_abi_mismatch")
+        }
+        let capabilities = unsafe { YJ_JSON_SimdCaps() }
+        if ((capabilities & 1u32) == 0u32) {
+            throw JsonException("Native acceleration is unsupported on this CPU",
+                code: "acceleration_cpu_unsupported")
+        }
     }
 }
 

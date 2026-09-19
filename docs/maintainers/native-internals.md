@@ -73,8 +73,10 @@ Initializing -- primitives()/activate() failure ----> Unconfigured
 
 ## ABI、数字与错误
 
-provider 初始化调用 v1 探测函数；结果必须为 `0x594A0101`，并校验协议、ABI 和能力。
-这三项是独立版本边界，任一不匹配都失败。
+第一方 provider 激活时调用实际链接库的 `YJ_JSON_ProbeV1()`，结果必须为 `0x594A0101`；
+否则抛出 `acceleration_abi_mismatch`。`YJ_JSON_SimdCaps()` 的基础能力位（bit 0）必须置位，
+否则抛出 `acceleration_cpu_unsupported`。初始化不要求 AVX2。
+生成代码协议、provider ABI 描述和链接库探测是独立检查，任一失败都不能冻结为 Native。
 
 所有路径保留精确 `Int64` 和 `UInt64` 边界；溢出、小数、指数和 `-0` 按
 JSON 数字语义处理。重复键默认 `Reject`，比较解码后的键字节，因此 `"a"` 与
