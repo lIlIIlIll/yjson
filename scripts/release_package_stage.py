@@ -59,7 +59,7 @@ def stage(package, destination: pathlib.Path, development: bool) -> None:
         copy_path(package_root / "build.cj", module / "build.cj")
         copy_path(ROOT / "scripts" / "build_native_scanner.py", module / "scripts" / "build_native_scanner.py")
         native_files = ["yjson_scanner.c", "yjson_scanner.h", "yjson_compact.c", "yjson_compact.h",
-                        "yjson_float_format.c"]
+                        "yjson_float_format.c", "yjson_writer_format.c"]
         if package.stage_kind == "yyjson":
             native_files += ["yjson_yyjson.c", "yjson_yyjson.h"]
         for filename in native_files:

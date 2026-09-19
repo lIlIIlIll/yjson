@@ -435,7 +435,10 @@ class CiGateRegressionTests(unittest.TestCase):
                 scripts.mkdir()
                 (native / "vendor/yyjson").mkdir(parents=True)
                 shutil.copy2(ROOT / "scripts/release_native_checks.sh", scripts)
-                for name in ("yjson_scanner.c", "yjson_compact.c", "yjson_yyjson.c", "vendor/yyjson/yyjson.c"):
+                for name in (
+                    "yjson_scanner.c", "yjson_writer_format.c", "yjson_compact.c",
+                    "yjson_yyjson.c", "vendor/yyjson/yyjson.c",
+                ):
                     (native / name).write_text("/* isolated translation unit */\n", encoding="utf-8")
                 for name in ("test_yjson_scanner.c", "test_yjson_compact.c", "test_yjson_yyjson.c"):
                     (native / name).write_text("int main(void) { return 0; }\n", encoding="utf-8")
