@@ -21,4 +21,19 @@ if [[ ! -x "$binary" ]]; then
     exit 2
 fi
 
+# cjpm places dynamic dependencies beside the executable package, not in bin.
+shopt -s nullglob
+library_path=
+for directory in "$PWD"/target/release/*; do
+    [[ -d "$directory" ]] || continue
+    libraries=("$directory"/*.so "$directory"/*.dylib)
+    if (( ${#libraries[@]} != 0 )); then
+        library_path+="${library_path:+:}$directory"
+    fi
+done
+if [[ -n "$library_path" ]]; then
+    export LD_LIBRARY_PATH="$library_path${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+    export DYLD_LIBRARY_PATH="$library_path${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
+fi
+
 exec "$binary"

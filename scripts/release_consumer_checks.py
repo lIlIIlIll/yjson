@@ -46,8 +46,9 @@ override-compile-option = "{override_compile_option}"
 '''
     (project / "cjpm.toml").write_text(manifest, encoding="utf-8")
     (project / "src" / "main.cj").write_text(source, encoding="utf-8")
+    command = [str(ROOT / "scripts/run_cjpm_executable.sh"), str(project)]
     result = subprocess.run(
-        ["cjpm", "run"], cwd=project, text=True,
+        command, text=True,
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
     )
     if result.returncode != 0:
@@ -55,7 +56,7 @@ override-compile-option = "{override_compile_option}"
         for log in sorted(project.rglob("script-log")):
             print(f"--- {log} ---", file=sys.stderr)
             print(log.read_text(encoding="utf-8", errors="replace")[-4000:], file=sys.stderr)
-        raise subprocess.CalledProcessError(result.returncode, ["cjpm", "run"])
+        raise subprocess.CalledProcessError(result.returncode, command)
     print(f"external consumer passed: {name}")
 
 
