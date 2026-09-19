@@ -4,24 +4,10 @@ set -euo pipefail
 repo=$(cd "$(dirname "$0")/.." && pwd)
 package="$repo/packages/runtime_freeze_contract"
 
-for scenario in pure-late generated-reader-late version-mismatch native-conflict activation-failure concurrent-race reentrant-use initialization-wait; do
+for scenario in pure-late generated-reader-late version-mismatch native-conflict activation-failure concurrent-race reentrant-use initialization-wait primitives-failure primitives-failure-wait; do
     printf 'runtime freeze scenario: %s\n' "$scenario"
-    # A failed `cjpm run` used to abort under set -e before its output was
-    # printed, hiding the cause. Retry flaky runner toolchain crashes
-    # (llc SIGSEGV) while still surfacing the captured output.
-    output=""
-    for attempt in 1 2 3; do
-        status=0
-        output=$(cd "$package" && cjpm run -- "$scenario" 2>&1) || status=$?
-        if [[ "$status" -eq 0 ]]; then
-            break
-        fi
-        printf '%s\n' "$output"
-        if [[ "$output" != *"llc"* || "$output" != *"exit code 139"* ]]; then
-            exit "$status"
-        fi
-        echo "runtime freeze: attempt $attempt failed for $scenario" >&2
-    done
+    status=0
+    output=$(cd "$package" && cjpm run -- "$scenario" 2>&1) || status=$?
     printf '%s\n' "$output"
     if [[ "$status" -ne 0 ]]; then
         exit "$status"

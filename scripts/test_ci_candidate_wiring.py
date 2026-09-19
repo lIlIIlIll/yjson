@@ -350,7 +350,7 @@ class CiGateRegressionTests(unittest.TestCase):
             self.assertEqual(counter.read_text(), "1")
             self.assertEqual(manifest.read_text(), text)
 
-    def test_runtime_freeze_retry_clears_previous_failure_status(self) -> None:
+    def test_runtime_freeze_llc_failure_is_not_retried(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = pathlib.Path(temporary)
             scripts = root / "scripts"
@@ -381,9 +381,8 @@ class CiGateRegressionTests(unittest.TestCase):
                 ["bash", str(scripts / "runtime_freeze_contract_checks.sh")],
                 env=env,
             )
-            self.assertEqual(result.returncode, 0, result.stdout)
-            self.assertEqual(counter.read_text(), "9")
-            self.assertIn("runtime freeze contract checks passed", result.stdout)
+            self.assertEqual(result.returncode, 139, result.stdout)
+            self.assertEqual(counter.read_text(), "1")
 
     def test_runtime_freeze_contract_failure_is_not_retried(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

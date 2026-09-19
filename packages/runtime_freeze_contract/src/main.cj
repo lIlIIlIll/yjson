@@ -4,6 +4,35 @@ import std.collection.*
 import std.sync.*
 import yjson.*
 
+private class PrimitivesFailure <: Exception {
+    init() { super("intentional primitives failure") }
+}
+
+private class FailingPrimitivesProvider <: JsonNativePrimitivesProviderV1 {
+    private let entered: AtomicInt64
+    private let release: AtomicInt64
+    private let jsonFailure: Bool
+
+    init(entered: AtomicInt64, release: AtomicInt64, jsonFailure!: Bool = false) {
+        this.entered = entered
+        this.release = release
+        this.jsonFailure = jsonFailure
+    }
+
+    public func identity(): String { "failing-primitives" }
+    public func protocolVersion(): Int64 { 1 }
+    public func abiVersion(): Int64 { 1 }
+    public func activate(): Unit { throw Exception("activation must not run") }
+    public func primitives(): JsonNativeAccelerationPrimitivesV1 {
+        entered.store(1)
+        while (release.load() == 0) {}
+        if (jsonFailure) {
+            throw JsonException("intentional primitives failure", code: "primitives_failure")
+        }
+        throw PrimitivesFailure()
+    }
+}
+
 private class ProbeProvider <: JsonAccelerationProviderV1 {
     private let providerIdentity: String
     private let protocol: Int64
@@ -188,6 +217,48 @@ private func ordinaryUseWaitsForInitialization(): Unit {
     requireEqual(finished.load(), 1, "ordinary use completion")
 }
 
+private func failedPrimitivesDoNotFreeze(): Unit {
+    let entered = AtomicInt64(0)
+    let release = AtomicInt64(1)
+    var caught = false
+    try {
+        initializeYJsonAccelerationV1(FailingPrimitivesProvider(entered, release))
+    } catch (_: PrimitivesFailure) {
+        caught = true
+    }
+    requireEqual(caught, true, "primitives exception type")
+    requireEqual(accelerationCode({ => initializeYJsonAccelerationV1(
+        FailingPrimitivesProvider(entered, release, jsonFailure: true)) }),
+        "primitives_failure", "primitives JsonException code")
+    let activations = AtomicInt64(0)
+    initializeYJsonAccelerationV1(ProbeProvider("working", activations))
+    requireEqual(activations.load(), 1, "initialization after primitives failure")
+    requireEqual(YJson.parseDocument("42").root().asInt64(), 42, "recovered engine")
+}
+
+private func failedPrimitivesWakeOrdinaryUse(): Unit {
+    let entered = AtomicInt64(0)
+    let release = AtomicInt64(0)
+    let started = AtomicInt64(0)
+    let initializer = spawn {
+        try {
+            initializeYJsonAccelerationV1(FailingPrimitivesProvider(entered, release))
+            false
+        } catch (_: PrimitivesFailure) {
+            true
+        }
+    }
+    while (entered.load() == 0) {}
+    let reader = spawn {
+        started.store(1)
+        YJson.parseDocument("42").root().asInt64()
+    }
+    while (started.load() == 0) {}
+    release.store(1)
+    requireEqual(initializer.get(), true, "primitives failure observed")
+    requireEqual(reader.get(), 42, "ordinary use after primitives failure")
+}
+
 main(args: Array<String>): Int64 {
     if (args.size != 1) { return 2 }
     match (args[0]) {
@@ -196,6 +267,8 @@ main(args: Array<String>): Int64 {
         case "version-mismatch" => versionMismatch()
         case "native-conflict" => nativeIdempotenceAndConflict()
         case "activation-failure" => failedActivationDoesNotFreeze()
+        case "primitives-failure" => failedPrimitivesDoNotFreeze()
+        case "primitives-failure-wait" => failedPrimitivesWakeOrdinaryUse()
         case "concurrent-race" => concurrentProviderCompetition()
         case "reentrant-use" => reentrantUseFailsWithoutDeadlock()
         case "initialization-wait" => ordinaryUseWaitsForInitialization()

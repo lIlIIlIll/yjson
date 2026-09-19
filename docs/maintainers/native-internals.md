@@ -27,10 +27,14 @@ yyjson 包内置 0.12.0 源码，以静态方式链接，并将公开 C 符号�
 ```text
 Unconfigured -- first ordinary call --> PureFrozen
 Unconfigured -- initialize() --------> Initializing --> NativeFrozen
+Initializing -- primitives()/activate() failure ----> Unconfigured
 ```
 
 初始化期间，其他普通调用等待结果；同线程重入调用会报错。相同 provider 重复初始化
 幂等。Pure 已冻结后的晚初始化、不同 provider 竞争、协议或 ABI 不匹配，以及激活失败都抛出 `JsonException`，错误码以 `acceleration_` 开头。
+
+获取 primitives 或激活失败时，初始化恢复到 `Unconfigured` 并唤醒等待者。
+`primitives()` 回调异常原样传播。等待中的普通调用此后可以冻结 Pure；重新初始化必须先于该次冻结。
 
 不提供卸载、模式选择或运行期切换。成功激活后的 provider 故障必须向调用方暴露，
 不能静默切回 Pure。底层操作在接管 token 前返回协议规定的“不适用”状态，属于解析和编码实现
