@@ -273,6 +273,10 @@ packages/yjson_algorithms/src/lib_json_patch.cj
 packages/yjson_algorithms/src/lib_json_path.cj
 packages/yjson_algorithms/src/lib_json_pointer.cj
 packages/yjson_algorithms/src/lib_json_schema.cj
+packages/yjson_algorithms/src/json_value_semantics.cj
+packages/yjson_algorithms/src/json_schema_compilation.cj
+packages/yjson_algorithms/src/json_schema_core_formats.cj
+packages/yjson_algorithms/src/json_path_filter.cj
 packages/yjson_algorithms/src/linear_regex.cj
 packages/yjson_algorithms/src/work_limits.cj
 packages/yjson_algorithms/src/json_path_test.cj
