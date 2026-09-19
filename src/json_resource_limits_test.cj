@@ -163,6 +163,30 @@ class JsonResourceLimitsTest {
     }
 
     @TestCase
+    func byteStringBudgetCountsUtf8BytesOnce(): Unit {
+        let payload = String.fromUtf8(Array<Byte>(9 * 1024 * 1024, repeat: b'a')) + "é中\u{10000}"
+        let text = "\"" + payload + "\""
+        @Expect(YJson.fromJson(unsafe { text.rawData() }, codec: JsonCodecs.string), payload)
+    }
+
+    @TestCase
+    func escapedByteStringBudgetCountsUtf8BytesOnce(): Unit {
+        let payload = String.fromUtf8(Array<Byte>(9 * 1024 * 1024, repeat: b'a')) + "é中\u{10000}"
+        let text = "\"\\n" + payload + "\""
+        @Expect(YJson.fromJson(unsafe { text.rawData() }, codec: JsonCodecs.string), "\n" + payload)
+    }
+
+    @TestCase
+    func compactHomogeneousArraysHonorMaterializeNodeBudget(): Unit {
+        for (text in ["[1,2,3]", "[\"a\",\"b\",\"c\"]", "[1.5,2.5,3.5]"]) {
+            let document = YJson.parseDocument(text)
+            let error = @AssertThrows[JsonException](document.materialize(2))
+            @Expect(error.code, "work_limit_exceeded")
+            @Expect(document.materialize(4).toString(), text)
+        }
+    }
+
+    @TestCase
     func rootContainerLimitIncludesNestedContentButNotTrailingWhitespace(): Unit {
         let text = "{\"a\":[1,2]}"
         @Expect(JsonNode.parse(text + "   ",

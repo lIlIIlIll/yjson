@@ -596,16 +596,21 @@ class CompactJsonDocument {
             case code == COMPACT_INT_ARRAY =>
                 let result = JsonArray(); let start = first[index]
                 for (offset in 0..second[index]) {
+                    budget.visit(depth + 1)
                     result.add(JsonIntValue(intValues[start + offset]))
                 }
                 result
             case code == COMPACT_STRING_ARRAY =>
                 let result = JsonArray(); let start = first[index]
-                for (offset in 0..second[index]) { result.add(JsonStringValue(strings[start + offset])) }
+                for (offset in 0..second[index]) {
+                    budget.visit(depth + 1)
+                    result.add(JsonStringValue(strings[start + offset]))
+                }
                 result
             case code == COMPACT_NUMBER_ARRAY =>
                 let result = JsonArray(); let start = first[index]
                 for (offset in 0..second[index]) {
+                    budget.visit(depth + 1)
                     let position = start + offset
                     if (numberKinds[position]) { result.add(JsonIntValue(numberPayloads[position])) }
                     else { result.add(JsonNumberLiteralValue.fromParsedLiteral(strings[numberPayloads[position]])) }
