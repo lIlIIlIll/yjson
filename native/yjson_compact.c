@@ -2067,23 +2067,64 @@ void YJ_Compact_FreeOwnedBuffer(uint64_t buffer_handle) {
     free(buffer);
 }
 
+enum {
+    YJ_COMPACT_STATS_SOURCE_BYTES = 0,
+    YJ_COMPACT_STATS_PERSISTENT_USED = 1,
+    YJ_COMPACT_STATS_PERSISTENT_COMMITTED = 2,
+    YJ_COMPACT_STATS_ARENA_USED = 3,
+    YJ_COMPACT_STATS_ARENA_COMMITTED = 4,
+    YJ_COMPACT_STATS_SCRATCH_CURRENT = 5,
+    YJ_COMPACT_STATS_SCRATCH_PEAK = 6,
+    YJ_COMPACT_STATS_DUPLICATE_SCRATCH_PEAK = 7,
+    YJ_COMPACT_STATS_NODES = 8,
+    YJ_COMPACT_STATS_OBJECT_FIELDS = 9,
+    YJ_COMPACT_STATS_ARRAY_ENTRIES = 10,
+    YJ_COMPACT_STATS_STRING_REFS = 11,
+    YJ_COMPACT_STATS_COUNT = 12
+};
+
+enum {
+    YJ_COMPACT_DUPLICATE_STATS_LOOKUPS = 0,
+    YJ_COMPACT_DUPLICATE_STATS_INSERTS = 1,
+    YJ_COMPACT_DUPLICATE_STATS_PROBES = 2,
+    YJ_COMPACT_DUPLICATE_STATS_EXACT_EQUALITIES = 3,
+    YJ_COMPACT_DUPLICATE_STATS_MAX_PROBE = 4,
+    YJ_COMPACT_DUPLICATE_STATS_GROW_COUNT = 5,
+    YJ_COMPACT_DUPLICATE_STATS_REHASHED_ENTRIES = 6,
+    YJ_COMPACT_DUPLICATE_STATS_FINAL_CAPACITY = 7,
+    YJ_COMPACT_DUPLICATE_STATS_LARGEST_CAPACITY = 8,
+    YJ_COMPACT_DUPLICATE_STATS_P50_PROBE = 9,
+    YJ_COMPACT_DUPLICATE_STATS_P95_PROBE = 10,
+    YJ_COMPACT_DUPLICATE_STATS_P99_PROBE = 11,
+    YJ_COMPACT_DUPLICATE_STATS_OCCUPIED = 12,
+    YJ_COMPACT_DUPLICATE_STATS_LOAD_PPM = 13,
+    YJ_COMPACT_DUPLICATE_STATS_PRESIZED = 14,
+    YJ_COMPACT_DUPLICATE_STATS_RESERVED = 15,
+    YJ_COMPACT_DUPLICATE_STATS_COUNT = 16
+};
+
 int32_t YJ_Compact_Stats(uint64_t handle, uint64_t *stats, uint64_t capacity) {
     YjDocument *document = yj_from_handle(handle);
     if (document == NULL) return YJ_COMPACT_CLOSED;
-    if (stats == NULL || capacity < 12u) return YJ_COMPACT_BOUNDS_ERROR;
-    uint64_t values[12] = {
-        document->source_owned ? document->source_length : 0u,
-        document->persistent_used + document->arena.used,
-        document->persistent_committed + document->arena.committed,
-        document->arena.used,
-        document->arena.committed,
-        document->scratch_current,
-        document->scratch_peak,
-        document->duplicate_scratch_peak,
-        document->node_count,
-        document->object_count,
-        document->array_count,
-        document->string_count
+    if (stats == NULL || capacity < YJ_COMPACT_STATS_COUNT)
+        return YJ_COMPACT_BOUNDS_ERROR;
+    uint64_t values[YJ_COMPACT_STATS_COUNT] = {
+        [YJ_COMPACT_STATS_SOURCE_BYTES] =
+            document->source_owned ? document->source_length : 0u,
+        [YJ_COMPACT_STATS_PERSISTENT_USED] =
+            document->persistent_used + document->arena.used,
+        [YJ_COMPACT_STATS_PERSISTENT_COMMITTED] =
+            document->persistent_committed + document->arena.committed,
+        [YJ_COMPACT_STATS_ARENA_USED] = document->arena.used,
+        [YJ_COMPACT_STATS_ARENA_COMMITTED] = document->arena.committed,
+        [YJ_COMPACT_STATS_SCRATCH_CURRENT] = document->scratch_current,
+        [YJ_COMPACT_STATS_SCRATCH_PEAK] = document->scratch_peak,
+        [YJ_COMPACT_STATS_DUPLICATE_SCRATCH_PEAK] =
+            document->duplicate_scratch_peak,
+        [YJ_COMPACT_STATS_NODES] = document->node_count,
+        [YJ_COMPACT_STATS_OBJECT_FIELDS] = document->object_count,
+        [YJ_COMPACT_STATS_ARRAY_ENTRIES] = document->array_count,
+        [YJ_COMPACT_STATS_STRING_REFS] = document->string_count
     };
     memcpy(stats, values, sizeof(values));
     return YJ_COMPACT_OK;
@@ -2107,25 +2148,35 @@ int32_t YJ_Compact_DuplicateStats(uint64_t handle, uint64_t *stats,
                                  uint64_t capacity) {
     YjDocument *document = yj_from_handle(handle);
     if (document == NULL) return YJ_COMPACT_CLOSED;
-    if (stats == NULL || capacity < 16u) return YJ_COMPACT_BOUNDS_ERROR;
-    stats[0] = document->duplicate_lookups;
-    stats[1] = document->duplicate_inserts;
-    stats[2] = document->duplicate_probes;
-    stats[3] = document->duplicate_exact_equalities;
-    stats[4] = document->duplicate_max_probe;
-    stats[5] = document->duplicate_grow_count;
-    stats[6] = document->duplicate_rehash_entries;
-    stats[7] = document->duplicate_final_capacity;
-    stats[8] = document->duplicate_largest_capacity;
-    stats[9] = yj_duplicate_percentile(document, 1u, 2u);
-    stats[10] = yj_duplicate_percentile(document, 95u, 100u);
-    stats[11] = yj_duplicate_percentile(document, 99u, 100u);
-    stats[12] = document->duplicate_final_size;
-    stats[13] = document->duplicate_final_capacity == 0 ? 0
-        : (uint64_t)document->duplicate_final_size * UINT64_C(1000000) /
+    if (stats == NULL || capacity < YJ_COMPACT_DUPLICATE_STATS_COUNT)
+        return YJ_COMPACT_BOUNDS_ERROR;
+    stats[YJ_COMPACT_DUPLICATE_STATS_LOOKUPS] = document->duplicate_lookups;
+    stats[YJ_COMPACT_DUPLICATE_STATS_INSERTS] = document->duplicate_inserts;
+    stats[YJ_COMPACT_DUPLICATE_STATS_PROBES] = document->duplicate_probes;
+    stats[YJ_COMPACT_DUPLICATE_STATS_EXACT_EQUALITIES] =
+        document->duplicate_exact_equalities;
+    stats[YJ_COMPACT_DUPLICATE_STATS_MAX_PROBE] = document->duplicate_max_probe;
+    stats[YJ_COMPACT_DUPLICATE_STATS_GROW_COUNT] =
+        document->duplicate_grow_count;
+    stats[YJ_COMPACT_DUPLICATE_STATS_REHASHED_ENTRIES] =
+        document->duplicate_rehash_entries;
+    stats[YJ_COMPACT_DUPLICATE_STATS_FINAL_CAPACITY] =
+        document->duplicate_final_capacity;
+    stats[YJ_COMPACT_DUPLICATE_STATS_LARGEST_CAPACITY] =
+        document->duplicate_largest_capacity;
+    stats[YJ_COMPACT_DUPLICATE_STATS_P50_PROBE] =
+        yj_duplicate_percentile(document, 1u, 2u);
+    stats[YJ_COMPACT_DUPLICATE_STATS_P95_PROBE] =
+        yj_duplicate_percentile(document, 95u, 100u);
+    stats[YJ_COMPACT_DUPLICATE_STATS_P99_PROBE] =
+        yj_duplicate_percentile(document, 99u, 100u);
+    stats[YJ_COMPACT_DUPLICATE_STATS_OCCUPIED] = document->duplicate_final_size;
+    stats[YJ_COMPACT_DUPLICATE_STATS_LOAD_PPM] =
+        document->duplicate_final_capacity == 0 ? 0 :
+        (uint64_t)document->duplicate_final_size * UINT64_C(1000000) /
           document->duplicate_final_capacity;
-    stats[14] = document->duplicate_presized;
-    stats[15] = 0;
+    stats[YJ_COMPACT_DUPLICATE_STATS_PRESIZED] = document->duplicate_presized;
+    stats[YJ_COMPACT_DUPLICATE_STATS_RESERVED] = 0;
     return YJ_COMPACT_OK;
 }
 
