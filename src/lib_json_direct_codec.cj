@@ -2968,8 +2968,7 @@ public class YJson {
     private static func encodeString<T>(value: T,
         codec: GeneratedCompactCursorWriteCodecV1<T>,
         options: JsonWriteOptions): String {
-        GeneratedSupportV1.requireProtocolVersion(1)
-        freezeYJsonRuntime()
+        GeneratedSupportV1.enterGeneratedEntry()
         let writer = acquireGeneratedCompactWriter(options)
         try {
             if (writer.tryBeginGeneratedCompactRawValue()) {
@@ -2987,8 +2986,7 @@ public class YJson {
         codec: GeneratedCompactCursorWriteCodecV1<T>,
         options: JsonWriteOptions): String
         where T <: GeneratedCompactCodecProviderV1<T> {
-        GeneratedSupportV1.requireProtocolVersion(1)
-        freezeYJsonRuntime()
+        GeneratedSupportV1.enterGeneratedEntry()
         let writer = acquireGeneratedCompactWriter(options)
         try {
             if (writer.tryBeginGeneratedCompactRawValue()) {
@@ -3004,8 +3002,7 @@ public class YJson {
 
     private static func encodeString<T>(value: T, codec: JsonCodec<T>,
         options: JsonWriteOptions): String {
-        GeneratedSupportV1.requireProtocolVersion(1)
-        freezeYJsonRuntime()
+        GeneratedSupportV1.enterGeneratedEntry()
         let writer = JsonDirectWriter(options)
         writeEncoded(value, codec, writer)
         writer.finishString()
@@ -3014,8 +3011,7 @@ public class YJson {
     private static func encodeBytes<T>(value: T,
         codec: GeneratedCompactCursorWriteCodecV1<T>,
         options: JsonWriteOptions): Array<Byte> {
-        GeneratedSupportV1.requireProtocolVersion(1)
-        freezeYJsonRuntime()
+        GeneratedSupportV1.enterGeneratedEntry()
         let writer = JsonDirectWriter.bytes(config: options)
         if (writer.tryBeginGeneratedCompactRawValue()) {
             codec.writeCompactRawWithWriter(value, writer)
@@ -3027,8 +3023,7 @@ public class YJson {
 
     private static func encodeBytes<T>(value: T, codec: JsonCodec<T>,
         options: JsonWriteOptions): Array<Byte> {
-        GeneratedSupportV1.requireProtocolVersion(1)
-        freezeYJsonRuntime()
+        GeneratedSupportV1.enterGeneratedEntry()
         let writer = JsonDirectWriter.bytes(config: options)
         writeEncoded(value, codec, writer)
         writer.finishBytes()
@@ -3036,8 +3031,7 @@ public class YJson {
 
     private static func encodeStream<T>(value: T, codec: JsonCodec<T>, output: OutputStream,
         options: JsonWriteOptions): Unit {
-        GeneratedSupportV1.requireProtocolVersion(1)
-        freezeYJsonRuntime()
+        GeneratedSupportV1.enterGeneratedEntry()
         let writer = JsonDirectWriter(output, config: options)
         writeEncoded(value, codec, writer)
         writer.finish()
@@ -3046,8 +3040,7 @@ public class YJson {
     private static func decodeString<T>(text: String,
         codec: GeneratedCompactCursorWriteCodecV1<T>,
         options: JsonReadOptions): T {
-        GeneratedSupportV1.requireProtocolVersion(1)
-        freezeYJsonRuntime()
+        GeneratedSupportV1.enterGeneratedEntry()
         if (jsonReadOptionsUsesDefaultFastPath(options)) {
             validateJsonResourceLimits(unsafe { text.rawData() }, options)
             let reader = JsonFastReader(text)
@@ -3083,8 +3076,7 @@ public class YJson {
     }
     private static func decodeString<T>(text: String, codec: JsonCodec<T>,
         options: JsonReadOptions): T {
-        GeneratedSupportV1.requireProtocolVersion(1)
-        freezeYJsonRuntime()
+        GeneratedSupportV1.enterGeneratedEntry()
         if (jsonReadOptionsUsesDefaultFastPath(options)) {
             validateJsonResourceLimits(unsafe { text.rawData() }, options)
             match (codec) {
@@ -3110,8 +3102,7 @@ public class YJson {
     private static func decodeBytes<T>(bytes: Array<Byte>,
         codec: GeneratedCompactCursorWriteCodecV1<T>,
         options: JsonReadOptions): T {
-        GeneratedSupportV1.requireProtocolVersion(1)
-        freezeYJsonRuntime()
+        GeneratedSupportV1.enterGeneratedEntry()
         if (jsonReadOptionsUsesDefaultFastPath(options)) {
             validateJsonResourceLimits(bytes, options)
             let reader = JsonFastReader(bytes)
@@ -3127,8 +3118,7 @@ public class YJson {
 
     private static func decodeBytes<T>(bytes: Array<Byte>, codec: JsonCodec<T>,
         options: JsonReadOptions): T {
-        GeneratedSupportV1.requireProtocolVersion(1)
-        freezeYJsonRuntime()
+        GeneratedSupportV1.enterGeneratedEntry()
         if (jsonReadOptionsUsesDefaultFastPath(options)) {
             validateJsonResourceLimits(bytes, options)
             match (codec) {
@@ -3153,8 +3143,7 @@ public class YJson {
 
     private static func decodeStream<T>(input: InputStream, codec: JsonCodec<T>,
         options: JsonReadOptions): T {
-        GeneratedSupportV1.requireProtocolVersion(1)
-        freezeYJsonRuntime()
+        GeneratedSupportV1.enterGeneratedEntry()
         let reader = JsonDirectReader(input, config: options)
         let result = codec.read(reader)
         reader.expectEnd()
