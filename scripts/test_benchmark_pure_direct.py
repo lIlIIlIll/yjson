@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
+import os
 import pathlib
+import subprocess
+import sys
 import tempfile
 import unittest
 from unittest import mock
@@ -165,6 +168,70 @@ class RolePlacementTest(unittest.TestCase):
              mock.patch.object(direct.os, "sched_getaffinity", return_value={2, 4}):
             with self.assertRaisesRegex(RuntimeError, "affinity verification failed"):
                 direct.pin_and_verify_roles(roles, [2, 4, 6])
+
+
+class ProcessDiscoveryTest(unittest.TestCase):
+    def test_fallback_discovers_real_child_when_children_file_is_unavailable(self) -> None:
+        process = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"])
+        children_path = pathlib.Path(
+            f"/proc/{os.getpid()}/task/{os.getpid()}/children"
+        )
+        original_read_text = pathlib.Path.read_text
+
+        def read_text_without_children(
+            path: pathlib.Path, *args: object, **kwargs: object
+        ) -> str:
+            if path == children_path:
+                raise FileNotFoundError(path)
+            return original_read_text(path, *args, **kwargs)
+
+        try:
+            with mock.patch.object(
+                pathlib.Path, "read_text", autospec=True, side_effect=read_text_without_children
+            ):
+                self.assertIn(process.pid, direct._child_pids(os.getpid()))
+        finally:
+            process.terminate()
+            process.wait(timeout=5.0)
+
+    def test_fallback_ignores_processes_that_exit_during_proc_scan(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            proc_root = pathlib.Path(directory)
+            parent_pid = 100
+            (proc_root / str(parent_pid) / "task" / str(parent_pid)).mkdir(parents=True)
+            (proc_root / "200").mkdir()
+            (proc_root / "200" / "status").write_text(
+                "Name:\tchild\nPPid:\t100\n", encoding="ascii"
+            )
+            (proc_root / "201").mkdir()
+
+            self.assertEqual(direct._child_pids(parent_pid, proc_root), [200])
+
+    def test_fallback_multiple_children_are_rejected(self) -> None:
+        children = [
+            subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"])
+            for _ in range(2)
+        ]
+        children_path = pathlib.Path(f"/proc/{os.getpid()}/task/{os.getpid()}/children")
+        original_read_text = pathlib.Path.read_text
+
+        def read_text_without_children(path, *args, **kwargs):
+            if path == children_path:
+                raise FileNotFoundError(path)
+            return original_read_text(path, *args, **kwargs)
+
+        try:
+            with mock.patch.object(
+                pathlib.Path, "read_text", autospec=True, side_effect=read_text_without_children
+            ):
+                with self.assertRaisesRegex(RuntimeError, "multiple target children"):
+                    direct.wait_for_target_child(
+                        mock.Mock(pid=os.getpid()), direct.time.monotonic() + 1.0
+                    )
+        finally:
+            for child in children:
+                child.terminate()
+                child.wait(timeout=5.0)
 
 
 class LaunchFailureEvidenceTest(unittest.TestCase):

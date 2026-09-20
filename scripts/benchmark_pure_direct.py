@@ -421,13 +421,34 @@ class CpuMonitor:
             self._stop.set()
 
 
-def _child_pids(pid: int) -> list[int]:
-    path = pathlib.Path(f"/proc/{pid}/task/{pid}/children")
+def _child_pids(pid: int, proc_root: pathlib.Path = pathlib.Path("/proc")) -> list[int]:
+    children_path = proc_root / str(pid) / "task" / str(pid) / "children"
     try:
-        text = path.read_text(encoding="ascii").strip()
+        text = children_path.read_text(encoding="ascii").strip()
     except FileNotFoundError:
-        return []
-    return [int(value) for value in text.split()] if text else []
+        pass
+    else:
+        return [int(value) for value in text.split()] if text else []
+
+    children: list[int] = []
+    for process_path in proc_root.iterdir():
+        if not process_path.name.isdecimal():
+            continue
+        try:
+            status = (process_path / "status").read_bytes()
+        except (FileNotFoundError, PermissionError, ProcessLookupError):
+            continue
+        for line in status.splitlines():
+            if not line.startswith(b"PPid:"):
+                continue
+            try:
+                parent_pid = int(line.removeprefix(b"PPid:").strip())
+            except ValueError:
+                break
+            if parent_pid == pid:
+                children.append(int(process_path.name))
+            break
+    return sorted(children)
 
 
 def wait_for_target_child(process: subprocess.Popen[object], deadline: float) -> int:
