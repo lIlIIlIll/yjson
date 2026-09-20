@@ -176,6 +176,15 @@ yjson = "0.1.0"
         )
         for index, relative in enumerate(paths):
             write(self.root / relative, f"fixture-{index}\n")
+        write(
+            self.root / "benchmarks/full-seven-library/summarize_full.py",
+            "#!/usr/bin/env python3\n"
+            "import argparse\n"
+            "p = argparse.ArgumentParser()\n"
+            "p.add_argument('root')\n"
+            "p.add_argument('--min-runs')\n"
+            "p.parse_args()\n",
+        )
 
     def metadata(self, batch: int, **overrides: object) -> dict[str, object]:
         value: dict[str, object] = {
@@ -346,17 +355,14 @@ yjson = "0.1.0"
         with tempfile.TemporaryDirectory() as temporary:
             root = pathlib.Path(temporary) / self.harness["root"]
             root.mkdir()
-            write(
-                root / "summarize_full.py",
-                "#!/usr/bin/env python3\n"
-                "import argparse\n"
-                "p = argparse.ArgumentParser()\n"
-                "p.add_argument('root')\n"
-                "p.add_argument('--min-runs')\n"
-                "p.parse_args()\n",
-            )
-            write(root / "run_full.py", "#!/usr/bin/env python3\n")
-            write(root / "benchmark_fixed_work.py", "PROTOCOL_VERSION = 1\n")
+            for relative in (
+                "benchmarks/full-seven-library/summarize_full.py",
+                "benchmarks/full-seven-library/run_full.py",
+                "scripts/benchmark_fixed_work.py",
+            ):
+                source = self.root / relative
+                write(root / source.name, source.read_text(encoding="utf-8"))
+
             with tarfile.open(self.evidence / self.harness["file"], "w:gz") as output:
                 output.add(root, arcname=self.harness["root"])
 
@@ -559,6 +565,23 @@ class SevenLibraryEvidenceTests(unittest.TestCase):
             checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=True)
 
 
+    def test_rejects_untrusted_summarizer_before_execution(self) -> None:
+        sentinel = self.root / "untrusted-harness-executed"
+
+        def replace_summarizer(root: pathlib.Path) -> None:
+            write(
+                root / "summarize_full.py",
+                "from pathlib import Path\n"
+                f"Path({str(sentinel)!r}).write_text('executed')\n",
+            )
+
+        self.fixture.rewrite_harness_archive(replace_summarizer)
+        try:
+            with self.assertRaises(checker.EvidenceError):
+                checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=True)
+        finally:
+            self.assertFalse(sentinel.exists(), "untrusted archive code was executed")
+
     def test_schema_v3_requires_metadata_fixed_work_protocol(self) -> None:
         self.fixture.write_evidence(second_metadata={"fixed_work_protocol": True})
         with self.assertRaisesRegex(checker.EvidenceError, "must declare fixed_work_protocol 1"):
@@ -723,9 +746,7 @@ class SevenLibraryEvidenceTests(unittest.TestCase):
 
     def test_fixed_work_parser_drift_invalidates_harness_identity(self) -> None:
         write(self.root / "scripts/benchmark_fixed_work.py", "mutated\n")
-        with self.assertRaisesRegex(
-            checker.EvidenceError, "current benchmark harness differs"
-        ):
+        with self.assertRaises(checker.EvidenceError):
             checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=False)
 
     def test_docs_only_change_does_not_make_measurement_stale(self) -> None:

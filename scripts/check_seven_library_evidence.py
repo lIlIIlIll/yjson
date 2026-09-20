@@ -1242,17 +1242,28 @@ def verify(root: pathlib.Path, marker_relative: str, integrity_only: bool) -> in
         harness_root = safe_extract(
             evidence / harness_info["file"], scratch / "harness", harness_info["root"]
         )
-        required_harness_files = {"summarize_full.py"}
+        trusted_harness_files = {
+            "summarize_full.py": root / "benchmarks/full-seven-library/summarize_full.py",
+        }
         if current_schema:
-            required_harness_files.update({"run_full.py", "benchmark_fixed_work.py"})
+            trusted_harness_files.update({
+                "run_full.py": root / "benchmarks/full-seven-library/run_full.py",
+                "benchmark_fixed_work.py": root / "scripts/benchmark_fixed_work.py",
+            })
         missing_harness_files = sorted(
-            name for name in required_harness_files if not (harness_root / name).is_file()
+            name for name in trusted_harness_files if not (harness_root / name).is_file()
         )
         if missing_harness_files:
             raise EvidenceError(
                 f"harness archive omits required files: {missing_harness_files}"
             )
-        summarize = harness_root / "summarize_full.py"
+        for name, trusted_source in trusted_harness_files.items():
+            if (
+                not trusted_source.is_file()
+                or (harness_root / name).read_bytes() != trusted_source.read_bytes()
+            ):
+                raise EvidenceError(f"harness archive differs from trusted checkout: {name}")
+        summarize = trusted_harness_files["summarize_full.py"]
         identities: list[dict[str, Any]] = []
         fixed_work_batches: list[dict[str, dict[str, Any]]] = []
         result_batch_rows: list[list[str]] = []
