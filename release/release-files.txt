@@ -120,9 +120,13 @@ scripts/release_native_checks.sh
 scripts/release_yyjson_colink_check.sh
 scripts/release_cangjie_checks.sh
 scripts/release_consumer_checks.py
+scripts/test_release_consumer_checks.py
 scripts/release_benchmark_smoke.sh
 scripts/release_performance_compare.sh
 scripts/json_pure_perf_compare.py
+scripts/benchmark_input_identity.py
+scripts/benchmark_fixed_work.py
+scripts/benchmark_pure_direct.py
 scripts/json_cjfast_perf_run.py
 scripts/json_cjfast_perf_summary.py
 scripts/check_json_numeric_equivalence.py
@@ -175,6 +179,7 @@ scripts/validate_cangjie_sts.py
 scripts/test_validate_cangjie_sts.py
 scripts/test_ci_candidate_wiring.py
 scripts/test_json_pure_perf_compare.py
+scripts/test_benchmark_pure_direct.py
 scripts/coverage.sh
 scripts/cjcov_to_lcov.py
 scripts/test_cjcov_to_lcov.py
@@ -207,6 +212,8 @@ packages/benchmarks/src/bench_fastjson2_compare.cj
 packages/benchmarks/src/bench_algorithms.cj
 packages/benchmarks/src/bench_document_lifecycle.cj
 packages/benchmarks/src/bench_fixtures.cj
+packages/benchmarks/src/bench_fixed_work.cj
+packages/benchmarks/src/bench_pure_direct.cj
 packages/benchmarks/src/bench_json_comprehensive.cj
 packages/benchmarks/src/bench_stdx_compare.cj
 packages/benchmarks/src/bench_stream_protocol.cj

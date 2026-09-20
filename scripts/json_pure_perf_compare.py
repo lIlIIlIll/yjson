@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import argparse
-import csv
+from collections.abc import Iterator
 import hashlib
 import json
+import math
 import os
 import pathlib
 import platform
@@ -13,60 +14,9 @@ import re
 import shutil
 import statistics
 import subprocess
-import time
 
-
-STANDALONE_MACRO_GIT = (
-    'git = "https://github.com/lIlIIlIll/yjson_macros.git", '
-    'commitId = "5961c2f448f989fb23a9731265ce025aad8bffaf"'
-)
-PREVIOUS_STANDALONE_MACRO_GIT = (
-    'git = "https://github.com/lIlIIlIll/yjson_macros.git", '
-    'commitId = "fec0adce41f73d037d876cbac7a28aee8108bb5c"'
-)
-LEGACY_STANDALONE_MACRO_GIT = (
-    'git = "https://github.com/lIlIIlIll/yjson_macros.git", '
-    'commitId = "30c3def793054c4b5ba25be2e22598e141923a51"'
-)
-STANDALONE_MACRO_GITS = (
-    STANDALONE_MACRO_GIT,
-    (
-        'git = "https://github.com/lIlIIlIll/yjson_macros.git", '
-        'commitId = "3fbdb063ffc6978be01294d3bbb0b03941fe1f02"'
-    ),
-    PREVIOUS_STANDALONE_MACRO_GIT,
-    LEGACY_STANDALONE_MACRO_GIT,
-)
-HISTORICAL_MACRO_MANIFEST = """[package]
-  cjc-version = "1.1.0"
-  name = "yjson_macros"
-  organization = ""
-  description = "AST codec macros for yjson"
-  version = "0.1.0"
-  target-dir = ""
-  script-dir = ""
-  output-type = "static"
-  compile-option = ""
-  override-compile-option = ""
-  link-option = ""
-  package-configuration = {}
-
-[dependencies]
-# Generated code is coupled to the matching versioned yjson runtime contract.
-yjson = { path = "../.." }
-""".encode("utf-8")
-HISTORICAL_MACRO_RELEASE_MANIFEST = """[package]
-cjc-version = "1.1.0"
-name = "yjson_macros"
-description = "AST codec macros for yjson"
-version = "0.1.0"
-output-type = "static"
-
-[dependencies]
-# Generated code is coupled to the matching versioned yjson runtime contract.
-yjson = "0.1.0"
-""".encode("utf-8")
-
+import benchmark_input_identity
+import benchmark_pure_direct
 
 CASES = (
     "yjsonStringEncodeLargeInt64Map",
@@ -94,6 +44,8 @@ CASES = (
     "encodePersonMemory",
     "encodeRecords64kMemory",
 )
+if tuple(benchmark_pure_direct.FROZEN_OPERATIONS) != CASES:
+    raise RuntimeError("Pure direct frozen-work case inventory differs from CASES")
 GATE_MODES = ("release", "optimization")
 DEFAULT_TARGET_IMPROVEMENT_PERCENT = 5.0
 RSS_RE = re.compile(
@@ -135,9 +87,15 @@ def parse_args() -> argparse.Namespace:
         "--cpu",
         type=int,
         default=None,
-        help="pin measurement to an explicit logical CPU instead of idle selection",
+        help="use this logical CPU as the business-core anchor",
     )
     parser.add_argument("--idle-sample-seconds", type=int, default=30)
+    parser.add_argument(
+        "--cell-timeout-seconds",
+        type=float,
+        default=180.0,
+        help="maximum wall time for each fresh direct-timing process",
+    )
     parser.add_argument("--enforce", action="store_true")
     parser.add_argument(
         "--rebuild",
@@ -167,80 +125,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def cpu_times() -> dict[int, tuple[int, int]]:
-    result: dict[int, tuple[int, int]] = {}
-    for line in pathlib.Path("/proc/stat").read_text().splitlines():
-        fields = line.split()
-        if not fields or not fields[0].startswith("cpu") or not fields[0][3:].isdigit():
-            continue
-        values = [int(value) for value in fields[1:]]
-        result[int(fields[0][3:])] = (sum(values), values[3] + values[4])
-    return result
-
-
-def topology(cpu: int) -> tuple[int, int, list[int]]:
-    root = pathlib.Path(f"/sys/devices/system/cpu/cpu{cpu}/topology")
-    socket = int((root / "physical_package_id").read_text())
-    core = int((root / "core_id").read_text())
-    siblings_text = (root / "thread_siblings_list").read_text().strip()
-    siblings: list[int] = []
-    for part in siblings_text.split(","):
-        if "-" in part:
-            start, end = (int(value) for value in part.split("-", 1))
-            siblings.extend(range(start, end + 1))
-        else:
-            siblings.append(int(part))
-    return socket, core, siblings
-
-
-def choose_idle_cpu(seconds: int) -> dict[str, object]:
-    before = cpu_times()
-    time.sleep(seconds)
-    after = cpu_times()
-    utilization: dict[int, float] = {}
-    for cpu, (total_after, idle_after) in after.items():
-        total_before, idle_before = before[cpu]
-        delta_total = total_after - total_before
-        delta_idle = idle_after - idle_before
-        utilization[cpu] = 100.0 if not delta_total else 100.0 * (delta_total - delta_idle) / delta_total
-    groups: dict[tuple[int, int], list[int]] = {}
-    for cpu in sorted(utilization):
-        socket, core, _ = topology(cpu)
-        groups.setdefault((socket, core), []).append(cpu)
-    ranked = sorted(
-        groups.items(),
-        key=lambda entry: (
-            max(utilization[cpu] for cpu in entry[1]),
-            sum(utilization[cpu] for cpu in entry[1]),
-            entry[0],
-        ),
-    )
-    (socket, core), cpus = ranked[0]
-    values = [utilization[cpu] for cpu in cpus]
-    return {
-        "sample_seconds": seconds,
-        "selected_cpu": cpus[0],
-        "selected_sibling": cpus[1] if len(cpus) > 1 else None,
-        "socket": socket,
-        "core": core,
-        "cpus": cpus,
-        "utilization_percent": values,
-        "acceptable_both_threads_below_1_percent": max(values) < 1.0,
-    }
-
-
-def explicit_cpu(cpu: int) -> dict[str, object]:
-    socket, core, siblings = topology(cpu)
-    return {
-        "sample_seconds": 0,
-        "selected_cpu": cpu,
-        "selected_sibling": next((value for value in siblings if value != cpu), None),
-        "socket": socket,
-        "core": core,
-        "cpus": siblings,
-        "utilization_percent": [],
-        "acceptable_both_threads_below_1_percent": None,
-    }
 
 
 def binary(root: pathlib.Path) -> pathlib.Path:
@@ -263,146 +147,6 @@ def sha256_file(path: pathlib.Path) -> str:
     return digest.hexdigest()
 
 
-def manifest_digest(manifest: dict[str, str]) -> str:
-    digest = hashlib.sha256()
-    for name, value in sorted(manifest.items()):
-        digest.update(name.encode("utf-8"))
-        digest.update(b"\0")
-        digest.update(value.encode("ascii"))
-        digest.update(b"\n")
-    return digest.hexdigest()
-
-def contains_standalone_macro_git(text: str) -> bool:
-    return any(marker in text for marker in STANDALONE_MACRO_GITS)
-
-
-def canonical_benchmark_input_bytes(
-    root: pathlib.Path, relative: str, data: bytes
-) -> bytes:
-    """Normalize the standalone macro move without hiding benchmark code drift."""
-    if relative == "packages/yjson_macros/src/json_literal.cj":
-        raise ValueError("JSON literal macro is outside the typed-codec benchmark closure")
-
-    if relative == "packages/yjson_macros/cjpm.toml" and (
-        'description = "AST codec and JSON literal macros for yjson"' in data.decode()
-    ):
-        return HISTORICAL_MACRO_MANIFEST
-    if relative == "release/package-manifests/yjson_macros.toml" and (
-        'description = "AST codec and JSON literal macros for yjson"' in data.decode()
-    ):
-        return HISTORICAL_MACRO_RELEASE_MANIFEST
-
-    text = data.decode("utf-8")
-    if relative.endswith(".lock"):
-        text = "\n".join(
-            line for line in text.splitlines()
-            if not contains_standalone_macro_git(line)
-        ) + "\n"
-    elif contains_standalone_macro_git(text):
-        dependency_path = os.path.relpath(
-            root / "packages/yjson_macros", (root / relative).parent
-        )
-        normalized_lines: list[str] = []
-        for line in text.splitlines():
-            if "yjson_macros" not in line or not contains_standalone_macro_git(line):
-                normalized_lines.append(line)
-                continue
-            opening = line.find("{")
-            closing = line.rfind("}")
-            if opening < 0 or closing <= opening:
-                normalized_lines.append(line)
-                continue
-            body = line[opening + 1 : closing]
-            output_type = (
-                ', output-type = "static"'
-                if 'output-type = "static"' in body
-                else ""
-            )
-            normalized_lines.append(
-                line[: opening + 1]
-                + f' path = "{dependency_path}"{output_type} '
-                + line[closing:]
-            )
-        text = "\n".join(normalized_lines) + "\n"
-
-    if (
-        relative == "release/release-graph.toml"
-        and contains_standalone_macro_git(
-            (root / "cjpm.toml").read_text(encoding="utf-8")
-        )
-    ):
-        text = text.replace(
-            'name = "yjson_macros"\n'
-            'role = "macros"\n'
-            'development_manifest = "packages/yjson_macros/cjpm.toml"\n'
-            'release_manifest = "release/package-manifests/yjson_macros.toml"\n'
-            'source_root = "packages/yjson_macros/src"\n'
-            'stage_kind = "package"\n'
-            "stability = \"stable\"\n"
-            "leaf_bundle = false\n"
-            "dependencies = []",
-            'name = "yjson_macros"\n'
-            'role = "macros"\n'
-            'development_manifest = "packages/yjson_macros/cjpm.toml"\n'
-            'release_manifest = "release/package-manifests/yjson_macros.toml"\n'
-            'source_root = "packages/yjson_macros/src"\n'
-            'stage_kind = "package"\n'
-            "stability = \"stable\"\n"
-            "leaf_bundle = false\n"
-            'dependencies = ["yjson"]',
-        )
-    return text.encode("utf-8")
-
-
-def files_manifest(root: pathlib.Path, paths: list[pathlib.Path]) -> dict[str, str]:
-    result: dict[str, str] = {}
-    for path in sorted(set(paths)):
-        if not path.is_file():
-            raise SystemExit(f"benchmark input file not found: {path}")
-        relative = str(path.relative_to(root))
-        try:
-            data = canonical_benchmark_input_bytes(root, relative, path.read_bytes())
-        except (UnicodeDecodeError, ValueError) as error:
-            raise SystemExit(f"invalid benchmark input file: {path}: {error}") from error
-        result[relative] = hashlib.sha256(data).hexdigest()
-    return result
-
-
-def harness_manifest(root: pathlib.Path) -> dict[str, str]:
-    package = root / "packages/benchmarks"
-    paths = [
-        root / "cjpm.toml",
-        root / "cjpm.lock",
-        package / "cjpm.toml",
-        package / "cjpm.lock",
-        package / "build.cj",
-        root / "packages/yjson_macros/cjpm.toml",
-        root / "packages/yjson_macros/cjpm.lock",
-        root / "scripts/build_native_scanner.py",
-        root / "native/yjson_scanner.c",
-        root / "native/yjson_scanner.h",
-        root / "native/yjson_compact.c",
-        root / "native/yjson_compact.h",
-        *sorted((package / "src").rglob("*.cj")),
-    ]
-    return files_manifest(root, paths)
-
-
-def product_manifest(root: pathlib.Path) -> dict[str, str]:
-    # The seven-library matrix exercises generated typed codecs, not the
-    # independent JSON literal macro. Keep this evidence scoped to its input
-    # closure so adding that API does not invalidate unrelated measurements.
-    paths = [
-        *sorted((root / "src").rglob("*.cj")),
-        *sorted(
-            path
-            for path in (root / "packages/yjson_macros/src").rglob("*.cj")
-            if path.name != "json_literal.cj"
-        ),
-    ]
-    return files_manifest(root, paths)
-
-
 def git_output(root: pathlib.Path, *args: str) -> str:
     completed = subprocess.run(
         ["git", "-C", str(root), *args], check=True,
@@ -413,13 +157,13 @@ def git_output(root: pathlib.Path, *args: str) -> str:
 
 def source_identity(root: pathlib.Path) -> dict[str, object]:
     dirty = git_output(root, "status", "--porcelain=v1", "--untracked-files=all").splitlines()
-    manifest = product_manifest(root)
+    manifest = benchmark_input_identity.product_manifest(root)
     return {
         "commit": git_output(root, "rev-parse", "HEAD"),
         "tree": git_output(root, "rev-parse", "HEAD^{tree}"),
         "dirty": bool(dirty),
         "dirty_paths": dirty,
-        "product_source_sha256": manifest_digest(manifest),
+        "product_source_sha256": benchmark_input_identity.manifest_digest(manifest),
         "product_source_manifest": manifest,
     }
 
@@ -504,14 +248,14 @@ def rebuild_variant(name: str, root: pathlib.Path, output: pathlib.Path) -> None
 
 
 def verify_equal_harness(baseline: pathlib.Path, candidate: pathlib.Path) -> str:
-    baseline_manifest = harness_manifest(baseline)
-    candidate_manifest = harness_manifest(candidate)
+    baseline_manifest = benchmark_input_identity.harness_manifest(baseline)
+    candidate_manifest = benchmark_input_identity.harness_manifest(candidate)
     if baseline_manifest != candidate_manifest:
         names = sorted(set(baseline_manifest) | set(candidate_manifest))
         differences = [name for name in names
                        if baseline_manifest.get(name) != candidate_manifest.get(name)]
         raise SystemExit("baseline/candidate benchmark harness differs: " + ", ".join(differences))
-    return manifest_digest(baseline_manifest)
+    return benchmark_input_identity.manifest_digest(baseline_manifest)
 
 
 def run_variant(
@@ -519,44 +263,69 @@ def run_variant(
     root: pathlib.Path,
     corpus: pathlib.Path,
     output: pathlib.Path,
-    cpu: int,
+    selected_cpus: list[int],
     round_number: int,
     case: str,
     time_binary: str,
-) -> tuple[float, int]:
-    report = output / f"round-{round_number:02d}-{case}-{name}"
-    rss_path = output / f"round-{round_number:02d}-{case}-{name}.rss.txt"
-    log = output / f"round-{round_number:02d}-{case}-{name}.log"
-    env = os.environ.copy()
-    env["cjHeapSize"] = "128MB"
-    env["YJSON_CROSSLANG_CORPUS_DIR"] = str(corpus)
-    env["LC_ALL"] = "C"
-    command = [
-        "taskset", "-c", str(cpu), str(binary(root)),
-        "--bench", "--no-color", "--no-progress",
-        f"--filter=*.{case}", f"--report-path={report}",
-    ]
-    with log.open("w", encoding="utf-8") as stream:
-        subprocess.run(
-            [time_binary, "-v", "-o", str(rss_path), *command],
-            env=env,
-            stdout=stream,
-            stderr=subprocess.STDOUT,
-            check=True,
+    timeout_seconds: float,
+    qualification_phase: str = "sample",
+) -> tuple[float, int, dict[str, object]]:
+    if qualification_phase not in ("preflight", "sample"):
+        raise ValueError(f"unknown qualification phase: {qualification_phase}")
+    stem = (
+        f"preflight-{case}-{name}"
+        if qualification_phase == "preflight"
+        else f"round-{round_number:02d}-{case}-{name}"
+    )
+    rss_path = output / f"{stem}.rss.txt"
+    log = output / f"{stem}.log"
+    sidecar = output / f"{stem}.direct.json"
+    try:
+        elapsed, max_rss_kb, evidence = benchmark_pure_direct.run_direct_cell(
+            case=case,
+            executable=binary(root),
+            corpus=corpus,
+            log_path=log,
+            rss_path=rss_path,
+            control=output / "control" / stem,
+            time_binary=time_binary,
+            selected_cpus=selected_cpus,
+            timeout_seconds=timeout_seconds,
         )
-    return read_case_report(report, case), parse_max_rss(rss_path)
+    except benchmark_pure_direct.DirectCellFailure as error:
+        evidence = {
+            **error.evidence,
+            "phase": qualification_phase,
+            "qualification_phase": qualification_phase,
+        }
+        sidecar.write_text(
+            json.dumps(evidence, indent=2) + "\n", encoding="utf-8"
+        )
+        raise
+    evidence["phase"] = qualification_phase
+    evidence["qualification_phase"] = qualification_phase
+    sidecar.write_text(
+        json.dumps(evidence, indent=2) + "\n", encoding="utf-8"
+    )
+    return elapsed, max_rss_kb, evidence
 
 
-def read_case_report(report: pathlib.Path, case: str) -> float:
-    values: list[float] = []
-    for path in report.rglob("bench-*.csv"):
-        with path.open(newline="", encoding="utf-8") as stream:
-            for row in csv.DictReader(stream):
-                if row["Case"] == case:
-                    values.append(float(row["Median"]))
-    if len(values) != 1:
-        raise RuntimeError(f"expected one {case} result in {report}, found {len(values)}")
-    return values[0]
+
+def qualification_schedule(
+    cases: tuple[str, ...], rounds: int
+) -> Iterator[tuple[str, int, str, str]]:
+    for case in cases:
+        for name in ("baseline", "candidate"):
+            yield "preflight", 0, case, name
+    for round_number in range(1, rounds + 1):
+        order = (
+            ("baseline", "candidate")
+            if round_number % 2
+            else ("candidate", "baseline")
+        )
+        for case in cases:
+            for name in order:
+                yield "sample", round_number, case, name
 
 
 def summarize(
@@ -656,6 +425,8 @@ def write_markdown(summary: dict[str, object], path: pathlib.Path) -> None:
     candidate = summary["candidate"]
     comparisons = summary["comparisons"]
     lines = [
+        f"Pure direct timing protocol: `{summary['direct_timing_protocol']}`",
+        "",
         "| Case | Baseline median | Candidate median | C/B | Improvement | Wins | Baseline CV | Candidate CV | "
         "Baseline max RSS KB | Candidate max RSS KB |",
         "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
@@ -689,6 +460,12 @@ def main() -> int:
     )
     if args.rounds < 2:
         raise SystemExit("--rounds must be at least 2")
+    if args.idle_sample_seconds <= 0:
+        raise SystemExit("--idle-sample-seconds must be positive")
+    if args.cell_timeout_seconds <= 0.0 or not math.isfinite(args.cell_timeout_seconds):
+        raise SystemExit("--cell-timeout-seconds must be finite and positive")
+    if args.enforce and cases != CASES:
+        raise SystemExit("--enforce requires the complete 24-case inventory")
     if args.enforce and args.rounds != 11:
         raise SystemExit("--enforce requires --rounds 11")
     if args.enforce and not args.rebuild:
@@ -713,7 +490,7 @@ def main() -> int:
     corpus_paths = [args.corpus / name for name in (
         "person.json", "records-64k.json", "records-1m.json"
     )]
-    corpus_manifest = files_manifest(args.corpus, corpus_paths)
+    corpus_manifest = benchmark_input_identity.files_manifest(args.corpus, corpus_paths)
     time_binary = find_time_binary()
     toolchain = toolchain_identity()
     args.output.mkdir(parents=True, exist_ok=False)
@@ -732,7 +509,32 @@ def main() -> int:
         "baseline": artifact_identity(args.baseline),
         "candidate": artifact_identity(args.candidate),
     }
+    direct_parser = pathlib.Path(benchmark_pure_direct.__file__).resolve()
+    fixed_work_source = pathlib.Path("packages/benchmarks/src/bench_fixed_work.cj")
+    frozen_work = {
+        case: {
+            "batches": benchmark_pure_direct.FROZEN_BATCH_WORK[case][1],
+            "batch_size": benchmark_pure_direct.FROZEN_BATCH_WORK[case][0],
+            "operations": benchmark_pure_direct.FROZEN_OPERATIONS[case],
+            "segments": benchmark_pure_direct.expected_segments(case),
+            "minimum_warmup_ns": benchmark_pure_direct.expected_warmup_ns(case),
+        }
+        for case in cases
+    }
     provenance = {
+        "direct_timing": {
+            "protocol_version": benchmark_pure_direct.PROTOCOL_VERSION,
+            "marker": benchmark_pure_direct.MARKER,
+            "source": {
+                "path": str(fixed_work_source),
+                "sha256": sha256_file(args.baseline / fixed_work_source),
+            },
+            "parser_runner": {
+                "path": str(direct_parser),
+                "sha256": sha256_file(direct_parser),
+            },
+            "frozen_work": frozen_work,
+        },
         "time_binary": time_binary,
         "rss_unit": "kbytes",
         "runner": {
@@ -746,7 +548,7 @@ def main() -> int:
         "artifacts": artifacts,
         "corpus": {
             "path": str(args.corpus),
-            "sha256": manifest_digest(corpus_manifest),
+            "sha256": benchmark_input_identity.manifest_digest(corpus_manifest),
             "manifest": corpus_manifest,
         },
         "invocation": {
@@ -755,26 +557,32 @@ def main() -> int:
             "gate_mode": args.gate_mode,
             "target_cases": list(target_cases),
             "target_improvement_percent": target_improvement_percent,
-            "cpu": args.cpu,
+            "cpu_business_anchor": args.cpu,
             "idle_sample_seconds": args.idle_sample_seconds,
+            "cell_timeout_seconds": args.cell_timeout_seconds,
             "enforce": args.enforce,
             "rebuild": args.rebuild,
             "heap": "128MB",
+            "cj_processor_num": 1,
         },
     }
-    (args.output / "provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
-    selection = explicit_cpu(args.cpu) if args.cpu is not None else choose_idle_cpu(args.idle_sample_seconds)
-    (args.output / "cpu-selection.json").write_text(json.dumps(selection, indent=2) + "\n")
-    if args.cpu is None and not selection["acceptable_both_threads_below_1_percent"]:
-        raise SystemExit("no physical CPU pair stayed below 1% utilization during idle selection")
-    cpu = int(selection["selected_cpu"])
-    sibling = selection["selected_sibling"]
-    monitor = None
-    monitor_path = args.output / "cpu-pair-monitor.csv"
-    if sibling is not None:
-        monitor_script = pathlib.Path(__file__).with_name("monitor_cpu_pair.py")
-        if monitor_script.is_file():
-            monitor = subprocess.Popen([str(monitor_script), f"{cpu},{sibling}", str(monitor_path)])
+    (args.output / "provenance.json").write_text(
+        json.dumps(provenance, indent=2) + "\n", encoding="utf-8"
+    )
+    try:
+        selection = benchmark_pure_direct.select_idle_cpu_triple(
+            args.idle_sample_seconds, args.cpu
+        )
+    except benchmark_pure_direct.CpuSelectionError as error:
+        (args.output / "cpu-selection.json").write_text(
+            json.dumps(error.evidence, indent=2) + "\n", encoding="utf-8"
+        )
+        raise SystemExit(f"CPU triple selection failed: {error}") from error
+    (args.output / "cpu-selection.json").write_text(
+        json.dumps(selection, indent=2) + "\n", encoding="utf-8"
+    )
+    selected_cpus = [int(value) for value in selection["selected_cpus"]]
+    monitor_path = args.output / "cpu-triple-monitor.csv"
     raw_rss = {
         name: {case: [] for case in cases}
         for name in ("baseline", "candidate")
@@ -783,21 +591,45 @@ def main() -> int:
         name: {case: [] for case in cases}
         for name in ("baseline", "candidate")
     }
-    try:
-        for round_number in range(1, args.rounds + 1):
-            order = ("baseline", "candidate") if round_number % 2 else ("candidate", "baseline")
-            for case in cases:
-                for name in order:
-                    root = args.baseline if name == "baseline" else args.candidate
-                    elapsed, max_rss_kb = run_variant(
-                        name, root, args.corpus, args.output, cpu, round_number, case, time_binary
-                    )
-                    raw[name][case].append(elapsed)
-                    raw_rss[name][case].append(max_rss_kb)
-    finally:
-        if monitor is not None:
-            monitor.terminate()
-            monitor.wait()
+    preflight_cells: list[dict[str, object]] = []
+    direct_cells: list[dict[str, object]] = []
+    with benchmark_pure_direct.CpuMonitor(
+        [int(value) for value in selection["monitored_cpus"]], monitor_path
+    ) as cpu_monitor:
+        for phase, round_number, case, name in qualification_schedule(
+            cases, args.rounds
+        ):
+            cpu_monitor.ensure_healthy()
+            root = args.baseline if name == "baseline" else args.candidate
+            elapsed, max_rss_kb, evidence = run_variant(
+                name, root, args.corpus, args.output, selected_cpus,
+                round_number, case, time_binary, args.cell_timeout_seconds, phase,
+            )
+            cpu_monitor.ensure_healthy()
+            stem = (
+                f"preflight-{case}-{name}"
+                if phase == "preflight"
+                else f"round-{round_number:02d}-{case}-{name}"
+            )
+            cell: dict[str, object] = {
+                "qualification_phase": phase,
+                "variant": name,
+                "case": case,
+                "sidecar": f"{stem}.direct.json",
+                "operations": evidence["operations"],
+                "elapsed_ns": evidence["elapsed_ns"],
+                "warmup_ns": evidence["warmup_ns"],
+                "segments": evidence["segments"],
+                "max_rss_kb": max_rss_kb,
+                "role_placement": evidence["role_placement"],
+            }
+            if phase == "preflight":
+                preflight_cells.append(cell)
+            else:
+                cell["round"] = round_number
+                direct_cells.append(cell)
+                raw[name][case].append(elapsed)
+                raw_rss[name][case].append(max_rss_kb)
     baseline = summarize(raw["baseline"], raw_rss["baseline"])
     candidate = summarize(raw["candidate"], raw_rss["candidate"])
     comparisons: dict[str, dict[str, float | int]] = {}
@@ -815,7 +647,10 @@ def main() -> int:
     summary: dict[str, object] = {
         "rounds": args.rounds,
         "heap": "128MB",
+        "cj_processor_num": 1,
         "harness_sha256": harness_digest,
+        "direct_timing_protocol": benchmark_pure_direct.PROTOCOL_VERSION,
+        "fixed_work": frozen_work,
         "provenance": provenance,
         "cpu": selection,
         "cases": list(cases),
@@ -824,6 +659,8 @@ def main() -> int:
         "target_improvement_percent": target_improvement_percent,
         "raw_median_ns": raw,
         "raw_max_rss_kb": raw_rss,
+        "preflight_cells": preflight_cells,
+        "direct_cells": direct_cells,
         "baseline": baseline,
         "candidate": candidate,
         "comparisons": comparisons,

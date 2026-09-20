@@ -14,6 +14,7 @@ import std.fs.*
 import std.io.*
 import std.overflow.*
 import std.runtime.*
+import std.time.*
 import std.unittest.*
 import std.unittest.testmacro.*
 
@@ -55,6 +56,7 @@ private class ProtocolMemoryOutputStream <: OutputStream {
     public func write(value: Array<Byte>): Unit { bytes.add(all: value) }
     public func flush(): Unit {}
     public prop size: Int64 { get() { bytes.size } }
+    public func toByteArray(): Array<Byte> { bytes.toArray() }
 }
 
 private class ProtocolCountingOutputStream <: OutputStream {
@@ -160,6 +162,129 @@ class StreamProtocolBenchmarks {
             "stream protocol counting sink preflight")
     }
 
+    private func validatePureDirectStream(caseName: String): Unit {
+        match (caseName) {
+            case "decodePersonChunk4k" =>
+                let decoded = YJson.fromJson<Person>(
+                    ProtocolChunkInputStream(personBytes, fixedChunks(4096)))
+                assertJson(decoded.id == person.id && decoded.name == person.name &&
+                    decoded.tags.size == person.tags.size, "Pure direct person stream decode result")
+            case "decodeRecords64kChunk4k" =>
+                let decoded = YJson.fromJson<ArrayList<ProfileRecord>>(
+                    ProtocolChunkInputStream(records64kBytes, fixedChunks(4096)))
+                assertJson(decoded.size == records64k.size && decoded[0].id == 10_000 &&
+                    decoded[decoded.size - 1].id == 10_000 + decoded.size - 1,
+                    "Pure direct records stream decode result")
+            case "encodePersonMemory" =>
+                let output = ProtocolMemoryOutputStream()
+                encodePersonMemory(PersonEncodeInput(output))
+                let decoded = YJson.fromJson<Person>(output.toByteArray())
+                assertJson(output.size == personBytes.size && decoded.id == person.id && decoded.name == person.name,
+                    "Pure direct person stream encode result")
+            case "encodeRecords64kMemory" =>
+                let output = ProtocolMemoryOutputStream()
+                encodeRecords64kMemory(RecordsEncodeInput(output))
+                let decoded = YJson.fromJson<ArrayList<ProfileRecord>>(output.toByteArray())
+                assertJson(output.size == records64kBytes.size && decoded.size == records64k.size &&
+                    decoded[0].id == 10_000 && decoded[decoded.size - 1].id == 10_000 + decoded.size - 1,
+                    "Pure direct records stream encode result")
+            case _ => throw Exception("unsupported Pure direct stream case")
+        }
+    }
+
+    private func measurePureDirectDecodePerson(operations: Int64): (Int64, Int64) {
+        var warmupNs: Int64 = 0
+        while (warmupNs < 500_000_000) {
+            let input = PersonDecodeInput(ProtocolChunkInputStream(personBytes, fixedChunks(4096)))
+            let start = MonoTime.now()
+            decodePersonChunk4k(input)
+            warmupNs += pureDirectElapsed(start)
+        }
+        var elapsedNs: Int64 = 0
+        for (_ in 0..operations) {
+            let input = PersonDecodeInput(ProtocolChunkInputStream(personBytes, fixedChunks(4096)))
+            let start = MonoTime.now()
+            decodePersonChunk4k(input)
+            elapsedNs += pureDirectElapsed(start)
+        }
+        (warmupNs, elapsedNs)
+    }
+
+    private func measurePureDirectDecodeRecords(operations: Int64): (Int64, Int64) {
+        var warmupNs: Int64 = 0
+        while (warmupNs < 500_000_000) {
+            let input = RecordsDecodeInput(ProtocolChunkInputStream(records64kBytes, fixedChunks(4096)))
+            let start = MonoTime.now()
+            decodeRecords64kChunk4k(input)
+            warmupNs += pureDirectElapsed(start)
+        }
+        var elapsedNs: Int64 = 0
+        for (_ in 0..operations) {
+            let input = RecordsDecodeInput(ProtocolChunkInputStream(records64kBytes, fixedChunks(4096)))
+            let start = MonoTime.now()
+            decodeRecords64kChunk4k(input)
+            elapsedNs += pureDirectElapsed(start)
+        }
+        (warmupNs, elapsedNs)
+    }
+
+    private func measurePureDirectEncodePerson(operations: Int64): (Int64, Int64) {
+        var warmupNs: Int64 = 0
+        while (warmupNs < 500_000_000) {
+            let output = ProtocolMemoryOutputStream()
+            let input = PersonEncodeInput(output)
+            let start = MonoTime.now()
+            encodePersonMemory(input)
+            warmupNs += pureDirectElapsed(start)
+        }
+        var elapsedNs: Int64 = 0
+        for (_ in 0..operations) {
+            let output = ProtocolMemoryOutputStream()
+            let input = PersonEncodeInput(output)
+            let start = MonoTime.now()
+            encodePersonMemory(input)
+            elapsedNs += pureDirectElapsed(start)
+        }
+        (warmupNs, elapsedNs)
+    }
+
+    private func measurePureDirectEncodeRecords(operations: Int64): (Int64, Int64) {
+        var warmupNs: Int64 = 0
+        while (warmupNs < 500_000_000) {
+            let output = ProtocolMemoryOutputStream()
+            let input = RecordsEncodeInput(output)
+            let start = MonoTime.now()
+            encodeRecords64kMemory(input)
+            warmupNs += pureDirectElapsed(start)
+        }
+        var elapsedNs: Int64 = 0
+        for (_ in 0..operations) {
+            let output = ProtocolMemoryOutputStream()
+            let input = RecordsEncodeInput(output)
+            let start = MonoTime.now()
+            encodeRecords64kMemory(input)
+            elapsedNs += pureDirectElapsed(start)
+        }
+        (warmupNs, elapsedNs)
+    }
+
+    @TestCase
+    func pureFixedStream(): Unit {
+        let caseName = pureDirectCaseName()
+        validatePureDirectStream(caseName)
+        pureDirectAwaitRelease(caseName)
+        let operations = fixedBenchOperations(caseName)
+        let (warmupNs, elapsedNs) = match (caseName) {
+            case "decodePersonChunk4k" => measurePureDirectDecodePerson(operations)
+            case "decodeRecords64kChunk4k" => measurePureDirectDecodeRecords(operations)
+            case "encodePersonMemory" => measurePureDirectEncodePerson(operations)
+            case "encodeRecords64kMemory" => measurePureDirectEncodeRecords(operations)
+            case _ => throw Exception("unsupported Pure direct stream case")
+        }
+        validatePureDirectStream(caseName)
+        pureDirectReport(caseName, operations, elapsedNs, warmupNs, operations)
+    }
+
     @Strategy
     func person64Input(): BatchSizeOneInputProvider<PersonDecodeInput> {
         BatchSizeOneInputProvider { => PersonDecodeInput(ProtocolChunkInputStream(personBytes, fixedChunks(64))) }
@@ -199,6 +324,11 @@ class StreamProtocolBenchmarks {
 
     @Bench[input in person64Input]
     func decodePersonChunk64(input: PersonDecodeInput): Unit { blackBox(YJson.fromJson<Person>(input.stream)) }
+    @Configure[
+        batchSize: fixedBenchBatchSize("decodePersonChunk4k"),
+        minDuration: Duration.second * 0,
+        minBatches: fixedBenchBatchCount("decodePersonChunk4k")
+    ]
     @Bench[input in person4kInput]
     func decodePersonChunk4k(input: PersonDecodeInput): Unit { blackBox(YJson.fromJson<Person>(input.stream)) }
     @Bench[input in personRandomInput]
@@ -207,6 +337,11 @@ class StreamProtocolBenchmarks {
     func decodeRecords64kChunk64(input: RecordsDecodeInput): Unit {
         blackBox(YJson.fromJson<ArrayList<ProfileRecord>>(input.stream))
     }
+    @Configure[
+        batchSize: fixedBenchBatchSize("decodeRecords64kChunk4k"),
+        minDuration: Duration.second * 0,
+        minBatches: fixedBenchBatchCount("decodeRecords64kChunk4k")
+    ]
     @Bench[input in records64k4kInput]
     func decodeRecords64kChunk4k(input: RecordsDecodeInput): Unit {
         blackBox(YJson.fromJson<ArrayList<ProfileRecord>>(input.stream))
@@ -253,10 +388,20 @@ class StreamProtocolBenchmarks {
         BatchSizeOneInputProvider { => RecordsEncodeInput(ProtocolCountingOutputStream()) }
     }
 
+    @Configure[
+        batchSize: fixedBenchBatchSize("encodePersonMemory"),
+        minDuration: Duration.second * 0,
+        minBatches: fixedBenchBatchCount("encodePersonMemory")
+    ]
     @Bench[input in personMemoryOutput]
     func encodePersonMemory(input: PersonEncodeInput): Unit { YJson.writeJson(person, input.output) }
     @Bench[input in personCountingOutput]
     func encodePersonCounting(input: PersonEncodeInput): Unit { YJson.writeJson(person, input.output) }
+    @Configure[
+        batchSize: fixedBenchBatchSize("encodeRecords64kMemory"),
+        minDuration: Duration.second * 0,
+        minBatches: fixedBenchBatchCount("encodeRecords64kMemory")
+    ]
     @Bench[input in records64kMemoryOutput]
     func encodeRecords64kMemory(input: RecordsEncodeInput): Unit { YJson.writeJson(records64k, input.output) }
     @Bench[input in records64kCountingOutput]

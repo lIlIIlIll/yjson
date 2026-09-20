@@ -18,9 +18,23 @@
 | `packages/yjson_schema_formats` | 国际化格式扩展 | 可选包 |
 | `packages/*integration*` | 模拟外部使用方的测试 | 仅供仓库使用 |
 | `packages/*benchmarks*` | 基准测试程序 | 仅供仓库使用 |
-| `native/` | 扫描器、DOM 适配器和 C 测试 | 按发布图复制到 Native 暂存目录 |
+| `native/` | 扫描器、无状态写出原语、DOM 适配器和 C 测试 | 按发布图复制到 Native 暂存目录 |
 | `release/` | 发布图、API 快照、cjdoc 配置、清单 | 发布工具 |
 | `scripts/` | CI、覆盖率、暂存、验证 | 发布工具 |
+
+## 包内职责边界
+
+| 文件 | 职责 |
+| --- | --- |
+| `packages/yjson_algorithms/src/json_value_semantics.cj` | Patch 与 Schema 共用的 JSON 等价语义 |
+| `packages/yjson_algorithms/src/json_schema_compilation.cj` | Schema 构造期的引用解析与正则编译 |
+| `packages/yjson_algorithms/src/json_schema_core_formats.cj` | 内建 Schema format 校验 |
+| `packages/yjson_algorithms/src/json_path_filter.cj` | JSONPath filter 的解析与求值 |
+| `native/yjson_writer_format.c` | 字符串转义和整数写出的无状态 C 原语 |
+| `scripts/benchmark_input_identity.py` | 性能输入的规范化、文件清单与摘要 |
+
+这些内部文件不增加应用入口。算法继续通过 `JsonValueView` 工作；C 写出原语不管理
+仓颉写入器的容器状态与预算。性能 runner 和严格证据校验器共用同一份输入身份规则。
 
 ## 开发清单与发布清单
 

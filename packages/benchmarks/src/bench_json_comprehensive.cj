@@ -366,6 +366,64 @@ class ComprehensiveJsonCompareBenchmarks {
         )
     }
 
+    @TestCase
+    func pureFixedComprehensive(): Unit {
+        let caseName = pureDirectCaseName()
+        match (caseName) {
+            case "yjsonStringEncodeLargeInt64Map" => runPureDirectContinuous(caseName, 200_000_000,
+                { => yjsonStringEncodeLargeInt64Map() },
+                { => assertJson(stringSink == largeInt64MapText, "Pure direct large map encode result") })
+            case "yjsonStringDecodeLargeInt64Map" => runPureDirectContinuous(caseName, 200_000_000,
+                { => yjsonStringDecodeLargeInt64Map() },
+                { => assertJson(intSink == 547, "Pure direct large map string decode result") })
+            case "yjsonBytesDecodeLargeInt64Map" => runPureDirectContinuous(caseName, 200_000_000,
+                { => yjsonBytesDecodeLargeInt64Map() },
+                { => assertJson(intSink == 547, "Pure direct large map bytes decode result") })
+            case "yjsonStringEncodeDeepNestedProfiles" => runPureDirectContinuous(caseName, 200_000_000,
+                { => yjsonStringEncodeDeepNestedProfiles() },
+                { => assertJson(stringSink == deepNestedProfilesText, "Pure direct deep nested encode result") })
+            case "yjsonStringDecodeDeepNestedProfiles" => runPureDirectContinuous(caseName, 200_000_000,
+                { => yjsonStringDecodeDeepNestedProfiles() },
+                { => assertJson(intSink == 0, "Pure direct deep nested string decode result") })
+            case "yjsonBytesDecodeDeepNestedProfiles" => runPureDirectContinuous(caseName, 200_000_000,
+                { => yjsonBytesDecodeDeepNestedProfiles() },
+                { => assertJson(intSink == 0, "Pure direct deep nested bytes decode result") })
+            case "yjsonStringEncodePerson" => runPureDirectContinuous(caseName, 200_000_000,
+                { => yjsonStringEncodePerson() },
+                { => assertJson(stringSink == personText, "Pure direct person encode result") })
+            case "yjsonStringDecodePerson" => runPureDirectContinuous(caseName, 200_000_000,
+                { => yjsonStringDecodePerson() },
+                { => assertJson(intSink == 42, "Pure direct person decode result") })
+            case "yjsonStringEncodeLargeProfileArray" => runPureDirectContinuous(caseName, 200_000_000,
+                { => yjsonStringEncodeLargeProfileArray() },
+                { => assertJson(stringSink == largeProfilesText, "Pure direct large profile encode result") })
+            case "yjsonStringDecodeLargeProfileArray" => runPureDirectContinuous(caseName, 200_000_000,
+                { => yjsonStringDecodeLargeProfileArray() },
+                { => assertJson(intSink == 10_000, "Pure direct large profile decode result") })
+            case "yjsonStringEncodeProfileBundle" => runPureDirectContinuous(caseName, 200_000_000,
+                { => yjsonStringEncodeProfileBundle() },
+                { => assertJson(stringSink == profileBundleText, "Pure direct bundle string encode result") })
+            case "yjsonStringDecodeProfileBundle" => runPureDirectContinuous(caseName, 200_000_000,
+                { => yjsonStringDecodeProfileBundle() },
+                { => assertJson(intSink == 11, "Pure direct bundle string decode result") })
+            case "yjsonBytesEncodeProfileBundle" => runPureDirectContinuous(caseName, 200_000_000,
+                { => yjsonBytesEncodeProfileBundle() },
+                { => assertJson(decodeYjsonReflectBytesWith(ProfileBundleJson, bytesSink).groups["platform"][0].id == 11,
+                    "Pure direct bundle bytes encode result") })
+            case "yjsonBytesDecodeProfileBundle" => runPureDirectContinuous(caseName, 200_000_000,
+                { => yjsonBytesDecodeProfileBundle() },
+                { => assertJson(intSink == 11, "Pure direct bundle bytes decode result") })
+            case "yjsonStringEncodeEscapedUnicodeString" => runPureDirectContinuous(caseName, 200_000_000,
+                { => yjsonStringEncodeEscapedUnicodeString() },
+                { => assertJson(stringSink == escapedUnicodeJsonText, "Pure direct escaped string encode result") })
+            case "yjsonBytesEncodeEscapedUnicodeString" => runPureDirectContinuous(caseName, 200_000_000,
+                { => yjsonBytesEncodeEscapedUnicodeString() },
+                { => assertJson(decodeYjsonReflectBytesWith(JsonCodecs.string, bytesSink) == escapedUnicodeText,
+                    "Pure direct escaped bytes encode result") })
+            case _ => throw Exception("unsupported Pure direct comprehensive case")
+        }
+    }
+
     @Bench
     func yjsonAstParsePerson(): Unit {
         yjsonAstSink = JsonNode.parse(personText)
@@ -386,6 +444,11 @@ class ComprehensiveJsonCompareBenchmarks {
         stringSink = stdxPersonAst.toJsonString()
     }
 
+    @Configure[
+        batchSize: fixedBenchBatchSize("yjsonStringEncodeAddress"),
+        minDuration: Duration.second * 0,
+        minBatches: fixedBenchBatchCount("yjsonStringEncodeAddress")
+    ]
     @Bench
     func yjsonStringEncodeAddress(): Unit {
         stringSink = YJson.toJson(address, codec: AddressJson)
@@ -396,6 +459,11 @@ class ComprehensiveJsonCompareBenchmarks {
         stringSink = encodeStdxToUtf8String<StdxAddress>(stdxAddress)
     }
 
+    @Configure[
+        batchSize: fixedBenchBatchSize("yjsonStringDecodeAddress"),
+        minDuration: Duration.second * 0,
+        minBatches: fixedBenchBatchCount("yjsonStringDecodeAddress")
+    ]
     @Bench
     func yjsonStringDecodeAddress(): Unit {
         intSink = YJson.fromJson(addressText, codec: AddressJson).zipcode
@@ -406,6 +474,11 @@ class ComprehensiveJsonCompareBenchmarks {
         intSink = decodeStdxFromUtf8String<StdxAddress>(addressText).zipcode
     }
 
+    @Configure[
+        batchSize: fixedBenchBatchSize("yjsonStringEncodePerson"),
+        minDuration: Duration.second * 0,
+        minBatches: fixedBenchBatchCount("yjsonStringEncodePerson")
+    ]
     @Bench
     func yjsonStringEncodePerson(): Unit {
         stringSink = YJson.toJson(person, codec: PersonJson)
@@ -416,6 +489,11 @@ class ComprehensiveJsonCompareBenchmarks {
         stringSink = encodeStdxToUtf8String<StdxPerson>(stdxPerson)
     }
 
+    @Configure[
+        batchSize: fixedBenchBatchSize("yjsonStringDecodePerson"),
+        minDuration: Duration.second * 0,
+        minBatches: fixedBenchBatchCount("yjsonStringDecodePerson")
+    ]
     @Bench
     func yjsonStringDecodePerson(): Unit {
         intSink = YJson.fromJson(personText, codec: PersonJson).id
@@ -462,6 +540,11 @@ class ComprehensiveJsonCompareBenchmarks {
         intSink = decodeStdxFromUtf8String<StdxPerson>(personText).id
     }
 
+    @Configure[
+        batchSize: fixedBenchBatchSize("yjsonStringEncodeProfileBundle"),
+        minDuration: Duration.second * 0,
+        minBatches: fixedBenchBatchCount("yjsonStringEncodeProfileBundle")
+    ]
     @Bench
     func yjsonStringEncodeProfileBundle(): Unit {
         stringSink = YJson.toJson(profileBundle, codec: ProfileBundleJson)
@@ -472,6 +555,11 @@ class ComprehensiveJsonCompareBenchmarks {
         stringSink = encodeStdxToUtf8String<StdxProfileBundle>(stdxProfileBundle)
     }
 
+    @Configure[
+        batchSize: fixedBenchBatchSize("yjsonStringDecodeProfileBundle"),
+        minDuration: Duration.second * 0,
+        minBatches: fixedBenchBatchCount("yjsonStringDecodeProfileBundle")
+    ]
     @Bench
     func yjsonStringDecodeProfileBundle(): Unit {
         intSink = YJson.fromJson(profileBundleText, codec: ProfileBundleJson).groups["platform"][0].id
@@ -632,6 +720,11 @@ class ComprehensiveJsonCompareBenchmarks {
         intSink = decodeStdxFromUtf8Bytes<StdxAddress>(addressBytes).zipcode
     }
 
+    @Configure[
+        batchSize: fixedBenchBatchSize("yjsonBytesEncodeProfileBundle"),
+        minDuration: Duration.second * 0,
+        minBatches: fixedBenchBatchCount("yjsonBytesEncodeProfileBundle")
+    ]
     @Bench
     func yjsonBytesEncodeProfileBundle(): Unit {
         bytesSink = encodeYjsonReflectBytesWith(ProfileBundleJson, profileBundle)
@@ -642,6 +735,11 @@ class ComprehensiveJsonCompareBenchmarks {
         bytesSink = encodeStdxToUtf8Bytes<StdxProfileBundle>(stdxProfileBundle)
     }
 
+    @Configure[
+        batchSize: fixedBenchBatchSize("yjsonBytesDecodeProfileBundle"),
+        minDuration: Duration.second * 0,
+        minBatches: fixedBenchBatchCount("yjsonBytesDecodeProfileBundle")
+    ]
     @Bench
     func yjsonBytesDecodeProfileBundle(): Unit {
         intSink = decodeYjsonReflectBytesWith(ProfileBundleJson, profileBundleBytes).groups["platform"][0].id
@@ -692,6 +790,11 @@ class ComprehensiveJsonCompareBenchmarks {
         stringSink = decodeStdxFromUtf8Bytes<StdxTemporalStats>(temporalStatsBytes).totalEvents.toString()
     }
 
+    @Configure[
+        batchSize: fixedBenchBatchSize("yjsonStringEncodeEscapedUnicodeString"),
+        minDuration: Duration.second * 0,
+        minBatches: fixedBenchBatchCount("yjsonStringEncodeEscapedUnicodeString")
+    ]
     @Bench
     func yjsonStringEncodeEscapedUnicodeString(): Unit {
         stringSink = YJson.toJson(escapedUnicodeText, codec: JsonCodecs.string)
@@ -712,6 +815,11 @@ class ComprehensiveJsonCompareBenchmarks {
         stringSink = decodeStdxFromUtf8String<String>(escapedUnicodeJsonText)
     }
 
+    @Configure[
+        batchSize: fixedBenchBatchSize("yjsonBytesEncodeEscapedUnicodeString"),
+        minDuration: Duration.second * 0,
+        minBatches: fixedBenchBatchCount("yjsonBytesEncodeEscapedUnicodeString")
+    ]
     @Bench
     func yjsonBytesEncodeEscapedUnicodeString(): Unit {
         bytesSink = encodeYjsonReflectBytesWith(JsonCodecs.string, escapedUnicodeText)
@@ -732,6 +840,11 @@ class ComprehensiveJsonCompareBenchmarks {
         stringSink = decodeStdxFromUtf8Bytes<String>(escapedUnicodeBytes)
     }
 
+    @Configure[
+        batchSize: fixedBenchBatchSize("yjsonStringEncodeLargeProfileArray"),
+        minDuration: Duration.second * 0,
+        minBatches: fixedBenchBatchCount("yjsonStringEncodeLargeProfileArray")
+    ]
     @Bench
     func yjsonStringEncodeLargeProfileArray(): Unit {
         stringSink = YJson.toJson(largeProfiles, codec: profileListCodec)
@@ -742,6 +855,11 @@ class ComprehensiveJsonCompareBenchmarks {
         stringSink = encodeStdxToUtf8String<ArrayList<StdxProfileRecord>>(stdxLargeProfiles)
     }
 
+    @Configure[
+        batchSize: fixedBenchBatchSize("yjsonStringDecodeLargeProfileArray"),
+        minDuration: Duration.second * 0,
+        minBatches: fixedBenchBatchCount("yjsonStringDecodeLargeProfileArray")
+    ]
     @Bench
     func yjsonStringDecodeLargeProfileArray(): Unit {
         intSink = YJson.fromJson(largeProfilesText, codec: profileListCodec)[0].id
@@ -795,6 +913,11 @@ class ComprehensiveJsonCompareBenchmarks {
         intSink = decodeStdxFromUtf8String<ArrayList<StdxProfileRecord>>(largeProfilesText)[0].id
     }
 
+    @Configure[
+        batchSize: fixedBenchBatchSize("yjsonStringEncodeLargeInt64Map"),
+        minDuration: Duration.second * 0,
+        minBatches: fixedBenchBatchCount("yjsonStringEncodeLargeInt64Map")
+    ]
     @Bench
     func yjsonStringEncodeLargeInt64Map(): Unit {
         stringSink = YJson.toJson(largeInt64Map, codec: int64MapCodec)
@@ -805,11 +928,21 @@ class ComprehensiveJsonCompareBenchmarks {
         stringSink = encodeStdxToUtf8String<HashMap<String, Int64>>(largeInt64Map)
     }
 
+    @Configure[
+        batchSize: fixedBenchBatchSize("yjsonStringDecodeLargeInt64Map"),
+        minDuration: Duration.second * 0,
+        minBatches: fixedBenchBatchCount("yjsonStringDecodeLargeInt64Map")
+    ]
     @Bench
     func yjsonStringDecodeLargeInt64Map(): Unit {
         intSink = YJson.fromJson(largeInt64MapText, codec: int64MapCodec)["metric_32"]
     }
 
+    @Configure[
+        batchSize: fixedBenchBatchSize("yjsonBytesDecodeLargeInt64Map"),
+        minDuration: Duration.second * 0,
+        minBatches: fixedBenchBatchCount("yjsonBytesDecodeLargeInt64Map")
+    ]
     @Bench
     func yjsonBytesDecodeLargeInt64Map(): Unit {
         intSink = decodeYjsonReflectBytesWith(int64MapCodec, largeInt64MapBytes)["metric_32"]
@@ -876,6 +1009,11 @@ class ComprehensiveJsonCompareBenchmarks {
         intSink = decodeStdxFromUtf8String<HashMap<String, Int64>>(largeInt64MapText)["metric_32"]
     }
 
+    @Configure[
+        batchSize: fixedBenchBatchSize("yjsonStringEncodeDeepNestedProfiles"),
+        minDuration: Duration.second * 0,
+        minBatches: fixedBenchBatchCount("yjsonStringEncodeDeepNestedProfiles")
+    ]
     @Bench
     func yjsonStringEncodeDeepNestedProfiles(): Unit {
         stringSink = YJson.toJson(deepNestedProfiles, codec: deepNestedCodec)
@@ -887,11 +1025,21 @@ class ComprehensiveJsonCompareBenchmarks {
             encodeStdxToUtf8String<ArrayList<HashMap<String, ArrayList<StdxProfileRecord>>>>(stdxDeepNestedProfiles)
     }
 
+    @Configure[
+        batchSize: fixedBenchBatchSize("yjsonStringDecodeDeepNestedProfiles"),
+        minDuration: Duration.second * 0,
+        minBatches: fixedBenchBatchCount("yjsonStringDecodeDeepNestedProfiles")
+    ]
     @Bench
     func yjsonStringDecodeDeepNestedProfiles(): Unit {
         intSink = YJson.fromJson(deepNestedProfilesText, codec: deepNestedCodec)[0]["group_0"][0].id
     }
 
+    @Configure[
+        batchSize: fixedBenchBatchSize("yjsonBytesDecodeDeepNestedProfiles"),
+        minDuration: Duration.second * 0,
+        minBatches: fixedBenchBatchCount("yjsonBytesDecodeDeepNestedProfiles")
+    ]
     @Bench
     func yjsonBytesDecodeDeepNestedProfiles(): Unit {
         intSink = decodeYjsonReflectBytesWith(deepNestedCodec, deepNestedProfilesBytes)[0]["group_0"][0].id
