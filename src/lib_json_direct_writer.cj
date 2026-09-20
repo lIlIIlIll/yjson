@@ -86,12 +86,12 @@ func jsonRawUInt64Size(value: UInt64): Int64 {
 func jsonRawCompactStringEscapeIndex(value: String): Int64 {
     unsafe {
         let bytes = value.rawData()
-        for (index in 0..bytes.size) {
-            let byte = Int64(bytes[index])
-            if (byte < 32 || byte == Int64(b'"') || byte == Int64(b'\\')) {
-                return index
-            }
+        var index: Int64 = 0
+        while (index < bytes.size && bytes[index] >= 32u8 &&
+            bytes[index] != b'"' && bytes[index] != b'\\') {
+            index++
         }
+        if (index < bytes.size) { return index }
     }
     -1
 }
