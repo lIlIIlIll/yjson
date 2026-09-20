@@ -134,7 +134,6 @@ struct CompactJsonStorageStats {
     public let duplicateLargestOldBytes: Int64
     public let duplicateLargestNewBytes: Int64
     public let duplicateRehashEntries: Int64
-    public let duplicateRehashNanos: Int64
     public let duplicateLookupCount: Int64
     public let duplicateInsertCount: Int64
     public let duplicateProbeCount: Int64
@@ -158,7 +157,7 @@ struct CompactJsonStorageStats {
         duplicateCapacityBytes: Int64, duplicateGrowCount: Int64,
         duplicatePeakOverlapBytes!: Int64 = 0, duplicateLargestOldBytes!: Int64 = 0,
         duplicateLargestNewBytes!: Int64 = 0, duplicateRehashEntries!: Int64 = 0,
-        duplicateRehashNanos!: Int64 = 0, duplicateLookupCount!: Int64 = 0,
+        duplicateLookupCount!: Int64 = 0,
         duplicateInsertCount!: Int64 = 0, duplicateProbeCount!: Int64 = 0,
         duplicateExactEqualityCount!: Int64 = 0, duplicateMaxProbe!: Int64 = 0,
         duplicateGrowthTrace!: String = "",
@@ -182,7 +181,6 @@ struct CompactJsonStorageStats {
         this.duplicateLargestOldBytes = duplicateLargestOldBytes
         this.duplicateLargestNewBytes = duplicateLargestNewBytes
         this.duplicateRehashEntries = duplicateRehashEntries
-        this.duplicateRehashNanos = duplicateRehashNanos
         this.duplicateLookupCount = duplicateLookupCount
         this.duplicateInsertCount = duplicateInsertCount
         this.duplicateProbeCount = duplicateProbeCount
@@ -249,7 +247,6 @@ class CompactJsonDocument {
     var duplicateLargestOldBytes: Int64 = 0
     var duplicateLargestNewBytes: Int64 = 0
     var duplicateRehashEntries: Int64 = 0
-    var duplicateRehashNanos: Int64 = 0
     var duplicateLookupCount: Int64 = 0
     var duplicateInsertCount: Int64 = 0
     var duplicateProbeCount: Int64 = 0
@@ -333,7 +330,6 @@ class CompactJsonDocument {
             duplicateLargestOldBytes: duplicateLargestOldBytes,
             duplicateLargestNewBytes: duplicateLargestNewBytes,
             duplicateRehashEntries: duplicateRehashEntries,
-            duplicateRehashNanos: duplicateRehashNanos,
             duplicateLookupCount: duplicateLookupCount,
             duplicateInsertCount: duplicateInsertCount,
             duplicateProbeCount: duplicateProbeCount,
@@ -596,16 +592,21 @@ class CompactJsonDocument {
             case code == COMPACT_INT_ARRAY =>
                 let result = JsonArray(); let start = first[index]
                 for (offset in 0..second[index]) {
+                    budget.visit(depth + 1)
                     result.add(JsonIntValue(intValues[start + offset]))
                 }
                 result
             case code == COMPACT_STRING_ARRAY =>
                 let result = JsonArray(); let start = first[index]
-                for (offset in 0..second[index]) { result.add(JsonStringValue(strings[start + offset])) }
+                for (offset in 0..second[index]) {
+                    budget.visit(depth + 1)
+                    result.add(JsonStringValue(strings[start + offset]))
+                }
                 result
             case code == COMPACT_NUMBER_ARRAY =>
                 let result = JsonArray(); let start = first[index]
                 for (offset in 0..second[index]) {
+                    budget.visit(depth + 1)
                     let position = start + offset
                     if (numberKinds[position]) { result.add(JsonIntValue(numberPayloads[position])) }
                     else { result.add(JsonNumberLiteralValue.fromParsedLiteral(strings[numberPayloads[position]])) }
@@ -892,6 +893,20 @@ private class CompactJsonParser {
         Some(document.addNode(COMPACT_STRING_ARRAY, firstValue: start, secondValue: document.strings.size - start))
     }
 
+    private func rollbackCompactNumericStorage(intStart: Int64, numberStart: Int64,
+        stringStart: Int64): Unit {
+        while (document.intValues.size > intStart) {
+            document.intValues.remove(at: document.intValues.size - 1)
+        }
+        while (document.numberPayloads.size > numberStart) {
+            document.numberPayloads.remove(at: document.numberPayloads.size - 1)
+            document.numberKinds.remove(at: document.numberKinds.size - 1)
+        }
+        while (document.strings.size > stringStart) {
+            document.strings.remove(at: document.strings.size - 1)
+        }
+    }
+
     private func tryParseCompactNumericArray(contentStart: Int64): Option<Int64> {
         if (let Some(result) <- tryParseNativeCompactNumericArray(contentStart)) { return Some(result) }
         let intStart = document.intValues.size
@@ -902,12 +917,7 @@ private class CompactJsonParser {
         while (reader.hasRawArrayItem(first)) {
             reader.beforeRawArrayItem(first)
             if (!tryReadNumberFromTape() && !reader.tryReadRawNumberToken()) {
-                while (document.intValues.size > intStart) { document.intValues.remove(at: document.intValues.size - 1) }
-                while (document.numberPayloads.size > numberStart) {
-                    document.numberPayloads.remove(at: document.numberPayloads.size - 1)
-                    document.numberKinds.remove(at: document.numberKinds.size - 1)
-                }
-                while (document.strings.size > stringStart) { document.strings.remove(at: document.strings.size - 1) }
+                rollbackCompactNumericStorage(intStart, numberStart, stringStart)
                 reader.rewind(contentStart); return None<Int64>
             }
             var storedInt = false
@@ -980,12 +990,7 @@ private class CompactJsonParser {
                 document.source, next, true, COMPACT_NUMERIC_BULK_CAP)) {
                 case Some(value) => value
                 case None =>
-                    while (document.intValues.size > intStart) { document.intValues.remove(at: document.intValues.size - 1) }
-                    while (document.numberPayloads.size > numberStart) {
-                        document.numberPayloads.remove(at: document.numberPayloads.size - 1)
-                        document.numberKinds.remove(at: document.numberKinds.size - 1)
-                    }
-                    while (document.strings.size > stringStart) { document.strings.remove(at: document.strings.size - 1) }
+                    rollbackCompactNumericStorage(intStart, numberStart, stringStart)
                     reader.rewind(contentStart)
                     return None<Int64>
             }
@@ -1179,7 +1184,6 @@ private class CompactJsonParser {
             document.duplicateLargestOldBytes = max(document.duplicateLargestOldBytes, index.largestOldBytes())
             document.duplicateLargestNewBytes = max(document.duplicateLargestNewBytes, index.largestNewBytes())
             document.duplicateRehashEntries = max(document.duplicateRehashEntries, index.rehashEntryCount())
-            document.duplicateRehashNanos = max(document.duplicateRehashNanos, index.rehashTimeNanos())
             document.duplicateLookupCount = max(document.duplicateLookupCount, index.lookupCount())
             document.duplicateInsertCount = max(document.duplicateInsertCount, index.insertCount())
             document.duplicateProbeCount = max(document.duplicateProbeCount, index.probeCount())
@@ -1212,7 +1216,6 @@ private class CompactObjectPositions {
     private var exactEqualities: Int64 = 0
     private var maxProbe: Int64 = 0
     private var rehashEntries: Int64 = 0
-    private var rehashNanos: Int64 = 0
     private var peakOverlap: Int64 = 0
     private var largestOld: Int64 = 0
     private var largestNew: Int64 = 0
@@ -1318,7 +1321,6 @@ private class CompactObjectPositions {
     func largestOldBytes(): Int64 { largestOld }
     func largestNewBytes(): Int64 { largestNew }
     func rehashEntryCount(): Int64 { rehashEntries }
-    func rehashTimeNanos(): Int64 { rehashNanos }
     func lookupCount(): Int64 { lookups }
     func insertCount(): Int64 { inserts }
     func probeCount(): Int64 { probes }

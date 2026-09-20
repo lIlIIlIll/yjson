@@ -10,7 +10,7 @@ link-option = "-L target/native -lyjson_scanner"
 
 [dependencies]
   "yjson" = { path = "../..", output-type = "static" }
-  "yjson_macros" = { git = "https://github.com/lIlIIlIll/yjson_macros.git", commitId = "fec0adce41f73d037d876cbac7a28aee8108bb5c" }
+  "yjson_macros" = { git = "https://github.com/lIlIIlIll/yjson_macros.git", commitId = "eb94e226b9d6d5c54c8418bfdaf515dcc819e5a9" }
   "yjson_algorithms" = { path = "../yjson_algorithms" }
 
 [target.x86_64-unknown-linux-gnu.bin-dependencies]

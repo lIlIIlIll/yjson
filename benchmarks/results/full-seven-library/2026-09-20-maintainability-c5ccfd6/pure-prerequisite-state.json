@@ -1,0 +1,12 @@
+{
+  "batches": [
+    {
+      "batch": "a",
+      "exit_code": 0,
+      "noisy_cases": [],
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "protocol": "YJSON_PURE_DIRECT_V1"
+}

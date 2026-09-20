@@ -350,7 +350,7 @@ class CiGateRegressionTests(unittest.TestCase):
             self.assertEqual(counter.read_text(), "1")
             self.assertEqual(manifest.read_text(), text)
 
-    def test_runtime_freeze_retry_clears_previous_failure_status(self) -> None:
+    def test_runtime_freeze_llc_failure_is_not_retried(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = pathlib.Path(temporary)
             scripts = root / "scripts"
@@ -381,9 +381,8 @@ class CiGateRegressionTests(unittest.TestCase):
                 ["bash", str(scripts / "runtime_freeze_contract_checks.sh")],
                 env=env,
             )
-            self.assertEqual(result.returncode, 0, result.stdout)
-            self.assertEqual(counter.read_text(), "9")
-            self.assertIn("runtime freeze contract checks passed", result.stdout)
+            self.assertEqual(result.returncode, 139, result.stdout)
+            self.assertEqual(counter.read_text(), "1")
 
     def test_runtime_freeze_contract_failure_is_not_retried(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -436,7 +435,10 @@ class CiGateRegressionTests(unittest.TestCase):
                 scripts.mkdir()
                 (native / "vendor/yyjson").mkdir(parents=True)
                 shutil.copy2(ROOT / "scripts/release_native_checks.sh", scripts)
-                for name in ("yjson_scanner.c", "yjson_compact.c", "yjson_yyjson.c", "vendor/yyjson/yyjson.c"):
+                for name in (
+                    "yjson_scanner.c", "yjson_writer_format.c", "yjson_compact.c",
+                    "yjson_yyjson.c", "vendor/yyjson/yyjson.c",
+                ):
                     (native / name).write_text("/* isolated translation unit */\n", encoding="utf-8")
                 for name in ("test_yjson_scanner.c", "test_yjson_compact.c", "test_yjson_yyjson.c"):
                     (native / name).write_text("int main(void) { return 0; }\n", encoding="utf-8")

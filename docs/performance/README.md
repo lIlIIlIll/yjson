@@ -3,10 +3,14 @@
 比较性能时，要先确认使用的是同一种 API、数据模型、输入数据和机器环境。类型编解码、
 可修改的 `JsonNode`、只读的 `JsonDocument`、可选后端和流式读写需要分别测量。
 
-## 0.1.0 状态
+## 当前候选状态
 
-`0.1.0` 已通过普通 Release 正式性能验收。Pure 回退门禁和三库/七库 RSS-complete
-证据均已记录；当前三库结果含 noisy workload，因此不发布精确 Native acceleration claim。
+候选 `7d086a6` 的 Pure 直接计时完成 24 个用例 × 11 轮 A/B，共 528 个正式样本；
+全部通过 `candidate/baseline <= 1.05`，最大回退 3.29%，两侧均无 CV 超过 5% 的用例。
+七库保留 SDKBench，两批各完成 770 个单元，第一批 0/10、第二批 1/10 workload stable。
+仓颉进程采用 `cjProcessorNum=1` 和 128 MiB 堆；Pure 分别绑定业务与两组 GC 线程，
+七库仍为单核绑定。结果不代表默认运行时配置，也不代表未重测的 Native 性能或发布资格。
+旧 `f4aed80` 和 `c844aa9` 的 Pure 失败仍保留，不因新协议通过而改判。
 
 发布前至少完成以下检查：
 
@@ -24,11 +28,17 @@
 具体阈值见[性能方法](methodology.md)。实现设计结论见
 [性能设计结论](../performance.md)。
 
-当前 `0.1.0` 候选的七库 RSS-complete 测量见[2026-09-14 当前候选七库对比](results/2026-09-13-release-seven-library.md)；两批各完成 770/770 单元，第一批 1/10 stable、9/10 noisy，第二批 2/10 stable、8/10 noisy，所有进程均保留 peak RSS sidecar。Cangjie timing 在未计时的 `cjpm bench --no-run` 构建后直接执行 prebuilt benchmark executable，GNU time 不包围构建步骤。三库 RSS-complete 测量见[2026-09-14 当前候选三库对比](results/2026-09-13-release-three-library.md)，36/36 workload 完成 11 轮；三库 direct executable timing 与稳定/noisy 统计见结果页。Pure 普通 Release timing/RSS 门禁见[2026-09-14 Pure 对比](results/2026-09-13-linux-release-pure.md)，当前 24 个 case 的 candidate/baseline 均不超过 `1.05`，gate `passed=true`；三类结果都绑定 STS `1.1.3` 和当前 measured candidate。
+当前证据分开阅读：
+
+- [七库报告](results/2026-09-13-release-seven-library.md)：两批各 770/770 单元、分别 0/10 与 1/10 stable；每批 110 份固定工作量证明，所有进程保留 RSS sidecar。
+- [Pure A/B](results/2026-09-13-linux-release-pure.md)：48/48 预检及 528/528 正式样本通过；Deep Nested 的 String/Bytes 解码中位数变化为 −0.23% / +0.33%。旧协议失败和新协议预检修复分别留档，不拼接样本。
+- [三库历史结果](results/2026-09-13-release-three-library.md)：属于较早候选，未重测本轮 Native 更改。
 
 ## 历史证据
 
 以下页面记录了旧版本或开发快照的结果，可用来查看历史数据或选择测试基线：
+
+- [`c844aa9` 维护性候选](../../benchmarks/results/full-seven-library/2026-09-18-maintainability-c844aa9/README.md)：七库完整，Pure 第二批两项超过 `1.05`，不改判为通过。
 
 - [2026-09-05 T9 A/B qualification](results/2026-09-05-t9-ab-qualification.md)
 - [2026-09-05 T9 矩阵(diagnostic)](results/2026-09-05-t9-matrix-bb43321.md)

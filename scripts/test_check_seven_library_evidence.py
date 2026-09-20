@@ -10,10 +10,12 @@ import json
 import os
 import pathlib
 import subprocess
+import sys
 import tarfile
 import tempfile
 import unittest
 
+import benchmark_input_identity as identity
 import check_seven_library_evidence as checker
 
 
@@ -67,8 +69,8 @@ class EvidenceFixture:
         git(root, "add", ".")
         git(root, "commit", "-q", "-m", "test: measured source")
         self.measured_commit = git(root, "rev-parse", "HEAD")
-        self.product_digest = checker.manifest_digest(checker.product_manifest(root))
-        self.harness_digest = checker.manifest_digest(checker.harness_manifest(root))
+        self.product_digest = identity.manifest_digest(identity.product_manifest(root))
+        self.harness_digest = identity.manifest_digest(identity.harness_manifest(root))
         self.candidate = checker.release_candidate_binding(
             root, self.product_digest, self.harness_digest
         )
@@ -162,13 +164,27 @@ yjson = "0.1.0"
             "packages/benchmarks/src/bench.cj",
             "packages/yjson_macros/src/macros.cj",
             "scripts/build_native_scanner.py",
+            "scripts/benchmark_fixed_work.py",
+            "scripts/benchmark_pure_direct.py",
+            "scripts/json_pure_perf_compare.py",
+            "benchmarks/full-seven-library/run_full.py",
             "native/yjson_scanner.c",
+            "native/yjson_writer_format.c",
             "native/yjson_scanner.h",
             "native/yjson_compact.c",
             "native/yjson_compact.h",
         )
         for index, relative in enumerate(paths):
             write(self.root / relative, f"fixture-{index}\n")
+        write(
+            self.root / "benchmarks/full-seven-library/summarize_full.py",
+            "#!/usr/bin/env python3\n"
+            "import argparse\n"
+            "p = argparse.ArgumentParser()\n"
+            "p.add_argument('root')\n"
+            "p.add_argument('--min-runs')\n"
+            "p.parse_args()\n",
+        )
 
     def metadata(self, batch: int, **overrides: object) -> dict[str, object]:
         value: dict[str, object] = {
@@ -183,7 +199,9 @@ yjson = "0.1.0"
                 "utilization_percent": [0.0, 0.0],
             },
             "heap": "128MB",
+            "cj_processor_num": 1,
             "runs": 11,
+            "fixed_work_protocol": 1,
             "schedule": "rotating and reversed",
             "jmh": "fixture",
             "cangjie_bench": "fixture",
@@ -258,19 +276,75 @@ yjson = "0.1.0"
             with (root / "manifest.csv").open("w", newline="", encoding="utf-8") as stream:
                 writer = csv.writer(stream)
                 writer.writerow(
-                    ("round", "workload_id", "library", "max_rss_kb", "rss_path")
+                    (
+                        "round",
+                        "workload_id",
+                        "library",
+                        "source_case",
+                        "report_path",
+                        "max_rss_kb",
+                        "rss_path",
+                        "log_path",
+                        "fixed_work_path",
+                    )
                 )
                 for round_number in range(1, 12):
                     for workload in checker.WORKLOADS:
                         for library in checker.LIBRARIES:
-                            rss_path = (
-                                f"rss/{round_number}/{workload}/{library}/time-rss.txt"
+                            source_case = checker.SOURCE_CASES[(workload, library)]
+                            report_path = f"raw/{round_number}/{workload}/{library}"
+                            rss_path = f"{report_path}/time-rss.txt"
+                            log_path = f"logs/{round_number}-{workload}-{library}.log"
+                            fixed_work_path = (
+                                f"{report_path}/fixed-work.json"
+                                if library == "yjson"
+                                else ""
                             )
-                            writer.writerow((round_number, workload, library, recorded_rss, rss_path))
+                            writer.writerow(
+                                (
+                                    round_number,
+                                    workload,
+                                    library,
+                                    source_case,
+                                    report_path,
+                                    recorded_rss,
+                                    rss_path,
+                                    log_path,
+                                    fixed_work_path,
+                                )
+                            )
                             write(
                                 root / rss_path,
                                 f"Maximum resident set size (kbytes): {sidecar_rss}\n",
                             )
+                            if library == "yjson":
+                                batches = 200
+                                batch_size = 16
+                                write(
+                                    root / log_path,
+                                    f"Starting the benchmark `{source_case}()`.\n"
+                                    f"YJSON_FIXED_WORK_V1 case={source_case} "
+                                    f"batches={batches} batch_size={batch_size}\n"
+                                    f"Max batch size: {batch_size}, "
+                                    "estimated execution time: 1 ms.\n"
+                                    f"Starting measurements of {batches} batches. "
+                                    "Measuring Duration.\n"
+                                    "Summary: TOTAL: 1 PASSED: 1, SKIPPED: 0, "
+                                    "ERROR: 0 FAILED: 0\n",
+                                )
+                                write(
+                                    root / fixed_work_path,
+                                    json.dumps(
+                                        {
+                                            "protocol_version": 1,
+                                            "case": source_case,
+                                            "batches": batches,
+                                            "batch_size": batch_size,
+                                            "operations": batches * batch_size,
+                                        }
+                                    )
+                                    + "\n",
+                                )
             write(root / "summary.json", json.dumps(self.summary(batch), indent=2) + "\n")
             write(root / "summary.csv", "fixture\n")
             write(root / "summary.md", "fixture\n")
@@ -281,15 +355,14 @@ yjson = "0.1.0"
         with tempfile.TemporaryDirectory() as temporary:
             root = pathlib.Path(temporary) / self.harness["root"]
             root.mkdir()
-            write(
-                root / "summarize_full.py",
-                "#!/usr/bin/env python3\n"
-                "import argparse\n"
-                "p = argparse.ArgumentParser()\n"
-                "p.add_argument('root')\n"
-                "p.add_argument('--min-runs')\n"
-                "p.parse_args()\n",
-            )
+            for relative in (
+                "benchmarks/full-seven-library/summarize_full.py",
+                "benchmarks/full-seven-library/run_full.py",
+                "scripts/benchmark_fixed_work.py",
+            ):
+                source = self.root / relative
+                write(root / source.name, source.read_text(encoding="utf-8"))
+
             with tarfile.open(self.evidence / self.harness["file"], "w:gz") as output:
                 output.add(root, arcname=self.harness["root"])
 
@@ -298,7 +371,7 @@ yjson = "0.1.0"
             [entry["file"] for entry in self.formal] + [self.harness["file"]]
         )
         return {
-            "schema_version": 2,
+            "schema_version": 3,
             "evidence_dir": self.evidence_relative,
             "result_doc": self.result_relative,
             "measured_commit": self.measured_commit,
@@ -369,6 +442,50 @@ yjson = "0.1.0"
         self.write_checksums()
         self.write_marker()
 
+    def rewrite_archive(self, archive: dict[str, str], mutate) -> None:
+        archive_path = self.evidence / archive["file"]
+        with tempfile.TemporaryDirectory() as temporary:
+            temporary_root = pathlib.Path(temporary)
+            with tarfile.open(archive_path, "r:gz") as source:
+                source.extractall(temporary_root, filter="data")
+            extracted_root = temporary_root / archive["root"]
+            mutate(extracted_root)
+            with tarfile.open(archive_path, "w:gz") as output:
+                output.add(extracted_root, arcname=archive["root"])
+        self.write_checksums()
+
+    def rewrite_formal_archive(self, index: int, mutate) -> None:
+        self.rewrite_archive(self.formal[index], mutate)
+
+    def rewrite_harness_archive(self, mutate) -> None:
+        self.rewrite_archive(self.harness, mutate)
+
+    def relabel_source_case(self, workload: str, library: str, source_case: str) -> None:
+        def relabel(root: pathlib.Path) -> None:
+            manifest = root / "manifest.csv"
+            with manifest.open(newline="", encoding="utf-8") as stream:
+                reader = csv.DictReader(stream)
+                fields = reader.fieldnames
+                rows = list(reader)
+            for row in rows:
+                if (row["workload_id"], row["library"]) != (workload, library):
+                    continue
+                previous_case = row["source_case"]
+                row["source_case"] = source_case
+                if library == "yjson":
+                    for field in ("log_path", "fixed_work_path"):
+                        path = root / row[field]
+                        write(path, path.read_text(encoding="utf-8").replace(
+                            previous_case, source_case
+                        ))
+            with manifest.open("w", newline="", encoding="utf-8") as stream:
+                writer = csv.DictWriter(stream, fieldnames=fields)
+                writer.writeheader()
+                writer.writerows(rows)
+
+        for index in range(len(self.formal)):
+            self.rewrite_formal_archive(index, relabel)
+
 
 class SevenLibraryEvidenceTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -389,11 +506,197 @@ class SevenLibraryEvidenceTests(unittest.TestCase):
         self.assertEqual(status, 0)
         self.assertIn("integrity", output.getvalue())
 
+    def test_cold_cli_import_preserves_clean_checkout(self) -> None:
+        for relative in (
+            "scripts/check_seven_library_evidence.py",
+            "scripts/benchmark_fixed_work.py",
+            "scripts/benchmark_input_identity.py",
+            "scripts/release_graph.py",
+            "benchmarks/full-seven-library/run_full.py",
+            "benchmarks/full-seven-library/summarize_full.py",
+        ):
+            write(
+                self.root / relative,
+                (checker.ROOT / relative).read_text(encoding="utf-8"),
+            )
+        write(self.root / ".gitignore", "scripts/__pycache__/\n")
+        git(self.root, "add", ".")
+        git(self.root, "commit", "-q", "-m", "test: freeze standalone checker")
+        environment = os.environ.copy()
+        environment.pop("PYTHONDONTWRITEBYTECODE", None)
+        environment.pop("PYTHONPYCACHEPREFIX", None)
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(self.root / "scripts/check_seven_library_evidence.py"),
+                "--help",
+            ],
+            env=environment,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(
+            git(self.root, "status", "--porcelain=v1", "--untracked-files=all"), ""
+        )
+
+
+    def test_schema_v3_rejects_consistent_proofs_for_another_workload(self) -> None:
+        self.fixture.relabel_source_case(
+            "address_encode", "yjson", "yjsonStringEncodePerson"
+        )
+        with self.assertRaises(checker.EvidenceError):
+            checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=True)
+
+    def test_schema_v3_rejects_peer_case_from_another_library(self) -> None:
+        self.fixture.relabel_source_case(
+            "address_encode", "fastjson2", "jacksonEncodeAddress"
+        )
+        with self.assertRaises(checker.EvidenceError):
+            checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=True)
+
+
+    def test_schema_v3_requires_fixed_work_parser_in_harness_archive(self) -> None:
+        def remove_parser(root: pathlib.Path) -> None:
+            (root / "benchmark_fixed_work.py").unlink()
+
+        self.fixture.rewrite_harness_archive(remove_parser)
+        with self.assertRaisesRegex(checker.EvidenceError, "harness archive omits"):
+            checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=True)
+
+
+    def test_rejects_untrusted_summarizer_before_execution(self) -> None:
+        sentinel = self.root / "untrusted-harness-executed"
+
+        def replace_summarizer(root: pathlib.Path) -> None:
+            write(
+                root / "summarize_full.py",
+                "from pathlib import Path\n"
+                f"Path({str(sentinel)!r}).write_text('executed')\n",
+            )
+
+        self.fixture.rewrite_harness_archive(replace_summarizer)
+        try:
+            with self.assertRaises(checker.EvidenceError):
+                checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=True)
+        finally:
+            self.assertFalse(sentinel.exists(), "untrusted archive code was executed")
+
+    def test_schema_v3_requires_metadata_fixed_work_protocol(self) -> None:
+        self.fixture.write_evidence(second_metadata={"fixed_work_protocol": True})
+        with self.assertRaisesRegex(checker.EvidenceError, "must declare fixed_work_protocol 1"):
+            checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=True)
+
+    def test_schema_v3_rejects_missing_runtime_concurrency(self) -> None:
+        def remove_concurrency(root: pathlib.Path) -> None:
+            path = root / "metadata.json"
+            value = json.loads(path.read_text(encoding="utf-8"))
+            del value["cj_processor_num"]
+            write(path, json.dumps(value) + "\n")
+
+        self.fixture.rewrite_formal_archive(0, remove_concurrency)
+        with self.assertRaises(checker.EvidenceError):
+            checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=True)
+
+    def test_schema_v3_rejects_changed_or_boolean_runtime_concurrency(self) -> None:
+        for value in (8, True):
+            with self.subTest(cj_processor_num=value):
+                self.fixture.write_evidence(second_metadata={"cj_processor_num": value})
+                with self.assertRaises(checker.EvidenceError):
+                    checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=True)
+
+    def test_schema_v3_rejects_missing_fixed_work_sidecar(self) -> None:
+        def remove_sidecar(root: pathlib.Path) -> None:
+            (root / "raw/1/address_encode/yjson/fixed-work.json").unlink()
+
+        self.fixture.rewrite_formal_archive(0, remove_sidecar)
+        with self.assertRaisesRegex(checker.EvidenceError, "invalid fixed-work sidecar"):
+            checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=True)
+
+    def test_schema_v3_rejects_non_integer_sidecar_protocol(self) -> None:
+        def change_protocol(root: pathlib.Path) -> None:
+            path = root / "raw/1/address_encode/yjson/fixed-work.json"
+            value = json.loads(path.read_text(encoding="utf-8"))
+            value["protocol_version"] = True
+            write(path, json.dumps(value) + "\n")
+
+        self.fixture.rewrite_formal_archive(0, change_protocol)
+        with self.assertRaisesRegex(checker.EvidenceError, "unsupported fixed-work protocol"):
+            checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=True)
+
+
+    def test_schema_v3_rejects_stdout_without_fixed_work_declaration(self) -> None:
+        def remove_declaration(root: pathlib.Path) -> None:
+            path = root / "logs/1-address_encode-yjson.log"
+            lines = [
+                line
+                for line in path.read_text(encoding="utf-8").splitlines()
+                if not line.startswith("YJSON_FIXED_WORK_V1 ")
+            ]
+            write(path, "\n".join(lines) + "\n")
+
+        self.fixture.rewrite_formal_archive(0, remove_declaration)
+        with self.assertRaisesRegex(checker.EvidenceError, "invalid fixed-work stdout proof"):
+            checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=True)
+
+    def test_schema_v3_rejects_sidecar_that_differs_from_stdout(self) -> None:
+        def change_sidecar(root: pathlib.Path) -> None:
+            path = root / "raw/1/address_encode/yjson/fixed-work.json"
+            value = json.loads(path.read_text(encoding="utf-8"))
+            value["operations"] += 1
+            write(path, json.dumps(value) + "\n")
+
+        self.fixture.rewrite_formal_archive(0, change_sidecar)
+        with self.assertRaisesRegex(checker.EvidenceError, "differs from stdout proof"):
+            checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=True)
+
+    def test_schema_v3_rejects_fixed_work_drift_between_formal_archives(self) -> None:
+        def change_address_work(root: pathlib.Path) -> None:
+            for round_number in range(1, 12):
+                log_path = root / f"logs/{round_number}-address_encode-yjson.log"
+                text = log_path.read_text(encoding="utf-8")
+                text = text.replace("batches=200", "batches=201")
+                text = text.replace("measurements of 200", "measurements of 201")
+                write(log_path, text)
+                sidecar_path = (
+                    root
+                    / f"raw/{round_number}/address_encode/yjson/fixed-work.json"
+                )
+                sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+                sidecar["batches"] = 201
+                sidecar["operations"] = 201 * sidecar["batch_size"]
+                write(sidecar_path, json.dumps(sidecar) + "\n")
+
+        self.fixture.rewrite_formal_archive(1, change_address_work)
+        with self.assertRaisesRegex(checker.EvidenceError, "differs across formal archives"):
+            checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=True)
+
+    def test_schema_v2_remains_historical_integrity_only(self) -> None:
+        marker = self.fixture.marker()
+        marker["schema_version"] = 2
+        self.fixture.write_marker(marker)
+        (self.root / "scripts/benchmark_fixed_work.py").unlink()
+        def remove_concurrency(root: pathlib.Path) -> None:
+            path = root / "metadata.json"
+            value = json.loads(path.read_text(encoding="utf-8"))
+            del value["cj_processor_num"]
+            write(path, json.dumps(value) + "\n")
+
+        for index in range(2):
+            self.fixture.rewrite_formal_archive(index, remove_concurrency)
+        self.assertEqual(
+            checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=True),
+            2,
+        )
+        with self.assertRaisesRegex(checker.EvidenceError, "historical-only"):
+            checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=False)
+
+
     def test_print_current_candidate_is_canonical_and_read_only(self) -> None:
         marker_before = self.fixture.marker_path.read_bytes()
         status_before = git(self.root, "status", "--porcelain=v1", "--untracked-files=all")
         expected = {
-            "schema_version": 2,
+            "schema_version": 3,
             "measured_commit": git(self.root, "rev-parse", "HEAD"),
             "product_source_sha256": self.fixture.product_digest,
             "effective_harness_sha256": self.fixture.harness_digest,
@@ -439,6 +742,11 @@ class SevenLibraryEvidenceTests(unittest.TestCase):
     def test_strict_mode_rejects_harness_drift(self) -> None:
         write(self.root / "packages/benchmarks/src/bench.cj", "mutated\n")
         with self.assertRaisesRegex(checker.EvidenceError, "current benchmark harness differs"):
+            checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=False)
+
+    def test_fixed_work_parser_drift_invalidates_harness_identity(self) -> None:
+        write(self.root / "scripts/benchmark_fixed_work.py", "mutated\n")
+        with self.assertRaises(checker.EvidenceError):
             checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=False)
 
     def test_docs_only_change_does_not_make_measurement_stale(self) -> None:
@@ -543,7 +851,7 @@ class SevenLibraryEvidenceTests(unittest.TestCase):
         )
         self.assertEqual(
             checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=True),
-            2,
+            3,
         )
 
     def test_squash_merge_measurement_uses_candidate_closure(self) -> None:
@@ -565,7 +873,7 @@ class SevenLibraryEvidenceTests(unittest.TestCase):
         git(self.root, "commit", "-q", "-m", "test: bind squash evidence")
         self.assertEqual(
             checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=False),
-            2,
+            3,
         )
     def test_missing_measurement_commit_uses_candidate_closure(self) -> None:
         self.fixture.measured_commit = "a" * 40
@@ -574,7 +882,7 @@ class SevenLibraryEvidenceTests(unittest.TestCase):
         git(self.root, "commit", "-q", "-m", "test: bind missing measurement")
         self.assertEqual(
             checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=False),
-            2,
+            3,
         )
 
 
@@ -589,7 +897,7 @@ class SevenLibraryEvidenceTests(unittest.TestCase):
         )
         self.assertEqual(
             checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=True),
-            2,
+            3,
         )
 
 

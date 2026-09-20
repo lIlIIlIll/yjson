@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -46,7 +47,78 @@ static void expect_limit(const char *json, int64_t max_bytes,
     assert(offset >= 0);
 }
 
+static void test_stats_abi_layout(void) {
+    const uint32_t field_count = 2048u;
+    const size_t json_capacity = 65536u;
+    char *json = (char *)malloc(json_capacity);
+    assert(json != NULL);
+    size_t length = 0;
+    json[length++] = '{';
+    for (uint32_t i = 0; i < field_count; i++) {
+        int written = snprintf(json + length, json_capacity - length,
+                               "%s\"k%u\":%u", i == 0 ? "" : ",", i, i);
+        assert(written > 0);
+        assert((size_t)written < json_capacity - length);
+        length += (size_t)written;
+    }
+    json[length++] = '}';
+    json[length] = '\0';
+
+    uint32_t root = 0;
+    uint64_t handle = parse(json, YJ_COMPACT_DUPLICATE_STATS |
+        YJ_COMPACT_DUPLICATE_PRESIZE, &root);
+
+    uint64_t stats[12];
+    for (uint32_t i = 0; i < 12u; i++) stats[i] = UINT64_MAX;
+    assert(YJ_Compact_Stats(handle, stats, 11u) == YJ_COMPACT_BOUNDS_ERROR);
+    for (uint32_t i = 0; i < 12u; i++) assert(stats[i] == UINT64_MAX);
+    assert(YJ_Compact_Stats(handle, stats, 12u) == YJ_COMPACT_OK);
+    /* Frozen public ABI positions, independent of implementation slot names. */
+    assert(stats[0] == length);
+    assert(stats[1] >= stats[3]);
+    assert(stats[2] >= stats[1]);
+    assert(stats[4] >= stats[3]);
+    assert(stats[5] == 0u);
+    assert(stats[6] >= stats[5]);
+    assert(stats[7] > 0u);
+    assert(stats[8] == 1u);
+    assert(stats[9] == field_count);
+    assert(stats[10] == 0u);
+    assert(stats[11] == 0u);
+
+    uint64_t duplicate_stats[16];
+    for (uint32_t i = 0; i < 16u; i++) duplicate_stats[i] = UINT64_MAX;
+    assert(YJ_Compact_DuplicateStats(handle, duplicate_stats, 15u) ==
+           YJ_COMPACT_BOUNDS_ERROR);
+    for (uint32_t i = 0; i < 16u; i++) assert(duplicate_stats[i] == UINT64_MAX);
+    assert(YJ_Compact_DuplicateStats(handle, duplicate_stats, 16u) ==
+           YJ_COMPACT_OK);
+    assert(duplicate_stats[0] == field_count);
+    assert(duplicate_stats[1] == field_count);
+    assert(duplicate_stats[2] >= field_count);
+    assert(duplicate_stats[3] == 0u);
+    assert(duplicate_stats[4] > 0u);
+    assert(duplicate_stats[5] > 0u);
+    assert(duplicate_stats[6] >= field_count);
+    assert(duplicate_stats[7] >= field_count);
+    assert(duplicate_stats[8] >= duplicate_stats[7]);
+    assert(duplicate_stats[9] > 0u && duplicate_stats[9] <= duplicate_stats[4]);
+    assert(duplicate_stats[10] >= duplicate_stats[9] &&
+           duplicate_stats[10] <= duplicate_stats[4]);
+    assert(duplicate_stats[11] >= duplicate_stats[10] &&
+           duplicate_stats[11] <= duplicate_stats[4]);
+    assert(duplicate_stats[12] == field_count);
+    assert(duplicate_stats[13] ==
+           field_count * 1000000u / duplicate_stats[7]);
+    assert(duplicate_stats[14] <= 1u);
+    assert(duplicate_stats[15] == 0u);
+
+    YJ_Compact_Free(handle);
+    free(json);
+}
+
 int main(void) {
+    test_stats_abi_layout();
     uint32_t root;
     uint64_t handle = parse(
         "{\"a\":1,\"b\":[true,null,\"x\",-9223372036854775808,1.5],"

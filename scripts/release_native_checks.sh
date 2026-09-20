@@ -19,6 +19,7 @@ vendor_flags=(-std=c11 -O2 -Wall -Wextra -fvisibility=hidden \
 
 if [[ "$mode" == all || "$mode" == targeted ]]; then
     "$cc" "${own_flags[@]}" "$repo/native/yjson_scanner.c" \
+        "$repo/native/yjson_writer_format.c" \
         "$repo/native/test_yjson_scanner.c" -o "$work/scanner"
     "$cc" "${own_flags[@]}" -DYJ_TESTING "$repo/native/yjson_compact.c" \
         "$repo/native/test_yjson_compact.c" -o "$work/compact"
@@ -42,6 +43,7 @@ san=(-std=c11 -O1 -g -DYJ_TESTING -fsanitize=address,undefined \
     -fno-sanitize-recover=undefined -fno-omit-frame-pointer -I "$repo/native")
 if [[ "$mode" == all || "$mode" == sanitizer ]]; then
     "$cc" "${san[@]}" "$repo/native/yjson_scanner.c" \
+        "$repo/native/yjson_writer_format.c" \
         "$repo/native/test_yjson_scanner.c" -o "$work/scanner-sanitized"
     "$cc" "${san[@]}" "$repo/native/yjson_compact.c" \
         "$repo/native/test_yjson_compact.c" -o "$work/compact-sanitized"

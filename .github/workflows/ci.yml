@@ -37,6 +37,8 @@ jobs:
         run: |
           python3 scripts/test_ci_candidate_wiring.py
           python3 scripts/test_json_pure_perf_compare.py
+          python3 scripts/test_benchmark_pure_direct.py
+          python3 scripts/test_release_consumer_checks.py
 
   generated-change-risk:
     name: Generated code change risk

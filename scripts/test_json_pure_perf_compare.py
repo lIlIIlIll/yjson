@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import importlib.util
+import json
 import pathlib
 import subprocess
 import sys
@@ -8,6 +9,7 @@ import tempfile
 import unittest
 from unittest import mock
 
+import benchmark_input_identity as identity
 
 SCRIPT = pathlib.Path(__file__).with_name("json_pure_perf_compare.py")
 SPEC = importlib.util.spec_from_file_location("json_pure_perf_compare", SCRIPT)
@@ -47,6 +49,63 @@ class RssCaptureTest(unittest.TestCase):
         self.assertEqual(result["case"]["max_rss_kb"], 140)
 
 
+class DirectCellFailureSidecarTest(unittest.TestCase):
+
+    def test_failure_sidecar_retains_phase_stage_and_target_pid(self) -> None:
+        case = MODULE.CASES[0]
+        failure = MODULE.benchmark_pure_direct.DirectCellFailure(
+            "affinity refused",
+            {
+                "status": "failed",
+                "stage": "affinity_placement",
+                "case": case,
+                "time_pid": 100,
+                "target_pid": 101,
+                "error_type": "RuntimeError",
+                "error": "affinity refused",
+            },
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            output = root / "output"
+            output.mkdir()
+            with mock.patch.object(
+                MODULE.benchmark_pure_direct, "run_direct_cell", side_effect=failure
+            ):
+                with self.assertRaises(MODULE.benchmark_pure_direct.DirectCellFailure):
+                    MODULE.run_variant(
+                        "candidate", root, root / "corpus", output, [2, 4, 6],
+                        0, case, "/usr/bin/time", 180.0, "preflight",
+                    )
+            sidecar = output / f"preflight-{case}-candidate.direct.json"
+            retained = json.loads(sidecar.read_text(encoding="utf-8"))
+        self.assertEqual(retained["phase"], "preflight")
+        self.assertEqual(retained["qualification_phase"], "preflight")
+        self.assertEqual(retained["stage"], "affinity_placement")
+        self.assertEqual(retained["target_pid"], 101)
+
+
+class QualificationScheduleTest(unittest.TestCase):
+    def test_all_variant_case_preflights_precede_every_sample(self) -> None:
+        schedule = list(MODULE.qualification_schedule(("caseA", "caseB"), 2))
+        self.assertEqual(
+            schedule[:4],
+            [
+                ("preflight", 0, "caseA", "baseline"),
+                ("preflight", 0, "caseA", "candidate"),
+                ("preflight", 0, "caseB", "baseline"),
+                ("preflight", 0, "caseB", "candidate"),
+            ],
+        )
+        self.assertTrue(all(item[0] == "sample" for item in schedule[4:]))
+        self.assertEqual(schedule[4:8], [
+            ("sample", 1, "caseA", "baseline"),
+            ("sample", 1, "caseA", "candidate"),
+            ("sample", 1, "caseB", "baseline"),
+            ("sample", 1, "caseB", "candidate"),
+        ])
+
+
 class PurePerfProvenanceTest(unittest.TestCase):
     def make_tree(self, root: pathlib.Path) -> None:
         files = {
@@ -59,9 +118,14 @@ class PurePerfProvenanceTest(unittest.TestCase):
             "packages/yjson_macros/src/json_codec.cj": "macro codec\n",
             "packages/yjson_macros/src/json_literal.cj": "macro literal\n",
             "packages/yjson_macros/cjpm.toml": "macro manifest\n",
+            "scripts/benchmark_fixed_work.py": "def parse_fixed_work(text, case): pass\n",
+            "scripts/benchmark_pure_direct.py": "def parse_direct_result(text, case): pass\n",
+            "scripts/json_pure_perf_compare.py": "def main(): pass\n",
+            "benchmarks/full-seven-library/run_full.py": "def main(): pass\n",
             "packages/yjson_macros/cjpm.lock": "macro lock\n",
             "scripts/build_native_scanner.py": "pass\n",
             "native/yjson_scanner.c": "void scanner(void) {}\n",
+            "native/yjson_writer_format.c": "void writer(void) {}\n",
             "native/yjson_scanner.h": "void scanner(void);\n",
             "native/yjson_compact.c": "void compact(void) {}\n",
             "native/yjson_compact.h": "void compact(void);\n",
@@ -75,21 +139,26 @@ class PurePerfProvenanceTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = pathlib.Path(directory)
             self.make_tree(root)
-            initial = MODULE.manifest_digest(MODULE.harness_manifest(root))
+            initial = identity.manifest_digest(identity.harness_manifest(root))
             for relative in (
                 "cjpm.toml",
                 "cjpm.lock",
                 "packages/benchmarks/cjpm.toml",
                 "packages/benchmarks/cjpm.lock",
                 "packages/benchmarks/build.cj",
+                "scripts/benchmark_fixed_work.py",
+                "scripts/benchmark_pure_direct.py",
+                "scripts/json_pure_perf_compare.py",
+                "benchmarks/full-seven-library/run_full.py",
                 "scripts/build_native_scanner.py",
                 "native/yjson_scanner.c",
+                "native/yjson_writer_format.c",
             ):
                 path = root / relative
                 original = path.read_text(encoding="utf-8")
                 path.write_text(original + "changed\n", encoding="utf-8")
                 self.assertNotEqual(
-                    MODULE.manifest_digest(MODULE.harness_manifest(root)), initial,
+                    identity.manifest_digest(identity.harness_manifest(root)), initial,
                     relative,
                 )
                 path.write_text(original, encoding="utf-8")
@@ -98,26 +167,46 @@ class PurePerfProvenanceTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = pathlib.Path(directory)
             self.make_tree(root)
-            initial = MODULE.manifest_digest(MODULE.product_manifest(root))
+            initial = identity.manifest_digest(identity.product_manifest(root))
             literal = root / "packages/yjson_macros/src/json_literal.cj"
             literal.write_text("changed literal\n", encoding="utf-8")
             self.assertEqual(
-                MODULE.manifest_digest(MODULE.product_manifest(root)), initial
+                identity.manifest_digest(identity.product_manifest(root)), initial
             )
-            codec = root / "packages/yjson_macros/src/json_codec.cj"
-            codec.write_text("changed codec\n", encoding="utf-8")
-            self.assertNotEqual(
-                MODULE.manifest_digest(MODULE.product_manifest(root)), initial
-            )
+            for name in ("json_codec.cj", "codec_decode_plan.cj"):
+                codec = root / "packages/yjson_macros/src" / name
+                original = codec.read_bytes() if codec.exists() else None
+                codec.write_text("changed codec\n", encoding="utf-8")
+                self.assertNotEqual(
+                    identity.manifest_digest(identity.product_manifest(root)), initial, name
+                )
+                if original is None:
+                    codec.unlink()
+                else:
+                    codec.write_bytes(original)
 
     def test_standalone_macro_dependency_is_canonicalized(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = pathlib.Path(directory)
             data = (
                 "[dependencies]\n"
-                f'yjson_macros = {{ {MODULE.STANDALONE_MACRO_GIT} }}\n'
+                f'yjson_macros = {{ {identity.STANDALONE_MACRO_GIT} }}\n'
             ).encode("utf-8")
-            normalized = MODULE.canonical_benchmark_input_bytes(
+            normalized = identity.canonical_benchmark_input_bytes(
+                root, "packages/benchmarks/cjpm.toml", data
+            ).decode("utf-8")
+            self.assertIn('yjson_macros = { path = "../yjson_macros" }', normalized)
+            self.assertNotIn("commitId", normalized)
+
+    def test_previous_standalone_macro_dependency_is_canonicalized(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            data = (
+                "[dependencies]\n"
+                'yjson_macros = { git = "https://github.com/lIlIIlIll/yjson_macros.git", '
+                'commitId = "fec0adce41f73d037d876cbac7a28aee8108bb5c" }\n'
+            ).encode("utf-8")
+            normalized = identity.canonical_benchmark_input_bytes(
                 root, "packages/benchmarks/cjpm.toml", data
             ).decode("utf-8")
             self.assertIn('yjson_macros = { path = "../yjson_macros" }', normalized)
@@ -128,13 +217,48 @@ class PurePerfProvenanceTest(unittest.TestCase):
             root = pathlib.Path(directory)
             data = (
                 "[dependencies]\n"
-                f'yjson_macros = {{ {MODULE.LEGACY_STANDALONE_MACRO_GIT} }}\n'
+                f'yjson_macros = {{ {identity.LEGACY_STANDALONE_MACRO_GIT} }}\n'
             ).encode("utf-8")
-            normalized = MODULE.canonical_benchmark_input_bytes(
+            normalized = identity.canonical_benchmark_input_bytes(
                 root, "packages/benchmarks/cjpm.toml", data
             ).decode("utf-8")
             self.assertIn('yjson_macros = { path = "../yjson_macros" }', normalized)
             self.assertNotIn("commitId", normalized)
+
+    def test_local_macro_binding_preserves_release_graph_identity(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            macro_manifest = root / "packages/yjson_macros/cjpm.toml"
+            macro_manifest.parent.mkdir(parents=True)
+            macro_manifest.write_text(
+                '[package]\nname = "yjson_macros"\n'
+                'description = "AST codec and JSON literal macros for yjson"\n',
+                encoding="utf-8",
+            )
+            graph = (
+                'name = "yjson_macros"\nrole = "macros"\n'
+                'development_manifest = "packages/yjson_macros/cjpm.toml"\n'
+                'release_manifest = "release/package-manifests/yjson_macros.toml"\n'
+                'source_root = "packages/yjson_macros/src"\n'
+                'stage_kind = "package"\nstability = "stable"\n'
+                'leaf_bundle = false\ndependencies = []\n'
+            ).encode("utf-8")
+            root_manifest = root / "cjpm.toml"
+            root_manifest.write_text(
+                f'[test-dependencies]\nyjson_macros = {{ {identity.STANDALONE_MACRO_GIT} }}\n',
+                encoding="utf-8",
+            )
+            git_graph = identity.canonical_benchmark_input_bytes(
+                root, "release/release-graph.toml", graph
+            )
+            root_manifest.write_text(
+                '[test-dependencies]\nyjson_macros = { path = "packages/yjson_macros" }\n',
+                encoding="utf-8",
+            )
+            local_graph = identity.canonical_benchmark_input_bytes(
+                root, "release/release-graph.toml", graph
+            )
+            self.assertEqual(local_graph, git_graph)
 
     def test_artifact_identity_rejects_symlink_and_hashes_regular_binary(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

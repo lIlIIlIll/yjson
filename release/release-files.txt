@@ -104,6 +104,7 @@ native/yjson_scanner.h
 native/yjson_compact.c
 native/yjson_compact.h
 native/yjson_float_format.c
+native/yjson_writer_format.c
 native/yjson_yyjson.c
 native/yjson_yyjson.h
 native/test_yjson_scanner.c
@@ -119,9 +120,13 @@ scripts/release_native_checks.sh
 scripts/release_yyjson_colink_check.sh
 scripts/release_cangjie_checks.sh
 scripts/release_consumer_checks.py
+scripts/test_release_consumer_checks.py
 scripts/release_benchmark_smoke.sh
 scripts/release_performance_compare.sh
 scripts/json_pure_perf_compare.py
+scripts/benchmark_input_identity.py
+scripts/benchmark_fixed_work.py
+scripts/benchmark_pure_direct.py
 scripts/json_cjfast_perf_run.py
 scripts/json_cjfast_perf_summary.py
 scripts/check_json_numeric_equivalence.py
@@ -174,6 +179,7 @@ scripts/validate_cangjie_sts.py
 scripts/test_validate_cangjie_sts.py
 scripts/test_ci_candidate_wiring.py
 scripts/test_json_pure_perf_compare.py
+scripts/test_benchmark_pure_direct.py
 scripts/coverage.sh
 scripts/cjcov_to_lcov.py
 scripts/test_cjcov_to_lcov.py
@@ -192,6 +198,12 @@ benchmarks/results/full-seven-library/2026-09-10-main-008e50b/README.md
 benchmarks/results/full-seven-library/2026-09-13-release-4766daa/README.md
 benchmarks/results/full-seven-library/2026-09-14-release-7436598/README.md
 benchmarks/results/full-seven-library/2026-09-15-release-af8693f/README.md
+benchmarks/results/full-seven-library/2026-09-18-maintainability-c844aa9/README.md
+benchmarks/results/full-seven-library/2026-09-18-maintainability-f4aed80/README.md
+benchmarks/results/full-seven-library/2026-09-20-maintainability-7d086a6/README.md
+benchmarks/results/release-performance/2026-09-20-maintainability-7d086a6/README.md
+benchmarks/results/full-seven-library/2026-09-20-maintainability-c5ccfd6/README.md
+benchmarks/results/release-performance/2026-09-20-maintainability-c5ccfd6/README.md
 docs/performance/results/2026-09-13-release-seven-library.md
 docs/performance/results/2026-09-13-linux-release-pure.md
 docs/performance/results/2026-09-13-release-three-library.md
@@ -206,6 +218,8 @@ packages/benchmarks/src/bench_fastjson2_compare.cj
 packages/benchmarks/src/bench_algorithms.cj
 packages/benchmarks/src/bench_document_lifecycle.cj
 packages/benchmarks/src/bench_fixtures.cj
+packages/benchmarks/src/bench_fixed_work.cj
+packages/benchmarks/src/bench_pure_direct.cj
 packages/benchmarks/src/bench_json_comprehensive.cj
 packages/benchmarks/src/bench_stdx_compare.cj
 packages/benchmarks/src/bench_stream_protocol.cj
@@ -234,6 +248,13 @@ release/public-cangjie-delta-bfd29.toml
 # Macro, native primitives, optional backends, examples, and consumer fixtures
 packages/yjson_macros/cjpm.toml
 packages/yjson_macros/cjpm.lock
+packages/yjson_macros/src/codec_analysis.cj
+packages/yjson_macros/src/codec_decode_plan.cj
+packages/yjson_macros/src/codec_model.cj
+packages/yjson_macros/src/codec_provider_emitter.cj
+packages/yjson_macros/src/codec_type_shape.cj
+packages/yjson_macros/src/codec_write_emitter.cj
+packages/yjson_macros/src/codec_write_plan.cj
 packages/yjson_macros/src/json_codec.cj
 packages/yjson_macros/src/json_literal.cj
 packages/yjson_macros/README.md
@@ -267,12 +288,17 @@ packages/yjson_algorithms/src/lib_json_patch.cj
 packages/yjson_algorithms/src/lib_json_path.cj
 packages/yjson_algorithms/src/lib_json_pointer.cj
 packages/yjson_algorithms/src/lib_json_schema.cj
+packages/yjson_algorithms/src/json_value_semantics.cj
+packages/yjson_algorithms/src/json_schema_compilation.cj
+packages/yjson_algorithms/src/json_schema_core_formats.cj
+packages/yjson_algorithms/src/json_path_filter.cj
 packages/yjson_algorithms/src/linear_regex.cj
 packages/yjson_algorithms/src/work_limits.cj
 packages/yjson_algorithms/src/json_path_test.cj
 packages/yjson_algorithms/src/json_pointer_patch_test.cj
 packages/yjson_algorithms/src/json_schema_test.cj
 packages/yjson_algorithms/src/linear_regex_test.cj
+packages/yjson_algorithms/src/schema_orchestration_contract_test.cj
 packages/yjson_algorithms/src/work_limits_test.cj
 packages/yjson_algorithms/README.md
 packages/yjson_schema_formats/cjpm.toml
@@ -299,7 +325,9 @@ packages/examples/src/main.cj
 packages/codec_integration/cjpm.toml
 packages/codec_integration/cjpm.lock
 packages/codec_integration/src/api_documentation_contract_test.cj
+packages/codec_integration/src/codec_render_plan_consumer_test.cj
 packages/codec_integration/src/generated_collections_test.cj
+packages/codec_integration/src/generated_traversal_state_consumer_test.cj
 packages/codec_integration/src/main.cj
 packages/codec_integration/src/json_literal_test.cj
 packages/standards_conformance/cjpm.toml

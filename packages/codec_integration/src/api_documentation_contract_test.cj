@@ -73,6 +73,19 @@ class ApiDocumentationContractConsumerTest {
     }
 
     @TestCase
+    func streamStringBudgetPrecedesLaterSyntaxErrors(): Unit {
+        for (body in ["x中", "x\\u4E2D"]) {
+            @Expect(YJson.fromJson(YJsonByteArrayInputStream("\"${body}\""),
+                codec: JsonCodecs.string, options: JsonReadOptions(maxStringBytes: 4)), "x中")
+            let error = @AssertThrows[JsonException](
+                YJson.fromJson(YJsonByteArrayInputStream("\"${body}\\q\""),
+                    codec: JsonCodecs.string, options: JsonReadOptions(maxStringBytes: 3)))
+            @Expect(error.code, "string_too_large")
+            @Expect(error.location.getOrThrow().byteOffset, 2)
+        }
+    }
+
+    @TestCase
     func materializeMustNotShareMutableStorage(): Unit {
         let document = YJson.parseDocument("{\"active\":false}")
         let copy = document.materialize().asObject()

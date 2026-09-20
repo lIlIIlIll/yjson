@@ -32,6 +32,41 @@ private let YJ_YYJSON_NUMBER_LEGACY_RAW: UInt32 = 8u32
 private let YJ_YYJSON_RETAIN_ROOT_INDEX: UInt32 = 16u32
 private let YJ_YYJSON_LAZY_ROOT_INDEX: UInt32 = 32u32
 private let YJ_YYJSON_SEPARATE_VALIDATION: UInt32 = 64u32
+private let YJ_YYJSON_STATS_ALLOCATOR_CURRENT: Int64 = 0
+private let YJ_YYJSON_STATS_ALLOCATOR_PEAK: Int64 = 1
+private let YJ_YYJSON_STATS_ALLOCATOR_TOTAL_REQUESTED: Int64 = 2
+private let YJ_YYJSON_STATS_VALIDATION_SCRATCH_PEAK: Int64 = 3
+private let YJ_YYJSON_STATS_PERSISTENT_USED: Int64 = 4
+private let YJ_YYJSON_STATS_PERSISTENT_COMMITTED: Int64 = 5
+private let YJ_YYJSON_STATS_NODES: Int64 = 6
+private let YJ_YYJSON_STATS_OBJECT_FIELDS: Int64 = 7
+private let YJ_YYJSON_STATS_ARRAY_ENTRIES: Int64 = 8
+private let YJ_YYJSON_STATS_STRINGS: Int64 = 9
+private let YJ_YYJSON_STATS_MODE: Int64 = 10
+private let YJ_YYJSON_STATS_CUSTOM_FALLBACK: Int64 = 11
+private let YJ_YYJSON_STATS_VALIDATION_PROBES: Int64 = 12
+private let YJ_YYJSON_STATS_VALIDATION_MAX_PROBE: Int64 = 13
+private let YJ_YYJSON_STATS_VALIDATION_HASHES: Int64 = 14
+private let YJ_YYJSON_STATS_VALIDATION_FINGERPRINT_MATCHES: Int64 = 15
+private let YJ_YYJSON_STATS_VALIDATION_MEMCMP_CALLS: Int64 = 16
+private let YJ_YYJSON_STATS_VALIDATION_MEMCMP_BYTES: Int64 = 17
+private let YJ_YYJSON_STATS_VALIDATION_SMALL_LINEAR_OBJECTS: Int64 = 18
+private let YJ_YYJSON_STATS_VALIDATION_HASHED_OBJECTS: Int64 = 19
+private let YJ_YYJSON_STATS_VALIDATION_WALKS: Int64 = 20
+private let YJ_YYJSON_STATS_LITERAL_ENTRIES: Int64 = 21
+private let YJ_YYJSON_STATS_LITERAL_BYTES: Int64 = 22
+private let YJ_YYJSON_STATS_SOURCE_REPLAY_BYTES: Int64 = 23
+private let YJ_YYJSON_STATS_SOURCE_COPY_BYTES: Int64 = 24
+private let YJ_YYJSON_STATS_SAFE_INT_NUMBERS: Int64 = 25
+private let YJ_YYJSON_STATS_RAW_REQUIRED_NUMBERS: Int64 = 26
+private let YJ_YYJSON_STATS_ROOT_INDEX_BYTES: Int64 = 27
+private let YJ_YYJSON_STATS_ROOT_INDEX_BUILDS: Int64 = 28
+private let YJ_YYJSON_STATS_ROOT_INDEX_PROBES: Int64 = 29
+private let YJ_YYJSON_STATS_ROOT_INDEX_MAX_PROBE: Int64 = 30
+private let YJ_YYJSON_STATS_VALIDATION_P50_PROBE: Int64 = 31
+private let YJ_YYJSON_STATS_VALIDATION_P95_PROBE: Int64 = 32
+private let YJ_YYJSON_STATS_VALIDATION_P99_PROBE: Int64 = 33
+private let YJ_YYJSON_STATS_FULL_COUNT: Int64 = 36
 
 foreign func YJ_Yyjson_Parse(input: CPointer<UInt8>, length: Int64, flags: UInt32,
     maxDepth: Int64, mode: UInt32, outHandle: CPointer<UInt64>,
@@ -200,40 +235,40 @@ struct YyjsonCompactStorageStats {
     public let validationP99Probe: UInt64
 
     init(values: Array<UInt64>) {
-        allocatorCurrent = values[0]
-        allocatorPeak = values[1]
-        allocatorTotalRequested = values[2]
-        validationScratchPeak = values[3]
-        persistentUsed = values[4]
-        persistentCommitted = values[5]
-        nodes = values[6]
-        objectFields = values[7]
-        arrayEntries = values[8]
-        strings = values[9]
-        mode = values[10]
-        customFallback = values[11] != 0u64
-        validationProbes = values[12]
-        validationMaxProbe = values[13]
-        validationHashes = values[14]
-        validationFingerprintMatches = values[15]
-        validationMemcmpCalls = values[16]
-        validationMemcmpBytes = values[17]
-        validationSmallLinearObjects = values[18]
-        validationHashedObjects = values[19]
-        validationWalks = values[20]
-        literalEntries = values[21]
-        literalBytes = values[22]
-        sourceReplayBytes = values[23]
-        sourceCopyBytes = values[24]
-        safeIntNumbers = values[25]
-        rawRequiredNumbers = values[26]
-        rootIndexBytes = values[27]
-        rootIndexBuilds = values[28]
-        rootIndexProbes = values[29]
-        rootIndexMaxProbe = values[30]
-        validationP50Probe = values[31]
-        validationP95Probe = values[32]
-        validationP99Probe = values[33]
+        allocatorCurrent = values[YJ_YYJSON_STATS_ALLOCATOR_CURRENT]
+        allocatorPeak = values[YJ_YYJSON_STATS_ALLOCATOR_PEAK]
+        allocatorTotalRequested = values[YJ_YYJSON_STATS_ALLOCATOR_TOTAL_REQUESTED]
+        validationScratchPeak = values[YJ_YYJSON_STATS_VALIDATION_SCRATCH_PEAK]
+        persistentUsed = values[YJ_YYJSON_STATS_PERSISTENT_USED]
+        persistentCommitted = values[YJ_YYJSON_STATS_PERSISTENT_COMMITTED]
+        nodes = values[YJ_YYJSON_STATS_NODES]
+        objectFields = values[YJ_YYJSON_STATS_OBJECT_FIELDS]
+        arrayEntries = values[YJ_YYJSON_STATS_ARRAY_ENTRIES]
+        strings = values[YJ_YYJSON_STATS_STRINGS]
+        mode = values[YJ_YYJSON_STATS_MODE]
+        customFallback = values[YJ_YYJSON_STATS_CUSTOM_FALLBACK] != 0u64
+        validationProbes = values[YJ_YYJSON_STATS_VALIDATION_PROBES]
+        validationMaxProbe = values[YJ_YYJSON_STATS_VALIDATION_MAX_PROBE]
+        validationHashes = values[YJ_YYJSON_STATS_VALIDATION_HASHES]
+        validationFingerprintMatches = values[YJ_YYJSON_STATS_VALIDATION_FINGERPRINT_MATCHES]
+        validationMemcmpCalls = values[YJ_YYJSON_STATS_VALIDATION_MEMCMP_CALLS]
+        validationMemcmpBytes = values[YJ_YYJSON_STATS_VALIDATION_MEMCMP_BYTES]
+        validationSmallLinearObjects = values[YJ_YYJSON_STATS_VALIDATION_SMALL_LINEAR_OBJECTS]
+        validationHashedObjects = values[YJ_YYJSON_STATS_VALIDATION_HASHED_OBJECTS]
+        validationWalks = values[YJ_YYJSON_STATS_VALIDATION_WALKS]
+        literalEntries = values[YJ_YYJSON_STATS_LITERAL_ENTRIES]
+        literalBytes = values[YJ_YYJSON_STATS_LITERAL_BYTES]
+        sourceReplayBytes = values[YJ_YYJSON_STATS_SOURCE_REPLAY_BYTES]
+        sourceCopyBytes = values[YJ_YYJSON_STATS_SOURCE_COPY_BYTES]
+        safeIntNumbers = values[YJ_YYJSON_STATS_SAFE_INT_NUMBERS]
+        rawRequiredNumbers = values[YJ_YYJSON_STATS_RAW_REQUIRED_NUMBERS]
+        rootIndexBytes = values[YJ_YYJSON_STATS_ROOT_INDEX_BYTES]
+        rootIndexBuilds = values[YJ_YYJSON_STATS_ROOT_INDEX_BUILDS]
+        rootIndexProbes = values[YJ_YYJSON_STATS_ROOT_INDEX_PROBES]
+        rootIndexMaxProbe = values[YJ_YYJSON_STATS_ROOT_INDEX_MAX_PROBE]
+        validationP50Probe = values[YJ_YYJSON_STATS_VALIDATION_P50_PROBE]
+        validationP95Probe = values[YJ_YYJSON_STATS_VALIDATION_P95_PROBE]
+        validationP99Probe = values[YJ_YYJSON_STATS_VALIDATION_P99_PROBE]
     }
 }
 
@@ -620,10 +655,13 @@ class YyjsonCompactJsonDocument <: Resource {
 
     public func storageStats(): YyjsonCompactStorageStats {
         synchronized(accessLock.readLock) {
-            let values = Array<UInt64>(36, repeat: 0u64)
+            let values = Array<UInt64>(YJ_YYJSON_STATS_FULL_COUNT, repeat: 0u64)
             let status = unsafe {
                 let valuesHandle = acquireArrayRawData(values)
-                try { YJ_Yyjson_Stats(requireOpenLocked(), valuesHandle.pointer, 36u64) }
+                try {
+                    YJ_Yyjson_Stats(requireOpenLocked(), valuesHandle.pointer,
+                        UInt64(YJ_YYJSON_STATS_FULL_COUNT))
+                }
                 finally { releaseArrayRawData(valuesHandle) }
             }
             checkStatus(status)

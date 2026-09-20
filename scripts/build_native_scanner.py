@@ -64,16 +64,17 @@ def main() -> int:
             )
     lib = out_dir / "libyjson_scanner.a"
     scanner_obj = out_dir / "yjson_scanner.o"
+    writer_format_obj = out_dir / "yjson_writer_format.o"
     compact_obj = out_dir / "yjson_compact.o"
     float_format_obj = out_dir / "yjson_float_format.o"
     yyjson_adapter_obj = out_dir / "yjson_yyjson.o"
     yyjson_obj = out_dir / "yyjson.o"
     yyjson_lib = out_dir / "libyjson_yyjson.a"
     out_dir.mkdir(parents=True, exist_ok=True)
-    sources = [NATIVE_DIR / "yjson_scanner.c", NATIVE_DIR / "yjson_compact.c",
-               NATIVE_DIR / "yjson_float_format.c"]
+    sources = [NATIVE_DIR / "yjson_scanner.c", NATIVE_DIR / "yjson_writer_format.c",
+               NATIVE_DIR / "yjson_compact.c", NATIVE_DIR / "yjson_float_format.c"]
     headers = [NATIVE_DIR / "yjson_scanner.h", NATIVE_DIR / "yjson_compact.h"]
-    objects = [scanner_obj, compact_obj, float_format_obj]
+    objects = [scanner_obj, writer_format_obj, compact_obj, float_format_obj]
 
     # BP-008: always rebuild. The archive is small and the source changes
     # often; incremental mtime caches are more trouble than they save.

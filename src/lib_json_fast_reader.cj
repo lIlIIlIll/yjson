@@ -1844,18 +1844,17 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
     private func parseString(): String {
         expectByte(b'"')
         let start = index
-        var leadingSegmentAscii = true
         var decodedBytes: Int64 = 0
         while (index < size) {
             let current = data[index]
             if (current == b'"') {
                 let end = index
                 index++
-                if (validateStrings && leadingSegmentAscii) {
-                    decodedBytes = enforceDecodedStringBytesIncrement(start, decodedBytes, end - start)
-                    return asciiStringFromRange(start, end)
-                }
                 enforceDecodedStringBytes(start, decodedBytes)
+                if (validateStrings) {
+                    // Raw UTF-8 has already been validated by the loop.
+                    return unsafe { String.fromUtf8Unchecked(data[start..end]) }
+                }
                 return stringFromUtf8Range(start, end)
             }
             if (current == b'\\') {
@@ -1864,18 +1863,13 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
             if (current < 0x20) {
                 failAt("Unescaped control character in string literal", index)
             }
-            if (current >= 0x80) {
-                if (validateStrings) {
-                    let width = validateRawUtf8At(index)
-                    decodedBytes = enforceDecodedStringBytesIncrement(start, decodedBytes, width)
-                    index = width
-                    continue
-                }
-                leadingSegmentAscii = false
-                decodedBytes++
-            } else {
-                decodedBytes++
+            if (validateStrings && current >= 0x80) {
+                let next = validateRawUtf8At(index)
+                decodedBytes = enforceDecodedStringBytesIncrement(start, decodedBytes, next - index)
+                index = next
+                continue
             }
+            decodedBytes++
             index++
         }
         fail("Unterminated string literal")
@@ -1908,6 +1902,7 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         while (read < size) {
             let current = data[read]
             if (current == b'"') {
+                enforceDecodedStringBytes(start, decodedBytes)
                 written = copyEscapedStringSegment(output, segmentStart, read, written)
                 index = read + 1
                 return unsafe { String.fromUtf8Unchecked(output[0..written]) }
@@ -1963,9 +1958,9 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
                 failAt("Unescaped control character in string literal", read)
             }
             if (validateStrings && current >= 0x80) {
-                let width = validateRawUtf8At(read)
-                decodedBytes = enforceDecodedStringBytesIncrement(start, decodedBytes, width)
-                read = width
+                let next = validateRawUtf8At(read)
+                decodedBytes = enforceDecodedStringBytesIncrement(start, decodedBytes, next - read)
+                read = next
                 continue
             }
             read++

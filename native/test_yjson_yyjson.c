@@ -293,8 +293,60 @@ static void test_close_loop(void) {
         YJ_Yyjson_Free(transcode);
     }
 }
+static void test_stats_prefix_abi_layout(void) {
+    const char *text = "[9223372036854775808,1.2300,1E-3]";
+    uint64_t handle = parse_ok(text, 0, YJ_YYJSON_DIRECT);
+    uint64_t stats[36];
+
+    for (uint32_t i = 0; i < 36u; i++) stats[i] = UINT64_MAX;
+    assert(YJ_Yyjson_Stats(handle, stats, 11u) == YJ_COMPACT_BOUNDS_ERROR);
+    for (uint32_t i = 0; i < 36u; i++) assert(stats[i] == UINT64_MAX);
+
+    assert(YJ_Yyjson_Stats(handle, stats, 12u) == YJ_COMPACT_OK);
+    /* Frozen public ABI positions, independent of implementation slot names. */
+    assert(stats[0] > 0u);
+    assert(stats[1] >= stats[0]);
+    assert(stats[2] >= stats[1]);
+    assert(stats[3] == 0u);
+    assert(stats[4] > 0u);
+    assert(stats[5] >= stats[4]);
+    assert(stats[6] == 4u);
+    assert(stats[7] == 0u);
+    assert(stats[8] == 3u);
+    assert(stats[9] == 0u);
+    assert(stats[10] == YJ_YYJSON_DIRECT);
+    assert(stats[11] == 0u);
+    for (uint32_t i = 12u; i < 36u; i++) assert(stats[i] == UINT64_MAX);
+
+    for (uint32_t i = 0; i < 36u; i++) stats[i] = UINT64_MAX;
+    assert(YJ_Yyjson_Stats(handle, stats, 14u) == YJ_COMPACT_OK);
+    assert(stats[12] == 0u);
+    assert(stats[13] == 0u);
+    for (uint32_t i = 14u; i < 36u; i++) assert(stats[i] == UINT64_MAX);
+
+    for (uint32_t i = 0; i < 36u; i++) stats[i] = UINT64_MAX;
+    assert(YJ_Yyjson_Stats(handle, stats, 36u) == YJ_COMPACT_OK);
+    assert(stats[20] == 1u);
+    assert(stats[21] == 3u);
+    assert(stats[22] == strlen("9223372036854775808") +
+                        strlen("1.2300") + strlen("1E-3"));
+    assert(stats[23] == strlen(text));
+    assert(stats[24] == strlen(text) + 1u);
+    assert(stats[25] == 0u);
+    assert(stats[26] == 3u);
+    for (uint32_t i = 27u; i <= 33u; i++) assert(stats[i] == 0u);
+    assert(stats[34] == strlen(text) + 1u);
+    assert(stats[35] == 0u);
+
+    uint64_t written_size = 0;
+    char *written = serialize(handle, &written_size);
+    assert(strcmp(written, text) == 0);
+    free(written);
+    YJ_Yyjson_Free(handle);
+}
 
 int main(void) {
+    test_stats_prefix_abi_layout();
     test_modes_and_numbers();
     test_number_strategies();
     test_lookup_index_modes();

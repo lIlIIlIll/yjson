@@ -1,6 +1,6 @@
 {
   "candidate": {
-    "identity_sha256": "2cac5f70965cc91554f1c3a384ab7c10631c0e274028178e8b7461d4217b7861",
+    "identity_sha256": "9fad27007d044de3d115b97317aa9b5deea6b9725c9deea79cb4cb6c3b33ac20",
     "lockstep_manifests_sha256": "4eb82f14fac080702ac2515da9094f4c24c5721cb0cd7c85f3aae55414b3cddb",
     "package_version": "0.1.0",
     "release_graph_sha256": "43b1c43d5a9c12128aa9acedf3e148d531a7a623e24c24d3734dee22bfa96bfc",
@@ -8,32 +8,43 @@
     "root_manifest_sha256": "3814815364bc0b40a5c5107269807c7a5c1766bb0054c5329521c4d424fcb259"
   },
   "checksum_files": [
-    "canonical-build-logs.tar.gz",
+    "archive-inventory.json",
+    "candidate-build-logs.tar.gz",
+    "candidate-fragment.json",
+    "candidate-source.tar.gz",
+    "cpu-selection.json",
     "fixture-preflight-overlay.patch",
-    "formal-release-11-1.tar.gz",
-    "formal-release-11-2.tar.gz",
     "harness-source.tar.gz",
-    "json4cj-source.tar.gz",
+    "path-normalization.json",
+    "peer-source.tar.gz",
+    "pure-prerequisite-state.json",
+    "seven-review-c5ccfd69-batch11-v1-a-run.log",
+    "seven-review-c5ccfd69-batch11-v1-a-summary.log",
+    "seven-review-c5ccfd69-batch11-v1-a.tar.gz",
+    "seven-review-c5ccfd69-batch11-v1-b-run.log",
+    "seven-review-c5ccfd69-batch11-v1-b-summary.log",
+    "seven-review-c5ccfd69-batch11-v1-b.tar.gz",
+    "source-archive-manifests.json",
     "source-identity.json"
   ],
-  "effective_harness_sha256": "4d5788b785c9b69993f91e78934dcb5e21fca8b9ac2b2a7c6986c115e65e0865",
-  "evidence_dir": "benchmarks/results/full-seven-library/2026-09-15-release-af8693f",
+  "effective_harness_sha256": "7b65d3cfc50c50bfbeb4ddce20e84183619ea7081a775f2a8152336fb4a1e2ab",
+  "evidence_dir": "benchmarks/results/full-seven-library/2026-09-20-maintainability-c5ccfd6",
   "formal_archives": [
     {
-      "file": "formal-release-11-1.tar.gz",
-      "root": "formal-pr30-a"
+      "file": "seven-review-c5ccfd69-batch11-v1-a.tar.gz",
+      "root": "seven-review-c5ccfd69-batch11-v1-a"
     },
     {
-      "file": "formal-release-11-2.tar.gz",
-      "root": "formal-pr30-b"
+      "file": "seven-review-c5ccfd69-batch11-v1-b.tar.gz",
+      "root": "seven-review-c5ccfd69-batch11-v1-b"
     }
   ],
   "harness_archive": {
     "file": "harness-source.tar.gz",
-    "root": "harness"
+    "root": "seven-harness-review-c5ccfd69-batch11-v1"
   },
-  "measured_commit": "af8693fe435f438bb67daf466d453e4dd079b3ca",
-  "product_source_sha256": "e367e12cfdc9af4857c60589878370d63d011af4edac5df36174aebe87ae8fc8",
+  "measured_commit": "c5ccfd6953ea57adedc4c642dbb51aa2fbb9a12a",
+  "product_source_sha256": "9e22b132f38b28f15ef698a373247ac91ad4bdbe922bd8fae42c1b09cdcf30cf",
   "result_doc": "docs/performance/results/2026-09-13-release-seven-library.md",
-  "schema_version": 2
+  "schema_version": 3
 }

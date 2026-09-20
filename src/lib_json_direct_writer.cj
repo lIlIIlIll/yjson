@@ -29,6 +29,25 @@ private func directStringWriterInitialCapacity(config: JsonWriteOptions): Int64 
     JSON_DIRECT_BYTES_INITIAL_CAPACITY
 }
 
+private func shouldEscapeJsonAscii(byte: Int64, htmlSafe: Bool): Bool {
+    if (byte < 32 || byte == Int64(b'"') || byte == Int64(b'\\')) {
+        return true
+    }
+    htmlSafe && (
+        byte == Int64(b'<') ||
+        byte == Int64(b'>') ||
+        byte == Int64(b'&') ||
+        byte == Int64(b'=') ||
+        byte == Int64(b'\''))
+}
+
+private func jsonHexNibbleByte(value: Int64): Byte {
+    if (value < 10) {
+        return UInt8(48 + value)
+    }
+    UInt8(87 + value)
+}
+
 func jsonRawInt64Size(value: Int64): Int64 {
     if (value < 0) {
         if (value == -0x8000_0000_0000_0000) {
@@ -67,12 +86,12 @@ func jsonRawUInt64Size(value: UInt64): Int64 {
 func jsonRawCompactStringEscapeIndex(value: String): Int64 {
     unsafe {
         let bytes = value.rawData()
-        for (index in 0..bytes.size) {
-            let byte = Int64(bytes[index])
-            if (byte < 32 || byte == Int64(b'"') || byte == Int64(b'\\')) {
-                return index
-            }
+        var index: Int64 = 0
+        while (index < bytes.size && bytes[index] >= 32u8 &&
+            bytes[index] != b'"' && bytes[index] != b'\\') {
+            index++
         }
+        if (index < bytes.size) { return index }
     }
     -1
 }
@@ -262,7 +281,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         }
         for (index in firstEscape..value.size) {
             let byte = Int64(value[index])
-            if (byte > 127 || !shouldEscapeAsciiForConfig(byte, htmlSafe)) {
+            if (byte > 127 || !shouldEscapeJsonAscii(byte, htmlSafe)) {
                 continue
             }
             ensureCapacity(used + (index - segmentStart) + 6 + (value.size - index) + 1)
@@ -503,7 +522,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         } else {
             for (index in firstEscape..value.size) {
                 let byte = Int64(value[index])
-                if (byte > 127 || !shouldEscapeAsciiForConfig(byte, htmlSafe)) {
+                if (byte > 127 || !shouldEscapeJsonAscii(byte, htmlSafe)) {
                     continue
                 }
                 copyTextRangeNoEnsure(value, segmentStart, index)
@@ -541,7 +560,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         } else {
             for (index in firstEscape..value.size) {
                 let byte = Int64(value[index])
-                if (byte > 127 || !shouldEscapeAsciiForConfig(byte, htmlSafe)) {
+                if (byte > 127 || !shouldEscapeJsonAscii(byte, htmlSafe)) {
                     continue
                 }
                 copyTextRangeNoEnsure(value, segmentStart, index)
@@ -1156,19 +1175,6 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         used += size
     }
 
-    private func shouldEscapeAsciiForConfig(byte: Int64, htmlSafe: Bool): Bool {
-        if (byte < 32 || byte == Int64(b'"') || byte == Int64(b'\\')) {
-            return true
-        }
-        if (!htmlSafe) {
-            return false
-        }
-        byte == Int64(b'<') ||
-            byte == Int64(b'>') ||
-            byte == Int64(b'&') ||
-            byte == Int64(b'=') ||
-            byte == Int64(b'\'')
-    }
 
     private func writeAsciiEscapeNoEnsure(byte: Int64): Unit {
         if (byte == Int64(b'"')) {
@@ -1210,16 +1216,10 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         writeRawByteNoEnsure(b'u')
         writeRawByteNoEnsure(b'0')
         writeRawByteNoEnsure(b'0')
-        writeRawByteNoEnsure(hexNibbleByte(byte >> 4))
-        writeRawByteNoEnsure(hexNibbleByte(byte & 0xF))
+        writeRawByteNoEnsure(jsonHexNibbleByte(byte >> 4))
+        writeRawByteNoEnsure(jsonHexNibbleByte(byte & 0xF))
     }
 
-    private func hexNibbleByte(value: Int64): Byte {
-        if (value < 10) {
-            return UInt8(48 + value)
-        }
-        UInt8(87 + value)
-    }
 
     public func finish(): Unit {}
 
@@ -1360,7 +1360,7 @@ class DirectStreamWriterTarget <: JsonDirectWriterTarget {
         }
         for (index in firstEscape..value.size) {
             let byte = Int64(value[index])
-            if (byte > 127 || !shouldEscapeAsciiForConfig(byte, htmlSafe)) {
+            if (byte > 127 || !shouldEscapeJsonAscii(byte, htmlSafe)) {
                 continue
             }
             writeTextRange(value, segmentStart, index)
@@ -1612,19 +1612,6 @@ class DirectStreamWriterTarget <: JsonDirectWriterTarget {
         )
     }
 
-    private func shouldEscapeAsciiForConfig(byte: Int64, htmlSafe: Bool): Bool {
-        if (byte < 32 || byte == Int64(b'"') || byte == Int64(b'\\')) {
-            return true
-        }
-        if (!htmlSafe) {
-            return false
-        }
-        byte == Int64(b'<') ||
-            byte == Int64(b'>') ||
-            byte == Int64(b'&') ||
-            byte == Int64(b'=') ||
-            byte == Int64(b'\'')
-    }
 
     private func writeAsciiEscape(byte: Int64): Unit {
         if (byte == Int64(b'"')) {
@@ -1666,16 +1653,10 @@ class DirectStreamWriterTarget <: JsonDirectWriterTarget {
         writeRawByte(b'u')
         writeRawByte(b'0')
         writeRawByte(b'0')
-        writeRawByte(hexNibbleByte(byte >> 4))
-        writeRawByte(hexNibbleByte(byte & 0xF))
+        writeRawByte(jsonHexNibbleByte(byte >> 4))
+        writeRawByte(jsonHexNibbleByte(byte & 0xF))
     }
 
-    private func hexNibbleByte(value: Int64): Byte {
-        if (value < 10) {
-            return UInt8(48 + value)
-        }
-        UInt8(87 + value)
-    }
 
     public func finish(): Unit {
         if (limitFailed) {
@@ -1706,15 +1687,10 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
 
     private static func buildEscapeLookupTable(htmlSafe: Bool): Array<UInt8> {
         let table = Array<UInt8>(256, repeat: 0)
-        for (byte in 0..32) { table[byte] = 1 }
-        table[Int64(b'"')] = 1
-        table[Int64(b'\\')] = 1
-        if (htmlSafe) {
-            table[Int64(b'<')] = 1
-            table[Int64(b'>')] = 1
-            table[Int64(b'&')] = 1
-            table[Int64(b'=')] = 1
-            table[Int64(b'\'')] = 1
+        for (byte in 0..128) {
+            if (shouldEscapeJsonAscii(byte, htmlSafe)) {
+                table[byte] = 1
+            }
         }
         table
     }

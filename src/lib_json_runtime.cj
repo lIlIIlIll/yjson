@@ -118,10 +118,15 @@ public func initializeYJsonAccelerationV1(provider: JsonAccelerationProviderV1):
     }
 
     var primitives: Option<JsonNativeAccelerationPrimitivesV1> = None<JsonNativeAccelerationPrimitivesV1>
-    match (provider) {
-        case nativeProvider: JsonNativePrimitivesProviderV1 =>
-            primitives = Some(nativeProvider.primitives())
-        case _ => ()
+    try {
+        match (provider) {
+            case nativeProvider: JsonNativePrimitivesProviderV1 =>
+                primitives = Some(nativeProvider.primitives())
+            case _ => ()
+        }
+    } catch (error: Exception) {
+        rollbackYJsonAccelerationInitialization()
+        throw error
     }
 
     try {

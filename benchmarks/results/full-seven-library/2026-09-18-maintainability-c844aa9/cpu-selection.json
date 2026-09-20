@@ -1,0 +1,16 @@
+{
+  "sample_seconds": 30,
+  "selected_cpu": 0,
+  "selected_sibling": 48,
+  "socket": 0,
+  "core": 0,
+  "cpus": [
+    0,
+    48
+  ],
+  "utilization_percent": [
+    0.0,
+    0.0
+  ],
+  "acceptable_both_threads_below_1_percent": true
+}

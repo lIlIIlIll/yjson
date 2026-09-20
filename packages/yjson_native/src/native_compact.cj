@@ -32,6 +32,36 @@ private let YJ_COMPACT_DUPLICATE_LOAD_625: UInt32 = 16u32
 private let YJ_COMPACT_DUPLICATE_LOAD_875: UInt32 = 32u32
 private let YJ_COMPACT_DUPLICATE_PRESIZE: UInt32 = 64u32
 private let YJ_COMPACT_DUPLICATE_STATS: UInt32 = 128u32
+private let YJ_COMPACT_STORAGE_STATS_SOURCE_BYTES: Int64 = 0
+private let YJ_COMPACT_STORAGE_STATS_PERSISTENT_USED: Int64 = 1
+private let YJ_COMPACT_STORAGE_STATS_PERSISTENT_COMMITTED: Int64 = 2
+private let YJ_COMPACT_STORAGE_STATS_ARENA_USED: Int64 = 3
+private let YJ_COMPACT_STORAGE_STATS_ARENA_COMMITTED: Int64 = 4
+private let YJ_COMPACT_STORAGE_STATS_SCRATCH_CURRENT: Int64 = 5
+private let YJ_COMPACT_STORAGE_STATS_SCRATCH_PEAK: Int64 = 6
+private let YJ_COMPACT_STORAGE_STATS_DUPLICATE_SCRATCH_PEAK: Int64 = 7
+private let YJ_COMPACT_STORAGE_STATS_NODES: Int64 = 8
+private let YJ_COMPACT_STORAGE_STATS_OBJECT_FIELDS: Int64 = 9
+private let YJ_COMPACT_STORAGE_STATS_ARRAY_ENTRIES: Int64 = 10
+private let YJ_COMPACT_STORAGE_STATS_STRING_REFS: Int64 = 11
+private let YJ_COMPACT_STORAGE_STATS_COUNT: Int64 = 12
+
+private let YJ_COMPACT_DUPLICATE_STATS_LOOKUPS: Int64 = 0
+private let YJ_COMPACT_DUPLICATE_STATS_INSERTS: Int64 = 1
+private let YJ_COMPACT_DUPLICATE_STATS_PROBES: Int64 = 2
+private let YJ_COMPACT_DUPLICATE_STATS_EXACT_EQUALITIES: Int64 = 3
+private let YJ_COMPACT_DUPLICATE_STATS_MAX_PROBE: Int64 = 4
+private let YJ_COMPACT_DUPLICATE_STATS_GROW_COUNT: Int64 = 5
+private let YJ_COMPACT_DUPLICATE_STATS_REHASHED_ENTRIES: Int64 = 6
+private let YJ_COMPACT_DUPLICATE_STATS_FINAL_CAPACITY: Int64 = 7
+private let YJ_COMPACT_DUPLICATE_STATS_LARGEST_CAPACITY: Int64 = 8
+private let YJ_COMPACT_DUPLICATE_STATS_P50_PROBE: Int64 = 9
+private let YJ_COMPACT_DUPLICATE_STATS_P95_PROBE: Int64 = 10
+private let YJ_COMPACT_DUPLICATE_STATS_P99_PROBE: Int64 = 11
+private let YJ_COMPACT_DUPLICATE_STATS_OCCUPIED: Int64 = 12
+private let YJ_COMPACT_DUPLICATE_STATS_LOAD_PPM: Int64 = 13
+private let YJ_COMPACT_DUPLICATE_STATS_PRESIZED: Int64 = 14
+private let YJ_COMPACT_DUPLICATE_STATS_COUNT: Int64 = 16
 
 enum NativeCompactSourceOwnership {
     | CopySource
@@ -183,18 +213,18 @@ struct NativeCompactStorageStats {
     public let stringRefs: UInt64
 
     init(values: Array<UInt64>) {
-        sourceBytes = values[0]
-        persistentUsed = values[1]
-        persistentCommitted = values[2]
-        arenaUsed = values[3]
-        arenaCommitted = values[4]
-        scratchCurrent = values[5]
-        scratchPeak = values[6]
-        duplicateScratchPeak = values[7]
-        nodes = values[8]
-        objectFields = values[9]
-        arrayEntries = values[10]
-        stringRefs = values[11]
+        sourceBytes = values[YJ_COMPACT_STORAGE_STATS_SOURCE_BYTES]
+        persistentUsed = values[YJ_COMPACT_STORAGE_STATS_PERSISTENT_USED]
+        persistentCommitted = values[YJ_COMPACT_STORAGE_STATS_PERSISTENT_COMMITTED]
+        arenaUsed = values[YJ_COMPACT_STORAGE_STATS_ARENA_USED]
+        arenaCommitted = values[YJ_COMPACT_STORAGE_STATS_ARENA_COMMITTED]
+        scratchCurrent = values[YJ_COMPACT_STORAGE_STATS_SCRATCH_CURRENT]
+        scratchPeak = values[YJ_COMPACT_STORAGE_STATS_SCRATCH_PEAK]
+        duplicateScratchPeak = values[YJ_COMPACT_STORAGE_STATS_DUPLICATE_SCRATCH_PEAK]
+        nodes = values[YJ_COMPACT_STORAGE_STATS_NODES]
+        objectFields = values[YJ_COMPACT_STORAGE_STATS_OBJECT_FIELDS]
+        arrayEntries = values[YJ_COMPACT_STORAGE_STATS_ARRAY_ENTRIES]
+        stringRefs = values[YJ_COMPACT_STORAGE_STATS_STRING_REFS]
     }
 }
 
@@ -216,21 +246,21 @@ struct NativeCompactDuplicateStats {
     public let presized: Bool
 
     init(values: Array<UInt64>) {
-        lookups = values[0]
-        inserts = values[1]
-        probes = values[2]
-        exactEqualities = values[3]
-        maxProbe = values[4]
-        growCount = values[5]
-        rehashedEntries = values[6]
-        finalCapacity = values[7]
-        largestCapacity = values[8]
-        p50Probe = values[9]
-        p95Probe = values[10]
-        p99Probe = values[11]
-        occupied = values[12]
-        loadPpm = values[13]
-        presized = values[14] != 0u64
+        lookups = values[YJ_COMPACT_DUPLICATE_STATS_LOOKUPS]
+        inserts = values[YJ_COMPACT_DUPLICATE_STATS_INSERTS]
+        probes = values[YJ_COMPACT_DUPLICATE_STATS_PROBES]
+        exactEqualities = values[YJ_COMPACT_DUPLICATE_STATS_EXACT_EQUALITIES]
+        maxProbe = values[YJ_COMPACT_DUPLICATE_STATS_MAX_PROBE]
+        growCount = values[YJ_COMPACT_DUPLICATE_STATS_GROW_COUNT]
+        rehashedEntries = values[YJ_COMPACT_DUPLICATE_STATS_REHASHED_ENTRIES]
+        finalCapacity = values[YJ_COMPACT_DUPLICATE_STATS_FINAL_CAPACITY]
+        largestCapacity = values[YJ_COMPACT_DUPLICATE_STATS_LARGEST_CAPACITY]
+        p50Probe = values[YJ_COMPACT_DUPLICATE_STATS_P50_PROBE]
+        p95Probe = values[YJ_COMPACT_DUPLICATE_STATS_P95_PROBE]
+        p99Probe = values[YJ_COMPACT_DUPLICATE_STATS_P99_PROBE]
+        occupied = values[YJ_COMPACT_DUPLICATE_STATS_OCCUPIED]
+        loadPpm = values[YJ_COMPACT_DUPLICATE_STATS_LOAD_PPM]
+        presized = values[YJ_COMPACT_DUPLICATE_STATS_PRESIZED] != 0u64
     }
 }
 
@@ -361,10 +391,13 @@ class NativeCompactJsonDocument <: Resource {
 
     public func storageStats(): NativeCompactStorageStats {
         withOpen({ current =>
-            let values = Array<UInt64>(12, repeat: 0u64)
+            let values = Array<UInt64>(YJ_COMPACT_STORAGE_STATS_COUNT, repeat: 0u64)
             let status = unsafe {
                 let valuesHandle = acquireArrayRawData(values)
-                try { YJ_Compact_Stats(current, valuesHandle.pointer, 12u64) }
+                try {
+                    YJ_Compact_Stats(current, valuesHandle.pointer,
+                        UInt64(YJ_COMPACT_STORAGE_STATS_COUNT))
+                }
                 finally { releaseArrayRawData(valuesHandle) }
             }
             checkStatus(status)
@@ -374,10 +407,13 @@ class NativeCompactJsonDocument <: Resource {
 
     public func duplicateStats(): NativeCompactDuplicateStats {
         withOpen({ current =>
-            let values = Array<UInt64>(16, repeat: 0u64)
+            let values = Array<UInt64>(YJ_COMPACT_DUPLICATE_STATS_COUNT, repeat: 0u64)
             let status = unsafe {
                 let valuesHandle = acquireArrayRawData(values)
-                try { YJ_Compact_DuplicateStats(current, valuesHandle.pointer, 16u64) }
+                try {
+                    YJ_Compact_DuplicateStats(current, valuesHandle.pointer,
+                        UInt64(YJ_COMPACT_DUPLICATE_STATS_COUNT))
+                }
                 finally { releaseArrayRawData(valuesHandle) }
             }
             checkStatus(status)

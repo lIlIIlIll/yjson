@@ -18,17 +18,19 @@ import tempfile
 import tomllib
 from typing import Any
 
-from json_pure_perf_compare import (
-    canonical_benchmark_input_bytes,
-    harness_manifest,
-    manifest_digest,
-    product_manifest,
-)
+import benchmark_fixed_work
+import benchmark_input_identity
 
 from release_graph import load_release_graph
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+# Loading canonical runner data must not dirty the checkout being verified.
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(ROOT / "benchmarks/full-seven-library"))
+import run_full
+
+
 DEFAULT_MARKER = "benchmarks/results/full-seven-library/current-main.json"
 MARKER_V1_KEYS = {
     "schema_version",
@@ -42,6 +44,7 @@ MARKER_V1_KEYS = {
     "checksum_files",
 }
 MARKER_V2_KEYS = MARKER_V1_KEYS | {"candidate"}
+MARKER_V3_KEYS = MARKER_V2_KEYS
 CANDIDATE_KEYS = {
     "package_version",
     "root_manifest_sha256",
@@ -60,27 +63,17 @@ RSS_RE = re.compile(
 )
 MARKDOWN_LINK_RE = re.compile(r"\]\(([^\s)]+)(?:\s+[^)]*)?\)")
 HTML_HREF_RE = re.compile(r"\bhref=[\"']([^\"']+)[\"']")
-LIBRARIES = (
-    "yjson",
-    "stdx_json",
-    "cangjieJSON",
-    "json4cj",
-    "cjfast_json",
-    "jackson",
-    "fastjson2",
-)
-WORKLOADS = (
-    "address_encode",
-    "address_decode",
-    "person_encode",
-    "person_decode",
-    "large_array_encode",
-    "large_array_decode",
-    "large_map_encode",
-    "large_map_decode",
-    "deep_nested_encode",
-    "deep_nested_decode",
-)
+LIBRARIES = run_full.LIBRARIES
+WORKLOADS = tuple(workload[0] for workload in run_full.WORKLOADS)
+SOURCE_CASES = {
+    (workload[0], library): (
+        run_full.CANGJIE[library][2]
+        if library in run_full.CANGJIE
+        else run_full.JAVA[library]
+    ) + workload[4]
+    for workload in run_full.WORKLOADS
+    for library in LIBRARIES
+}
 WORKLOAD_LABELS = {
     "address_encode": "Address encode",
     "address_decode": "Address decode",
@@ -119,6 +112,14 @@ STABLE_METADATA_KEYS = (
     "time_binary",
     "rss_unit",
 )
+FIXED_WORK_PROTOCOL_VERSION = 1
+FIXED_WORK_SIDECAR_KEYS = {
+    "protocol_version",
+    "case",
+    "batches",
+    "batch_size",
+    "operations",
+}
 
 
 class EvidenceError(ValueError):
@@ -147,7 +148,7 @@ def benchmark_input_sha256(
         else data
     )
     return digest_bytes(
-        canonical_benchmark_input_bytes(root, relative_name, payload)
+        benchmark_input_identity.canonical_benchmark_input_bytes(root, relative_name, payload)
     )
 
 
@@ -221,6 +222,68 @@ def parse_max_rss(path: pathlib.Path) -> int:
     if value <= 0:
         raise EvidenceError(f"GNU time RSS value must be positive in {path}")
     return value
+
+
+def fixed_work_sidecar(
+    path: pathlib.Path, case: str, parsed: dict[str, int]
+) -> dict[str, int]:
+    value = read_json_object(path, f"fixed-work sidecar for {case}")
+    if set(value) != FIXED_WORK_SIDECAR_KEYS:
+        raise EvidenceError(
+            f"fixed-work sidecar for {case} must contain exactly: "
+            + ", ".join(sorted(FIXED_WORK_SIDECAR_KEYS))
+        )
+    protocol = value.get("protocol_version")
+    if type(protocol) is not int or protocol != FIXED_WORK_PROTOCOL_VERSION:
+        raise EvidenceError(f"unsupported fixed-work protocol for {case}")
+    if value.get("case") != case:
+        raise EvidenceError(f"fixed-work sidecar case mismatch for {case}")
+    counts: dict[str, int] = {}
+    for key in ("batches", "batch_size", "operations"):
+        count = value.get(key)
+        if type(count) is not int or count <= 0:
+            raise EvidenceError(f"fixed-work sidecar {key} must be positive for {case}")
+        counts[key] = count
+    if counts != parsed:
+        raise EvidenceError(f"fixed-work sidecar differs from stdout proof for {case}")
+    return counts
+
+
+def validate_fixed_work_cell(
+    root: pathlib.Path, row: dict[str, str]
+) -> tuple[pathlib.Path, pathlib.Path, dict[str, int]]:
+    workload = row["workload_id"]
+    case = row["source_case"]
+    log_path = repo_path(
+        root, row.get("log_path"), f"stdout log for {workload}/{case}"
+    )
+    fixed_path = repo_path(
+        root,
+        row.get("fixed_work_path"),
+        f"fixed-work sidecar for {workload}/{case}",
+    )
+    report_parts = relative_parts(
+        row.get("report_path"), f"report_path for {workload}/{case}"
+    )
+    expected_fixed = root.joinpath(*report_parts, "fixed-work.json")
+    if fixed_path != expected_fixed:
+        raise EvidenceError(
+            "fixed-work sidecar must be inside the round report directory "
+            f"for {workload}/{case}"
+        )
+    try:
+        stdout = log_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as error:
+        raise EvidenceError(
+            f"cannot read stdout log for {workload}/{case}: {error}"
+        ) from error
+    try:
+        parsed = benchmark_fixed_work.parse_fixed_work(stdout, case)
+    except ValueError as error:
+        raise EvidenceError(
+            f"invalid fixed-work stdout proof for {workload}/{case}: {error}"
+        ) from error
+    return log_path, fixed_path, fixed_work_sidecar(fixed_path, case, parsed)
 
 
 def basename(value: object, label: str, suffix: str | None = None) -> str:
@@ -346,7 +409,7 @@ def release_candidate_binding(
         "release_graph_sha256": benchmark_input_sha256(
             root, pathlib.Path("release/release-graph.toml")
         ),
-        "lockstep_manifests_sha256": manifest_digest(manifest_files),
+        "lockstep_manifests_sha256": benchmark_input_identity.manifest_digest(manifest_files),
     }
     candidate["identity_sha256"] = candidate_identity_sha256(
         candidate, product_digest, harness_digest
@@ -389,13 +452,19 @@ def read_marker(
 ) -> dict[str, Any]:
     marker = read_json_object(marker_path, "seven-library marker")
     schema_version = marker.get("schema_version")
-    if type(schema_version) is not int or schema_version not in (1, 2):
-        raise EvidenceError("marker schema_version must be integer 1 or 2")
-    if schema_version == 1 and not integrity_only:
+    if type(schema_version) is not int or schema_version not in (1, 2, 3):
+        raise EvidenceError("marker schema_version must be integer 1, 2, or 3")
+    if schema_version in (1, 2) and not integrity_only:
         raise EvidenceError(
-            "marker schema v1 is historical-only; strict freshness requires schema v2"
+            f"marker schema v{schema_version} is historical-only; "
+            "strict freshness requires schema v3 fixed-work evidence"
         )
-    expected_keys = MARKER_V1_KEYS if schema_version == 1 else MARKER_V2_KEYS
+    if schema_version == 1:
+        expected_keys = MARKER_V1_KEYS
+    elif schema_version == 2:
+        expected_keys = MARKER_V2_KEYS
+    else:
+        expected_keys = MARKER_V3_KEYS
     if set(marker) != expected_keys:
         missing = sorted(expected_keys - set(marker))
         unexpected = sorted(set(marker) - expected_keys)
@@ -455,7 +524,7 @@ def read_marker(
     marker["formal_archives"] = formal
     marker["harness_archive"] = harness
     marker["checksum_files"] = checksums
-    if schema_version == 2:
+    if schema_version in (2, 3):
         marker["candidate"] = parse_candidate(marker["candidate"], marker)
     return marker
 
@@ -581,7 +650,7 @@ def cpu_selection_is_formal(value: object) -> bool:
 
 def read_metadata_and_validate(
     root: pathlib.Path, marker: dict[str, Any]
-) -> dict[str, Any]:
+) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
     if not (root / "COMPLETE").is_file():
         raise EvidenceError(f"missing COMPLETE marker: {root.name}")
     metadata = read_json_object(root / "metadata.json", f"metadata for {root.name}")
@@ -602,16 +671,42 @@ def read_metadata_and_validate(
     if missing_stable:
         raise EvidenceError(f"metadata in {root.name} omits: {missing_stable}")
 
+    fixed_protocol = marker["schema_version"] == 3
+    metadata_protocol = metadata.get("fixed_work_protocol")
+    if fixed_protocol and (
+        type(metadata_protocol) is not int
+        or metadata_protocol != FIXED_WORK_PROTOCOL_VERSION
+    ):
+        raise EvidenceError(
+            f"metadata in {root.name} must declare fixed_work_protocol "
+            f"{FIXED_WORK_PROTOCOL_VERSION}"
+        )
+    if fixed_protocol and (
+        type(metadata.get("cj_processor_num")) is not int
+        or metadata["cj_processor_num"] != 1
+    ):
+        raise EvidenceError(
+            f"metadata in {root.name} must declare integer cj_processor_num 1"
+        )
+
     try:
         with (root / "manifest.csv").open(newline="", encoding="utf-8") as stream:
             rows = list(csv.DictReader(stream))
     except (OSError, UnicodeError, csv.Error) as error:
         raise EvidenceError(f"cannot read manifest for {root.name}: {error}") from error
     required_columns = {"round", "workload_id", "library", "max_rss_kb", "rss_path"}
+    if fixed_protocol:
+        required_columns.update(
+            {"source_case", "report_path", "log_path", "fixed_work_path"}
+        )
     if not rows or not required_columns.issubset(rows[0]):
         raise EvidenceError(f"manifest columns are incomplete in {root.name}")
     cells = {(row["round"], row["workload_id"], row["library"]) for row in rows}
-    if len(rows) != len(EXPECTED_CELLS) or len(cells) != len(rows) or cells != EXPECTED_CELLS:
+    if (
+        len(rows) != len(EXPECTED_CELLS)
+        or len(cells) != len(rows)
+        or cells != EXPECTED_CELLS
+    ):
         missing = len(EXPECTED_CELLS - cells)
         unexpected = len(cells - EXPECTED_CELLS)
         raise EvidenceError(
@@ -619,8 +714,18 @@ def read_metadata_and_validate(
             f"rows={len(rows)}, unique={len(cells)}, missing={missing}, unexpected={unexpected}"
         )
     seen_rss: dict[pathlib.Path, tuple[str, str, str]] = {}
+    seen_logs: dict[pathlib.Path, tuple[str, str, str]] = {}
+    seen_fixed: dict[pathlib.Path, tuple[str, str, str]] = {}
+    fixed_by_workload: dict[str, dict[str, Any]] = {}
     for row in rows:
         cell = (row["round"], row["workload_id"], row["library"])
+        if fixed_protocol:
+            expected_case = SOURCE_CASES[(row["workload_id"], row["library"])]
+            if row["source_case"] != expected_case:
+                raise EvidenceError(
+                    f"manifest source_case does not match workload/library in {root.name}: "
+                    f"{cell}; expected={expected_case!r}, actual={row['source_case']!r}"
+                )
         rss_path = repo_path(root, row["rss_path"], f"manifest rss_path in {root.name}")
         previous = seen_rss.get(rss_path)
         if previous is not None:
@@ -641,8 +746,36 @@ def read_metadata_and_validate(
             raise EvidenceError(
                 f"manifest RSS differs from sidecar in {root.name}: {cell}"
             )
-    return metadata
 
+        if fixed_protocol and row["library"] == "yjson":
+            log_path, fixed_path, counts = validate_fixed_work_cell(root, row)
+            for path, seen, label in (
+                (log_path, seen_logs, "stdout log"),
+                (fixed_path, seen_fixed, "fixed-work sidecar"),
+            ):
+                prior = seen.get(path)
+                if prior is not None:
+                    raise EvidenceError(
+                        f"{label} is shared by {prior} and {cell} in {root.name}"
+                    )
+                seen[path] = cell
+            workload_proof: dict[str, Any] = {
+                "case": row["source_case"],
+                **counts,
+            }
+            prior_proof = fixed_by_workload.get(row["workload_id"])
+            if prior_proof is not None and prior_proof != workload_proof:
+                raise EvidenceError(
+                    f"fixed work differs across rounds in {root.name}: {row['workload_id']}"
+                )
+            fixed_by_workload[row["workload_id"]] = workload_proof
+        elif fixed_protocol and row.get("fixed_work_path"):
+            raise EvidenceError(
+                f"non-yjson cell must not claim fixed-work proof in {root.name}: {cell}"
+            )
+    if fixed_protocol and set(fixed_by_workload) != set(WORKLOADS):
+        raise EvidenceError(f"fixed-work proof inventory differs in {root.name}")
+    return metadata, fixed_by_workload
 
 def stable_identity(metadata: dict[str, Any], key: str) -> object:
     value = metadata[key]
@@ -957,7 +1090,7 @@ def verify_measured_candidate_binding(
             measured_manifests[manifest_path.as_posix()] = benchmark_input_sha256(
                 root, manifest_path, git_blob(root, commit, manifest_path)
             )
-    if manifest_digest(measured_manifests) != candidate["lockstep_manifests_sha256"]:
+    if benchmark_input_identity.manifest_digest(measured_manifests) != candidate["lockstep_manifests_sha256"]:
         raise EvidenceError(
             "measured commit lockstep package manifests differ from candidate identity"
         )
@@ -1012,8 +1145,12 @@ def current_candidate_fragment(root: pathlib.Path) -> dict[str, Any]:
     before_commit = current_head_commit(root)
     verify_clean_checkout(root)
     try:
-        product_digest = manifest_digest(product_manifest(root))
-        harness_digest = manifest_digest(harness_manifest(root))
+        product_digest = benchmark_input_identity.manifest_digest(
+            benchmark_input_identity.product_manifest(root)
+        )
+        harness_digest = benchmark_input_identity.manifest_digest(
+            benchmark_input_identity.harness_manifest(root)
+        )
     except SystemExit as error:
         raise EvidenceError(
             f"cannot compute current performance input identity: {error}"
@@ -1024,7 +1161,7 @@ def current_candidate_fragment(root: pathlib.Path) -> dict[str, Any]:
     if after_commit != before_commit:
         raise EvidenceError("current candidate commit changed while computing identity")
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "measured_commit": before_commit,
         "product_source_sha256": product_digest,
         "effective_harness_sha256": harness_digest,
@@ -1034,8 +1171,12 @@ def current_candidate_fragment(root: pathlib.Path) -> dict[str, Any]:
 
 def verify_current_checkout(root: pathlib.Path, marker: dict[str, Any]) -> None:
     try:
-        product_digest = manifest_digest(product_manifest(root))
-        harness_digest = manifest_digest(harness_manifest(root))
+        product_digest = benchmark_input_identity.manifest_digest(
+            benchmark_input_identity.product_manifest(root)
+        )
+        harness_digest = benchmark_input_identity.manifest_digest(
+            benchmark_input_identity.harness_manifest(root)
+        )
     except SystemExit as error:
         raise EvidenceError(
             f"cannot compute current performance input identity: {error}"
@@ -1090,7 +1231,7 @@ def verify(root: pathlib.Path, marker_relative: str, integrity_only: bool) -> in
     for name in marker["checksum_files"]:
         if name.endswith(".tar.gz"):
             validate_archive(evidence / name)
-    current_schema = marker["schema_version"] == 2
+    current_schema = marker["schema_version"] == 3
     verify_documentation_bindings(
         root, evidence, result_doc, marker, require_current_links=current_schema
     )
@@ -1101,10 +1242,30 @@ def verify(root: pathlib.Path, marker_relative: str, integrity_only: bool) -> in
         harness_root = safe_extract(
             evidence / harness_info["file"], scratch / "harness", harness_info["root"]
         )
-        summarize = harness_root / "summarize_full.py"
-        if not summarize.is_file():
-            raise EvidenceError("harness archive omits summarize_full.py")
+        trusted_harness_files = {
+            "summarize_full.py": root / "benchmarks/full-seven-library/summarize_full.py",
+        }
+        if current_schema:
+            trusted_harness_files.update({
+                "run_full.py": root / "benchmarks/full-seven-library/run_full.py",
+                "benchmark_fixed_work.py": root / "scripts/benchmark_fixed_work.py",
+            })
+        missing_harness_files = sorted(
+            name for name in trusted_harness_files if not (harness_root / name).is_file()
+        )
+        if missing_harness_files:
+            raise EvidenceError(
+                f"harness archive omits required files: {missing_harness_files}"
+            )
+        for name, trusted_source in trusted_harness_files.items():
+            if (
+                not trusted_source.is_file()
+                or (harness_root / name).read_bytes() != trusted_source.read_bytes()
+            ):
+                raise EvidenceError(f"harness archive differs from trusted checkout: {name}")
+        summarize = trusted_harness_files["summarize_full.py"]
         identities: list[dict[str, Any]] = []
+        fixed_work_batches: list[dict[str, dict[str, Any]]] = []
         result_batch_rows: list[list[str]] = []
         readme_stable_rows: list[str] | None = None
         for index, archive_info in enumerate(marker["formal_archives"]):
@@ -1113,7 +1274,9 @@ def verify(root: pathlib.Path, marker_relative: str, integrity_only: bool) -> in
                 scratch / f"formal-{index}",
                 archive_info["root"],
             )
-            identities.append(read_metadata_and_validate(formal_root, marker))
+            identity, fixed_work = read_metadata_and_validate(formal_root, marker)
+            identities.append(identity)
+            fixed_work_batches.append(fixed_work)
             regenerate_and_compare_summary(formal_root, summarize, archive_info["file"])
             result_batch_rows.append(
                 canonical_summary_rows(formal_root, include_max_cv=True)
@@ -1126,6 +1289,8 @@ def verify(root: pathlib.Path, marker_relative: str, integrity_only: bool) -> in
         for key in STABLE_METADATA_KEYS:
             if stable_identity(identities[0], key) != stable_identity(identities[1], key):
                 raise EvidenceError(f"formal archive identity mismatch: {key}")
+        if current_schema and fixed_work_batches[0] != fixed_work_batches[1]:
+            raise EvidenceError("fixed work differs across formal archives")
         if readme_stable_rows is None:
             raise EvidenceError("formal batch 2 is missing")
         verify_report_rows(
@@ -1163,7 +1328,7 @@ def main(argv: list[str] | None = None) -> int:
         "--print-current-candidate",
         action="store_true",
         help=(
-            "print a schema-v2 marker identity fragment for the clean current commit; "
+            "print a schema-v3 marker identity fragment for the clean current commit; "
             "do not read or write evidence"
         ),
     )
@@ -1181,8 +1346,10 @@ def main(argv: list[str] | None = None) -> int:
     except (EvidenceError, OSError) as error:
         print(f"seven-library evidence failed: {error}", file=sys.stderr)
         return 1
-    if args.integrity_only and schema_version == 1:
-        mode = "historical-only integrity (schema v1; not current freshness)"
+    if args.integrity_only and schema_version in (1, 2):
+        mode = (
+            f"historical-only integrity (schema v{schema_version}; not current freshness)"
+        )
     else:
         mode = "integrity" if args.integrity_only else "strict freshness"
     print(f"seven-library evidence passed: {mode}, checksums, manifests, identities, and summaries")

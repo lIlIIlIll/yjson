@@ -2069,55 +2069,110 @@ static uint64_t fy_validation_percentile(FyDocument *document,
     return document->validation_max_probe;
 }
 
+enum {
+    YJ_YYJSON_STATS_ALLOCATOR_CURRENT = 0,
+    YJ_YYJSON_STATS_ALLOCATOR_PEAK = 1,
+    YJ_YYJSON_STATS_ALLOCATOR_TOTAL_REQUESTED = 2,
+    YJ_YYJSON_STATS_VALIDATION_SCRATCH_PEAK = 3,
+    YJ_YYJSON_STATS_PERSISTENT_USED = 4,
+    YJ_YYJSON_STATS_PERSISTENT_COMMITTED = 5,
+    YJ_YYJSON_STATS_NODES = 6,
+    YJ_YYJSON_STATS_OBJECT_FIELDS = 7,
+    YJ_YYJSON_STATS_ARRAY_ENTRIES = 8,
+    YJ_YYJSON_STATS_STRINGS = 9,
+    YJ_YYJSON_STATS_MODE = 10,
+    YJ_YYJSON_STATS_CUSTOM_FALLBACK = 11,
+    YJ_YYJSON_STATS_MIN_COUNT = 12,
+    YJ_YYJSON_STATS_VALIDATION_PROBES = 12,
+    YJ_YYJSON_STATS_VALIDATION_MAX_PROBE = 13,
+    YJ_YYJSON_STATS_VALIDATION_COUNT = 14,
+    YJ_YYJSON_STATS_VALIDATION_HASHES = 14,
+    YJ_YYJSON_STATS_VALIDATION_FINGERPRINT_MATCHES = 15,
+    YJ_YYJSON_STATS_VALIDATION_MEMCMP_CALLS = 16,
+    YJ_YYJSON_STATS_VALIDATION_MEMCMP_BYTES = 17,
+    YJ_YYJSON_STATS_VALIDATION_SMALL_LINEAR_OBJECTS = 18,
+    YJ_YYJSON_STATS_VALIDATION_HASHED_OBJECTS = 19,
+    YJ_YYJSON_STATS_VALIDATION_WALKS = 20,
+    YJ_YYJSON_STATS_LITERAL_ENTRIES = 21,
+    YJ_YYJSON_STATS_LITERAL_BYTES = 22,
+    YJ_YYJSON_STATS_SOURCE_REPLAY_BYTES = 23,
+    YJ_YYJSON_STATS_SOURCE_COPY_BYTES = 24,
+    YJ_YYJSON_STATS_SAFE_INT_NUMBERS = 25,
+    YJ_YYJSON_STATS_RAW_REQUIRED_NUMBERS = 26,
+    YJ_YYJSON_STATS_ROOT_INDEX_BYTES = 27,
+    YJ_YYJSON_STATS_ROOT_INDEX_BUILDS = 28,
+    YJ_YYJSON_STATS_ROOT_INDEX_PROBES = 29,
+    YJ_YYJSON_STATS_ROOT_INDEX_MAX_PROBE = 30,
+    YJ_YYJSON_STATS_VALIDATION_P50_PROBE = 31,
+    YJ_YYJSON_STATS_VALIDATION_P95_PROBE = 32,
+    YJ_YYJSON_STATS_VALIDATION_P99_PROBE = 33,
+    YJ_YYJSON_STATS_LITERAL_SOURCE_SIZE = 34,
+    YJ_YYJSON_STATS_FLAGS = 35,
+    YJ_YYJSON_STATS_FULL_COUNT = 36
+};
+
 int32_t YJ_Yyjson_Stats(uint64_t handle, uint64_t *stats, uint64_t capacity) {
     FyDocument *document = (FyDocument *)(uintptr_t)handle;
     if (document == NULL) return YJ_COMPACT_CLOSED;
-    if (stats == NULL || capacity < 12u) return YJ_COMPACT_BOUNDS_ERROR;
-    stats[0] = document->allocator.current;
-    stats[1] = document->allocator.peak;
-    stats[2] = document->allocator.total;
-    stats[3] = document->validation_scratch_peak;
-    stats[4] = document->flat == NULL ? document->allocator.current
-        : document->flat->persistent_used;
-    stats[5] = document->flat == NULL ? document->allocator.current
-        : document->flat->persistent_committed;
-    stats[6] = document->node_count;
-    stats[7] = document->object_fields;
-    stats[8] = document->array_entries;
-    stats[9] = document->string_count;
-    stats[10] = document->mode;
-    stats[11] = document->fallback_custom_handle != 0;
-    if (capacity >= 14u) {
-        stats[12] = document->validation_probes;
-        stats[13] = document->validation_max_probe;
+    if (stats == NULL || capacity < YJ_YYJSON_STATS_MIN_COUNT)
+        return YJ_COMPACT_BOUNDS_ERROR;
+    stats[YJ_YYJSON_STATS_ALLOCATOR_CURRENT] = document->allocator.current;
+    stats[YJ_YYJSON_STATS_ALLOCATOR_PEAK] = document->allocator.peak;
+    stats[YJ_YYJSON_STATS_ALLOCATOR_TOTAL_REQUESTED] = document->allocator.total;
+    stats[YJ_YYJSON_STATS_VALIDATION_SCRATCH_PEAK] =
+        document->validation_scratch_peak;
+    stats[YJ_YYJSON_STATS_PERSISTENT_USED] = document->flat == NULL
+        ? document->allocator.current : document->flat->persistent_used;
+    stats[YJ_YYJSON_STATS_PERSISTENT_COMMITTED] = document->flat == NULL
+        ? document->allocator.current : document->flat->persistent_committed;
+    stats[YJ_YYJSON_STATS_NODES] = document->node_count;
+    stats[YJ_YYJSON_STATS_OBJECT_FIELDS] = document->object_fields;
+    stats[YJ_YYJSON_STATS_ARRAY_ENTRIES] = document->array_entries;
+    stats[YJ_YYJSON_STATS_STRINGS] = document->string_count;
+    stats[YJ_YYJSON_STATS_MODE] = document->mode;
+    stats[YJ_YYJSON_STATS_CUSTOM_FALLBACK] =
+        document->fallback_custom_handle != 0;
+    if (capacity >= YJ_YYJSON_STATS_VALIDATION_COUNT) {
+        stats[YJ_YYJSON_STATS_VALIDATION_PROBES] = document->validation_probes;
+        stats[YJ_YYJSON_STATS_VALIDATION_MAX_PROBE] =
+            document->validation_max_probe;
     }
-    if (capacity >= 36u) {
-        stats[14] = document->validation_hashes;
-        stats[15] = document->validation_fingerprint_matches;
-        stats[16] = document->validation_memcmp_calls;
-        stats[17] = document->validation_memcmp_bytes;
-        stats[18] = document->validation_small_linear_objects;
-        stats[19] = document->validation_hashed_objects;
-        stats[20] = document->validation_walks;
-        stats[21] = document->literal_entries;
-        stats[22] = document->literal_bytes;
-        stats[23] = document->source_replay_bytes;
-        stats[24] = document->source_copy_bytes;
-        stats[25] = document->number_safe_ints;
-        stats[26] = document->number_raw_required;
-        stats[27] = atomic_load_explicit(&document->root_index_bytes,
-                                         memory_order_relaxed);
-        stats[28] = atomic_load_explicit(&document->root_index_builds,
-                                         memory_order_relaxed);
-        stats[29] = atomic_load_explicit(&document->root_index_probes,
-                                         memory_order_relaxed);
-        stats[30] = atomic_load_explicit(&document->root_index_max_probe,
-                                         memory_order_relaxed);
-        stats[31] = fy_validation_percentile(document, 1u, 2u);
-        stats[32] = fy_validation_percentile(document, 95u, 100u);
-        stats[33] = fy_validation_percentile(document, 99u, 100u);
-        stats[34] = document->literal_source_size;
-        stats[35] = document->flags;
+    if (capacity >= YJ_YYJSON_STATS_FULL_COUNT) {
+        stats[YJ_YYJSON_STATS_VALIDATION_HASHES] = document->validation_hashes;
+        stats[YJ_YYJSON_STATS_VALIDATION_FINGERPRINT_MATCHES] =
+            document->validation_fingerprint_matches;
+        stats[YJ_YYJSON_STATS_VALIDATION_MEMCMP_CALLS] =
+            document->validation_memcmp_calls;
+        stats[YJ_YYJSON_STATS_VALIDATION_MEMCMP_BYTES] =
+            document->validation_memcmp_bytes;
+        stats[YJ_YYJSON_STATS_VALIDATION_SMALL_LINEAR_OBJECTS] =
+            document->validation_small_linear_objects;
+        stats[YJ_YYJSON_STATS_VALIDATION_HASHED_OBJECTS] =
+            document->validation_hashed_objects;
+        stats[YJ_YYJSON_STATS_VALIDATION_WALKS] = document->validation_walks;
+        stats[YJ_YYJSON_STATS_LITERAL_ENTRIES] = document->literal_entries;
+        stats[YJ_YYJSON_STATS_LITERAL_BYTES] = document->literal_bytes;
+        stats[YJ_YYJSON_STATS_SOURCE_REPLAY_BYTES] = document->source_replay_bytes;
+        stats[YJ_YYJSON_STATS_SOURCE_COPY_BYTES] = document->source_copy_bytes;
+        stats[YJ_YYJSON_STATS_SAFE_INT_NUMBERS] = document->number_safe_ints;
+        stats[YJ_YYJSON_STATS_RAW_REQUIRED_NUMBERS] =
+            document->number_raw_required;
+        stats[YJ_YYJSON_STATS_ROOT_INDEX_BYTES] = atomic_load_explicit(
+            &document->root_index_bytes, memory_order_relaxed);
+        stats[YJ_YYJSON_STATS_ROOT_INDEX_BUILDS] = atomic_load_explicit(
+            &document->root_index_builds, memory_order_relaxed);
+        stats[YJ_YYJSON_STATS_ROOT_INDEX_PROBES] = atomic_load_explicit(
+            &document->root_index_probes, memory_order_relaxed);
+        stats[YJ_YYJSON_STATS_ROOT_INDEX_MAX_PROBE] = atomic_load_explicit(
+            &document->root_index_max_probe, memory_order_relaxed);
+        stats[YJ_YYJSON_STATS_VALIDATION_P50_PROBE] =
+            fy_validation_percentile(document, 1u, 2u);
+        stats[YJ_YYJSON_STATS_VALIDATION_P95_PROBE] =
+            fy_validation_percentile(document, 95u, 100u);
+        stats[YJ_YYJSON_STATS_VALIDATION_P99_PROBE] =
+            fy_validation_percentile(document, 99u, 100u);
+        stats[YJ_YYJSON_STATS_LITERAL_SOURCE_SIZE] = document->literal_source_size;
+        stats[YJ_YYJSON_STATS_FLAGS] = document->flags;
     }
     return YJ_COMPACT_OK;
 }

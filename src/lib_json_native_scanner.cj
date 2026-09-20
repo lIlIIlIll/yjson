@@ -102,9 +102,12 @@ func jsonNativeFormatFloat64Into(value: Float64, output: Array<Byte>,
     }
     unsafe {
         let outputHandle = acquireArrayRawData(output)
-        let written = backend.formatFloat64(value, outputHandle.pointer, output.size,
-            outputOffset)
-        releaseArrayRawData(outputHandle)
+        let written = try {
+            backend.formatFloat64(value, outputHandle.pointer, output.size,
+                outputOffset)
+        } finally {
+            releaseArrayRawData(outputHandle)
+        }
         if (written <= 0 || written > 40 || written > output.size - outputOffset) {
             throw JsonException("Native JSON float formatting failed",
                 code: "acceleration_writer_failure")
@@ -137,11 +140,14 @@ func jsonNativeFormatInt64ArrayInto(values: ArrayList<Int64>, output: Array<Byte
         let valuesHandle = acquireArrayRawData(contiguous)
         let outputHandle = acquireArrayRawData(output)
         let writtenHandle = acquireArrayRawData(written)
-        let status = backend.formatInt64Array(valuesHandle.pointer, contiguous.size,
-            outputHandle.pointer, output.size, outputOffset, writtenHandle.pointer)
-        releaseArrayRawData(writtenHandle)
-        releaseArrayRawData(outputHandle)
-        releaseArrayRawData(valuesHandle)
+        let status = try {
+            backend.formatInt64Array(valuesHandle.pointer, contiguous.size,
+                outputHandle.pointer, output.size, outputOffset, writtenHandle.pointer)
+        } finally {
+            releaseArrayRawData(writtenHandle)
+            releaseArrayRawData(outputHandle)
+            releaseArrayRawData(valuesHandle)
+        }
         if (status == YJ_JSON_SCAN_CAPACITY) {
             return None<Int64>
         }
@@ -176,11 +182,14 @@ func jsonNativeFormatInt64ArrayInto(values: Array<Int64>, output: Array<Byte>,
         let valuesHandle = acquireArrayRawData(values)
         let outputHandle = acquireArrayRawData(output)
         let writtenHandle = acquireArrayRawData(written)
-        let status = backend.formatInt64Array(valuesHandle.pointer, values.size,
-            outputHandle.pointer, output.size, outputOffset, writtenHandle.pointer)
-        releaseArrayRawData(writtenHandle)
-        releaseArrayRawData(outputHandle)
-        releaseArrayRawData(valuesHandle)
+        let status = try {
+            backend.formatInt64Array(valuesHandle.pointer, values.size,
+                outputHandle.pointer, output.size, outputOffset, writtenHandle.pointer)
+        } finally {
+            releaseArrayRawData(writtenHandle)
+            releaseArrayRawData(outputHandle)
+            releaseArrayRawData(valuesHandle)
+        }
         if (status == YJ_JSON_SCAN_CAPACITY) {
             return None<Int64>
         }
@@ -215,11 +224,14 @@ func jsonNativeFormatFloat64ArrayInto(values: Array<Float64>, output: Array<Byte
         let valuesHandle = acquireArrayRawData(values)
         let outputHandle = acquireArrayRawData(output)
         let writtenHandle = acquireArrayRawData(written)
-        let status = backend.formatFloat64Array(valuesHandle.pointer, values.size,
-            outputHandle.pointer, output.size, outputOffset, writtenHandle.pointer)
-        releaseArrayRawData(writtenHandle)
-        releaseArrayRawData(outputHandle)
-        releaseArrayRawData(valuesHandle)
+        let status = try {
+            backend.formatFloat64Array(valuesHandle.pointer, values.size,
+                outputHandle.pointer, output.size, outputOffset, writtenHandle.pointer)
+        } finally {
+            releaseArrayRawData(writtenHandle)
+            releaseArrayRawData(outputHandle)
+            releaseArrayRawData(valuesHandle)
+        }
         if (status == YJ_JSON_SCAN_CAPACITY) {
             return None<Int64>
         }
@@ -294,11 +306,14 @@ func jsonNativeEscapeString(value: String, htmlSafe: Bool,
         let inputHandle = acquireArrayRawData(input)
         let outputHandle = acquireArrayRawData(output)
         let writtenHandle = acquireArrayRawData(written)
-        let status = backend.escapeString(inputHandle.pointer, input.size, htmlSafe,
-            outputHandle.pointer, output.size, writtenHandle.pointer)
-        releaseArrayRawData(writtenHandle)
-        releaseArrayRawData(outputHandle)
-        releaseArrayRawData(inputHandle)
+        let status = try {
+            backend.escapeString(inputHandle.pointer, input.size, htmlSafe,
+                outputHandle.pointer, output.size, writtenHandle.pointer)
+        } finally {
+            releaseArrayRawData(writtenHandle)
+            releaseArrayRawData(outputHandle)
+            releaseArrayRawData(inputHandle)
+        }
         if (status != YJ_JSON_SCAN_OK || written[0] != output.size) {
             throw JsonException("Native JSON string escaping failed",
                 code: "acceleration_writer_failure")
@@ -324,9 +339,12 @@ func jsonNativeParseFloat64(reader: JsonFastReader): Option<Float64> {
     var result = Float64.NaN
     unsafe {
         let dataHandle = acquireArrayRawData(data)
-        result = backend.parseFloat64(dataHandle.pointer, data.size,
-            reader.currentRawTokenStartOffset(), tokenLength)
-        releaseArrayRawData(dataHandle)
+        result = try {
+            backend.parseFloat64(dataHandle.pointer, data.size,
+                reader.currentRawTokenStartOffset(), tokenLength)
+        } finally {
+            releaseArrayRawData(dataHandle)
+        }
     }
     if (result.isNaN()) { None<Float64> } else { Some(result) }
 }
@@ -361,11 +379,14 @@ class JsonNativeNumericTape {
                 let nextHandle = acquireArrayRawData(next)
                 let countHandle = acquireArrayRawData(count)
                 let errorHandle = acquireArrayRawData(error)
-                let status = backend.scanNumericTape(dataHandle.pointer, data.size, start, pageBytes,
-                    YJ_JSON_SCAN_VALIDATE_STRINGS, wordsHandle.pointer, words.size / 4,
-                    nextHandle.pointer, countHandle.pointer, errorHandle.pointer)
-                releaseArrayRawData(errorHandle); releaseArrayRawData(countHandle)
-                releaseArrayRawData(nextHandle); releaseArrayRawData(wordsHandle); releaseArrayRawData(dataHandle)
+                let status = try {
+                    backend.scanNumericTape(dataHandle.pointer, data.size, start, pageBytes,
+                        YJ_JSON_SCAN_VALIDATE_STRINGS, wordsHandle.pointer, words.size / 4,
+                        nextHandle.pointer, countHandle.pointer, errorHandle.pointer)
+                } finally {
+                    releaseArrayRawData(errorHandle); releaseArrayRawData(countHandle)
+                    releaseArrayRawData(nextHandle); releaseArrayRawData(wordsHandle); releaseArrayRawData(dataHandle)
+                }
                 if (status != YJ_JSON_SCAN_OK) {
                     throw JsonException("Native numeric tape error at byte ${error[0]}", code: "parse_error")
                 }
@@ -431,12 +452,15 @@ func jsonNativeParseInt64Array(data: Array<Byte>, start: Int64): Option<JsonNati
         let endHandle = acquireArrayRawData(end)
         let countHandle = acquireArrayRawData(count)
         let errorHandle = acquireArrayRawData(error)
-        let status = backend.parseInt64Array(dataHandle.pointer, data.size, start,
-            valuesHandle.pointer, values.size, endHandle.pointer, countHandle.pointer,
-            errorHandle.pointer)
-        releaseArrayRawData(errorHandle); releaseArrayRawData(countHandle)
-        releaseArrayRawData(endHandle); releaseArrayRawData(valuesHandle)
-        releaseArrayRawData(dataHandle)
+        let status = try {
+            backend.parseInt64Array(dataHandle.pointer, data.size, start,
+                valuesHandle.pointer, values.size, endHandle.pointer, countHandle.pointer,
+                errorHandle.pointer)
+        } finally {
+            releaseArrayRawData(errorHandle); releaseArrayRawData(countHandle)
+            releaseArrayRawData(endHandle); releaseArrayRawData(valuesHandle)
+            releaseArrayRawData(dataHandle)
+        }
         if (status == YJ_JSON_SCAN_OK && count[0] >= 0 && count[0] <= values.size) {
             return Some(JsonNativeInt64Array(values, count[0], end[0]))
         }
@@ -464,12 +488,15 @@ func jsonNativeScanNumericArrayChunk(data: Array<Byte>, start: Int64,
         let countHandle = acquireArrayRawData(count)
         let doneHandle = acquireArrayRawData(done)
         let errorHandle = acquireArrayRawData(error)
-        let status = backend.scanNumericArrayChunk(dataHandle.pointer, data.size, start,
-            nativeJsonScannerFlags(validateStrings), wordsHandle.pointer, tokenCap,
-            nextHandle.pointer, countHandle.pointer, doneHandle.pointer, errorHandle.pointer)
-        releaseArrayRawData(errorHandle); releaseArrayRawData(doneHandle)
-        releaseArrayRawData(countHandle); releaseArrayRawData(nextHandle)
-        releaseArrayRawData(wordsHandle); releaseArrayRawData(dataHandle)
+        let status = try {
+            backend.scanNumericArrayChunk(dataHandle.pointer, data.size, start,
+                nativeJsonScannerFlags(validateStrings), wordsHandle.pointer, tokenCap,
+                nextHandle.pointer, countHandle.pointer, doneHandle.pointer, errorHandle.pointer)
+        } finally {
+            releaseArrayRawData(errorHandle); releaseArrayRawData(doneHandle)
+            releaseArrayRawData(countHandle); releaseArrayRawData(nextHandle)
+            releaseArrayRawData(wordsHandle); releaseArrayRawData(dataHandle)
+        }
         if (status == YJ_JSON_SCAN_OK || status == YJ_JSON_SCAN_FALLBACK) {
             return Some(JsonNativeNumericChunk(words, count[0], next[0], done[0] != 0,
                 status == YJ_JSON_SCAN_FALLBACK))
@@ -568,17 +595,20 @@ func jsonNativeScanString(
         let dataHandle = acquireArrayRawData(data)
         let endHandle = acquireArrayRawData(end)
         let errorHandle = acquireArrayRawData(error)
-        let status = YJ_JSON_ScanString(
-            dataHandle.pointer,
-            size,
-            start,
-            nativeJsonScannerFlags(validateStrings),
-            endHandle.pointer,
-            errorHandle.pointer
-        )
-        releaseArrayRawData(errorHandle)
-        releaseArrayRawData(endHandle)
-        releaseArrayRawData(dataHandle)
+        let status = try {
+            YJ_JSON_ScanString(
+                dataHandle.pointer,
+                size,
+                start,
+                nativeJsonScannerFlags(validateStrings),
+                endHandle.pointer,
+                errorHandle.pointer
+            )
+        } finally {
+            releaseArrayRawData(errorHandle)
+            releaseArrayRawData(endHandle)
+            releaseArrayRawData(dataHandle)
+        }
         if (status == YJ_JSON_SCAN_OK) {
             return end[0]
         }
@@ -615,22 +645,25 @@ func jsonNativeDecodeString(
         let endHandle = acquireArrayRawData(end)
         let writtenHandle = acquireArrayRawData(written)
         let errorHandle = acquireArrayRawData(error)
-        let status = YJ_JSON_DecodeString(
-            dataHandle.pointer,
-            size,
-            start,
-            nativeJsonScannerFlags(validateStrings),
-            outputHandle.pointer,
-            output.size,
-            endHandle.pointer,
-            writtenHandle.pointer,
-            errorHandle.pointer
-        )
-        releaseArrayRawData(errorHandle)
-        releaseArrayRawData(writtenHandle)
-        releaseArrayRawData(endHandle)
-        releaseArrayRawData(outputHandle)
-        releaseArrayRawData(dataHandle)
+        let status = try {
+            YJ_JSON_DecodeString(
+                dataHandle.pointer,
+                size,
+                start,
+                nativeJsonScannerFlags(validateStrings),
+                outputHandle.pointer,
+                output.size,
+                endHandle.pointer,
+                writtenHandle.pointer,
+                errorHandle.pointer
+            )
+        } finally {
+            releaseArrayRawData(errorHandle)
+            releaseArrayRawData(writtenHandle)
+            releaseArrayRawData(endHandle)
+            releaseArrayRawData(outputHandle)
+            releaseArrayRawData(dataHandle)
+        }
         if (status == YJ_JSON_SCAN_OK) {
             return Some(JsonNativeDecodedString(String.fromUtf8Unchecked(output[0..written[0]]), end[0]))
         }
@@ -659,17 +692,20 @@ func jsonNativeSkipValue(
         let dataHandle = acquireArrayRawData(data)
         let endHandle = acquireArrayRawData(end)
         let errorHandle = acquireArrayRawData(error)
-        let status = YJ_JSON_SkipValue(
-            dataHandle.pointer,
-            size,
-            start,
-            nativeJsonScannerFlags(validateStrings),
-            endHandle.pointer,
-            errorHandle.pointer
-        )
-        releaseArrayRawData(errorHandle)
-        releaseArrayRawData(endHandle)
-        releaseArrayRawData(dataHandle)
+        let status = try {
+            YJ_JSON_SkipValue(
+                dataHandle.pointer,
+                size,
+                start,
+                nativeJsonScannerFlags(validateStrings),
+                endHandle.pointer,
+                errorHandle.pointer
+            )
+        } finally {
+            releaseArrayRawData(errorHandle)
+            releaseArrayRawData(endHandle)
+            releaseArrayRawData(dataHandle)
+        }
         if (status == YJ_JSON_SCAN_OK) {
             return end[0]
         }

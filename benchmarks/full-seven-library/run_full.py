@@ -22,6 +22,8 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+import benchmark_fixed_work
 from summarize_full import load_cangjie_case, load_jmh_case
 
 
@@ -156,6 +158,30 @@ def parse_max_rss(path: Path) -> int:
     return value
 
 
+def write_fixed_work_sidecar(
+    library: str, stdout: str, source_case: str, report_dir: Path
+) -> Path | None:
+    """Validate and save fixed measurement work for one yjson matrix cell."""
+    if library != "yjson":
+        return None
+    counts = benchmark_fixed_work.parse_fixed_work(stdout, source_case)
+    path = report_dir / "fixed-work.json"
+    path.write_text(
+        json.dumps(
+            {
+                "protocol_version": benchmark_fixed_work.PROTOCOL_VERSION,
+                "case": source_case,
+                **counts,
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return path
+
+
 def source_digest(root: Path) -> str:
     digest = hashlib.sha256()
     paths: list[Path] = []
@@ -214,6 +240,7 @@ def cangjie_runtime_environment(
     env: dict[str, str], stdx_sdk_root: Path, cwd: Path
 ) -> dict[str, str]:
     command_env = env.copy()
+    command_env["cjProcessorNum"] = "1"
     dynamic_stdx = (
         stdx_sdk_root
         if stdx_sdk_root.name == "stdx"
@@ -434,12 +461,17 @@ def metadata(
         "platform": platform.platform(),
         "cpu_selection": cpu_selection,
         "heap": "128MB",
+        "cj_processor_num": 1,
         "runs": runs,
+        "fixed_work_protocol": benchmark_fixed_work.PROTOCOL_VERSION,
         "schedule": (
             "workload and seven-library order rotate; even rounds reverse workload order"
         ),
         "jmh": "1 fork per outer round, 3x500ms warmup, 1x1s measurement, avgt ns/op",
-        "cangjie_bench": "prebuilt executable direct; 200ms warmup, >=1s duration, >=12 batches, csv-raw",
+        "cangjie_bench": (
+            "prebuilt executable direct; yjson fixed-work protocol v1; peer Cangjie "
+            "methods unchanged; csv-raw"
+        ),
         "timing_build_policy": (
             "all Cangjie benchmark packages are built before this runner; GNU time wraps "
             "only the prebuilt benchmark executables"
@@ -602,6 +634,7 @@ def main(argv: list[str] | None = None) -> int:
         "report_path",
         "rss_path",
         "log_path",
+        "fixed_work_path",
     ]
     with (output / "manifest.csv").open("w", newline="", encoding="utf-8") as stream:
         manifest = csv.DictWriter(stream, fieldnames=fields)
@@ -658,6 +691,21 @@ def main(argv: list[str] | None = None) -> int:
                         )
                         return result.returncode
                     try:
+                        fixed_work_path = write_fixed_work_sidecar(
+                            library, result.stdout, source_case, report_dir
+                        )
+                    except (OSError, UnicodeError, ValueError) as error:
+                        with log_path.open("a", encoding="utf-8") as log:
+                            log.write(f"\nFIXED WORK VALIDATION FAILED: {error}\n")
+                        print(
+                            f"FAILED fixed-work proof round={round_id} "
+                            f"workload={workload_id} library={library}: {error} "
+                            f"log={log_path}",
+                            file=sys.stderr,
+                            flush=True,
+                        )
+                        return 1
+                    try:
                         max_rss_kb = parse_max_rss(rss_path)
                     except (OSError, UnicodeError, ValueError) as error:
                         print(
@@ -698,6 +746,11 @@ def main(argv: list[str] | None = None) -> int:
                             "report_path": report_dir.relative_to(output),
                             "rss_path": rss_path.relative_to(output),
                             "log_path": log_path.relative_to(output),
+                            "fixed_work_path": (
+                                fixed_work_path.relative_to(output)
+                                if fixed_work_path is not None
+                                else ""
+                            ),
                         }
                     )
                     stream.flush()

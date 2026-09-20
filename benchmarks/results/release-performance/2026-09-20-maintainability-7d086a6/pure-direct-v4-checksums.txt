@@ -1,0 +1,4 @@
+87cfacd795641eb3da62a43b471e46048e41edce3ccf3c5f1fdb8aae31ea1c78  pure-direct-v4-evidence.tar.gz
+a60d4a95a274d85bf620d541eadd4ac399ef82a22be3ab716eaf88721c420611  pure-direct-v4-baseline-source.tar.gz
+bf3a78afc2bc51ff8dd39904299f5f2685e4d3006036a05f32cc8e9d946a1c0f  pure-direct-v4-baseline-source-manifest.json
+e3aafc0803b14c33437fffe8c2ad0f4de614099b6284fa1d36ed296bd78a6813  pure-direct-v4-validation.json

@@ -533,51 +533,54 @@ private class GeneratedPathStateV1 {
 
 }
 
-public class GeneratedWriteStateV1 {
+private struct GeneratedTraversalStateV1 {
     private let maxDepth: Int64
     private var depth: Int64 = 0
     private var path: Option<GeneratedPathStateV1> = None<GeneratedPathStateV1>
 
-    init(config: JsonWriteOptions) { maxDepth = config.maxDepth }
+    init(maxDepth: Int64) { this.maxDepth = maxDepth }
 
-    public func pushField(name: String): Unit { pathState().pushField(name) }
-    public func pushIndex(index: Int64): Unit { pathState().pushIndex(index) }
-    public func popPath(): Unit { if (let Some(value) <- path) { value.pop() } }
-    public func updateLastField(name: String): Unit {
+    mut func pushField(name: String): Unit { pathState().pushField(name) }
+    mut func pushIndex(index: Int64): Unit { pathState().pushIndex(index) }
+    mut func popPath(): Unit { if (let Some(value) <- path) { value.pop() } }
+    mut func updateLastField(name: String): Unit {
         if (let Some(value) <- path) { value.updateLastField(name) }
     }
-    public func updateLastIndex(index: Int64): Unit {
+    mut func updateLastIndex(index: Int64): Unit {
         if (let Some(value) <- path) { value.updateLastIndex(index) }
     }
 
     func pathDepth(): Int64 { match (path) { case Some(value) => value.size(); case None => 0 } }
-    func pushAutoField(name: String, baseDepth: Int64): Bool { pathState().pushAutoField(name, baseDepth) }
-    func pushAutoIndex(index: Int64, baseDepth: Int64): Bool { pathState().pushAutoIndex(index, baseDepth) }
-    func beginAutoValue(pushed: Bool): Unit {
+    mut func pushAutoField(name: String, baseDepth: Int64): Bool {
+        pathState().pushAutoField(name, baseDepth)
+    }
+    mut func pushAutoIndex(index: Int64, baseDepth: Int64): Bool {
+        pathState().pushAutoIndex(index, baseDepth)
+    }
+    mut func beginAutoValue(pushed: Bool): Unit {
         if (let Some(value) <- path) { value.beginAutoValue(pushed) }
     }
-    func completeAutoValue(pushed: Bool): Unit {
+    mut func completeAutoValue(pushed: Bool): Unit {
         if (let Some(value) <- path) { value.completeAutoValue(pushed) }
     }
 
-    public func enterValue(): Unit {
+    mut func enterValue(): Unit {
         if (depth >= maxDepth) {
             throw JsonException("Maximum JSON depth ${maxDepth} exceeded", code: "max_depth", path: currentPath())
         }
         depth++
     }
-    public func leaveValue(): Unit { if (depth > 0) { depth-- } }
-    public func enterObject<T>(value: T): Unit { let _ = value; enterValue() }
-    public func leaveObject(): Unit { leaveValue() }
-    public func currentPath(): String {
+    mut func leaveValue(): Unit { if (depth > 0) { depth-- } }
+    func remainingDepth(): Int64 { maxDepth - depth }
+    func currentPath(): String {
         match (path) { case Some(value) => value.pointer(); case None => "" }
     }
-    func resetForReuse(): Unit {
+    mut func reset(): Unit {
         depth = 0
         match (path) { case Some(value) => value.reset(); case None => () }
     }
 
-    private func pathState(): GeneratedPathStateV1 {
+    private mut func pathState(): GeneratedPathStateV1 {
         match (path) {
             case Some(value) => value
             case None =>
@@ -588,54 +591,64 @@ public class GeneratedWriteStateV1 {
     }
 }
 
+public class GeneratedWriteStateV1 {
+    private var traversal: GeneratedTraversalStateV1
+
+    init(config: JsonWriteOptions) {
+        traversal = GeneratedTraversalStateV1(config.maxDepth)
+    }
+
+    public func pushField(name: String): Unit { traversal.pushField(name) }
+    public func pushIndex(index: Int64): Unit { traversal.pushIndex(index) }
+    public func popPath(): Unit { traversal.popPath() }
+    public func updateLastField(name: String): Unit { traversal.updateLastField(name) }
+    public func updateLastIndex(index: Int64): Unit { traversal.updateLastIndex(index) }
+
+    func pathDepth(): Int64 { traversal.pathDepth() }
+    func pushAutoField(name: String, baseDepth: Int64): Bool {
+        traversal.pushAutoField(name, baseDepth)
+    }
+    func pushAutoIndex(index: Int64, baseDepth: Int64): Bool {
+        traversal.pushAutoIndex(index, baseDepth)
+    }
+    func beginAutoValue(pushed: Bool): Unit { traversal.beginAutoValue(pushed) }
+    func completeAutoValue(pushed: Bool): Unit { traversal.completeAutoValue(pushed) }
+
+    public func enterValue(): Unit { traversal.enterValue() }
+    public func leaveValue(): Unit { traversal.leaveValue() }
+    public func enterObject<T>(value: T): Unit { let _ = value; traversal.enterValue() }
+    public func leaveObject(): Unit { traversal.leaveValue() }
+    public func currentPath(): String { traversal.currentPath() }
+    func resetForReuse(): Unit { traversal.reset() }
+}
+
 public class GeneratedReadStateV1 {
-    private let maxDepth: Int64
-    private var depth: Int64 = 0
-    private var path: Option<GeneratedPathStateV1> = None<GeneratedPathStateV1>
+    private var traversal: GeneratedTraversalStateV1
 
-    init(config: JsonReadOptions) { maxDepth = config.maxDepth }
-
-    public func pushField(name: String): Unit { pathState().pushField(name) }
-    public func pushIndex(index: Int64): Unit { pathState().pushIndex(index) }
-    public func popPath(): Unit { if (let Some(value) <- path) { value.pop() } }
-    func updateLastField(name: String): Unit {
-        if (let Some(value) <- path) { value.updateLastField(name) }
-    }
-    func updateLastIndex(index: Int64): Unit {
-        if (let Some(value) <- path) { value.updateLastIndex(index) }
+    init(config: JsonReadOptions) {
+        traversal = GeneratedTraversalStateV1(config.maxDepth)
     }
 
-    func pathDepth(): Int64 { match (path) { case Some(value) => value.size(); case None => 0 } }
-    func pushAutoField(name: String, baseDepth: Int64): Bool { pathState().pushAutoField(name, baseDepth) }
-    func pushAutoIndex(index: Int64, baseDepth: Int64): Bool { pathState().pushAutoIndex(index, baseDepth) }
-    func beginAutoValue(pushed: Bool): Unit {
-        if (let Some(value) <- path) { value.beginAutoValue(pushed) }
-    }
-    func completeAutoValue(pushed: Bool): Unit {
-        if (let Some(value) <- path) { value.completeAutoValue(pushed) }
-    }
+    public func pushField(name: String): Unit { traversal.pushField(name) }
+    public func pushIndex(index: Int64): Unit { traversal.pushIndex(index) }
+    public func popPath(): Unit { traversal.popPath() }
+    func updateLastField(name: String): Unit { traversal.updateLastField(name) }
+    func updateLastIndex(index: Int64): Unit { traversal.updateLastIndex(index) }
 
-    public func enterValue(): Unit {
-        if (depth >= maxDepth) {
-            throw JsonException("Maximum JSON depth ${maxDepth} exceeded", code: "max_depth", path: currentPath())
-        }
-        depth++
+    func pathDepth(): Int64 { traversal.pathDepth() }
+    func pushAutoField(name: String, baseDepth: Int64): Bool {
+        traversal.pushAutoField(name, baseDepth)
     }
-    public func leaveValue(): Unit { if (depth > 0) { depth-- } }
-    public func remainingDepth(): Int64 { maxDepth - depth }
-    public func currentPath(): String {
-        match (path) { case Some(value) => value.pointer(); case None => "" }
+    func pushAutoIndex(index: Int64, baseDepth: Int64): Bool {
+        traversal.pushAutoIndex(index, baseDepth)
     }
+    func beginAutoValue(pushed: Bool): Unit { traversal.beginAutoValue(pushed) }
+    func completeAutoValue(pushed: Bool): Unit { traversal.completeAutoValue(pushed) }
 
-    private func pathState(): GeneratedPathStateV1 {
-        match (path) {
-            case Some(value) => value
-            case None =>
-                let value = GeneratedPathStateV1()
-                path = Some(value)
-                value
-        }
-    }
+    public func enterValue(): Unit { traversal.enterValue() }
+    public func leaveValue(): Unit { traversal.leaveValue() }
+    public func remainingDepth(): Int64 { traversal.remainingDepth() }
+    public func currentPath(): String { traversal.currentPath() }
 }
 
 private func jsonPointerEscape(value: String): String {
@@ -2955,8 +2968,7 @@ public class YJson {
     private static func encodeString<T>(value: T,
         codec: GeneratedCompactCursorWriteCodecV1<T>,
         options: JsonWriteOptions): String {
-        GeneratedSupportV1.requireProtocolVersion(1)
-        freezeYJsonRuntime()
+        GeneratedSupportV1.enterGeneratedEntry()
         let writer = acquireGeneratedCompactWriter(options)
         try {
             if (writer.tryBeginGeneratedCompactRawValue()) {
@@ -2974,8 +2986,7 @@ public class YJson {
         codec: GeneratedCompactCursorWriteCodecV1<T>,
         options: JsonWriteOptions): String
         where T <: GeneratedCompactCodecProviderV1<T> {
-        GeneratedSupportV1.requireProtocolVersion(1)
-        freezeYJsonRuntime()
+        GeneratedSupportV1.enterGeneratedEntry()
         let writer = acquireGeneratedCompactWriter(options)
         try {
             if (writer.tryBeginGeneratedCompactRawValue()) {
@@ -2991,8 +3002,7 @@ public class YJson {
 
     private static func encodeString<T>(value: T, codec: JsonCodec<T>,
         options: JsonWriteOptions): String {
-        GeneratedSupportV1.requireProtocolVersion(1)
-        freezeYJsonRuntime()
+        GeneratedSupportV1.enterGeneratedEntry()
         let writer = JsonDirectWriter(options)
         writeEncoded(value, codec, writer)
         writer.finishString()
@@ -3001,8 +3011,7 @@ public class YJson {
     private static func encodeBytes<T>(value: T,
         codec: GeneratedCompactCursorWriteCodecV1<T>,
         options: JsonWriteOptions): Array<Byte> {
-        GeneratedSupportV1.requireProtocolVersion(1)
-        freezeYJsonRuntime()
+        GeneratedSupportV1.enterGeneratedEntry()
         let writer = JsonDirectWriter.bytes(config: options)
         if (writer.tryBeginGeneratedCompactRawValue()) {
             codec.writeCompactRawWithWriter(value, writer)
@@ -3014,8 +3023,7 @@ public class YJson {
 
     private static func encodeBytes<T>(value: T, codec: JsonCodec<T>,
         options: JsonWriteOptions): Array<Byte> {
-        GeneratedSupportV1.requireProtocolVersion(1)
-        freezeYJsonRuntime()
+        GeneratedSupportV1.enterGeneratedEntry()
         let writer = JsonDirectWriter.bytes(config: options)
         writeEncoded(value, codec, writer)
         writer.finishBytes()
@@ -3023,8 +3031,7 @@ public class YJson {
 
     private static func encodeStream<T>(value: T, codec: JsonCodec<T>, output: OutputStream,
         options: JsonWriteOptions): Unit {
-        GeneratedSupportV1.requireProtocolVersion(1)
-        freezeYJsonRuntime()
+        GeneratedSupportV1.enterGeneratedEntry()
         let writer = JsonDirectWriter(output, config: options)
         writeEncoded(value, codec, writer)
         writer.finish()
@@ -3033,8 +3040,7 @@ public class YJson {
     private static func decodeString<T>(text: String,
         codec: GeneratedCompactCursorWriteCodecV1<T>,
         options: JsonReadOptions): T {
-        GeneratedSupportV1.requireProtocolVersion(1)
-        freezeYJsonRuntime()
+        GeneratedSupportV1.enterGeneratedEntry()
         if (jsonReadOptionsUsesDefaultFastPath(options)) {
             validateJsonResourceLimits(unsafe { text.rawData() }, options)
             let reader = JsonFastReader(text)
@@ -3070,8 +3076,7 @@ public class YJson {
     }
     private static func decodeString<T>(text: String, codec: JsonCodec<T>,
         options: JsonReadOptions): T {
-        GeneratedSupportV1.requireProtocolVersion(1)
-        freezeYJsonRuntime()
+        GeneratedSupportV1.enterGeneratedEntry()
         if (jsonReadOptionsUsesDefaultFastPath(options)) {
             validateJsonResourceLimits(unsafe { text.rawData() }, options)
             match (codec) {
@@ -3097,8 +3102,7 @@ public class YJson {
     private static func decodeBytes<T>(bytes: Array<Byte>,
         codec: GeneratedCompactCursorWriteCodecV1<T>,
         options: JsonReadOptions): T {
-        GeneratedSupportV1.requireProtocolVersion(1)
-        freezeYJsonRuntime()
+        GeneratedSupportV1.enterGeneratedEntry()
         if (jsonReadOptionsUsesDefaultFastPath(options)) {
             validateJsonResourceLimits(bytes, options)
             let reader = JsonFastReader(bytes)
@@ -3114,8 +3118,7 @@ public class YJson {
 
     private static func decodeBytes<T>(bytes: Array<Byte>, codec: JsonCodec<T>,
         options: JsonReadOptions): T {
-        GeneratedSupportV1.requireProtocolVersion(1)
-        freezeYJsonRuntime()
+        GeneratedSupportV1.enterGeneratedEntry()
         if (jsonReadOptionsUsesDefaultFastPath(options)) {
             validateJsonResourceLimits(bytes, options)
             match (codec) {
@@ -3140,8 +3143,7 @@ public class YJson {
 
     private static func decodeStream<T>(input: InputStream, codec: JsonCodec<T>,
         options: JsonReadOptions): T {
-        GeneratedSupportV1.requireProtocolVersion(1)
-        freezeYJsonRuntime()
+        GeneratedSupportV1.enterGeneratedEntry()
         let reader = JsonDirectReader(input, config: options)
         let result = codec.read(reader)
         reader.expectEnd()
