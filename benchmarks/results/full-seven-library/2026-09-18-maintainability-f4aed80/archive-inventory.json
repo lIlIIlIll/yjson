@@ -1,0 +1,60 @@
+{
+  "archive_member_counts": {
+    "candidate-build-logs.tar.gz": 2,
+    "harness-source.tar.gz": 4,
+    "seven-fixed-work-cj1-v1-a.tar.gz": 4460,
+    "seven-fixed-work-cj1-v1-b.tar.gz": 4460
+  },
+  "build_logs_archive": {
+    "file": "candidate-build-logs.tar.gz",
+    "root": "seven-build-logs-fixed-work-cj1-v1"
+  },
+  "fixed_work_protocol": 1,
+  "formal_archives": [
+    {
+      "cells": 770,
+      "file": "seven-fixed-work-cj1-v1-a.tar.gz",
+      "root": "seven-fixed-work-cj1-v1-a",
+      "yjson_fixed_work_proofs": 110
+    },
+    {
+      "cells": 770,
+      "file": "seven-fixed-work-cj1-v1-b.tar.gz",
+      "root": "seven-fixed-work-cj1-v1-b",
+      "yjson_fixed_work_proofs": 110
+    }
+  ],
+  "formal_identity": {
+    "candidate": {
+      "identity_sha256": "8eb3be733b99dd03b06af7d41eb797cfb527ff4d1fc5ea162941d68b6dc40d0e",
+      "lockstep_manifests_sha256": "4eb82f14fac080702ac2515da9094f4c24c5721cb0cd7c85f3aae55414b3cddb",
+      "package_version": "0.1.0",
+      "release_graph_sha256": "43b1c43d5a9c12128aa9acedf3e148d531a7a623e24c24d3734dee22bfa96bfc",
+      "root_lock_sha256": "7b09643cc3e7107d2a0f09605871366c547525d40221945a60bee8a9a5e3f3b0",
+      "root_manifest_sha256": "3814815364bc0b40a5c5107269807c7a5c1766bb0054c5329521c4d424fcb259"
+    },
+    "candidate_binary_sha256": "0d08b2bed8034aceb74805f0691632f9ae0847f8b4f37f0bcffbfd36f651dbc7",
+    "cj_processor_num": 1,
+    "commit": "f4aed80847e77fee12a156e8644f65ab34c64092",
+    "effective_harness_sha256": "721fec53e1a190c71e2996396474870f2516add82ca0be4a94ab143465d0ffba",
+    "measured_overlay_sha256": "4f1350b31ab636db4b6b00410d0927f4baf1e52900657ac5f6ae5eb529d0b35d",
+    "product_source_sha256": "1c3d85aca3fec86594d1732bb8779728cd42e7e5b7656b720bd0f934390cb2c9"
+  },
+  "harness_archive": {
+    "file": "harness-source.tar.gz",
+    "files": 3,
+    "root": "seven-harness-fixed-work-cj1-v1"
+  },
+  "reused_peer_binaries": {
+    "cangjieJSON": "1d38b2fef242e384706bd6b8ef3511ed8e8a9f81fe7684954ae07508d149988e",
+    "cjfast_json": "08f20e543d799c6b3b0f3fbdbf5bcc7a4ec695988ecdfbdbf79876b31f672330",
+    "jackson_fastjson2": "450bfee6c0d91ea11f85480d7fe2eab0efd293ed546025274532a96219221d1e",
+    "json4cj": "23de0d644308fe24fa67a2d64cf45f3d3bcadee32c068326d0dd49e568580b94"
+  },
+  "schema_version": 1,
+  "source_capsules": {
+    "candidate-source.tar.gz": "d220c2819154479689b801d3136b51b865dbfaed906733e7a28aa935a0aaf2ab",
+    "peer-source.tar.gz": "70d35e1cc8c5de4e028c4510e99c845f335c39cb9fda7529ecb8df1f64b30c28",
+    "source-archive-manifests.json": "eb2ab2ea797e97314dc93cc68d7f286514286209da80b9154c1504e9ffe72c94"
+  }
+}

@@ -33,6 +33,10 @@ benchmarks/java_fastjson2/build/
 !benchmarks/results/full-seven-library/*/*.json
 !benchmarks/results/full-seven-library/*/*.patch
 
+# Frozen Pure performance evidence overrides developer-wide ignores.
+!benchmarks/results/release-performance/*/*.json
+!benchmarks/results/release-performance/*/*-checksums.txt
+
 # Audited RC evidence overrides the developer-wide *.json / *.txt ignores.
 !release/public-api-snapshot.txt
 !release/1.0.0-rc.1/artifacts/environment.json

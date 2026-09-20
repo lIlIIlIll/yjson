@@ -1,0 +1,440 @@
+{
+  "artifact_identity": {
+    "cangjieJSON": {
+      "path": "harness/cjjson/target/release/unittest_bin/bench_cjjson",
+      "sha256": "1d38b2fef242e384706bd6b8ef3511ed8e8a9f81fe7684954ae07508d149988e",
+      "size_bytes": 13074720
+    },
+    "cjfast_json": {
+      "path": "cjfast-json/target/release/unittest_bin/fastjson.bench",
+      "sha256": "08f20e543d799c6b3b0f3fbdbf5bcc7a4ec695988ecdfbdbf79876b31f672330",
+      "size_bytes": 14188152
+    },
+    "jackson_fastjson2": {
+      "path": "harness/java/target/json-optimal-bench-1.0.0-all.jar",
+      "sha256": "450bfee6c0d91ea11f85480d7fe2eab0efd293ed546025274532a96219221d1e",
+      "size_bytes": 7425809
+    },
+    "json4cj": {
+      "path": "harness/json4cj/target/release/unittest_bin/bench_json4cj",
+      "sha256": "23de0d644308fe24fa67a2d64cf45f3d3bcadee32c068326d0dd49e568580b94",
+      "size_bytes": 17077320
+    },
+    "yjson_stdx_json": {
+      "path": "repo/packages/benchmarks/target/release/unittest_bin/yjson_benchmarks",
+      "sha256": "f706d8437ae75f9ce9b9b1fcd34577b9269e0b52e752b4307320d15c98727f89",
+      "size_bytes": 18464096
+    }
+  },
+  "batch_validation": [
+    {
+      "cells": 770,
+      "peer_cells": 660,
+      "preflight_logs": 7,
+      "rss_bound_cells": 770,
+      "successful_cells": 770,
+      "summary_rows": 10,
+      "unique_cells": 770,
+      "yjson_fixed_work_proofs": 110
+    },
+    {
+      "cells": 770,
+      "peer_cells": 660,
+      "preflight_logs": 7,
+      "rss_bound_cells": 770,
+      "successful_cells": 770,
+      "summary_rows": 10,
+      "unique_cells": 770,
+      "yjson_fixed_work_proofs": 110
+    }
+  ],
+  "candidate": {
+    "identity_sha256": "67dca1cfe2b00efbf3cb4f85e3d2a4c5fb1fb9260483a138796c5813d6235a10",
+    "lockstep_manifests_sha256": "4eb82f14fac080702ac2515da9094f4c24c5721cb0cd7c85f3aae55414b3cddb",
+    "package_version": "0.1.0",
+    "release_graph_sha256": "43b1c43d5a9c12128aa9acedf3e148d531a7a623e24c24d3734dee22bfa96bfc",
+    "root_lock_sha256": "7b09643cc3e7107d2a0f09605871366c547525d40221945a60bee8a9a5e3f3b0",
+    "root_manifest_sha256": "3814815364bc0b40a5c5107269807c7a5c1766bb0054c5329521c4d424fcb259"
+  },
+  "candidate_build": {
+    "attempts": 1,
+    "command": "cjpm clean && cjpm bench --no-color --no-run",
+    "final_binary_sha256": "f706d8437ae75f9ce9b9b1fcd34577b9269e0b52e752b4307320d15c98727f89",
+    "policy": "clean plus compile-only; exact commit/tree checked before and after; no benchmark acceptance timing and no compiler retry"
+  },
+  "cj_processor_num": 1,
+  "cpu_selector_provenance": {
+    "normalized_path": "<work>/fixed-work-cj1-v1/candidate/scripts/json_pure_perf_compare.py",
+    "policy": "original choose_idle_cpu; 30-second idle sample; both SMT siblings below 1 percent",
+    "sha256": "77424e07b82aa3399e706808ee8490d02e482c10aab4799b9fc8b6533ea9ce5d"
+  },
+  "effective_harness_manifest": {
+    "benchmarks/full-seven-library/run_full.py": "069fb131500a786f03bf604a852e3f18bcd3088fdbede467fb5f6b73139f9a5f",
+    "cjpm.lock": "7b09643cc3e7107d2a0f09605871366c547525d40221945a60bee8a9a5e3f3b0",
+    "cjpm.toml": "3814815364bc0b40a5c5107269807c7a5c1766bb0054c5329521c4d424fcb259",
+    "native/yjson_compact.c": "b89c3066617864a9f819a81ac29d0c1287671b155356e9059b47b339aa80d66f",
+    "native/yjson_compact.h": "cd93f96989a646999ce49133b26c0aa9e2c6ea7fc535f3eaacceaaa96a704b87",
+    "native/yjson_scanner.c": "ba0f802a449b2f861545edeb83c79ee9c342c86e89ee3fd5e460e81d7a913083",
+    "native/yjson_scanner.h": "d61ad963e64788776fb10d6daa7f7f3b9ca08ca8d5d4856fd26196f5adad57b3",
+    "native/yjson_writer_format.c": "5ae9f9c24d9762fbd3110312a34085ce78186464364229204758f88f5db0d369",
+    "packages/benchmarks/build.cj": "d5ce1078b17bb9917bd8174461e9abe1a64af14e8855b7c76e30bd5fdefae595",
+    "packages/benchmarks/cjpm.lock": "7b09643cc3e7107d2a0f09605871366c547525d40221945a60bee8a9a5e3f3b0",
+    "packages/benchmarks/cjpm.toml": "3dcff1119ab8de11348e7c1abba8e1b39989572d1a4e659374968a6bf6e0f8ba",
+    "packages/benchmarks/src/bench_algorithms.cj": "79537c7413339c6a0169272d332e6e19c507f845c58582bbfa62dff4eaaefba4",
+    "packages/benchmarks/src/bench_document_lifecycle.cj": "c3ce5dbf5f9a2e84d88508fc904896d3f0e226dfc6bccd0f3a6bc622e0c598d2",
+    "packages/benchmarks/src/bench_fastjson2_compare.cj": "1a390abf22607defef45def3c5a66f32a82775bdc16e5291238b012e1c9ed30b",
+    "packages/benchmarks/src/bench_fixed_work.cj": "ed65b416d519a76fac8fba2e918bbeca3164939b25b48b219b5fe79d8b884c1a",
+    "packages/benchmarks/src/bench_fixtures.cj": "5f82356574f23ec12b6f42fb8f27b3bd5049eb533f4bbc336be6e0da226e414f",
+    "packages/benchmarks/src/bench_json_comprehensive.cj": "c8009927fb163aba1afed3a1b2870bea67ae7c2aea273c673d70adb5fd9f4966",
+    "packages/benchmarks/src/bench_pure_direct.cj": "d576ee14e7f5cbc52e6f4d155f897316584a2f56b1a2858dcd62aabffdbeac6f",
+    "packages/benchmarks/src/bench_stdx_compare.cj": "a7f4b608970cfd2d8b37b8b25eb38d171c93cd801f9b2b5d3557aa9fd6680e2c",
+    "packages/benchmarks/src/bench_stream_protocol.cj": "4b4b73ab2308537d3062c87b3f97e5d8342b10dd01ece343c4c8e2dc681a9c47",
+    "packages/benchmarks/src/bench_t9_throughput.cj": "7d0fb90cf43cc82e21216e6e964e7d4bbd19e72c8e681eccb974e6d201ec16c8",
+    "packages/benchmarks/src/bench_yjson.cj": "18151cd3356fea8f7e08a7b6cae9c5bbf5646a41a37ec20f2a8a4e633d0fa4eb",
+    "packages/yjson_macros/cjpm.lock": "7b09643cc3e7107d2a0f09605871366c547525d40221945a60bee8a9a5e3f3b0",
+    "packages/yjson_macros/cjpm.toml": "c12f52d24942b1a3a917e1f700367b1945ca6762f955a087e3db69e9b0313ecf",
+    "scripts/benchmark_fixed_work.py": "abde65c29851617a74311b1bdf21194c3a96656e4dfc940ce4c59fb028304de6",
+    "scripts/benchmark_pure_direct.py": "6bfd2eb649e3cd359c655a8347e59bfd72d1554a97f0b26ac6c979eb323f762f",
+    "scripts/build_native_scanner.py": "61d2e38785cc21fe826da5a8355482acb7daf43b8b7fe27bce27887752a9cb3d",
+    "scripts/json_pure_perf_compare.py": "b9f86aa0c259ba31259637785d1d4ae8663600ec5f213ecc5027b33b1de85b7b"
+  },
+  "effective_harness_sha256": "43461d89631bd104fc93f32b0319dfc3d386c5a6a1266cd47bec4d1e2559268f",
+  "expected_dirty_paths": [],
+  "fixed_work_parser_identity": {
+    "path": "seven-harness-direct-7d086a-batch11-v1/benchmark_fixed_work.py",
+    "sha256": "abde65c29851617a74311b1bdf21194c3a96656e4dfc940ce4c59fb028304de6",
+    "size_bytes": 4411
+  },
+  "fixed_work_protocol": 1,
+  "formal_metadata": [
+    {
+      "affinity_probe": "Cpus_allowed_list:\t1",
+      "api_paths": {
+        "cangjieJSON": "@JsonAdapter generated toJson/fromJson (only public typed path; DOM-backed internally)",
+        "cjfast_json": "@JsonAdapter generated toJson/fromJson",
+        "fastjson2": "cached concrete/generic ObjectWriter/ObjectReader with per-operation JSONWriter/JSONReader",
+        "jackson": "cached concrete/generic ObjectWriter/ObjectReader",
+        "json4cj": "@Codable generated encode/decode via public JsonWriter/JsonReader; public BuiltinEncoders/Decoders for root containers",
+        "stdx_json": "typed JsonSerializable/JsonDeserializable direct JsonWriter/JsonReader",
+        "yjson": "cached typed JsonCodec via public YJson.toJson/fromJson"
+      },
+      "api_policy": "fastest semantically equivalent public typed API; no DOM fallback when a direct typed path exists",
+      "cangjie_bench": "prebuilt executable direct; yjson fixed-work protocol v1; peer Cangjie methods unchanged; csv-raw",
+      "cangjie_binaries": {
+        "cangjieJSON": {
+          "path": "harness/cjjson/target/release/unittest_bin/bench_cjjson",
+          "sha256": "1d38b2fef242e384706bd6b8ef3511ed8e8a9f81fe7684954ae07508d149988e"
+        },
+        "cjfast_json": {
+          "path": "cjfast-json/target/release/unittest_bin/fastjson.bench",
+          "sha256": "08f20e543d799c6b3b0f3fbdbf5bcc7a4ec695988ecdfbdbf79876b31f672330"
+        },
+        "json4cj": {
+          "path": "harness/json4cj/target/release/unittest_bin/bench_json4cj",
+          "sha256": "23de0d644308fe24fa67a2d64cf45f3d3bcadee32c068326d0dd49e568580b94"
+        },
+        "stdx_json": {
+          "path": "repo/packages/benchmarks/target/release/unittest_bin/yjson_benchmarks",
+          "sha256": "f706d8437ae75f9ce9b9b1fcd34577b9269e0b52e752b4307320d15c98727f89"
+        },
+        "yjson": {
+          "path": "repo/packages/benchmarks/target/release/unittest_bin/yjson_benchmarks",
+          "sha256": "f706d8437ae75f9ce9b9b1fcd34577b9269e0b52e752b4307320d15c98727f89"
+        }
+      },
+      "canonical_decode_payload_bytes": {
+        "Address": 47,
+        "ArrayList<HashMap<String, ArrayList<ProfileRecord>>>": 1929,
+        "ArrayList<ProfileRecord>[64]": 3929,
+        "HashMap<String, Int64>[64]": 1013,
+        "Person": 176
+      },
+      "case_selection": "exact fully-qualified benchmark method; report Case validated before manifest commit",
+      "cj_processor_num": 1,
+      "correctness_preflight": "all seven fixtures execute and validate one exact case before formal timing; fixture setup assertions cover canonical encode/decode payloads",
+      "cpu_selection": {
+        "acceptable_both_threads_below_1_percent": true,
+        "core": 1,
+        "cpus": [
+          1,
+          49
+        ],
+        "sample_seconds": 30,
+        "selected_cpu": 1,
+        "selected_sibling": 49,
+        "selector_provenance": {
+          "normalized_path": "<work>/fixed-work-cj1-v1/candidate/scripts/json_pure_perf_compare.py",
+          "policy": "original choose_idle_cpu; 30-second idle sample; both SMT siblings below 1 percent",
+          "sha256": "77424e07b82aa3399e706808ee8490d02e482c10aab4799b9fc8b6533ea9ce5d"
+        },
+        "socket": 0,
+        "utilization_percent": [
+          0.0,
+          0.0
+        ]
+      },
+      "effective_harness_sha256": "43461d89631bd104fc93f32b0319dfc3d386c5a6a1266cd47bec4d1e2559268f",
+      "fixed_work_protocol": 1,
+      "heap": "128MB",
+      "host": "example-host",
+      "jmh": "1 fork per outer round, 3x500ms warmup, 1x1s measurement, avgt ns/op",
+      "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           46 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  96\nOn-line CPU(s) list:                     0-95\nVendor ID:                               GenuineIntel\nModel name:                              Intel(R) Xeon(R) Gold 6248R CPU @ 3.00GHz\nCPU family:                              6\nModel:                                   85\nThread(s) per core:                      2\nCore(s) per socket:                      24\nSocket(s):                               2\nStepping:                                7\nCPU max MHz:                             4000.0000\nCPU min MHz:                             1200.0000\nBogoMIPS:                                6000.00\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb cat_l3 cdp_l3 invpcid_single intel_ppin ssbd mba ibrs ibpb stibp ibrs_enhanced tpr_shadow vnmi flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid cqm mpx rdt_a avx512f avx512dq rdseed adx smap clflushopt clwb intel_pt avx512cd avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local dtherm ida arat pln pts hwp hwp_act_window hwp_epp hwp_pkg_req pku ospke avx512_vnni md_clear flush_l1d arch_capabilities ibpb_exit_to_user\nVirtualization:                          VT-x\nL1d cache:                               1.5 MiB (48 instances)\nL1i cache:                               1.5 MiB (48 instances)\nL2 cache:                                48 MiB (48 instances)\nL3 cache:                                71.5 MiB (2 instances)\nNUMA node(s):                            2\nNUMA node0 CPU(s):                       0-23,48-71\nNUMA node1 CPU(s):                       24-47,72-95\nVulnerability Gather data sampling:      Mitigation; Microcode\nVulnerability Indirect target selection: Mitigation; Aligned branch/return thunks\nVulnerability Itlb multihit:             KVM: Mitigation: VMX disabled\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Mitigation; Clear CPU buffers; SMT vulnerable\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Mitigation; Enhanced IBRS\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl and seccomp\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Enhanced / Automatic IBRS; IBPB conditional; PBRSB-eIBRS SW sequence; BHI SW loop, KVM SW loop\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Mitigation; TSX disabled\nVulnerability Vmscape:                   Mitigation; IBPB before exit to userspace",
+      "measured_overlay_sha256": "4f1350b31ab636db4b6b00410d0927f4baf1e52900657ac5f6ae5eb529d0b35d",
+      "platform": "Linux-5.15.0-187-generic-x86_64-with-glibc2.35",
+      "product_source_sha256": "1c3d85aca3fec86594d1732bb8779728cd42e7e5b7656b720bd0f934390cb2c9",
+      "rss_unit": "kbytes",
+      "runs": 11,
+      "schedule": "workload and seven-library order rotate; even rounds reverse workload order",
+      "source_sha256": {
+        "cangjieJSON_harness": "f905c507bbd3dcc99eff502aa225a9f677175b1d1243fcf283d4d6babf2196ea",
+        "cjfast_json": "cca9574435230c10928df3fdf97ac2173098d56fc268f53fc845d6761c10d350",
+        "java_harness": "26fc932638449295066eae5da5ca8c0c036041e337217e5533e824e8b7840cc9",
+        "json4cj_harness": "32ca612fe29910dca4d19ccee9a37299a3ebafc3e963306003ecc8242aeceeab",
+        "yjson": "22bd869d4e17cf83d3e3b74946a39cfaec684cf5ae979f733322003171f27e9d"
+      },
+      "started_at_utc": "2026-09-19T20:12:22.998591+00:00",
+      "time_binary": "/usr/bin/time",
+      "timing_build_policy": "all Cangjie benchmark packages are built before this runner; GNU time wraps only the prebuilt benchmark executables",
+      "versions": {
+        "cangjieJSON_branch_commit": "910fd9c61858f33b242a0076c22b2e06c8073511",
+        "cangjieJSON_source_tree_sha256": "a394867f5c6ac691ebef3754f3c8051d761aa82da415c5648e646b8ffeb643b8",
+        "cjc": "Cangjie Compiler: 1.1.3 (cjnative)\nTarget: x86_64-unknown-linux-gnu",
+        "cjfast_json_commit": "eefdedd1e53c93bb5ada11a96b9b81d88b2c6c65",
+        "cjpm": "Cangjie Project Manager: 1.1.3",
+        "fastjson2": "2.0.52",
+        "jackson": "2.18.2",
+        "java": "openjdk version \"17.0.20\" 2026-07-21\nOpenJDK Runtime Environment (build 17.0.20+8-1-22.04-Ubuntu)\nOpenJDK 64-Bit Server VM (build 17.0.20+8-1-22.04-Ubuntu, mixed mode, sharing)",
+        "jmh": "1.37",
+        "json4cj_source_tree_sha256": "e7ae4a06f149a311b98c5889b119201f5ab39f71f87e93aaf6a633f794103bae",
+        "stdx_json_ffi_sha256": "23cfd52d3563776fc1d5aa6676a789f269366dc8b4c7fc9f84e10cef393348d5",
+        "stdx_json_stream_ffi_sha256": "27bc19262ab186e6743100ebc5f0c73cdb6db1f20098e1aa56274f83822c4047",
+        "yjson_commit": "7d086a69200cecb447c64e73fa2b5e61e584ddb7"
+      }
+    },
+    {
+      "affinity_probe": "Cpus_allowed_list:\t1",
+      "api_paths": {
+        "cangjieJSON": "@JsonAdapter generated toJson/fromJson (only public typed path; DOM-backed internally)",
+        "cjfast_json": "@JsonAdapter generated toJson/fromJson",
+        "fastjson2": "cached concrete/generic ObjectWriter/ObjectReader with per-operation JSONWriter/JSONReader",
+        "jackson": "cached concrete/generic ObjectWriter/ObjectReader",
+        "json4cj": "@Codable generated encode/decode via public JsonWriter/JsonReader; public BuiltinEncoders/Decoders for root containers",
+        "stdx_json": "typed JsonSerializable/JsonDeserializable direct JsonWriter/JsonReader",
+        "yjson": "cached typed JsonCodec via public YJson.toJson/fromJson"
+      },
+      "api_policy": "fastest semantically equivalent public typed API; no DOM fallback when a direct typed path exists",
+      "cangjie_bench": "prebuilt executable direct; yjson fixed-work protocol v1; peer Cangjie methods unchanged; csv-raw",
+      "cangjie_binaries": {
+        "cangjieJSON": {
+          "path": "harness/cjjson/target/release/unittest_bin/bench_cjjson",
+          "sha256": "1d38b2fef242e384706bd6b8ef3511ed8e8a9f81fe7684954ae07508d149988e"
+        },
+        "cjfast_json": {
+          "path": "cjfast-json/target/release/unittest_bin/fastjson.bench",
+          "sha256": "08f20e543d799c6b3b0f3fbdbf5bcc7a4ec695988ecdfbdbf79876b31f672330"
+        },
+        "json4cj": {
+          "path": "harness/json4cj/target/release/unittest_bin/bench_json4cj",
+          "sha256": "23de0d644308fe24fa67a2d64cf45f3d3bcadee32c068326d0dd49e568580b94"
+        },
+        "stdx_json": {
+          "path": "repo/packages/benchmarks/target/release/unittest_bin/yjson_benchmarks",
+          "sha256": "f706d8437ae75f9ce9b9b1fcd34577b9269e0b52e752b4307320d15c98727f89"
+        },
+        "yjson": {
+          "path": "repo/packages/benchmarks/target/release/unittest_bin/yjson_benchmarks",
+          "sha256": "f706d8437ae75f9ce9b9b1fcd34577b9269e0b52e752b4307320d15c98727f89"
+        }
+      },
+      "canonical_decode_payload_bytes": {
+        "Address": 47,
+        "ArrayList<HashMap<String, ArrayList<ProfileRecord>>>": 1929,
+        "ArrayList<ProfileRecord>[64]": 3929,
+        "HashMap<String, Int64>[64]": 1013,
+        "Person": 176
+      },
+      "case_selection": "exact fully-qualified benchmark method; report Case validated before manifest commit",
+      "cj_processor_num": 1,
+      "correctness_preflight": "all seven fixtures execute and validate one exact case before formal timing; fixture setup assertions cover canonical encode/decode payloads",
+      "cpu_selection": {
+        "acceptable_both_threads_below_1_percent": true,
+        "core": 1,
+        "cpus": [
+          1,
+          49
+        ],
+        "sample_seconds": 30,
+        "selected_cpu": 1,
+        "selected_sibling": 49,
+        "selector_provenance": {
+          "normalized_path": "<work>/fixed-work-cj1-v1/candidate/scripts/json_pure_perf_compare.py",
+          "policy": "original choose_idle_cpu; 30-second idle sample; both SMT siblings below 1 percent",
+          "sha256": "77424e07b82aa3399e706808ee8490d02e482c10aab4799b9fc8b6533ea9ce5d"
+        },
+        "socket": 0,
+        "utilization_percent": [
+          0.0,
+          0.0
+        ]
+      },
+      "effective_harness_sha256": "43461d89631bd104fc93f32b0319dfc3d386c5a6a1266cd47bec4d1e2559268f",
+      "fixed_work_protocol": 1,
+      "heap": "128MB",
+      "host": "example-host",
+      "jmh": "1 fork per outer round, 3x500ms warmup, 1x1s measurement, avgt ns/op",
+      "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           46 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  96\nOn-line CPU(s) list:                     0-95\nVendor ID:                               GenuineIntel\nModel name:                              Intel(R) Xeon(R) Gold 6248R CPU @ 3.00GHz\nCPU family:                              6\nModel:                                   85\nThread(s) per core:                      2\nCore(s) per socket:                      24\nSocket(s):                               2\nStepping:                                7\nCPU max MHz:                             4000.0000\nCPU min MHz:                             1200.0000\nBogoMIPS:                                6000.00\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb cat_l3 cdp_l3 invpcid_single intel_ppin ssbd mba ibrs ibpb stibp ibrs_enhanced tpr_shadow vnmi flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid cqm mpx rdt_a avx512f avx512dq rdseed adx smap clflushopt clwb intel_pt avx512cd avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local dtherm ida arat pln pts hwp hwp_act_window hwp_epp hwp_pkg_req pku ospke avx512_vnni md_clear flush_l1d arch_capabilities ibpb_exit_to_user\nVirtualization:                          VT-x\nL1d cache:                               1.5 MiB (48 instances)\nL1i cache:                               1.5 MiB (48 instances)\nL2 cache:                                48 MiB (48 instances)\nL3 cache:                                71.5 MiB (2 instances)\nNUMA node(s):                            2\nNUMA node0 CPU(s):                       0-23,48-71\nNUMA node1 CPU(s):                       24-47,72-95\nVulnerability Gather data sampling:      Mitigation; Microcode\nVulnerability Indirect target selection: Mitigation; Aligned branch/return thunks\nVulnerability Itlb multihit:             KVM: Mitigation: VMX disabled\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Mitigation; Clear CPU buffers; SMT vulnerable\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Mitigation; Enhanced IBRS\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl and seccomp\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Enhanced / Automatic IBRS; IBPB conditional; PBRSB-eIBRS SW sequence; BHI SW loop, KVM SW loop\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Mitigation; TSX disabled\nVulnerability Vmscape:                   Mitigation; IBPB before exit to userspace",
+      "measured_overlay_sha256": "4f1350b31ab636db4b6b00410d0927f4baf1e52900657ac5f6ae5eb529d0b35d",
+      "platform": "Linux-5.15.0-187-generic-x86_64-with-glibc2.35",
+      "product_source_sha256": "1c3d85aca3fec86594d1732bb8779728cd42e7e5b7656b720bd0f934390cb2c9",
+      "rss_unit": "kbytes",
+      "runs": 11,
+      "schedule": "workload and seven-library order rotate; even rounds reverse workload order",
+      "source_sha256": {
+        "cangjieJSON_harness": "f905c507bbd3dcc99eff502aa225a9f677175b1d1243fcf283d4d6babf2196ea",
+        "cjfast_json": "cca9574435230c10928df3fdf97ac2173098d56fc268f53fc845d6761c10d350",
+        "java_harness": "26fc932638449295066eae5da5ca8c0c036041e337217e5533e824e8b7840cc9",
+        "json4cj_harness": "32ca612fe29910dca4d19ccee9a37299a3ebafc3e963306003ecc8242aeceeab",
+        "yjson": "22bd869d4e17cf83d3e3b74946a39cfaec684cf5ae979f733322003171f27e9d"
+      },
+      "started_at_utc": "2026-09-19T21:04:42.007121+00:00",
+      "time_binary": "/usr/bin/time",
+      "timing_build_policy": "all Cangjie benchmark packages are built before this runner; GNU time wraps only the prebuilt benchmark executables",
+      "versions": {
+        "cangjieJSON_branch_commit": "910fd9c61858f33b242a0076c22b2e06c8073511",
+        "cangjieJSON_source_tree_sha256": "a394867f5c6ac691ebef3754f3c8051d761aa82da415c5648e646b8ffeb643b8",
+        "cjc": "Cangjie Compiler: 1.1.3 (cjnative)\nTarget: x86_64-unknown-linux-gnu",
+        "cjfast_json_commit": "eefdedd1e53c93bb5ada11a96b9b81d88b2c6c65",
+        "cjpm": "Cangjie Project Manager: 1.1.3",
+        "fastjson2": "2.0.52",
+        "jackson": "2.18.2",
+        "java": "openjdk version \"17.0.20\" 2026-07-21\nOpenJDK Runtime Environment (build 17.0.20+8-1-22.04-Ubuntu)\nOpenJDK 64-Bit Server VM (build 17.0.20+8-1-22.04-Ubuntu, mixed mode, sharing)",
+        "jmh": "1.37",
+        "json4cj_source_tree_sha256": "e7ae4a06f149a311b98c5889b119201f5ab39f71f87e93aaf6a633f794103bae",
+        "stdx_json_ffi_sha256": "23cfd52d3563776fc1d5aa6676a789f269366dc8b4c7fc9f84e10cef393348d5",
+        "stdx_json_stream_ffi_sha256": "27bc19262ab186e6743100ebc5f0c73cdb6db1f20098e1aa56274f83822c4047",
+        "yjson_commit": "7d086a69200cecb447c64e73fa2b5e61e584ddb7"
+      }
+    }
+  ],
+  "json4cj_source_tree_sha256": "e7ae4a06f149a311b98c5889b119201f5ab39f71f87e93aaf6a633f794103bae",
+  "measured_commit": "7d086a69200cecb447c64e73fa2b5e61e584ddb7",
+  "measured_overlay_file": "fixture-preflight-overlay.patch",
+  "measured_overlay_sha256": "4f1350b31ab636db4b6b00410d0927f4baf1e52900657ac5f6ae5eb529d0b35d",
+  "measured_tree": "53527121b6bdca31586505ec838b5b092cd15924",
+  "overlay_provenance": {
+    "file": "fixture-preflight-overlay.patch",
+    "origin_candidate_commit": "c844aa9519ec9bd9bffa3e45fceb3d5d45fb974a",
+    "peer_fixtures_reused_without_edit": true,
+    "sha256": "4f1350b31ab636db4b6b00410d0927f4baf1e52900657ac5f6ae5eb529d0b35d"
+  },
+  "peer_reuse": {
+    "copied_byte_for_byte": true,
+    "libraries": [
+      "cangjieJSON",
+      "json4cj",
+      "cjfast_json",
+      "jackson",
+      "fastjson2"
+    ],
+    "pinned_binary_sha256": {
+      "cangjieJSON": "1d38b2fef242e384706bd6b8ef3511ed8e8a9f81fe7684954ae07508d149988e",
+      "cjfast_json": "08f20e543d799c6b3b0f3fbdbf5bcc7a4ec695988ecdfbdbf79876b31f672330",
+      "jackson_fastjson2": "450bfee6c0d91ea11f85480d7fe2eab0efd293ed546025274532a96219221d1e",
+      "json4cj": "23de0d644308fe24fa67a2d64cf45f3d3bcadee32c068326d0dd49e568580b94"
+    },
+    "rebuilt": false,
+    "source_workspace": "<work>/seven-workspace-pure-direct-v1"
+  },
+  "product_manifest": {
+    "packages/yjson_macros/src/codec_analysis.cj": "ad8c996566854fb3b57bc5ab9aa3b678c39999b0e08f033c8898613390f59179",
+    "packages/yjson_macros/src/codec_decode_plan.cj": "4ac4df0772e164e9559c2fdf6dd4d24a2e1fd0bd33015712d841eff7b0c6cb74",
+    "packages/yjson_macros/src/codec_model.cj": "63ad7f112803581c4030ec543e135dc2cd877edde54f85143e68ea3301caae98",
+    "packages/yjson_macros/src/codec_provider_emitter.cj": "8a1a318a1890f0826d2bcf24a295b9f5d3e8d3c4a5adbf303d362cc42e606f5e",
+    "packages/yjson_macros/src/codec_type_shape.cj": "03fed0961fe5d1a9e4d0de95d61e4ff4dbf53dbb471e6f113acb098346f08453",
+    "packages/yjson_macros/src/codec_write_emitter.cj": "747ee1ad7e02a9b11f202fce09d6eba3549bd05a2f7a91d7a0d1dd156657449a",
+    "packages/yjson_macros/src/codec_write_plan.cj": "1ed16b9f68857a80515870098a8fb7ad97ece0dcdbc584f1dc605dcb6f39f63d",
+    "packages/yjson_macros/src/json_codec.cj": "72651b94498813e7f2c17439b9da673178ca719c640d975a3a206b94355695a4",
+    "src/example_support_test.cj": "cf0e9207ef841fc07253d688d0627cd7f0d5a8e155fe9c4d3ed4d4239014eac4",
+    "src/json_audit_contracts_test.cj": "c2ec8086ed8dc7f29464abe15b1ff57e790f03d98a552d90294762e7ad6638f3",
+    "src/json_boundary_test.cj": "8ad6bddf1de0001db257cb3d086ada10fdba6a265141a6bec4d5b37e8ab7db97",
+    "src/json_bulk_path_test.cj": "9c56c7cd2e43f7a668b1eb642281eec91ac2ed8240ca61cc4de1cacceaf5409a",
+    "src/json_compact_document_test.cj": "c42af8c2ee201d766fce17ba501bcee1ef7d2fff87ac978bdc5e7df5bd03733f",
+    "src/json_concurrency_test.cj": "15b3df7168dfe7e9824c3bf8b258c61855b299ea6a360ae5359a405d85e2c535",
+    "src/json_context_path_test.cj": "9050a653d02f785f6f0d8cc81e939d7b8c04818c2840496be5bb8d6c3f53db30",
+    "src/json_coverage_contracts_test.cj": "87ac612cb155669a4481978c3814e5a8df9483bd26481b8f5719092cde0aa56f",
+    "src/json_direct_writer_state_test.cj": "19629b37588da79fb1224b43ccadf3298db2078a36e65861cff87ed09f4f0f82",
+    "src/json_document_test.cj": "5b740651de499a226918a6dd6759899fcf9aa73a8647e86bc9893bb5aaedf741",
+    "src/json_memory_test.cj": "3d9bb021230b9094c141d6c2a8b2c900f7a710b306805c35e22371ed9f7f0498",
+    "src/json_parser_compliance_test.cj": "3d66b1444b9ad5715aca0aa1b66f8f50cec34dfc42752aee5f8f412625663750",
+    "src/json_performance_test.cj": "3ae00e6452d9d4030c560e853d686fb9e8a2a3cfd259a1b65496e24d4f77425a",
+    "src/json_reader_test.cj": "2461c10f5b1562bda9d516dd36c4c2195902131432951daa564a4886d8631610",
+    "src/json_regression_test.cj": "fb3ba8ef161e7cf5fc0cde86b632b5768d0beeff90da6263eea73921c4bd12e7",
+    "src/json_resource_limits_test.cj": "b60f66ada5ae005c73f2b44e3c539e5d861504d8c2be5f7cb243606f82965167",
+    "src/json_semantic_vectors_test.cj": "35c259e2cc80cae7577f888fdd83ee79397ce90c1b2dbe226d4d4ec9986d657e",
+    "src/json_serializer_test.cj": "503e505a3d66ad9b75ae727d743a06b61ad95e52b4e6a389b521f932e69638c4",
+    "src/json_special_cases_test.cj": "905f763a2a3c1e2128db043063b71df3e0c2d829e413efbc6a49ed18942e5de6",
+    "src/json_stream_support_test.cj": "beddd04e32f661fd126ff2baa1b55385b60998d0cd93f600fca54463cebb165c",
+    "src/json_stream_test.cj": "812737410ea2909a1034a3eab9ec24106324f5a931a9d641ef04aca47d87f776",
+    "src/json_temporal_number_fast_test.cj": "28b81eab3fec6a29c4b996424dbcb0d235bae0e8d09de0fc7629fba5cb443e41",
+    "src/lib_json_bind.cj": "436f411f2327a8e751faf01956183a3e3e7d3651b388da05bd14cd7e605e0a7f",
+    "src/lib_json_builtin_codecs.cj": "2db478b480ecd2eba6215a716fed83e0aa85bb62c7a25cd9a39f449e41277637",
+    "src/lib_json_compact_document.cj": "174127d7c83ca62c1cbf28515f32bb1d77f63695d0f68bfa65ad59b2ac402f76",
+    "src/lib_json_direct_codec.cj": "f6e0359e82bca49ebc2e5708566c5871d39fe8f84dae3e6d55816ed3272877bb",
+    "src/lib_json_direct_reader.cj": "c803a2a062e837861ec313c2197b2125ba22e27e09eda637a67c90c348f8bcf7",
+    "src/lib_json_direct_writer.cj": "eb1b016ca8e7cc8da7a4daa757dc872cec39567dcfc2eb40cc399ff9d028fab8",
+    "src/lib_json_document.cj": "e44ee6ecbaa7ef501c31a34a7c29adeb249d9afdf5ec5a8038cfd731fcc2460d",
+    "src/lib_json_fast_reader.cj": "08c9836809a5872d64a96bbd688c93ecde224245ab5138c48f9be2795c18bd41",
+    "src/lib_json_generated_support_v1.cj": "79d853da3cfb0f28300b30cd64ef2b13bd33f685dfdd40424723a5b40a38e8f5",
+    "src/lib_json_native_scanner.cj": "dde17f345f812b28c188f99f927bf3e53f77838529d6ca551e52c2a51cb835e9",
+    "src/lib_json_node_semantics.cj": "b3f1a1f6785c06ea4de31794878c50a6ff58749b9de06379b740cb92b90d1aa3",
+    "src/lib_json_parser.cj": "7db7b779fb4219e532b69f8e6e31db0658b797377f46d5ff2aa41135365e3c13",
+    "src/lib_json_parser_core.cj": "69a82a5d28bad2292b0c7b3784b171e69af5c70eaa08721729f9d3356a0772ba",
+    "src/lib_json_resource_limits.cj": "2b4112735bb17cb8b3d88aec8dc080c994cfdf36896cad5933b00e4722f3f0c4",
+    "src/lib_json_runtime.cj": "fa48679edae3f32cd2bbc93e16b5e6f7b8f1c7d59424f50537e56d18708a67c1",
+    "src/lib_json_stream_parser.cj": "47b934117f5bc29ff19f2ddd70689cd52a82c260e9c549f368737996a8714116",
+    "src/lib_json_stream_support.cj": "fe30c1f9dc05d2669d32f327a207146daafe32e96d16d5b220636524ba7ebb75",
+    "src/lib_json_stream_tape.cj": "4563a5e7ac00703cf0ff5011cd392ac823c927f8ff548b8b3af2aab616b22938",
+    "src/lib_json_stream_writer.cj": "74527f4c81af165218e2580cb4ba824faeb7b6bcd2df3c7751ab14c05d90deda",
+    "src/lib_json_temporal_number_fast.cj": "276f2aab95da26dd5587f4ae446ebcddc11681531bfb4c3c8adf4b64b047a3c0",
+    "src/lib_json_value.cj": "421008f6adcbcfd9aa7ad5ee93e069958e8dd292604881a54613a3ed108ef10a"
+  },
+  "product_source_sha256": "1c3d85aca3fec86594d1732bb8779728cd42e7e5b7656b720bd0f934390cb2c9",
+  "runner_identity": {
+    "path": "seven-harness-direct-7d086a-batch11-v1/run_full.py",
+    "sha256": "069fb131500a786f03bf604a852e3f18bcd3088fdbede467fb5f6b73139f9a5f",
+    "size_bytes": 27245
+  },
+  "schema_version": 1,
+  "source_capsule_file_counts": {
+    "candidate-source.tar.gz": 179,
+    "peer-source.tar.gz": 278
+  },
+  "source_capsules": {
+    "candidate-source.tar.gz": "19866a87e5f1a4d69392e7e63fd3ffdff5d51780ecb7dbfaa46d5314ca7ad0d7",
+    "peer-source.tar.gz": "70d35e1cc8c5de4e028c4510e99c845f335c39cb9fda7529ecb8df1f64b30c28",
+    "source-archive-manifests.json": "8c243e168154aedcdb1c39e62867c72d5c0a693f1aac5dabea51531bac0507d1"
+  },
+  "source_privacy_validation": {
+    "archive_paths_safe": true,
+    "candidate_content_normalizations": 0,
+    "candidate_snapshot_byte_exact": true,
+    "deterministic_metadata": true,
+    "gzip_mtime_zero": true,
+    "machine_specific_content_matches": 0,
+    "peer_build_path_normalizations": 2,
+    "provider": "direct-source-capsules",
+    "revalidated_by_packaging_agent": true,
+    "status": "pass"
+  },
+  "stdx_json_driver": {
+    "artifact": "yjson_stdx_json",
+    "method_and_sampling_unchanged": true,
+    "rebuilt_with_candidate": true,
+    "sdk": "STS 1.1.3"
+  },
+  "summarizer_identity": {
+    "path": "seven-harness-direct-7d086a-batch11-v1/summarize_full.py",
+    "sha256": "4f4762200fbbd020157883329b64288f933b2ef6b1cf9364faa4fc9d5877dc12",
+    "size_bytes": 19445
+  }
+}

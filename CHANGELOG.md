@@ -7,6 +7,22 @@
 
 ## [Unreleased]
 
+- 修复字节输入的 UTF-8 字符串预算计费：非 ASCII 字符按实际消耗字节计数，避免长 ASCII
+  前缀导致误报超限；转义后的 ASCII 后缀也纳入最终长度检查。
+- 修复紧凑整数、字符串和数字数组的 `materialize(maxNodes)`，每个元素创建前扣减节点预算。
+- provider 的 `primitives()` 回调失败后恢复可配置状态并唤醒等待者，保留原异常；Native
+  底层回调抛异常时通过 `finally` 释放临时 raw-array handle。
+- 第一方 Native provider 激活时校验实际链接库的 `YJ_JSON_ProbeV1()` 和基础能力位。
+  不匹配时分别返回 `acceleration_abi_mismatch` 或 `acceleration_cpu_unsupported`，不冻结为 Native。
+- 外部使用方门禁改为构建后直接执行二进制，不再把 `cjpm run` 的零退出码当作成功依据；
+  runtime-freeze 门禁首次编译失败即终止，不重试 `llc` 崩溃。
+- 性能候选身份统一处理独立宏的 Git 与本地 path 绑定，修复本地源码候选的发布图摘要不一致。
+- Pure 发布验收使用冻结工作量的直接计时，七库 yjson 用例保留 SDKBench；两者分别校验
+  实际调用数或 SDK 批次数、批大小及成功状态。仓颉进程固定 `cjProcessorNum=1`、128 MiB 堆，
+  Pure 将业务与两组 GC 线程分核放置，七库仍为单核绑定。
+- 候选 `7d086a6` 的 Pure 48 项预检和 528 个正式样本完整通过：24 项最大回退 3.29%，
+  两侧均无 CV 超过 5% 的用例；七库两批各 770 个单元完整。旧协议失败批次保留，
+  5% 回退门槛不变；不同协议不拼接样本，本轮不声明 Native 性能或发布资格。
 - 当前成熟度版本线重置为 `0.1.0`；既有 1.x/2.0 tag 与 evidence 只作为不可变历史保留。
 - 发布图固定为九个 lockstep package；`yjson_macros` 已拆为独立仓库
   `https://github.com/lIlIIlIll/yjson_macros`，但仍与 runtime 使用同一版本线。删除
