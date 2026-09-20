@@ -103,6 +103,8 @@ abstract class InputCursor {
             case _ => ()
         }
         expectJsonByte(b'"')
+        let readConfig = config()
+        let stringLimit = readConfig.maxStringBytes
         let builder = StringBuilder()
         var decodedBytes: Int64 = 0
         while (hasMore()) {
@@ -114,18 +116,18 @@ abstract class InputCursor {
                     if (!hasMore()) { failJson("Unexpected end of escape sequence") }
                     let escaped = consumeJsonByte()
                     match (escaped) {
-                        case b'"' => builder.append("\""); decodedBytes = addDecodedJsonBytes(decodedBytes, 1, start)
-                        case b'\\' => builder.append("\\"); decodedBytes = addDecodedJsonBytes(decodedBytes, 1, start)
-                        case b'/' => builder.append("/"); decodedBytes = addDecodedJsonBytes(decodedBytes, 1, start)
-                        case b'b' => builder.append(r'\b'); decodedBytes = addDecodedJsonBytes(decodedBytes, 1, start)
-                        case b'f' => builder.append(r'\f'); decodedBytes = addDecodedJsonBytes(decodedBytes, 1, start)
-                        case b'n' => builder.append(r'\n'); decodedBytes = addDecodedJsonBytes(decodedBytes, 1, start)
-                        case b'r' => builder.append(r'\r'); decodedBytes = addDecodedJsonBytes(decodedBytes, 1, start)
-                        case b't' => builder.append(r'\t'); decodedBytes = addDecodedJsonBytes(decodedBytes, 1, start)
+                        case b'"' => builder.append("\""); decodedBytes += 1
+                        case b'\\' => builder.append("\\"); decodedBytes += 1
+                        case b'/' => builder.append("/"); decodedBytes += 1
+                        case b'b' => builder.append(r'\b'); decodedBytes += 1
+                        case b'f' => builder.append(r'\f'); decodedBytes += 1
+                        case b'n' => builder.append(r'\n'); decodedBytes += 1
+                        case b'r' => builder.append(r'\r'); decodedBytes += 1
+                        case b't' => builder.append(r'\t'); decodedBytes += 1
                         case b'u' =>
                             let (r, size) = readJsonUnicodeEscape()
                             builder.append(r)
-                            decodedBytes = addDecodedJsonBytes(decodedBytes, size, start)
+                            decodedBytes += size
                         case _ => failJsonAt("Unsupported escape sequence", start)
                     }
                 case _ =>
@@ -134,11 +136,15 @@ abstract class InputCursor {
                             failJsonAt("Unescaped control character in string literal", start)
                         }
                         builder.append(Rune(current))
-                        decodedBytes = addDecodedJsonBytes(decodedBytes, 1, start)
+                        decodedBytes += 1
                     } else {
                         builder.append(decodeJsonUtf8Rune(current, start))
-                        decodedBytes = addDecodedJsonBytes(decodedBytes, position() - start, start)
+                        decodedBytes += position() - start
                     }
+            }
+            if (decodedBytes > stringLimit) {
+                throw jsonResourceLimitException(readConfig,
+                    "JSON string exceeds ${stringLimit} decoded UTF-8 bytes", "string_too_large", start)
             }
         }
         failJson("Unterminated string literal")
@@ -238,16 +244,6 @@ abstract class InputCursor {
             case value >= b'A' && value <= b'F' => Int64(value - b'A') + 10
             case _ => failJson("Invalid unicode escape")
         }
-    }
-
-    private func addDecodedJsonBytes(current: Int64, added: Int64, offset: Int64): Int64 {
-        let next = current + added
-        let limit = config().maxStringBytes
-        if (limit > 0 && next > limit) {
-            throw jsonResourceLimitException(config(),
-                "JSON string exceeds ${limit} decoded UTF-8 bytes", "string_too_large", offset)
-        }
-        next
     }
 
     private func failJson(message: String): Nothing {
