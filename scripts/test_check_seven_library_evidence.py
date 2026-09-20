@@ -10,6 +10,7 @@ import json
 import os
 import pathlib
 import subprocess
+import sys
 import tarfile
 import tempfile
 import unittest
@@ -498,6 +499,41 @@ class SevenLibraryEvidenceTests(unittest.TestCase):
             )
         self.assertEqual(status, 0)
         self.assertIn("integrity", output.getvalue())
+
+    def test_cold_cli_import_preserves_clean_checkout(self) -> None:
+        for relative in (
+            "scripts/check_seven_library_evidence.py",
+            "scripts/benchmark_fixed_work.py",
+            "scripts/benchmark_input_identity.py",
+            "scripts/release_graph.py",
+            "benchmarks/full-seven-library/run_full.py",
+            "benchmarks/full-seven-library/summarize_full.py",
+        ):
+            write(
+                self.root / relative,
+                (checker.ROOT / relative).read_text(encoding="utf-8"),
+            )
+        write(self.root / ".gitignore", "scripts/__pycache__/\n")
+        git(self.root, "add", ".")
+        git(self.root, "commit", "-q", "-m", "test: freeze standalone checker")
+        environment = os.environ.copy()
+        environment.pop("PYTHONDONTWRITEBYTECODE", None)
+        environment.pop("PYTHONPYCACHEPREFIX", None)
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(self.root / "scripts/check_seven_library_evidence.py"),
+                "--help",
+            ],
+            env=environment,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(
+            git(self.root, "status", "--porcelain=v1", "--untracked-files=all"), ""
+        )
+
 
     def test_schema_v3_rejects_consistent_proofs_for_another_workload(self) -> None:
         self.fixture.relabel_source_case(

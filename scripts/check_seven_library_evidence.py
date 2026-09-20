@@ -25,6 +25,8 @@ from release_graph import load_release_graph
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+# Loading canonical runner data must not dirty the checkout being verified.
+sys.dont_write_bytecode = True
 sys.path.insert(0, str(ROOT / "benchmarks/full-seven-library"))
 import run_full
 
