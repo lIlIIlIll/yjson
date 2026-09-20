@@ -1,4 +1,4 @@
 version = 0
 
 [requires]
-  yjson_macros = {git = "https://github.com/lIlIIlIll/yjson_macros.git", commitId = "5961c2f448f989fb23a9731265ce025aad8bffaf"}
+  yjson_macros = {git = "https://github.com/lIlIIlIll/yjson_macros.git", commitId = "eb94e226b9d6d5c54c8418bfdaf515dcc819e5a9"}

@@ -251,6 +251,8 @@ packages/yjson_macros/src/codec_decode_plan.cj
 packages/yjson_macros/src/codec_model.cj
 packages/yjson_macros/src/codec_provider_emitter.cj
 packages/yjson_macros/src/codec_type_shape.cj
+packages/yjson_macros/src/codec_write_emitter.cj
+packages/yjson_macros/src/codec_write_plan.cj
 packages/yjson_macros/src/json_codec.cj
 packages/yjson_macros/src/json_literal.cj
 packages/yjson_macros/README.md
