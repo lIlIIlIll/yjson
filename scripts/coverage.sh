@@ -49,7 +49,7 @@ runtime_package="$work/packages/runtime_freeze_contract"
 cd "$runtime_package"
 cjpm build --coverage
 mkdir -p "$work/runtime-gcov" "$work/runtime-cjcov"
-for scenario in pure-late generated-reader-late version-mismatch native-conflict activation-failure concurrent-race reentrant-use initialization-wait; do
+for scenario in pure-late generated-reader-late version-mismatch native-conflict activation-failure concurrent-race reentrant-use initialization-wait primitives-failure primitives-failure-wait; do
     # Cangjie's gcda writer cannot reliably merge repeated process runs into
     # the same file. Collect each contract scenario independently, then merge
     # the resulting textual gcov records in cjcov_to_lcov.py.

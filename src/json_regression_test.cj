@@ -169,6 +169,32 @@ class YJsonRegressionTest {
     }
 
     @TestCase
+    func htmlSafeFieldWritersPreserveUnicodeSegments(): Unit {
+        let options = JsonWriteOptions(htmlSafe: true)
+        let generated = JsonDirectWriter(options)
+        generated.writeRawBeginObject()
+        var first = generated.writeRawObjectEntryKnownNameStringBuffer(
+            true, "text", "<仓&tail")
+        let byteName = unsafe { "bytes".rawData() }
+        first = generated.writeRawObjectEntryKnownNameStringBuffer(
+            first, byteName, "<颉&tail")
+        generated.writeRawEndObject()
+        @Expect(
+            generated.finishString(),
+            "{\"text\":\"\\u003c仓\\u0026tail\",\"bytes\":\"\\u003c颉\\u0026tail\"}"
+        )
+
+        let output = YJsonMemoryOutputStream()
+        let stream = JsonDirectWriter(output, config: options)
+        stream.startObject()
+        stream.writeName("payload")
+        stream.writeString("<仓&tail")
+        stream.endObject()
+        stream.finish()
+        @Expect(output.toUtf8String(), "{\"payload\":\"\\u003c仓\\u0026tail\"}")
+    }
+
+    @TestCase
     func generatedFastDecodeRejectsMalformedUnknownKeys(): Unit {
         let control: Array<Byte> = [b'{', b'"', 0x01u8, b'"', b':', b'0', b'}']
         let controlError = @AssertThrows[JsonException](YJson.fromJson(control, codec: PersonJson))
