@@ -17,19 +17,6 @@ import unittest
 import benchmark_input_identity as identity
 import check_seven_library_evidence as checker
 
-YJSON_CASES = {
-    "address_encode": "yjsonStringEncodeAddress",
-    "address_decode": "yjsonStringDecodeAddress",
-    "person_encode": "yjsonStringEncodePerson",
-    "person_decode": "yjsonStringDecodePerson",
-    "large_array_encode": "yjsonStringEncodeLargeProfileArray",
-    "large_array_decode": "yjsonStringDecodeLargeProfileArray",
-    "large_map_encode": "yjsonStringEncodeLargeInt64Map",
-    "large_map_decode": "yjsonStringDecodeLargeInt64Map",
-    "deep_nested_encode": "yjsonStringEncodeDeepNestedProfiles",
-    "deep_nested_decode": "yjsonStringDecodeDeepNestedProfiles",
-}
-
 
 def write(path: pathlib.Path, text: str = "fixture\n") -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -294,11 +281,7 @@ yjson = "0.1.0"
                 for round_number in range(1, 12):
                     for workload in checker.WORKLOADS:
                         for library in checker.LIBRARIES:
-                            source_case = (
-                                YJSON_CASES[workload]
-                                if library == "yjson"
-                                else f"{library}_{workload}"
-                            )
+                            source_case = checker.SOURCE_CASES[(workload, library)]
                             report_path = f"raw/{round_number}/{workload}/{library}"
                             rss_path = f"{report_path}/time-rss.txt"
                             log_path = f"logs/{round_number}-{workload}-{library}.log"
@@ -470,6 +453,33 @@ yjson = "0.1.0"
     def rewrite_harness_archive(self, mutate) -> None:
         self.rewrite_archive(self.harness, mutate)
 
+    def relabel_source_case(self, workload: str, library: str, source_case: str) -> None:
+        def relabel(root: pathlib.Path) -> None:
+            manifest = root / "manifest.csv"
+            with manifest.open(newline="", encoding="utf-8") as stream:
+                reader = csv.DictReader(stream)
+                fields = reader.fieldnames
+                rows = list(reader)
+            for row in rows:
+                if (row["workload_id"], row["library"]) != (workload, library):
+                    continue
+                previous_case = row["source_case"]
+                row["source_case"] = source_case
+                if library == "yjson":
+                    for field in ("log_path", "fixed_work_path"):
+                        path = root / row[field]
+                        write(path, path.read_text(encoding="utf-8").replace(
+                            previous_case, source_case
+                        ))
+            with manifest.open("w", newline="", encoding="utf-8") as stream:
+                writer = csv.DictWriter(stream, fieldnames=fields)
+                writer.writeheader()
+                writer.writerows(rows)
+
+        for index in range(len(self.formal)):
+            self.rewrite_formal_archive(index, relabel)
+
+
 class SevenLibraryEvidenceTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory()
@@ -488,6 +498,21 @@ class SevenLibraryEvidenceTests(unittest.TestCase):
             )
         self.assertEqual(status, 0)
         self.assertIn("integrity", output.getvalue())
+
+    def test_schema_v3_rejects_consistent_proofs_for_another_workload(self) -> None:
+        self.fixture.relabel_source_case(
+            "address_encode", "yjson", "yjsonStringEncodePerson"
+        )
+        with self.assertRaises(checker.EvidenceError):
+            checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=True)
+
+    def test_schema_v3_rejects_peer_case_from_another_library(self) -> None:
+        self.fixture.relabel_source_case(
+            "address_encode", "fastjson2", "jacksonEncodeAddress"
+        )
+        with self.assertRaises(checker.EvidenceError):
+            checker.verify(self.root, checker.DEFAULT_MARKER, integrity_only=True)
+
 
     def test_schema_v3_requires_fixed_work_parser_in_harness_archive(self) -> None:
         def remove_parser(root: pathlib.Path) -> None:

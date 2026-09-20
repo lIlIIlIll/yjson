@@ -25,6 +25,10 @@ from release_graph import load_release_graph
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "benchmarks/full-seven-library"))
+import run_full
+
+
 DEFAULT_MARKER = "benchmarks/results/full-seven-library/current-main.json"
 MARKER_V1_KEYS = {
     "schema_version",
@@ -57,27 +61,17 @@ RSS_RE = re.compile(
 )
 MARKDOWN_LINK_RE = re.compile(r"\]\(([^\s)]+)(?:\s+[^)]*)?\)")
 HTML_HREF_RE = re.compile(r"\bhref=[\"']([^\"']+)[\"']")
-LIBRARIES = (
-    "yjson",
-    "stdx_json",
-    "cangjieJSON",
-    "json4cj",
-    "cjfast_json",
-    "jackson",
-    "fastjson2",
-)
-WORKLOADS = (
-    "address_encode",
-    "address_decode",
-    "person_encode",
-    "person_decode",
-    "large_array_encode",
-    "large_array_decode",
-    "large_map_encode",
-    "large_map_decode",
-    "deep_nested_encode",
-    "deep_nested_decode",
-)
+LIBRARIES = run_full.LIBRARIES
+WORKLOADS = tuple(workload[0] for workload in run_full.WORKLOADS)
+SOURCE_CASES = {
+    (workload[0], library): (
+        run_full.CANGJIE[library][2]
+        if library in run_full.CANGJIE
+        else run_full.JAVA[library]
+    ) + workload[4]
+    for workload in run_full.WORKLOADS
+    for library in LIBRARIES
+}
 WORKLOAD_LABELS = {
     "address_encode": "Address encode",
     "address_decode": "Address decode",
@@ -723,6 +717,13 @@ def read_metadata_and_validate(
     fixed_by_workload: dict[str, dict[str, Any]] = {}
     for row in rows:
         cell = (row["round"], row["workload_id"], row["library"])
+        if fixed_protocol:
+            expected_case = SOURCE_CASES[(row["workload_id"], row["library"])]
+            if row["source_case"] != expected_case:
+                raise EvidenceError(
+                    f"manifest source_case does not match workload/library in {root.name}: "
+                    f"{cell}; expected={expected_case!r}, actual={row['source_case']!r}"
+                )
         rss_path = repo_path(root, row["rss_path"], f"manifest rss_path in {root.name}")
         previous = seen_rss.get(rss_path)
         if previous is not None:

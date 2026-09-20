@@ -85,6 +85,8 @@ Native 构建辅助脚本及对应 C 源码和头文件相同，再以独立进�
 Pure 的 24 个验收用例使用 [`bench_fixed_work.cj`](../../packages/benchmarks/src/bench_fixed_work.cj)
 中的固定批大小与批次数乘积作为调用总数。该表在候选测量前冻结；基线推导批次数统一取
 `min(推导批次数, 65536)`，不按候选成绩调整。
+例如 `encodePersonMemory` 的推导值为 524,288 批，但 `fixedBenchWork()` 返回截断后的
+65,536 批；batch size 为 1，因此实际调用数和 Python 验收值均为 65,536，而不是 524,288。
 
 Pure 采用 `YJSON_PURE_DIRECT_V1` 直接计时协议，不使用 SDKBench 的 bootstrap 或回归估计值。
 类型化编解码和 DOM 用例对固定次数的调用测量一个连续区间，以总纳秒数除以调用总数得到
@@ -98,6 +100,8 @@ Pure 采用 `YJSON_PURE_DIRECT_V1` 直接计时协议，不使用 SDKBench 的 b
 七库仍使用 `YJSON_FIXED_WORK_V1` 与 SDKBench；固定表同时覆盖两个 Address 用例。
 方法级 `minDuration` 为零，保留类级预热和输入提供器生命周期。七库校验器要求声明与
 SDK 输出的批次数、批大小一致，且只有一个成功的所选用例。两个协议不得混合汇总。
+schema-v3 的全部七库单元还必须把 `source_case` 绑定到正式运行器定义的 workload 后缀与库前缀；
+即使日志、sidecar 和各轮数据彼此一致，也不能把其他 workload 或其他库的 case 标作当前单元。
 
 旧 SDKBench 协议的 OOM、被中止的部分批次及
 [两批 Pure 比例门禁失败](results/2026-09-13-linux-release-pure.md)保留为历史证据，
