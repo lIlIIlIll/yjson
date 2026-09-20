@@ -1,0 +1,5 @@
+b8ec97efce8cef8c06d0e94807668bdb1480840e8aafb4f0ef9d111411cf117e  pure-direct-review-baseline-source-manifest.json
+13c16cec2f2447f9a761de16da7ef219f127d55f4b2de6bc62b1c8dfad9a6d13  pure-direct-review-baseline-source.tar.gz
+72a32bcc7f0283cd0f80548bce7df9033d1486648980e7dfd56abd4aae6738b0  pure-direct-review-failed-candidates.tar.gz
+33e9faddfcfbfeac43d0704f109b7d9bf0be08e5cc9c93bd82608fc84b0cab4a  pure-direct-review-v4-evidence.tar.gz
+ad181f122938cc4da07842569c2055d46043bd5901439541422811a2ccaa27c4  pure-direct-review-v4-validation.json

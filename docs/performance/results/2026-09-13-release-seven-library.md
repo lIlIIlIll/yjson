@@ -1,6 +1,124 @@
 # 2026-09-20 维护性候选七库完整对比
 
-本页记录 [`current-main.json`](../../../benchmarks/results/full-seven-library/current-main.json) 指向的当前七库报告。
+本页记录 [`current-main.json`](../../../benchmarks/results/full-seven-library/current-main.json) 指向的当前报告。
+测量绑定 `c5ccfd6953ea57adedc4c642dbb51aa2fbb9a12a`，使用 SDKBench `YJSON_FIXED_WORK_V1`。
+两批各完成 10 个 workload × 7 个库 × 11 轮，共 1,540 个测量单元；
+原始报告、RSS、源码和校验和见[证据目录](../../../benchmarks/results/full-seven-library/2026-09-20-maintainability-c5ccfd6/README.md)。
+
+**七库完整性 PASS；同一源码和 harness 的 [Pure direct A/B](2026-09-13-linux-release-pure.md) 回退门禁 PASS。**
+结果只适用于单核绑定、`cjProcessorNum=1`、128 MiB 堆，不代表默认运行时并发配置。
+Pure 使用独立的 `YJSON_PURE_DIRECT_V1` 协议；两种协议不拼接样本、不比较绝对延迟，也不证明发布资格。
+
+## 测量范围
+
+Encode 从已构造的 typed value 生成紧凑 JSON 字符串；Decode 从 canonical JSON 恢复同一 typed 类型。
+Payload bytes 是 decode 输入的 UTF-8 大小。各 adapter 在计时前通过公开 API correctness preflight；
+存在 direct typed path 时不使用 DOM fallback。
+
+| Workload | Typed value 的形状 | 规模 | Payload bytes |
+| --- | --- | ---: | ---: |
+| Address | `Address{street_name: String, zipcode: Int64}` | 2 个字段 | 47 |
+| Person | 3 个字符串 tag、2 个整数 score、嵌套 Address 和 null nick | 7 个 JSON 字段 | 176 |
+| Large Array | `ArrayList<ProfileRecord>` | 64 条记录 | 3929 |
+| Large Map | `HashMap<String, Int64>` | 64 个 entry | 1013 |
+| Deep Nested | `ArrayList<HashMap<String, ArrayList<ProfileRecord>>>` | 8 组 × 4 条记录 | 1929 |
+
+## 结果状态
+
+每批有 770 个唯一成功单元、7 个 preflight 日志、110 份 yjson 固定工作量证明和 770 份正值 RSS sidecar。
+共 1,540 个测量单元、220 份固定工作量证明。每个进程只测一个 exact case；报告与 RSS 逐项绑定到 manifest。
+构建不计入 timing 或 RSS。
+
+表中单位为 µs/op，是 11 轮独立进程样本的中位数，越小越好。
+`Max CV` 是七个库中的最大 CV；仅 `Max CV <= 5%` 的行标为 stable。
+
+| 批次 | 完整测量单元 | Stable workloads | Noisy workloads |
+| --- | ---: | ---: | ---: |
+| 第一批 | 770/770 | 3/10 | 7/10 |
+| 第二批 | 770/770 | 2/10 | 8/10 |
+
+Noisy 行保留原值，不据此发布稳定的跨库精确比例。
+
+## 第一批
+
+| Workload | yjson | stdx.json | cangjieJSON | json4cj | cjfast_json | Jackson | fastjson2 | Max CV |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Address encode | 1.308 | 3.299 | 3.123 | 3.495 | 2.458 | 0.180 | 0.066 | 18.93% |
+| Address decode | 1.783 | 2.433 | 3.328 | 3.456 | 2.037 | 0.317 | 0.075 | 7.96% |
+| Person encode | 3.145 | 10.869 | 17.027 | 5.437 | 10.546 | 0.572 | 0.269 | 16.88% |
+| Person decode | 10.839 | 21.979 | 28.247 | 20.151 | 15.585 | 1.134 | 0.422 | 5.85% |
+| Large Array encode | 54.275 | 97.925 | 250.428 | 91.895 | 75.750 | 9.022 | 4.143 | 4.14% |
+| Large Array decode | 111.260 | 183.824 | 422.730 | 172.181 | 77.312 | 18.706 | 5.120 | 5.96% |
+| Large Map encode | 8.950 | 130.231 | 182.541 | 131.298 | 128.684 | 1.752 | 1.739 | 4.89% |
+| Large Map decode | 47.918 | 240.128 | 351.488 | 225.579 | 237.589 | 5.419 | 3.988 | 5.53% |
+| Deep Nested encode | 57.017 | 80.640 | 171.447 | 84.736 | 74.208 | 4.439 | 2.466 | 5.14% |
+| Deep Nested decode | 370.098 | 160.543 | 264.244 | 142.336 | 95.437 | 10.345 | 3.416 | 4.27% |
+
+## 第二批
+
+| Workload | yjson | stdx.json | cangjieJSON | json4cj | cjfast_json | Jackson | fastjson2 | Max CV |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Address encode | 1.314 | 3.302 | 3.166 | 3.485 | 2.457 | 0.180 | 0.066 | 16.00% |
+| Address decode | 1.783 | 2.422 | 3.339 | 3.445 | 2.033 | 0.320 | 0.071 | 7.59% |
+| Person encode | 3.168 | 10.251 | 17.611 | 5.483 | 10.081 | 0.580 | 0.268 | 8.51% |
+| Person decode | 10.911 | 22.020 | 27.889 | 20.053 | 15.413 | 1.130 | 0.420 | 5.62% |
+| Large Array encode | 54.251 | 98.853 | 250.645 | 91.477 | 75.622 | 8.985 | 4.182 | 5.15% |
+| Large Array decode | 111.334 | 182.078 | 410.594 | 174.720 | 77.682 | 18.659 | 5.100 | 7.91% |
+| Large Map encode | 9.393 | 129.665 | 179.900 | 133.466 | 129.387 | 1.761 | 1.737 | 3.53% |
+| Large Map decode | 47.782 | 248.576 | 351.104 | 224.768 | 225.681 | 5.438 | 3.903 | 6.53% |
+| Deep Nested encode | 57.420 | 80.896 | 171.648 | 84.928 | 74.129 | 4.497 | 2.460 | 2.55% |
+| Deep Nested decode | 362.314 | 160.947 | 243.630 | 142.427 | 95.488 | 10.385 | 3.435 | 10.59% |
+
+## 输入和运行环境
+
+| 项目 | 值 |
+| --- | --- |
+| Measured commit | `c5ccfd6953ea57adedc4c642dbb51aa2fbb9a12a` |
+| Measured tree | `9fdaf2bf352dd78bb3db2686d986082e15887c8d` |
+| Product source SHA-256 | `9e22b132f38b28f15ef698a373247ac91ad4bdbe922bd8fae42c1b09cdcf30cf` |
+| Effective harness SHA-256 | `7b65d3cfc50c50bfbeb4ddce20e84183619ea7081a775f2a8152336fb4a1e2ab` |
+| Candidate identity SHA-256 | `9fad27007d044de3d115b97317aa9b5deea6b9725c9deea79cb4cb6c3b33ac20` |
+| SDK | Cangjie STS `1.1.3`；`cjc`/`cjpm` `1.1.3` |
+| CPU | CPU 0，sibling 48；30 秒 idle sample 均为 `0.0%` |
+| 仓颉运行时 | `cjHeapSize=128MB`、`cjProcessorNum=1` |
+| Hostname | 独立 UTS namespace 中的 `example-host` |
+| GNU time | `/usr/bin/time`；RSS 单位 `kbytes` |
+
+七库和 workload 顺序逐轮旋转，偶数轮反转 workload 顺序。
+yjson 使用冻结的固定工作量；其他库保留原采样参数，所有仓颉库统一限制运行时并发。
+Java 每个外层轮次使用一个 fork、3 × 500 ms warmup 和 1 × 1 秒测量。
+详细工作量规则见[性能方法](../methodology.md)。
+
+yjson 与 stdx.json 共用本轮一次 clean compile-only 构建的候选程序。
+其余五个库按摘要逐字节复用固定二进制，没有重建 peer。
+实际运行器与冻结候选权威源字节相同；候选源码归档含 179 个文件，覆盖全部 51 个产品输入和 28 个 harness 输入。
+
+## 资格边界与复核
+
+本矩阵测量 typed Pure API，不证明真实 Native provider 的性能，也不能代替正确性、覆盖率或发布门禁。
+Deep Nested 的回退判定以同轮 Pure A/B 为准，不跨历史批次推导。
+
+在包含完整归档的干净候选中执行：
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 bash scripts/ci_job.sh perf-evidence-drift strict
+```
+
+门禁核对校验和、安全解包、两批 770-cell 矩阵、RSS、固定工作量、整数单并发配置、可重生成的 summary、文档表格，以及当前产品、harness 和发布绑定。不能用 `integrity-only` 放行。
+
+## 历史与包装边界
+
+评审后的旧 Pure 候选曾出现 stream 和 Large Map encode 超限；失败批次在 Pure 报告中保留，不能作为当前通过证据。
+本轮首包因日志内保留测量工作目录而被拒；后续打包调用产生的 Python 缓存也被拒绝。
+最终包装只将日志和报告中的工作目录前缀替换为 `<work>`，不改源码或测量值，不重跑样本。
+`path-normalization.json` 保留 1,985 个改动文件的原始/公开摘要与被拒包装记录；规范化后的两批重新解析通过。
+
+<details>
+<summary>7d086a6 原报告（封存，非当前候选）</summary>
+
+### 7d086a6 维护性候选七库完整对比
+
+以下为旧候选记录；当前身份和结果以上文为准。
 测量绑定 `7d086a69200cecb447c64e73fa2b5e61e584ddb7`，七库协议为 SDKBench `YJSON_FIXED_WORK_V1`。
 两批各完成 10 个 workload × 7 个库 × 11 轮，共 1,540 个实际测量单元；
 原始报告、RSS、源码和校验和见[证据目录](../../../benchmarks/results/full-seven-library/2026-09-20-maintainability-7d086a6/README.md)。
@@ -9,7 +127,7 @@
 它不代表默认运行时并发配置，也不与旧自适应批次、失败的固定采样批次或被拒包装拼接。
 [Pure A/B](2026-09-13-linux-release-pure.md) 使用独立的 `YJSON_PURE_DIRECT_V1` direct 协议；其 24 个 case 均通过 `<= 1.05` 回退门槛且 48 个 side CV 均 `<= 5%`。Pure direct 与本页 SDKBench 七库结果不比较绝对延迟。
 
-## 测量范围
+### 测量范围
 
 Encode 从已构造的 typed value 生成紧凑 JSON 字符串；Decode 从 canonical JSON 字符串恢复同一 typed 类型。
 Payload bytes 是 decode 输入的 UTF-8 大小。各 adapter 在正式计时前通过公开 API correctness preflight，
@@ -23,7 +141,7 @@ Payload bytes 是 decode 输入的 UTF-8 大小。各 adapter 在正式计时前
 | Large Map | `HashMap<String, Int64>` | 64 个 entry | 1013 |
 | Deep Nested | `ArrayList<HashMap<String, ArrayList<ProfileRecord>>>` | 8 组 × 4 条记录 | 1929 |
 
-## 结果状态
+### 结果状态
 
 **七库完整性 PASS；与独立单批 PASS 的 Pure direct 回退门禁共同完成本候选正式性能资格。**
 
@@ -40,7 +158,7 @@ Payload bytes 是 decode 输入的 UTF-8 大小。各 adapter 在正式计时前
 
 Noisy 行保留原值，但不据此发布稳定的跨库精确比例。
 
-## 第一批
+### 第一批
 
 | Workload | yjson | stdx.json | cangjieJSON | json4cj | cjfast_json | Jackson | fastjson2 | Max CV |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -55,7 +173,7 @@ Noisy 行保留原值，但不据此发布稳定的跨库精确比例。
 | Deep Nested encode | 57.767 | 75.264 | 171.093 | 84.880 | 73.824 | 4.481 | 2.441 | 9.92% |
 | Deep Nested decode | 367.074 | 161.780 | 242.501 | 143.104 | 95.183 | 10.420 | 3.412 | 8.51% |
 
-## 第二批
+### 第二批
 
 | Workload | yjson | stdx.json | cangjieJSON | json4cj | cjfast_json | Jackson | fastjson2 | Max CV |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -70,7 +188,7 @@ Noisy 行保留原值，但不据此发布稳定的跨库精确比例。
 | Deep Nested encode | 59.110 | 70.400 | 170.944 | 84.651 | 73.920 | 4.479 | 2.471 | 12.63% |
 | Deep Nested decode | 357.844 | 159.137 | 266.328 | 143.206 | 94.985 | 10.398 | 3.418 | 7.39% |
 
-## 输入和运行环境
+### 输入和运行环境
 
 | 项目 | 值 |
 | --- | --- |
@@ -93,7 +211,7 @@ Java 每个外层轮次使用一个 fork、3 × 500 ms warmup 和 1 × 1 秒测�
 yjson 与 stdx.json 共享本轮一次 clean compile-only 构建的候选程序；独立仓颉对照和 JMH JAR 使用按摘要绑定、逐字节复用的固定产物，没有重建 peer。
 实际运行器与冻结候选权威源字节相同。28 文件 harness 身份为 `43461d…9268f`；候选源码 capsule 含 179 个冻结提交文件，并覆盖全部 51 个产品输入和 28 个 harness 输入。
 
-## 资格边界与复核
+### 资格边界与复核
 
 本页七库矩阵使用 SDKBench；Pure 回退门禁使用 `YJSON_PURE_DIRECT_V1` direct 总耗时协议。两者 workload 名称相交也不能跨协议比较绝对延迟。
 本矩阵测量 typed Pure API，不证明真实 Native provider 下 RF-009 writer 的性能，也不能代替正确性门禁。
@@ -106,11 +224,13 @@ PYTHONDONTWRITEBYTECODE=1 bash scripts/ci_job.sh perf-evidence-drift strict
 
 门禁验证校验和、安全解包、两批 770-cell 矩阵、RSS、固定工作量、整数单并发配置、可重新生成的 summary、文档表格，以及当前产品、harness 和发布绑定。不能用 `integrity-only` 放行。
 
+</details>
+
 ## 已封存协议
 
 `c844aa9` 的 Pure 第二批失败、初版固定采样的基线 OOM，以及被中止的七库部分批次均保持原状态。
 统一 65,536 批上限的首次预检仍 OOM；单并发配置是随后经批准的测量方案，不是对旧失败的改判。SDK 分配器的准确失败机制仍未完成证明，本轮不声称修复 SDK。
-首版 v1 包装因复制历史 run/summary 日志而被拒，并在远端保留为失败历史；当前 v2 只修正日志绑定，没有重跑 benchmark 行或改写测量数据。
+`7d086a6` 的首版 v1 包装因复制历史 run/summary 日志而被拒；当时的 v2 只修正日志绑定，没有重跑 benchmark 行或改写测量数据。
 
 <details>
 <summary>c844aa9 原报告（封存，非当前配置）</summary>

@@ -1,4 +1,111 @@
-# 2026-09-20 维护性重构候选 Pure 直接计时资格化：通过
+# 2026-09-20 评审修复候选 Pure 直接计时资格：通过
+
+候选 `c5ccfd6953ea57adedc4c642dbb51aa2fbb9a12a` 相对基线 `fce62c75ff03b61bed0bc72331d1c2e71b2f1b6b` 通过正式 Pure 资格。
+一批完整测量覆盖 24 个 case × 11 轮 × baseline/candidate 两侧，共 528 个计时进程；另有 48 个不计入统计的预检进程。
+24 个 `candidate/baseline` 中位数比值均不超过 `1.05`，48 个单侧 CV 均不超过 `5%`，没有第二批。
+
+最差一项是 `yjsonStringDecodeLargeProfileArray`，变动为 `+2.064919%`。
+Deep Nested string decode 为 `+0.415102%`，bytes decode 为 `-0.043659%`。
+流式 `decodeRecords64kChunk4k` 为 `-4.819148%`，大型整数映射编码为 `-0.685422%`。
+正值表示候选更慢，负值表示更快；通过 5% 门槛不等于所有用例都更快。
+
+## 本轮协议与范围
+
+使用 `YJSON_PURE_DIRECT_V1`，即 `direct_timing_protocol: 1`；固定工作量、最低预热、segments 和 exact case 不变。
+每个进程只有一条有效 direct marker，且 unittest 为 `PASSED: 1`、`ERROR: 0`、`FAILED: 0`。
+奇数轮 baseline 先执行，偶数轮 candidate 先执行；ready/continue 握手完成线程发现和绑定后才开始后续计时。
+stdout、direct sidecar、GNU time RSS、线程放置和全部统计均已独立复核。
+
+范围限于 Linux x86_64、Cangjie STS `1.1.3`、`cjProcessorNum=1`、`cjHeapSize=128MB`。
+业务、GC main/helper、GC pool/schmon 分别绑定 CPU 1、2、4；同时检查 sibling 49、50、52。
+30 秒空闲筛选中六个逻辑 CPU 均低于 1%，正式运行保留逐秒监测。双方构建前后源码干净，产品与 harness 身份不变。
+本轮不证明默认并发配置、其他平台或真实 Native provider 的性能，也不构成发布许可。
+
+七库使用独立 SDKBench 协议；即使用例同名，也不能与本页拼接样本或比较绝对延迟。
+七库矩阵和完整性状态见[七库报告](2026-09-13-release-seven-library.md)。
+
+## 本轮完整正式结果
+
+时延是 11 个独立进程 `ns/op` 的中位数，表中换算为 µs/op。CV 使用 sample standard deviation。
+RSS 是每侧 11 份 GNU time sidecar 的实际最大值，不是托管堆存活量；本协议没有 RSS 门禁。
+
+| Case | Baseline median (µs/op) | Candidate median (µs/op) | C/B | 变动 | Candidate wins | Baseline CV | Candidate CV | Baseline max RSS (KB) | Candidate max RSS (KB) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `yjsonStringEncodeLargeInt64Map` | 6.492377 | 6.447877 | 0.993146 | -0.685422% | 6/11 | 1.626% | 0.709% | 190848 | 190084 |
+| `yjsonStringDecodeLargeInt64Map` | 14.179830 | 14.334539 | 1.010911 | +1.091050% | 1/11 | 1.583% | 2.608% | 189228 | 188200 |
+| `yjsonBytesDecodeLargeInt64Map` | 16.888977 | 17.065586 | 1.010457 | +1.045706% | 1/11 | 0.997% | 1.129% | 190616 | 189876 |
+| `yjsonStringEncodeDeepNestedProfiles` | 23.090366 | 23.246656 | 1.006769 | +0.676864% | 4/11 | 2.126% | 1.905% | 147920 | 147912 |
+| `yjsonStringDecodeDeepNestedProfiles` | 109.906837 | 110.363062 | 1.004151 | +0.415102% | 1/11 | 0.226% | 0.379% | 189184 | 188796 |
+| `yjsonBytesDecodeDeepNestedProfiles` | 116.594481 | 116.543576 | 0.999563 | -0.043659% | 4/11 | 0.357% | 0.466% | 188660 | 188392 |
+| `yjsonStringEncodePerson` | 1.055472 | 1.039299 | 0.984676 | -1.532363% | 8/11 | 1.840% | 1.546% | 133176 | 135888 |
+| `yjsonStringDecodePerson` | 3.524545 | 3.556235 | 1.008991 | +0.899125% | 2/11 | 0.600% | 1.094% | 190608 | 190244 |
+| `yjsonStringEncodeLargeProfileArray` | 21.209055 | 20.142585 | 0.949716 | -5.028370% | 10/11 | 1.055% | 2.442% | 161260 | 165516 |
+| `yjsonStringDecodeLargeProfileArray` | 41.027617 | 41.874804 | 1.020649 | +2.064919% | 1/11 | 0.821% | 0.907% | 132872 | 137432 |
+| `parseStringRecords64k` | 1290.860585 | 1307.679401 | 1.013029 | +1.302915% | 3/11 | 2.048% | 2.653% | 190328 | 190024 |
+| `parseBytesRecords64k` | 1446.189602 | 1438.200567 | 0.994476 | -0.552420% | 4/11 | 2.983% | 2.344% | 190212 | 189940 |
+| `parseStringRecords1m` | 24093.742120 | 24395.734625 | 1.012534 | +1.253406% | 1/11 | 1.083% | 0.851% | 187904 | 187572 |
+| `parseBytesRecords1m` | 26647.670810 | 26538.357005 | 0.995898 | -0.410219% | 6/11 | 0.787% | 1.067% | 188112 | 187812 |
+| `yjsonStringEncodeProfileBundle` | 3.506833 | 3.514906 | 1.002302 | +0.230193% | 5/11 | 1.095% | 0.717% | 135900 | 135852 |
+| `yjsonStringDecodeProfileBundle` | 5.967494 | 6.057762 | 1.015127 | +1.512655% | 5/11 | 2.841% | 2.871% | 190432 | 189984 |
+| `yjsonBytesEncodeProfileBundle` | 3.956155 | 3.977643 | 1.005431 | +0.543142% | 6/11 | 1.771% | 1.791% | 161404 | 161496 |
+| `yjsonBytesDecodeProfileBundle` | 6.499907 | 6.617686 | 1.018120 | +1.812007% | 3/11 | 2.024% | 1.241% | 182112 | 181180 |
+| `yjsonStringEncodeEscapedUnicodeString` | 0.798419 | 0.798570 | 1.000189 | +0.018946% | 6/11 | 1.727% | 1.334% | 190468 | 190300 |
+| `yjsonBytesEncodeEscapedUnicodeString` | 0.644688 | 0.643433 | 0.998053 | -0.194693% | 8/11 | 1.178% | 1.212% | 190624 | 190284 |
+| `decodePersonChunk4k` | 24.515228 | 23.232005 | 0.947656 | -5.234390% | 11/11 | 0.680% | 1.932% | 160600 | 166808 |
+| `decodeRecords64kChunk4k` | 6254.763266 | 5953.336971 | 0.951809 | -4.819148% | 11/11 | 0.498% | 1.029% | 135860 | 137556 |
+| `encodePersonMemory` | 7.061110 | 7.109702 | 1.006882 | +0.688169% | 5/11 | 1.839% | 1.749% | 190788 | 190100 |
+| `encodeRecords64kMemory` | 565.405160 | 567.588861 | 1.003862 | +0.386219% | 4/11 | 1.151% | 1.239% | 189360 | 189392 |
+
+## 评审后的失败与修复
+
+以下失败没有被本轮通过覆盖，也没有删除超限行、第三批重试或跨批拼接。
+
+| 尝试 | 正式单元 | 结果 | 后续处理 |
+| --- | ---: | --- | --- |
+| review-v1 | 0 | 覆盖率修复改变候选源码；完成 11 个预检后中止 | 冻结新候选，旧预检不进入统计 |
+| review-v2 A：`08e2c7a` | 528 | 流式解码 C/B `1.067956`；两侧 CV `3.399% / 6.224%` | noisy 触发唯一一次完整 B 批 |
+| review-v2 B：`08e2c7a` | 528 | 同项 C/B `1.053621`；两侧 CV `0.646% / 1.896%` | 稳定失败，停止重试并修复源码 |
+| review-v3 A：`d759d70` | 528 | 大型整数映射编码 C/B `1.076158`；两侧 CV `1.142% / 0.799%` | 稳定失败，无第二批；继续修复源码 |
+| review-v4 传输预检：`598e1c5` | 0 | 两份 release 清单未跟踪，clean-source 检查在构建前拒绝 | 补全冻结提交；没有构建或计时样本 |
+| 本轮 A：`c5ccfd6` | 528 | 全部比例与 CV 通过 | 无需复测 |
+
+review-v2 的流式回退修复把 `readJsonString()` 的固定字符串预算读取移出逐字节循环，仍在原位置检查超限。
+外部使用方测试覆盖原始与转义 Unicode 的字节预算边界，以及超限先于后续非法转义的错误顺序。
+review-v3 的映射回退修复精简了 `jsonRawCompactStringEscapeIndex()` 的紧凑 key 扫描。
+STS 1.1.3 产物的普通未转义字节循环由 22 条指令降为 16 条，去掉三次重复字符比较和三条 `cmov` 指令。
+
+独立的五用例、11 轮源码修复诊断共 110 个进程：映射编码 after/before 为 `0.923777`。
+该诊断比较的是 `d759d70` 与扫描修复，不是正式 baseline/candidate；没有任何诊断样本并入上表。
+正式通过只来自本轮完整的 24-case 批次。
+
+## 本轮身份与证据
+
+| 项目 | 值 |
+| --- | --- |
+| Candidate commit / tree | `c5ccfd6953ea57adedc4c642dbb51aa2fbb9a12a` / `9fdaf2bf352dd78bb3db2686d986082e15887c8d` |
+| Baseline commit / tree | `fce62c75ff03b61bed0bc72331d1c2e71b2f1b6b` / `97416ee14444470a3b5919b3646d1b3970e3f452` |
+| Candidate product SHA-256 | `9e22b132f38b28f15ef698a373247ac91ad4bdbe922bd8fae42c1b09cdcf30cf` |
+| Baseline product SHA-256 | `9c1e738dcf8e8a56314e433874555ff8830bac9652c57268658050199df0a847` |
+| Shared effective harness SHA-256 | `7b65d3cfc50c50bfbeb4ddce20e84183619ea7081a775f2a8152336fb4a1e2ab` |
+
+测量提交属于隔离冻结树；与主仓库源码提交 `67fb3aabfef11cb9d415b3f62b3c44f262228b59` 的产品和有效 harness 相同，不要求 Git tree 相同。
+产品、harness 或发布依赖绑定变化后，不能复用本轮资格。
+
+文件位置与核对命令见[本轮 Pure 证据索引](../../../benchmarks/results/release-performance/2026-09-20-maintainability-c5ccfd6/README.md)：
+
+- `pure-direct-review-v4-evidence.tar.gz`：本轮全部原始进程、构建、CPU、退出码、独立复核、110 个诊断进程及反汇编；SHA-256 `33e9faddfcfbfeac43d0704f109b7d9bf0be08e5cc9c93bd82608fc84b0cab4a`。
+- `pure-direct-review-failed-candidates.tar.gz`：三批共 1,584 个失败正式单元、144 个对应预检、11 个中止预检、构建前拒绝记录，以及失败候选的源码与复核；SHA-256 `72a32bcc7f0283cd0f80548bce7df9033d1486648980e7dfd56abd4aae6738b0`。
+- `pure-direct-review-baseline-source.tar.gz`：175 个冻结基线文件；SHA-256 `13c16cec2f2447f9a761de16da7ef219f127d55f4b2de6bc62b1c8dfad9a6d13`。
+- 候选源码复用[本轮七库证据目录](../../../benchmarks/results/full-seven-library/2026-09-20-maintainability-c5ccfd6/README.md)的 `candidate-source.tar.gz`：179 个冻结文件；SHA-256 `dd14466c63bcb0d99332ebe23c8167bd297dcdfe1fe35f43ab78d6887c8169a3`。
+- 基线和候选的源码归档均重建出完整的 51 个产品输入和 28 个 harness 输入。
+  日志仅规范化工作目录与 home 路径前缀；源码归档和计时值没有改写。
+- 同一产品与 harness 的干净主仓库检出通过 `scripts/ci_fresh_checkout.sh` 全部 17 个 Linux 门禁；这不是托管 CI 或其他平台的通过声明。
+
+原有 `7d086a6` 的通过、较早候选的失败及其归档保持不变，以下按历史身份保留。
+
+---
+
+## 历史记录：7d086a6 的 Pure 直接计时资格通过
 
 候选 `7d086a69200cecb447c64e73fa2b5e61e584ddb7` 相对基线 `3d0ae8981db4c30926411568bedb7ba7d0607d95` 的 Pure 正式资格化通过。
 唯一一批正式测量覆盖 24 个 case、11 轮和 baseline/candidate 两侧，共 528 个计时进程；另有 48 个不计入统计的预检进程。
@@ -12,7 +119,7 @@ Deep Nested string decode 变动为 `-0.229176%`，bytes decode 变动为 `+0.32
 业务线程、GC main/helper 和 GC pool/schmon 分别绑定 CPU 1、4、7；CPU 选择同时检查其 sibling 49、52、55，正式测量期间保留逐秒监测。
 这些结果只说明本次 Pure workload，不代表默认运行时配置、其他操作系统、Native provider 或产品整体。
 
-## 门禁和直接计时协议
+### 门禁和直接计时协议
 
 本次使用 `YJSON_PURE_DIRECT_V1`，即 `direct_timing_protocol: 1`。
 每个进程恰好提供一条直接计时 marker；runner 核对固定 operations、正 elapsed、最低预热、segments、唯一成功用例、线程布局和 GNU time RSS sidecar。
@@ -26,7 +133,7 @@ Deep Nested string decode 变动为 `-0.229176%`，bytes decode 变动为 `+0.32
 前三次尝试没有产生正式样本，也没有并入本表：v1 因必需 manifest 未跟踪而在构建前被拒绝，v2 因 provenance 收集缺少 `os` import 在构建前失败，v3 因 SDK progress 输出覆盖直接 marker 而在首个预检中失败。
 归档将三次失败分别保存在 `v1-manifest-missing`、`v2-import-missing` 和 `v3-progress-collision` 下。
 
-## 完整正式结果
+### 完整正式结果
 
 时延是 11 个独立进程 `ns/op` 的中位数。`C/B` 和“变动”都以 candidate/baseline 计算。
 CV 使用 11 个进程样本的 sample standard deviation。RSS 是该 case 11 份 GNU time sidecar 的实际最大值，不是托管堆存活量；本次没有定义 RSS 门禁。
@@ -58,7 +165,7 @@ CV 使用 11 个进程样本的 sample standard deviation。RSS 是该 case 11 �
 | `encodePersonMemory` | 6.997257 | 6.879593 | 0.983184 | -1.681581% | 7/11 | 3.312% | 3.269% | 190512 | 190436 |
 | `encodeRecords64kMemory` | 568.087999 | 566.457253 | 0.997129 | -0.287059% | 8/11 | 0.416% | 0.549% | 188380 | 189092 |
 
-## 身份和完整证据
+### 身份和完整证据
 
 - candidate 产品源码摘要：`1c3d85aca3fec86594d1732bb8779728cd42e7e5b7656b720bd0f934390cb2c9`；tree `53527121b6bdca31586505ec838b5b092cd15924`。
 - baseline 产品源码摘要：`9c1e738dcf8e8a56314e433874555ff8830bac9652c57268658050199df0a847`；tree `f053b4d9dfa7192ae7bdf1c47861cad170d5a56e`。
