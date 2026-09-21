@@ -48,6 +48,8 @@ benchmarks/java_fastjson2/build/
 !release/1.0.0-rc.2/artifacts/performance/summary.json
 !release/1.0.0-rc.2/artifacts/performance/metadata.json
 !release/1.0.0-rc.2/artifacts/performance/checksums.txt
+!release/0.1.1/binary-compatibility.json
+!release/0.1.1/local-verification.json
 target/api-docs
 target/cjdoc
 target/doc

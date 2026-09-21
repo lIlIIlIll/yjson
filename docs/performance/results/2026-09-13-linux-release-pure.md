@@ -1,4 +1,83 @@
-# 2026-09-20 评审修复候选 Pure 直接计时资格：通过
+# 2026-09-21 0.1.1 发布候选 Pure 直接计时资格：通过
+
+源码候选 `fd2a8f7b400c4c80d6aaaf1e71fdd1ac5ff422ab` 相对实际发布的 `0.1.0` 包源码通过正式 Pure 资格。
+一批完整测量覆盖 24 个 case × 11 轮 × baseline/candidate，共 528 个计时进程，另有 48 个预检进程。
+全部 C/B 中位数比值不超过 `1.05`，48 个单侧 CV 均不超过 `5%`；没有第二批。
+
+最差项 `yjsonStringDecodeLargeProfileArray` 为 `+3.539109%`。
+Deep Nested string decode 为 `+0.321852%`，bytes decode 为 `+0.150699%`。
+正值表示候选更慢。通过 5% 回退门槛不等于每项更快，也不构成新的优化倍数声明。
+
+## 协议与范围
+
+使用 `YJSON_PURE_DIRECT_V1`、`direct_timing_protocol: 1`；固定工作量、最低预热、segments 和 exact case 不变。
+逐个复核了 576 份 stdout、direct sidecar、GNU time RSS 和 ready/continue 握手记录；每个进程通过且只有一条有效 direct marker。
+奇数轮 baseline 先执行，偶数轮 candidate 先执行，没有删样本或跨批拼接。
+
+Linux x86_64、Cangjie STS `1.1.3`、`cjProcessorNum=1`、`cjHeapSize=128MB`。
+业务、GC main/helper、GC pool/schmon 分别绑定 CPU 1、2、3，并监测 sibling 49、50、51。
+30 秒筛选中六个逻辑 CPU 均低于 1%；正式运行保留逐秒监测。两侧构建前后源码干净，身份不变。
+结果不外推到其他平台、默认并发配置或 Native provider。七库 SDKBench 结果使用另一协议，不比较绝对延迟或拼接样本。
+
+## 完整正式结果
+
+时延为 11 个独立进程 ns/op 的中位数，表中换算为 µs/op；CV 使用 sample standard deviation。
+RSS 为每侧 11 份 sidecar 的实际最大值，不是托管堆存活量；本协议没有 RSS 门禁。
+
+| Case | Baseline median (µs/op) | Candidate median (µs/op) | C/B | 变动 | Candidate wins | Baseline CV | Candidate CV | Baseline max RSS (KB) | Candidate max RSS (KB) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `yjsonStringEncodeLargeInt64Map` | 6.969666 | 6.468901 | 0.928151 | -7.184920% | 11/11 | 0.773% | 1.153% | 190696 | 190120 |
+| `yjsonStringDecodeLargeInt64Map` | 14.207919 | 14.343308 | 1.009529 | +0.952914% | 0/11 | 0.257% | 0.331% | 188372 | 187544 |
+| `yjsonBytesDecodeLargeInt64Map` | 16.950528 | 17.035952 | 1.005040 | +0.503962% | 1/11 | 0.273% | 0.663% | 190636 | 190100 |
+| `yjsonStringEncodeDeepNestedProfiles` | 23.340814 | 23.152971 | 0.991952 | -0.804785% | 8/11 | 0.935% | 0.904% | 147724 | 148476 |
+| `yjsonStringDecodeDeepNestedProfiles` | 110.314409 | 110.669459 | 1.003219 | +0.321852% | 5/11 | 0.338% | 0.508% | 188976 | 188812 |
+| `yjsonBytesDecodeDeepNestedProfiles` | 116.809892 | 116.985924 | 1.001507 | +0.150699% | 5/11 | 0.379% | 0.274% | 188716 | 188368 |
+| `yjsonStringEncodePerson` | 1.067178 | 1.039382 | 0.973954 | -2.604567% | 10/11 | 1.363% | 1.799% | 132164 | 135900 |
+| `yjsonStringDecodePerson` | 3.502776 | 3.561141 | 1.016663 | +1.666256% | 0/11 | 0.529% | 1.072% | 190556 | 190104 |
+| `yjsonStringEncodeLargeProfileArray` | 20.364877 | 20.127933 | 0.988365 | -1.163496% | 10/11 | 0.323% | 1.330% | 164984 | 165540 |
+| `yjsonStringDecodeLargeProfileArray` | 40.481421 | 41.914102 | 1.035391 | +3.539109% | 0/11 | 0.100% | 1.370% | 135868 | 137616 |
+| `parseStringRecords64k` | 1290.628601 | 1288.531505 | 0.998375 | -0.162486% | 5/11 | 2.726% | 2.611% | 190396 | 190136 |
+| `parseBytesRecords64k` | 1415.287467 | 1392.300519 | 0.983758 | -1.624189% | 6/11 | 2.096% | 4.285% | 190364 | 190032 |
+| `parseStringRecords1m` | 24771.241850 | 24570.552015 | 0.991898 | -0.810173% | 9/11 | 0.925% | 0.995% | 187764 | 187692 |
+| `parseBytesRecords1m` | 26554.105920 | 26311.952200 | 0.990881 | -0.911926% | 6/11 | 0.694% | 1.198% | 188084 | 188072 |
+| `yjsonStringEncodeProfileBundle` | 3.553527 | 3.529567 | 0.993257 | -0.674251% | 7/11 | 1.201% | 1.315% | 135980 | 136080 |
+| `yjsonStringDecodeProfileBundle` | 5.929061 | 5.991366 | 1.010508 | +1.050834% | 4/11 | 2.605% | 2.071% | 190220 | 190072 |
+| `yjsonBytesEncodeProfileBundle` | 4.018430 | 3.999485 | 0.995286 | -0.471440% | 10/11 | 0.735% | 0.545% | 159664 | 160060 |
+| `yjsonBytesDecodeProfileBundle` | 6.583782 | 6.536233 | 0.992778 | -0.722214% | 8/11 | 0.991% | 0.875% | 180852 | 181776 |
+| `yjsonStringEncodeEscapedUnicodeString` | 0.794602 | 0.796148 | 1.001945 | +0.194532% | 5/11 | 1.165% | 1.746% | 190432 | 190212 |
+| `yjsonBytesEncodeEscapedUnicodeString` | 0.635905 | 0.640802 | 1.007701 | +0.770052% | 3/11 | 1.437% | 1.226% | 190724 | 190280 |
+| `decodePersonChunk4k` | 24.545758 | 23.234684 | 0.946586 | -5.341350% | 11/11 | 0.357% | 0.768% | 159864 | 166048 |
+| `decodeRecords64kChunk4k` | 6351.044373 | 5921.552869 | 0.932375 | -6.762534% | 11/11 | 0.379% | 0.626% | 135800 | 135772 |
+| `encodePersonMemory` | 7.010206 | 7.162759 | 1.021762 | +2.176151% | 1/11 | 1.142% | 1.562% | 190704 | 190332 |
+| `encodeRecords64kMemory` | 561.607169 | 558.529778 | 0.994520 | -0.547962% | 7/11 | 1.192% | 1.116% | 188008 | 189408 |
+
+## 身份、基线纠正与证据
+
+| 项目 | 值 |
+| --- | --- |
+| Candidate measured commit / tree | `ce39e57ba6ade281d232bc0d82abfafdf91f5bb5` / `4826abc45cac6fdff757ce6ee36dd50219b2eded` |
+| Baseline measured commit / tree | `eef197c7fd0124e1b2cfd105bdaad2d0ae894d97` / `2a54750a266d771f0cf5d5e25691c42bd69d9e7b` |
+| Candidate product SHA-256 | `9e22b132f38b28f15ef698a373247ac91ad4bdbe922bd8fae42c1b09cdcf30cf` |
+| Baseline product SHA-256 | `e367e12cfdc9af4857c60589878370d63d011af4edac5df36174aebe87ae8fc8` |
+| Shared effective harness SHA-256 | `4d34fcb5e5a160e46c293efd996ac9fc416aa2858d316d163e1cf7c22bba1cc3` |
+
+测量提交属于隔离冻结树；候选产品、有效 harness 和版本依赖绑定与上述主仓库源码候选一致，不要求 Git tree 相同。
+实际发布基线为 runtime `89c22a933cbd7e5cdc9b0f8df725ca6e1cda2372`、macro `fec0adce41f73d037d876cbac7a28aee8108bb5c`。
+下载校验后的九个发布包中，43 个 runtime 和 2 个宏源文件均与该身份逐字节一致。
+两侧使用相同的当前测量 harness；不是将旧包的历史测量值拿来对比。
+
+`0.1.0` tag 与实际发布源码不一致，已记录为 [issue #6](https://github.com/lIlIIlIll/yjson/issues/6)。
+首次 tag-baseline 部分批次发现该问题后中止，完整保留在独立归档中；其样本不进入上表，历史 tag 和附件没有修改。
+
+[本轮证据索引](../../../benchmarks/results/release-performance/2026-09-21-release-011/README.md)包含完整正式归档、独立复核、实际发布基线源码和中止批次。
+正式归档 SHA-256：`e7bf130a48bad1d7ea81d79e87783e9ccb54bafb202cbde0e128b7a3ebeb9f85`。
+候选源码胶囊由本轮七库证据共用。产品、harness 或版本绑定变化后不得复用本轮资格。
+
+以下历史结果及失败记录按原身份保留，不参与本次发布统计。
+
+---
+
+## 历史记录：2026-09-20 评审修复候选 Pure 直接计时资格通过
 
 候选 `c5ccfd6953ea57adedc4c642dbb51aa2fbb9a12a` 相对基线 `fce62c75ff03b61bed0bc72331d1c2e71b2f1b6b` 通过正式 Pure 资格。
 一批完整测量覆盖 24 个 case × 11 轮 × baseline/candidate 两侧，共 528 个计时进程；另有 48 个不计入统计的预检进程。

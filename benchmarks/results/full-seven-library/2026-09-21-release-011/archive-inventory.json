@@ -1,0 +1,76 @@
+{
+  "archive_member_counts": {
+    "candidate-build-logs.tar.gz": 2,
+    "harness-source.tar.gz": 4,
+    "seven-release-011-batch11-v1-a.tar.gz": 4460,
+    "seven-release-011-batch11-v1-b.tar.gz": 4460
+  },
+  "build_logs_archive": {
+    "file": "candidate-build-logs.tar.gz",
+    "root": "seven-build-logs-release-011-batch11-v1"
+  },
+  "fixed_work_protocol": 1,
+  "formal_archives": [
+    {
+      "cells": 770,
+      "file": "seven-release-011-batch11-v1-a.tar.gz",
+      "root": "seven-release-011-batch11-v1-a",
+      "yjson_fixed_work_proofs": 110
+    },
+    {
+      "cells": 770,
+      "file": "seven-release-011-batch11-v1-b.tar.gz",
+      "root": "seven-release-011-batch11-v1-b",
+      "yjson_fixed_work_proofs": 110
+    }
+  ],
+  "formal_identity": {
+    "candidate": {
+      "identity_sha256": "e809af61d164287dbf18f320977334c52d2140ebb3358fe6834f2e34e1147549",
+      "lockstep_manifests_sha256": "e0ea26a58363f65ffc816fdff403780bf8c94c8fb88b3fdaac046abf1ad45dc3",
+      "package_version": "0.1.1",
+      "release_graph_sha256": "fdad132c2d51dbc2d7be5e2c00f3fe57113df957c769fb8227741721a406fb2c",
+      "root_lock_sha256": "7b09643cc3e7107d2a0f09605871366c547525d40221945a60bee8a9a5e3f3b0",
+      "root_manifest_sha256": "01dc0ebc6ee124ab61410ad365aa2ccdeeeade51f995c6b451a3d1ea56a7cd7c"
+    },
+    "candidate_binary_sha256": "d8e5cc337331371055d58268cf138dabefc9218f1fa665c181854da69473c27e",
+    "cj_processor_num": 1,
+    "commit": "ce39e57ba6ade281d232bc0d82abfafdf91f5bb5",
+    "effective_harness_sha256": "4d34fcb5e5a160e46c293efd996ac9fc416aa2858d316d163e1cf7c22bba1cc3",
+    "measured_overlay_sha256": "4f1350b31ab636db4b6b00410d0927f4baf1e52900657ac5f6ae5eb529d0b35d",
+    "product_source_sha256": "9e22b132f38b28f15ef698a373247ac91ad4bdbe922bd8fae42c1b09cdcf30cf"
+  },
+  "harness_archive": {
+    "file": "harness-source.tar.gz",
+    "files": 3,
+    "root": "seven-harness-release-011-batch11-v1"
+  },
+  "reused_peer_binaries": {
+    "cangjieJSON": "1d38b2fef242e384706bd6b8ef3511ed8e8a9f81fe7684954ae07508d149988e",
+    "cjfast_json": "08f20e543d799c6b3b0f3fbdbf5bcc7a4ec695988ecdfbdbf79876b31f672330",
+    "jackson_fastjson2": "450bfee6c0d91ea11f85480d7fe2eab0efd293ed546025274532a96219221d1e",
+    "json4cj": "23de0d644308fe24fa67a2d64cf45f3d3bcadee32c068326d0dd49e568580b94"
+  },
+  "schema_version": 1,
+  "source_capsule_file_counts": {
+    "candidate-source.tar.gz": 179,
+    "peer-source.tar.gz": 278
+  },
+  "source_capsules": {
+    "candidate-source.tar.gz": "d09073f5d49b5e362e9907f4fe4ff2dd44c78353d14bf9dc16775e159f1c4815",
+    "peer-source.tar.gz": "70d35e1cc8c5de4e028c4510e99c845f335c39cb9fda7529ecb8df1f64b30c28",
+    "source-archive-manifests.json": "a6556703d9c84450cb241c90505a0f5c81c34c193f1f97622cdf0bdcd0671f0c"
+  },
+  "source_privacy_validation": {
+    "archive_paths_safe": true,
+    "candidate_content_normalizations": 0,
+    "candidate_snapshot_byte_exact": true,
+    "deterministic_metadata": true,
+    "gzip_mtime_zero": true,
+    "machine_specific_content_matches": 0,
+    "peer_build_path_normalizations": 2,
+    "provider": "release-0.1.1-source-capsules",
+    "revalidated_by": "committed-blob-and-archive-verification",
+    "status": "pass"
+  }
+}

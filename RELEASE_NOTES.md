@@ -26,10 +26,13 @@
 
 ## 兼容性
 
-- 已检入的 Cangjie public API 和 C ABI 快照相对 `0.1.0` 没有变化。
-- generated-support v1 协议没有版本变更，九个包仍按 lockstep 方式配对。
-- 快照不等同于二进制兼容证明。冻结的旧 consumer 链接和调用矩阵完成并写入
-  [发布候选记录](release/0.1.1/evidence.md)前，本版本不声明二进制兼容。
+- Cangjie public API 和 C ABI 声明快照与实际发布的 `0.1.0` 源码提交一致。
+- generated-support v1 协议没有版本变更；升级时将所用的 yjson 包及宏包同步到 `0.1.1`。
+- 固定 STS `1.1.3`、Linux x86_64 下，冻结的 `0.1.0` 消费者通过新库重链接与调用，
+  三个动态包通过原应用替换 `.so` 运行。28 个冻结文件的摘要保持不变；该结论不外推到
+  其他平台、SDK 或任意第三方程序。矩阵与源码见[兼容性证据](release/0.1.1/binary-compatibility.json)。
+- Custom Native 及 yyjson 的 Custom Native fallback 元数据版本更新为 `0.1.1`；
+  yyjson 引擎版本仍为 `0.12.0`。
 
 ## 验证与发布状态
 
