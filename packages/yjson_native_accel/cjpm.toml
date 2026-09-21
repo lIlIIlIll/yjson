@@ -3,7 +3,7 @@
   name = "yjson_native_accel"
   organization = ""
   description = "Single-option startup acceleration for yjson"
-  version = "0.1.0"
+  version = "0.1.1"
   output-type = "static"
   compile-option = "-O2"
   link-option = "-L target/native -lyjson_scanner"
@@ -13,4 +13,4 @@
 
 [test-dependencies]
   yjson = { path = "../.." }
-  yjson_macros = { git = "https://github.com/lIlIIlIll/yjson_macros.git", commitId = "eb94e226b9d6d5c54c8418bfdaf515dcc819e5a9" }
+  yjson_macros = { git = "https://github.com/lIlIIlIll/yjson_macros.git", commitId = "0847b59e0c8c47b7c5b52b550ef8765c0cbddb03" }

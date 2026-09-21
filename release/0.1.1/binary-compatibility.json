@@ -1,0 +1,509 @@
+{
+  "baseline": {
+    "assets": [
+      {
+        "name": "environment.json",
+        "sha256": "e94f2b99e2a822e8ad441b8283bb0f63f38d0481caab10796d5ef94b9b08a455",
+        "verified": true
+      },
+      {
+        "name": "manifest.json",
+        "sha256": "10af1123fb7c437270cc7f2cc3f6bf0a8b533ab00f40ad5dd17f212264209fc3",
+        "verified": true
+      },
+      {
+        "name": "yjson-0.1.0.cjp",
+        "sha256": "fbedf299f102c3ef00b23132e12a484c419ad7167595e1995c864b2a1e584999",
+        "verified": true
+      },
+      {
+        "name": "yjson_algorithms-0.1.0.cjp",
+        "sha256": "b98052fef3e438a80c5f7d746a3187aa91663975b8401516b2391cbe6a147ec0",
+        "verified": true
+      },
+      {
+        "name": "yjson_backends-0.1.0.cjp",
+        "sha256": "31d4ca4dfd16c2051529c7553e0cb0c51832ce977d1696a904520de2f70343d4",
+        "verified": true
+      },
+      {
+        "name": "yjson_macros-0.1.0.cjp",
+        "sha256": "e9de109f513cf41e2edd397779a9c56a30fd23afac5b95f717a4199b830e9b9d",
+        "verified": true
+      },
+      {
+        "name": "yjson_native-0.1.0.cjp",
+        "sha256": "d0d257477725fa7a47f2231afea58b451c999d0ff487f9fc6523e20ef06d83b6",
+        "verified": true
+      },
+      {
+        "name": "yjson_native_accel-0.1.0.cjp",
+        "sha256": "a0de10adb688c5400598c7e8c95de0e63387c2b957165abfccdd77168c4c70cd",
+        "verified": true
+      },
+      {
+        "name": "yjson_native_primitives-0.1.0.cjp",
+        "sha256": "07ee3f9257f1c357a9262026344ffd71aa211e6e02955dc409ae75217778df94",
+        "verified": true
+      },
+      {
+        "name": "yjson_schema_formats-0.1.0.cjp",
+        "sha256": "6faf008a1e91d6243497b91d7dec822b513fa4c21adee0841d4de944d2b35c8f",
+        "verified": true
+      },
+      {
+        "name": "yjson_yyjson-0.1.0.cjp",
+        "sha256": "37824422d743e35d5a933532adb0c096978a8307ca36c813f6b20560dae9bcc7",
+        "verified": true
+      }
+    ],
+    "github_release_url": "https://github.com/lIlIIlIll/yjson/releases/tag/0.1.0",
+    "release": "0.1.0",
+    "release_source_commit": "89c22a933cbd7e5cdc9b0f8df725ca6e1cda2372"
+  },
+  "baseline_build_record": [
+    {
+      "case": "core",
+      "returncode": 0
+    },
+    {
+      "case": "native_accel",
+      "returncode": 0
+    },
+    {
+      "case": "native",
+      "returncode": 0
+    },
+    {
+      "case": "yyjson",
+      "returncode": 0
+    }
+  ],
+  "candidate": {
+    "macro_commit": "0847b59e0c8c47b7c5b52b550ef8765c0cbddb03",
+    "main_commit": "fd2a8f7b400c4c80d6aaaf1e71fdd1ac5ff422ab",
+    "main_tree": "0abc1cd6f153b49f82db8fe720c1e475fd965e68",
+    "package_outputs": [
+      {
+        "artifact": "libyjson.a",
+        "package": "yjson",
+        "sha256": "24d5f5fb48a328a0e37b5c644f49b4732209fa416a0e95e09c5a16f55a623562",
+        "size": 3684330
+      },
+      {
+        "artifact": "lib-macro_yjson_macros.so",
+        "package": "yjson_macros",
+        "sha256": "e92cd16674d59590cbaa321f77da71cc2d89c595eed0b00c418afe116ad3dab7",
+        "size": 827904
+      },
+      {
+        "artifact": "libyjson_algorithms.a",
+        "package": "yjson_algorithms",
+        "sha256": "c944ac8457a887e3e14af17276a956641bd9a8a1b22c60de5cf016fae75f1b02",
+        "size": 1103800
+      },
+      {
+        "artifact": "libyjson_backends.a",
+        "package": "yjson_backends",
+        "sha256": "92b5355610e9da05b8ee00d3204e547dbd27206fed031c8874ab8c4aa8fd5f9d",
+        "size": 17100
+      },
+      {
+        "artifact": "libyjson_native_primitives.a",
+        "package": "yjson_native_primitives",
+        "sha256": "f5edfea9ae3a0ca87b69763c3b9c8ffb4ad856ffd96749c7e8df478a94addf48",
+        "size": 46404
+      },
+      {
+        "artifact": "libyjson_native_accel.a",
+        "package": "yjson_native_accel",
+        "sha256": "bab86d5f18c0fa9f1bf6787c22e0888ed3cbb1ff71535813c7c4127e1b239b59",
+        "size": 11926
+      },
+      {
+        "artifact": "libyjson_native.so",
+        "package": "yjson_native",
+        "sha256": "d9d529f756f75172acb8114bbaeadfb990ac6d13c9ed999537ede73b9e5be9d9",
+        "size": 2827592
+      },
+      {
+        "artifact": "libyjson_yyjson.so",
+        "package": "yjson_yyjson",
+        "sha256": "0c92c527f9731ab2f9d1594bd7feaa98bac2921e76d08815a16fa962d989b63a",
+        "size": 3155264
+      },
+      {
+        "artifact": "libyjson_schema_formats.so",
+        "package": "yjson_schema_formats",
+        "sha256": "4cc6ee38d3f189b99c0d97591751cd0352da414a6ce4af9835ea35c60a7536e0",
+        "size": 3336904
+      }
+    ],
+    "staged_source_file_count": 143,
+    "staged_source_manifest_sha256": "4526875857615cfdc310d77127a9fa45a8b485baa2a969358a7993c4c7ba40fb",
+    "version": "0.1.1"
+  },
+  "frozen_consumer_integrity": {
+    "artifacts": [
+      {
+        "after_sha256": "6735233093b39d681a10c827f4287d4ca676e8fd47625f582505914706afefcd",
+        "before_sha256": "6735233093b39d681a10c827f4287d4ca676e8fd47625f582505914706afefcd",
+        "path": "frozen-artifacts/baseline-apps/core",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "1f2fe6145569aef607a2f161ac854b2f98b0c55a570b36fd655624252c8bd205",
+        "before_sha256": "1f2fe6145569aef607a2f161ac854b2f98b0c55a570b36fd655624252c8bd205",
+        "path": "frozen-artifacts/baseline-apps/native",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "14bdb4797bb665b241764f03cef075b7461aee8703a9ffc262fc23eeee018d77",
+        "before_sha256": "14bdb4797bb665b241764f03cef075b7461aee8703a9ffc262fc23eeee018d77",
+        "path": "frozen-artifacts/baseline-apps/native_accel",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "1a8c38057a1297dc3dbfe8ec0e804874dca739a7349be59c719c94762fa143bc",
+        "before_sha256": "1a8c38057a1297dc3dbfe8ec0e804874dca739a7349be59c719c94762fa143bc",
+        "path": "frozen-artifacts/baseline-apps/yyjson",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "3e65914b05c719c74045a8cafdf6ee40d210cb04a5ac17efb6d2dbbdc803b70f",
+        "before_sha256": "3e65914b05c719c74045a8cafdf6ee40d210cb04a5ac17efb6d2dbbdc803b70f",
+        "path": "frozen-artifacts/libraries/libfrozen_core_consumer.a",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "a4a62d2b90a9e2919a5ee5eb051f2eb9c51de8720cfa9776d7303d7979aceca0",
+        "before_sha256": "a4a62d2b90a9e2919a5ee5eb051f2eb9c51de8720cfa9776d7303d7979aceca0",
+        "path": "frozen-artifacts/libraries/libfrozen_native_accel_consumer.a",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "25d74f1fdabce0bf88327930928fd0f7a6363f11b05019b37a7e9ba2b8b1ee3b",
+        "before_sha256": "25d74f1fdabce0bf88327930928fd0f7a6363f11b05019b37a7e9ba2b8b1ee3b",
+        "path": "frozen-artifacts/libraries/libfrozen_native_consumer.a",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "9e98f25051f3e026948f34ba110df0f2e0993d30fd7fd82548eed537954df84e",
+        "before_sha256": "9e98f25051f3e026948f34ba110df0f2e0993d30fd7fd82548eed537954df84e",
+        "path": "frozen-artifacts/libraries/libfrozen_yyjson_consumer.a",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "947c1f50653824cb02554de179b17b368b8978a17ad32524e8fb7b59d6ef1234",
+        "before_sha256": "947c1f50653824cb02554de179b17b368b8978a17ad32524e8fb7b59d6ef1234",
+        "path": "frozen-artifacts/objects/core.o",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "004db51ddcb0946757f739cce2eeda3339896e78af90e861e79cc8e3d553a6ae",
+        "before_sha256": "004db51ddcb0946757f739cce2eeda3339896e78af90e861e79cc8e3d553a6ae",
+        "path": "frozen-artifacts/objects/frozen_core_driver.cjo",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "48fccebf89b5e2cc412647e7ed3420009d5454bf808696da9a102b2a8a345191",
+        "before_sha256": "48fccebf89b5e2cc412647e7ed3420009d5454bf808696da9a102b2a8a345191",
+        "path": "frozen-artifacts/objects/frozen_native_accel_driver.cjo",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "77d0e9e2eaa2f2317f7be1a292e2de18313e31b0305547dd86402bc8a67f3d09",
+        "before_sha256": "77d0e9e2eaa2f2317f7be1a292e2de18313e31b0305547dd86402bc8a67f3d09",
+        "path": "frozen-artifacts/objects/frozen_native_driver.cjo",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "6ee3da6de8af39527f492a7480d55562edd5b6900b7c73ba10b301dfd118d498",
+        "before_sha256": "6ee3da6de8af39527f492a7480d55562edd5b6900b7c73ba10b301dfd118d498",
+        "path": "frozen-artifacts/objects/frozen_yyjson_driver.cjo",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "43fb1e33519cb70bfe681be9d8801249e364c16de4483d8fd41c3e83734eb472",
+        "before_sha256": "43fb1e33519cb70bfe681be9d8801249e364c16de4483d8fd41c3e83734eb472",
+        "path": "frozen-artifacts/objects/native.o",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "18e3c316c64e774e0770232d22a59cfd9658108ead27b3948fab7d2a36fe2308",
+        "before_sha256": "18e3c316c64e774e0770232d22a59cfd9658108ead27b3948fab7d2a36fe2308",
+        "path": "frozen-artifacts/objects/native_accel.o",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "9ceb7ade3c81c75907423954c971fafbd52ebb6edbb92cd9dd2ff019bb046300",
+        "before_sha256": "9ceb7ade3c81c75907423954c971fafbd52ebb6edbb92cd9dd2ff019bb046300",
+        "path": "frozen-artifacts/objects/yyjson.o",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "ad12a3cd5aa3ce5804cf01756deff85bdd8f1d2da004c7f707ba942089c594b0",
+        "before_sha256": "ad12a3cd5aa3ce5804cf01756deff85bdd8f1d2da004c7f707ba942089c594b0",
+        "path": "old-consumers/core/cjpm.toml",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "31fd85a9c3d8684f2faaa19b99f078d3aef144ab2c7d1fcb9bc297f78e96a118",
+        "before_sha256": "31fd85a9c3d8684f2faaa19b99f078d3aef144ab2c7d1fcb9bc297f78e96a118",
+        "path": "old-consumers/core/src/compat.cj",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "a9a5ca263b17f0056728c9c987fdb9c7f32832b652a3bbdb5dd36f9702e124fd",
+        "before_sha256": "a9a5ca263b17f0056728c9c987fdb9c7f32832b652a3bbdb5dd36f9702e124fd",
+        "path": "old-consumers/drivers/core.cj",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "251dd775e9908f42e8b34f7cbf7af6728f5dbc611d715e2528dcdd5dd28e6747",
+        "before_sha256": "251dd775e9908f42e8b34f7cbf7af6728f5dbc611d715e2528dcdd5dd28e6747",
+        "path": "old-consumers/drivers/native.cj",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "44454287cc6d636af1112a66a1e6677a460c04b7baf0d73502f271106c8de17d",
+        "before_sha256": "44454287cc6d636af1112a66a1e6677a460c04b7baf0d73502f271106c8de17d",
+        "path": "old-consumers/drivers/native_accel.cj",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "794018c59d63d4207b1d64bb2c3160a805b6f43becc66f30f8e8d330944791ca",
+        "before_sha256": "794018c59d63d4207b1d64bb2c3160a805b6f43becc66f30f8e8d330944791ca",
+        "path": "old-consumers/drivers/yyjson.cj",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "853a604ccf35de5209371e511ae47ff723a010f48b79a7211b56d94175ce5f76",
+        "before_sha256": "853a604ccf35de5209371e511ae47ff723a010f48b79a7211b56d94175ce5f76",
+        "path": "old-consumers/native/cjpm.toml",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "373972a5d46399cb2c69dc4f94daff8b30702afdd0e87923453c5837557c8df9",
+        "before_sha256": "373972a5d46399cb2c69dc4f94daff8b30702afdd0e87923453c5837557c8df9",
+        "path": "old-consumers/native/src/compat.cj",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "ccb22cd33301d22047e5a866f379f3bcaca03c14219eb8a06e74a381052ad23a",
+        "before_sha256": "ccb22cd33301d22047e5a866f379f3bcaca03c14219eb8a06e74a381052ad23a",
+        "path": "old-consumers/native_accel/cjpm.toml",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "deb013649fe4fd9908bc378d38f7c3d8bd9d1806367066a6298952d05bcfca4c",
+        "before_sha256": "deb013649fe4fd9908bc378d38f7c3d8bd9d1806367066a6298952d05bcfca4c",
+        "path": "old-consumers/native_accel/src/compat.cj",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "6930d121bc7e3a17342145c07808edb8f53f164ce2578dd7905734c27aac9d01",
+        "before_sha256": "6930d121bc7e3a17342145c07808edb8f53f164ce2578dd7905734c27aac9d01",
+        "path": "old-consumers/yyjson/cjpm.toml",
+        "unchanged": true
+      },
+      {
+        "after_sha256": "bac03901c3d43e5a604a5d0ab87af85c1b1d7f2ccef7b4afd791e0d4d74bb4e1",
+        "before_sha256": "bac03901c3d43e5a604a5d0ab87af85c1b1d7f2ccef7b4afd791e0d4d74bb4e1",
+        "path": "old-consumers/yyjson/src/compat.cj",
+        "unchanged": true
+      }
+    ],
+    "status": "PASS"
+  },
+  "frozen_consumer_sources": {
+    "old-consumers/core/src/compat.cj": {
+      "sha256": "31fd85a9c3d8684f2faaa19b99f078d3aef144ab2c7d1fcb9bc297f78e96a118",
+      "source": "package frozen_core_consumer\n\nimport yjson.*\nimport yjson_algorithms.*\nimport yjson_macros.*\nimport yjson_schema_formats.*\n\n@JsonCodec\nclass FrozenPerson {\n    public let id: Int64\n    public let name: String\n    public init(id: Int64, name: String) { this.id = id; this.name = name }\n}\n\npublic func runCompatibilityMatrix(): Unit {\n    let scalarText = YJson.toJson(41i64)\n    if (scalarText != \"41\" || YJson.fromJson<Int64>(scalarText) != 41) {\n        throw Exception(\"ordinary encode/decode\")\n    }\n    let document = YJson.parseDocument(\"{\\\"items\\\":[1,2,3]}\")\n    if (document.root().member(\"items\").getOrThrow().element(2).getOrThrow().asInt64() != 3) {\n        throw Exception(\"parseDocument\")\n    }\n\n    let generatedText = YJson.toJson(FrozenPerson(7, \"Ada\"))\n    let generated = YJson.fromJson<FrozenPerson>(generatedText)\n    if (generatedText != \"{\\\"id\\\":7,\\\"name\\\":\\\"Ada\\\"}\" ||\n        generated.id != 7 || generated.name != \"Ada\") {\n        throw Exception(\"generated codec/support v1\")\n    }\n\n    let root = JsonNode.parse(\"{\\\"users\\\":[{\\\"id\\\":7}]}\")\n    if (JsonPointer.parse(\"/users/0/id\").evaluate(root).asInt64() != 7) {\n        throw Exception(\"pointer\")\n    }\n    let patch = JsonPatch.parse(\"[{\\\"op\\\":\\\"replace\\\",\\\"path\\\":\\\"/users/0/id\\\",\\\"value\\\":9}]\")\n    if (patch.apply(root)[\"users\"][0][\"id\"].asInt64() != 9) { throw Exception(\"patch\") }\n    let matches = JsonPath.parse(\"$.users[*].id\").collectValues(root)\n    if (matches.size != 1 || matches[0].asInt64() != 7) { throw Exception(\"path\") }\n    let schema = JsonSchema.parse(\"{\\\"type\\\":\\\"object\\\",\\\"required\\\":[\\\"users\\\"]}\")\n    if (!schema.validate(root).isEmpty()) { throw Exception(\"schema\") }\n\n    let formats = JsonSchemaFormatRegistry.withCoreFormats()\n    formats.install(StandardInternationalFormats())\n    let config = JsonSchemaConfig(formatMode: JsonSchemaFormatMode.Assertion, formats: formats)\n    let formatSchema = JsonSchema.parse(\"{\\\"format\\\":\\\"idn-hostname\\\"}\", config: config)\n    if (!formatSchema.validator().isValid(JsonNode.string(\"실례.테스트\"))) {\n        throw Exception(\"schema formats dynamic\")\n    }\n    println(\"core|41|3|{\\\"id\\\":7,\\\"name\\\":\\\"Ada\\\"}|pointer=7|patch=9|path=7|schema=ok|idn=ok\")\n}\n"
+    },
+    "old-consumers/drivers/core.cj": {
+      "sha256": "a9a5ca263b17f0056728c9c987fdb9c7f32832b652a3bbdb5dd36f9702e124fd",
+      "source": "package frozen_core_driver\nimport frozen_core_consumer.*\nmain(): Unit { runCompatibilityMatrix() }\n"
+    },
+    "old-consumers/drivers/native.cj": {
+      "sha256": "251dd775e9908f42e8b34f7cbf7af6728f5dbc611d715e2528dcdd5dd28e6747",
+      "source": "package frozen_native_driver\nimport frozen_native_consumer.*\nmain(): Unit { runCompatibilityMatrix() }\n"
+    },
+    "old-consumers/drivers/native_accel.cj": {
+      "sha256": "44454287cc6d636af1112a66a1e6677a460c04b7baf0d73502f271106c8de17d",
+      "source": "package frozen_native_accel_driver\nimport frozen_native_accel_consumer.*\nmain(): Unit { runCompatibilityMatrix() }\n"
+    },
+    "old-consumers/drivers/yyjson.cj": {
+      "sha256": "794018c59d63d4207b1d64bb2c3160a805b6f43becc66f30f8e8d330944791ca",
+      "source": "package frozen_yyjson_driver\nimport frozen_yyjson_consumer.*\nmain(): Unit { runCompatibilityMatrix() }\n"
+    },
+    "old-consumers/native/src/compat.cj": {
+      "sha256": "373972a5d46399cb2c69dc4f94daff8b30702afdd0e87923453c5837557c8df9",
+      "source": "package frozen_native_consumer\n\nimport yjson.*\nimport yjson_backends.*\nimport yjson_native.*\n\npublic func runCompatibilityMatrix(): Unit {\n    let document = NativeBackends.customNative.parseDocument(\"{\\\"native\\\":42}\")\n    if (document.isClosed()) { throw Exception(\"native initially closed\") }\n    if (document.root().member(\"native\").getOrThrow().asInt64() != 42) {\n        throw Exception(\"native root\")\n    }\n    document.close()\n    if (!document.isClosed()) { throw Exception(\"native close\") }\n    println(\"native|42|closed=true\")\n}\n"
+    },
+    "old-consumers/native_accel/src/compat.cj": {
+      "sha256": "deb013649fe4fd9908bc378d38f7c3d8bd9d1806367066a6298952d05bcfca4c",
+      "source": "package frozen_native_accel_consumer\n\nimport yjson.*\nimport yjson_native_accel.*\n\npublic func runCompatibilityMatrix(): Unit {\n    YJsonNativeAccel.initialize()\n    let document = YJson.parseDocument(\"{\\\"accelerated\\\":42}\")\n    if (document.root().member(\"accelerated\").getOrThrow().asInt64() != 42) {\n        throw Exception(\"native accel\")\n    }\n    println(\"native-accel|42\")\n}\n"
+    },
+    "old-consumers/yyjson/src/compat.cj": {
+      "sha256": "bac03901c3d43e5a604a5d0ab87af85c1b1d7f2ccef7b4afd791e0d4d74bb4e1",
+      "source": "package frozen_yyjson_consumer\n\nimport yjson.*\nimport yjson_backends.*\nimport yjson_yyjson.*\n\npublic func runCompatibilityMatrix(): Unit {\n    let document = YyjsonBackends.yyjson.parseDocument(\"{\\\"yyjson\\\":42}\")\n    if (document.isClosed()) { throw Exception(\"yyjson initially closed\") }\n    if (document.root().member(\"yyjson\").getOrThrow().asInt64() != 42) {\n        throw Exception(\"yyjson root\")\n    }\n    document.close()\n    if (!document.isClosed()) { throw Exception(\"yyjson close\") }\n    println(\"yyjson|42|closed=true\")\n}\n"
+    }
+  },
+  "limitations": [
+    "Fixed Cangjie STS 1.1.3 and Linux x86_64 only.",
+    "Representative frozen consumers; not a proof for every third-party binary.",
+    "Compile-time macro compatibility is exercised through unchanged 0.1.0 expanded consumer objects."
+  ],
+  "loader_resolution": [
+    "core candidate-relink: <matrix>/candidate-modules/yjson_schema_formats/target/release/yjson_schema_formats/libyjson_schema_formats.so",
+    "core unchanged-baseline-app-replacement: <matrix>/candidate-modules/yjson_schema_formats/target/release/yjson_schema_formats/libyjson_schema_formats.so",
+    "native candidate-relink: <matrix>/candidate-modules/yjson_native/target/release/yjson_native/libyjson_native.so",
+    "native unchanged-baseline-app-replacement: <matrix>/candidate-modules/yjson_native/target/release/yjson_native/libyjson_native.so",
+    "yyjson candidate-relink: <matrix>/candidate-modules/yjson_yyjson/target/release/yjson_yyjson/libyjson_yyjson.so",
+    "yyjson unchanged-baseline-app-replacement: <matrix>/candidate-modules/yjson_yyjson/target/release/yjson_yyjson/libyjson_yyjson.so"
+  ],
+  "matrix": {
+    "cases": [
+      {
+        "actual_output": "core|41|3|{\"id\":7,\"name\":\"Ada\"}|pointer=7|patch=9|path=7|schema=ok|idn=ok",
+        "candidate_app_sha256": "6735233093b39d681a10c827f4287d4ca676e8fd47625f582505914706afefcd",
+        "case": "core",
+        "dynamic_replacement_output": "core|41|3|{\"id\":7,\"name\":\"Ada\"}|pointer=7|patch=9|path=7|schema=ok|idn=ok",
+        "dynamic_replacement_status": "PASS",
+        "expected_output": "core|41|3|{\"id\":7,\"name\":\"Ada\"}|pointer=7|patch=9|path=7|schema=ok|idn=ok",
+        "link_command": "<repo>/scripts/codex_cangjie_env cjc <matrix>/frozen-artifacts/objects/core.o --experimental --set-runtime-rpath -L <matrix>/frozen-artifacts/libraries -lfrozen_core_consumer -L <matrix>/candidate-modules/yjson_schema_formats/target/release/yjson_schema_formats -lyjson_schema_formats -L <matrix>/candidate-modules/yjson_schema_formats/target/release/yjson_algorithms -lyjson_algorithms -L <matrix>/candidate-modules/yjson_schema_formats/target/release/yjson -lyjson -lcangjie-std-core -lcangjie-std-collection -lcangjie-std-math -o <matrix>/frozen-artifacts/candidate-apps/core",
+        "link_status": "PASS",
+        "run_status": "PASS"
+      },
+      {
+        "actual_output": "native-accel|42",
+        "candidate_app_sha256": "c292fd8396eebeff67efc972aeac335de1670c924a5c69a833a93f7b0c96260d",
+        "case": "native_accel",
+        "dynamic_replacement_status": "NOT_APPLICABLE_STATIC_PACKAGE",
+        "expected_output": "native-accel|42",
+        "link_command": "<repo>/scripts/codex_cangjie_env cjc <matrix>/frozen-artifacts/objects/native_accel.o --experimental --set-runtime-rpath -L <matrix>/frozen-artifacts/libraries -lfrozen_native_accel_consumer -L <matrix>/candidate-modules/yjson_native_accel/target/release/yjson_native_accel -lyjson_native_accel -L <matrix>/candidate-modules/yjson_native_accel/target/release/yjson_native_primitives -lyjson_native_primitives -L <matrix>/candidate-modules/yjson_native_accel/target/release/yjson -lyjson -L <matrix>/candidate-modules/yjson_native_accel/target/native -lyjson_scanner -lcangjie-std-core -lcangjie-std-collection -lcangjie-std-math -lcangjie-std-sort -lcangjie-std-random -lcangjie-std-binary -lcangjie-std-unicode -lcangjie-std-ast -lcangjie-std-convert -lcangjie-std-math.numeric -lcangjie-std-io -lcangjie-std-time -lcangjie-std-sync -o <matrix>/frozen-artifacts/candidate-apps/native_accel",
+        "link_status": "PASS",
+        "run_status": "PASS"
+      },
+      {
+        "actual_output": "native|42|closed=true",
+        "candidate_app_sha256": "1f2fe6145569aef607a2f161ac854b2f98b0c55a570b36fd655624252c8bd205",
+        "case": "native",
+        "dynamic_replacement_output": "native|42|closed=true",
+        "dynamic_replacement_status": "PASS",
+        "expected_output": "native|42|closed=true",
+        "link_command": "<repo>/scripts/codex_cangjie_env cjc <matrix>/frozen-artifacts/objects/native.o --experimental --set-runtime-rpath -L <matrix>/frozen-artifacts/libraries -lfrozen_native_consumer -L <matrix>/candidate-modules/yjson_native/target/release/yjson_native -lyjson_native -L <matrix>/candidate-modules/yjson_native/target/release/yjson_native_primitives -lyjson_native_primitives -L <matrix>/candidate-modules/yjson_native/target/release/yjson_backends -lyjson_backends -L <matrix>/candidate-modules/yjson_native/target/release/yjson -lyjson -lcangjie-std-core -lcangjie-std-collection -lcangjie-std-math -o <matrix>/frozen-artifacts/candidate-apps/native",
+        "link_status": "PASS",
+        "run_status": "PASS"
+      },
+      {
+        "actual_output": "yyjson|42|closed=true",
+        "candidate_app_sha256": "1a8c38057a1297dc3dbfe8ec0e804874dca739a7349be59c719c94762fa143bc",
+        "case": "yyjson",
+        "dynamic_replacement_output": "yyjson|42|closed=true",
+        "dynamic_replacement_status": "PASS",
+        "expected_output": "yyjson|42|closed=true",
+        "link_command": "<repo>/scripts/codex_cangjie_env cjc <matrix>/frozen-artifacts/objects/yyjson.o --experimental --set-runtime-rpath -L <matrix>/frozen-artifacts/libraries -lfrozen_yyjson_consumer -L <matrix>/candidate-modules/yjson_yyjson/target/release/yjson_yyjson -lyjson_yyjson -L <matrix>/candidate-modules/yjson_yyjson/target/release/yjson_native_primitives -lyjson_native_primitives -L <matrix>/candidate-modules/yjson_yyjson/target/release/yjson_backends -lyjson_backends -L <matrix>/candidate-modules/yjson_yyjson/target/release/yjson -lyjson -lcangjie-std-core -lcangjie-std-collection -lcangjie-std-math -o <matrix>/frozen-artifacts/candidate-apps/yyjson",
+        "link_status": "PASS",
+        "run_status": "PASS"
+      }
+    ],
+    "schema_version": 1,
+    "status": "PASS"
+  },
+  "published_source_crosscheck": {
+    "published_release_provenance_match": {
+      "scopes": [
+        {
+          "content_mismatches": [],
+          "extra_in_release": [],
+          "git_commit": "89c22a933cbd7e5cdc9b0f8df725ca6e1cda2372",
+          "git_file_count": 43,
+          "missing_from_release": [],
+          "release_file_count": 43,
+          "scope": "runtime-release-manifest-commit",
+          "status": "PASS"
+        },
+        {
+          "content_mismatches": [],
+          "extra_in_release": [],
+          "git_commit": "fec0adce41f73d037d876cbac7a28aee8108bb5c",
+          "git_file_count": 2,
+          "missing_from_release": [],
+          "release_file_count": 2,
+          "scope": "macro-release-manifest-gitlink",
+          "status": "PASS"
+        }
+      ],
+      "status": "PASS"
+    },
+    "requested_performance_source_match": {
+      "scopes": [
+        {
+          "content_mismatches": [
+            {
+              "git_sha256": "4620a55c73586dcfecc68e6950b19ce2df91085aa399dd09826b18e85c6e8d8a",
+              "path": "json_coverage_contracts_test.cj",
+              "release_sha256": "87ac612cb155669a4481978c3814e5a8df9483bd26481b8f5719092cde0aa56f"
+            },
+            {
+              "git_sha256": "4670d283e279baba52f846f5abc98cfe1a7149b8269c9baaf2c2009c46ed40e5",
+              "path": "json_regression_test.cj",
+              "release_sha256": "fb3ba8ef161e7cf5fc0cde86b632b5768d0beeff90da6263eea73921c4bd12e7"
+            },
+            {
+              "git_sha256": "c00fe56ad43be40a406f57061c43d4428ddeddc7200a6b3b644fa39475c4ec3c",
+              "path": "lib_json_direct_writer.cj",
+              "release_sha256": "8b085a3f0b9710e715c9d3d3308aec789708f57af150b1350956163684ae515e"
+            },
+            {
+              "git_sha256": "286470029e4f3aec6dabbf3e873a4f740dd0eb5391683897cb13c21f92f42ff6",
+              "path": "lib_json_fast_reader.cj",
+              "release_sha256": "4b400c7346a9a1c4a2320afe6ae70b11509b5f77b3aeaa67051e4e7fef7bb3da"
+            }
+          ],
+          "extra_in_release": [],
+          "git_commit": "274e69cb85208b5fcd37d62d04beba031bd65763",
+          "git_file_count": 43,
+          "missing_from_release": [],
+          "release_file_count": 43,
+          "scope": "runtime",
+          "status": "FAIL"
+        },
+        {
+          "content_mismatches": [
+            {
+              "git_sha256": "3ae36947b775c2a31bf2465e6084d79de0399e49af02a39ca43f2c239d78a122",
+              "path": "json_codec.cj",
+              "release_sha256": "d586c44ff6fba640c7c27206149ac0dd6822071d36ac7b3b1f39b9f853f073bd"
+            }
+          ],
+          "extra_in_release": [],
+          "git_commit": "f784f302756d6e80570478466cacc6fb7172bb74",
+          "git_file_count": 2,
+          "missing_from_release": [],
+          "release_file_count": 2,
+          "scope": "macro",
+          "status": "FAIL"
+        }
+      ],
+      "status": "FAIL"
+    },
+    "schema_version": 1
+  },
+  "raw_evidence_sha256": {
+    "baseline-source-crosscheck.json": "010ba15647efdd2a3673bf5ccc1b915f4c7af0a59793d625d61ff4134d217c33",
+    "candidate-matrix.json": "e432ba694d134cf5df1bf8ac943f078f112cb7a6e6f5b6bdb73b78c0d4184a99",
+    "evidence.json": "b9c693caf1e9cfb77d5ba677b818be82f5d2700c71083841b434f410cf0bcf15",
+    "loader-resolution.txt": "00beac95e6e34f4691979b4c5d89aedd52831269ba5804f386415d3827a93735"
+  },
+  "schema_version": 1,
+  "sdk": {
+    "cjc_sha256": "bf2536ea4dbb266ecca660decedad40bdcc373f4090a9eb70ded03bca52b4aae",
+    "cjc_version": "Cangjie Compiler: 1.1.3 (cjnative)",
+    "cjpm_sha256": "32ab13ead318414ab1b9ef9bf6dee06f210f9d12c1cd31bdd5ce15b42c929cba",
+    "cjpm_version": "Cangjie Project Manager: 1.1.3",
+    "target": "x86_64-unknown-linux-gnu"
+  }
+}

@@ -3,7 +3,7 @@
   name = "yjson_native"
   organization = ""
   description = "Optional Linux x86_64 native DOM and stream backends for yjson"
-  version = "0.1.0"
+  version = "0.1.1"
   target-dir = ""
   script-dir = ""
   output-type = "dynamic"

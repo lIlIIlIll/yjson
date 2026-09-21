@@ -98,6 +98,6 @@ Custom Native 和 yyjson 的流模式是 `WholeDocument`，会读取到 EOF。�
 `yjson_native_primitives` 提供扫描器静态库和带版本的 provider 接口，只供同步发布的
 第一方包使用。应用依赖 `yjson_native_accel`，不要直接安装底层 provider。
 
-`0.1.0` 的 Native 发布验证目标是 Linux x86_64。Windows 和 macOS 的检查只覆盖 Pure。
+`0.1.1` 的 Native 发布验证目标是 Linux x86_64。Windows 和 macOS 的检查只覆盖 Pure。
 C ABI、符号隔离和仓库内置 yyjson 的维护规则见
 [Native 内部实现](maintainers/native-internals.md)。

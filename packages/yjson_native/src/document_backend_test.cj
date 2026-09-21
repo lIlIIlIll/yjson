@@ -14,6 +14,7 @@ class NativeDocumentBackendTest {
         let bytes = unsafe { "{\"id\":42,\"items\":[1,2]}".rawData() }
         try (document = NativeBackends.customNative.parseDocument(bytes)) {
             @Expect(document.metadata().name, "custom-native")
+            @Expect(document.metadata().version, "0.1.1")
             @Expect(document.root().size(), 2)
             @Expect(document.root().member("id").getOrThrow().asInt64(), 42)
             @Expect(document.root().member("missing").isNone())

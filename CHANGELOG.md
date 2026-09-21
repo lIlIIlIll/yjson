@@ -7,6 +7,11 @@
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-09-21
+
+- 已检入的 Cangjie public API、C ABI 和 generated-support v1 声明快照相对 `0.1.0` 不变；
+  二进制兼容结论仍以冻结旧 consumer 的链接和调用矩阵为准。
+
 - 修复字节输入的 UTF-8 字符串预算计费：非 ASCII 字符按实际消耗字节计数，避免长 ASCII
   前缀导致误报超限；转义后的 ASCII 后缀也纳入最终长度检查。
 - 修复紧凑整数、字符串和数字数组的 `materialize(maxNodes)`，每个元素创建前扣减节点预算。
@@ -27,6 +32,9 @@
 - 候选 `c5ccfd6` 的 Pure 48 项预检和 528 个正式样本完整通过：24 项最大回退 2.06%，
   两侧 48 个 CV 均不超过 5%；七库两批各 770 个单元完整。保留此前 stream、Large Map
   encode 超限与旧协议失败记录，5% 门槛不变；不同协议不拼接样本，不声明 Native 性能或发布资格。
+
+## [0.1.0] - 2026-09-16
+
 - 当前成熟度版本线重置为 `0.1.0`；既有 1.x/2.0 tag 与 evidence 只作为不可变历史保留。
 - 发布图固定为九个 lockstep package；`yjson_macros` 已拆为独立仓库
   `https://github.com/lIlIIlIll/yjson_macros`，但仍与 runtime 使用同一版本线。删除

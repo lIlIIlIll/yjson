@@ -1,0 +1,21 @@
+{
+  "acceptable_both_threads_below_1_percent": true,
+  "core": 3,
+  "cpus": [
+    3,
+    51
+  ],
+  "sample_seconds": 30,
+  "selected_cpu": 3,
+  "selected_sibling": 51,
+  "selector_provenance": {
+    "normalized_path": "<work>/fixed-work-cj1-v1/candidate/scripts/json_pure_perf_compare.py",
+    "policy": "original choose_idle_cpu; 30-second idle sample; both SMT siblings below 1 percent",
+    "sha256": "77424e07b82aa3399e706808ee8490d02e482c10aab4799b9fc8b6533ea9ce5d"
+  },
+  "socket": 0,
+  "utilization_percent": [
+    0.0,
+    0.0
+  ]
+}

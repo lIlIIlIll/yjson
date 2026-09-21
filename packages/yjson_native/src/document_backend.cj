@@ -6,7 +6,7 @@ import yjson_backends.*
 
 private let CUSTOM_NATIVE_METADATA = JsonBackendMetadata(
     "custom-native",
-    "0.1.0",
+    "0.1.1",
     true,
     JsonStreamBufferingMode.WholeDocument,
     JsonStreamBufferingMode.WholeDocument

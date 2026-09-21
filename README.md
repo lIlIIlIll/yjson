@@ -12,14 +12,14 @@
   <a href="https://github.com/lIlIIlIll/yjson/actions/workflows/ci.yml"><img src="https://github.com/lIlIIlIll/yjson/actions/workflows/ci.yml/badge.svg?branch=main" alt="Tests" /></a>
   <a href="https://codecov.io/gh/lIlIIlIll/yjson"><img src="https://codecov.io/gh/lIlIIlIll/yjson/branch/main/graph/badge.svg?flag=core" alt="Core Coverage" /></a>
   <a href="https://github.com/lIlIIlIll/yjson/releases/latest"><img src="https://img.shields.io/github/v/release/lIlIIlIll/yjson?display_name=tag&sort=semver&label=historical%20release" alt="Latest historical GitHub release" /></a>
-  <img src="https://img.shields.io/badge/current%20line-0.1.0-F59E0B" alt="Current development line 0.1.0" />
+  <img src="https://img.shields.io/badge/current%20line-0.1.1-F59E0B" alt="Current development line 0.1.1" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache--2.0-yellow" alt="Apache License 2.0" /></a>
 </p>
 
 yjson 是仓颉 JSON 库，支持类型与 JSON 互转、构造和修改 JSON 树、只读查询以及流式读写。
 默认使用纯仓颉实现，由 GC 管理内存。
 
-当前开发版本为 `0.1.0`，API 仍可能发生不兼容变更，不提供旧 API 别名。
+当前开发版本为 `0.1.1`，API 仍可能发生不兼容变更，不提供旧 API 别名。
 历史 `1.x`、`2.0` 版本的接口不适用于当前版本。
 
 <p align="center">
@@ -67,7 +67,7 @@ yjson_macros = { git = "https://github.com/lIlIIlIll/yjson_macros.git", branch =
 `JsonNode.object()`、`JsonNode.array()` 和 `put()` API。
 
 只做 JSON 解析、节点操作、只读查询或使用手写编解码器时，添加 `yjson` 即可。
-这份安装说明使用源码仓库，不依赖包仓库中的发布状态。SDK 的测试范围见[发布记录](release/0.1.0/evidence.md)。
+这份安装说明使用源码仓库，不依赖包仓库中的发布状态。SDK 的测试范围见[发布记录](release/0.1.1/evidence.md)。
 
 ## 快速开始
 
@@ -167,27 +167,21 @@ let name = document.root().member("name").getOrThrow().asString()
   `JsonNode` 可以修改，仅通过 `JsonValueView` 访问它不会使底层数据不可变。
   `JsonPathCursor` 是有状态惰性迭代器，只能由一个线程消费。
 - yjson 不关闭调用方提供的流。一次调用只处理一份 JSON 文档，文档后仍有非空白内容时会报错。
-- Pure 的跨平台测试在 GitHub runners 上运行，结果见
-  [发布记录](release/0.1.0/evidence.md)。Native `0.1.0` 的验证范围限于 Linux x86_64。
+- `0.1.1` 的平台验收状态见[候选发布记录](release/0.1.1/evidence.md)。Native 发布验证目标为 Linux x86_64。
 
 配置和预算见[配置与错误](docs/configuration-and-errors.md)及
 [资源限制](docs/resource-limits.md)。
 
 ## 性能
 
-下面是候选 `c5ccfd6953ea57adedc4c642dbb51aa2fbb9a12a` 七库第二批的 11 轮中位数，
-单位为 µs/op，越小越好。仓颉进程使用单核、`cjProcessorNum=1` 和 128 MiB 堆，
-不代表默认运行时配置。每个进程保留 peak RSS；仅展示第二批 `Max CV <= 5%` 的 2/10 行。
-第一批 3/10 行 stable；其余 noisy 行完整保留在报告中。
-
-| Workload | yjson | stdx.json | cangjieJSON | json4cj | cjfast_json | Jackson | fastjson2 |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Large Map encode | 9.393 | 129.665 | 179.900 | 133.466 | 129.387 | 1.761 | 1.737 |
-| Deep Nested encode | 57.420 | 80.896 | 171.648 | 84.928 | 74.129 | 4.497 | 2.460 |
+本轮 `0.1.1` 候选的七库测量绑定 `ce39e57ba6ade281d232bc0d82abfafdf91f5bb5`。
+两批各完成 770 个测量单元；第一批 1/10 行、第二批 0/10 行满足 `Max CV <= 5%`。
+因此这里不展示跨库精确比例；全部 noisy 行与原始结果保留在报告中，没有第三批。
+仓颉进程使用单核、`cjProcessorNum=1` 和 128 MiB 堆，不代表默认运行时配置。
 
 **本轮 Pure 回退门禁通过，七库两批测量完整。**
-[Pure A/B](docs/performance/results/2026-09-13-linux-release-pure.md)使用独立的直接计时与三核线程放置协议：
-24 个用例各完成 11 轮，最大回退 2.06%，全部低于原有 5% 门槛，两侧 48 个 CV 均不超过 5%。
+[Pure A/B](docs/performance/results/2026-09-13-linux-release-pure.md)使用独立直接计时与三核线程放置：
+24 个用例各完成 11 轮，最大回退 3.539%，均不超过原有 5% 门槛，48 个单侧 CV 均不超过 5%。
 七库仍使用 SDKBench；两种协议不能拼接样本。完整波动、RSS、输入身份与旧失败记录见
 [七库报告](docs/performance/results/2026-09-13-release-seven-library.md)和 Pure 报告。
 [三库历史测量](docs/performance/results/2026-09-13-release-three-library.md)未覆盖本轮 Native 修改，不作为当前性能声明。

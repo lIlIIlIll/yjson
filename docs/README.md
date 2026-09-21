@@ -29,7 +29,7 @@ API 参考由 cjdoc 从九个发布包的源码生成。运行下面的命令准
 cjdoc_path=$(scripts/codex_cangjie_env python3 scripts/prepare_cjdoc.py)
 scripts/codex_cangjie_env python3 scripts/generate_api_docs.py \
   --cjdoc "$cjdoc_path" \
-  --output /tmp/yjson-api-docs-0.1.0
+  --output /tmp/yjson-api-docs-0.1.1
 ```
 
 `--output` 指定的目录必须不存在。脚本会校验工具来源、版本和校验和，再检查生成结果中的

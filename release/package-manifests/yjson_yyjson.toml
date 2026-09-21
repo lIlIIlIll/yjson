@@ -2,13 +2,13 @@
 cjc-version = "1.1.0"
 name = "yjson_yyjson"
 description = "Optional yyjson-backed native DOM facade for yjson"
-version = "0.1.0"
+version = "0.1.1"
 script-dir = ""
 output-type = "dynamic"
 compile-option = "-O2"
 link-option = "-L target/native -lyjson_yyjson -lyjson_scanner"
 
 [dependencies]
-yjson = "0.1.0"
-yjson_backends = "0.1.0"
-yjson_native_primitives = "0.1.0"
+yjson = "0.1.1"
+yjson_backends = "0.1.1"
+yjson_native_primitives = "0.1.1"

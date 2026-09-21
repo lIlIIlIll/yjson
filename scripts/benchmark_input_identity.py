@@ -24,6 +24,10 @@ STANDALONE_MACRO_GITS = (
     STANDALONE_MACRO_GIT,
     (
         'git = "https://github.com/lIlIIlIll/yjson_macros.git", '
+        'commitId = "0847b59e0c8c47b7c5b52b550ef8765c0cbddb03"'
+    ),
+    (
+        'git = "https://github.com/lIlIIlIll/yjson_macros.git", '
         'commitId = "eb94e226b9d6d5c54c8418bfdaf515dcc819e5a9"'
     ),
     (
