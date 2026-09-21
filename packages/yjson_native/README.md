@@ -33,6 +33,6 @@ try (document = json.parseDocument("{\"n\":42}")) {
 `resource_closed`。序列化根视图、将整份文档转换为 AST 时，只获取一次读锁；
 保留的子视图则在每次操作时获取读锁。转换得到的 `JsonNode` 独立于原文档资源。
 
-`0.1.0` 的 Native 发布验证范围是 Linux x86_64。使用约定见
+`0.1.1` 的 Native 发布验证目标是 Linux x86_64。使用约定见
 [后端使用指南](../../docs/backends.md)，底层实现见
 [Native 实现说明](../../docs/maintainers/native-internals.md)。

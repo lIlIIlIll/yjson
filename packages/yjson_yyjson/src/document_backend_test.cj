@@ -3,7 +3,6 @@ package yjson_yyjson
 import yjson.*
 import yjson_backends.*
 import std.collection.*
-import std.env.*
 import std.sync.*
 import std.time.*
 import std.unittest.*
@@ -22,10 +21,21 @@ class YyjsonDocumentBackendTest {
         let json = YyjsonBackends.yyjson
         try (document = json.parseDocument(bytes)) {
             @Expect(document.metadata().name, "yyjson")
+            @Expect(document.metadata().version, "0.12.0")
             @Expect(document.root().size(), 2)
             @Expect(document.root().member("id").getOrThrow().asInt64(), 42)
             @Expect(document.root().member("missing").isNone())
             @Expect(document.materialize().asObject().get("items").getOrThrow().asArray().size(), 2)
+        }
+    }
+
+    @TestCase
+    func fallbackMetadataReportsYjsonReleaseVersion(): Unit {
+        let options = JsonReadOptions(duplicateKeyPolicy: JsonDuplicateKeyPolicy.LastWins)
+        try (document = YyjsonBackends.yyjson.parseDocument(
+            "{\"a\":1,\"\\u0061\":2}", options: options)) {
+            @Expect(document.metadata().name, "custom-native-fallback")
+            @Expect(document.metadata().version, "0.1.1")
         }
     }
 

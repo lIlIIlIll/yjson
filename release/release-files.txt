@@ -208,6 +208,7 @@ docs/performance/results/2026-09-13-release-seven-library.md
 docs/performance/results/2026-09-13-linux-release-pure.md
 docs/performance/results/2026-09-13-release-three-library.md
 release/0.1.0/evidence.md
+release/0.1.1/evidence.md
 benchmarks/cjfast_json/cjfast_comprehensive_bench.cj
 packages/native_accel_benchmarks/build.cj
 benchmarks/cjfast_json/run.sh

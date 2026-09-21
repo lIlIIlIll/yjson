@@ -1,83 +1,48 @@
-# Release notes: 0.1.0
+# Release notes: 0.1.1
 
-`0.1.0` 开启 yjson 当前的实验版本线。版本号有意调低，以说明 API 仍在实验阶段。仓库没有已知的 package
-registry 用户，项目将在 `0.x` 阶段继续简化 API，再为稳定的 `1.0.0` 冻结接口。
+`0.1.1` 是 `0.1.x` 版本线的补丁版本，集中修复资源预算、失败恢复和 Native
+启动校验，并拆分内部职责。九个发布包继续使用同一版本号。
 
-既有 `1.0.0-rc.1`、`2.0.0` tag、GitHub Release、带日期的性能报告和 evidence 保持不可变，
-作为历史原型保留；它们不定义 `0.1.x` 的兼容性。历史仓库路径
-`release/2.0.0/evidence.md` 继续用于审计和性能基线，但不进入 `0.1.0` source archive。
+## 行为修复
 
-## 发布包
+- 字节输入的 UTF-8 字符串预算按实际消耗字节计费。长 ASCII 前缀不再导致非 ASCII
+  内容误报超限，转义后的 ASCII 后缀也会进入最终长度检查。
+- Compact 文档的整数、字符串和数字数组在 `materialize(maxNodes)` 时，于创建每个元素前
+  扣减节点预算。预算耗尽继续抛出 `work_limit_exceeded`。
+- Native acceleration provider 的 `primitives()` 回调失败后恢复可配置状态并唤醒等待者，
+  同时保留原始异常。底层回调抛出异常时会释放临时 raw-array handle。
+- 第一方 Native provider 激活时校验实际链接库的 `YJ_JSON_ProbeV1()` 和基础能力位。
+  ABI 或 CPU 能力不匹配时明确失败，不会把进程冻结为 Native 状态。
 
-本版本包含九个同步版本的包，其中 `yjson_macros` 的源码位于独立仓库，但与 runtime
-使用同一版本线：
+## 维护性变更
 
-| Package | 职责 |
-| --- | --- |
-| `yjson` | Pure runtime、typed API、mutable AST 与 managed document |
-| `yjson_macros` | 编译期 codec 与 JSON literal 生成 |
-| `yjson_algorithms` | Pointer、Path、Patch 与 Schema 算法 |
-| `yjson_backends` | 高级 backend API |
-| `yjson_native_primitives` | 第一方 closed Native primitives SPI |
-| `yjson_native_accel` | 默认 façade 的一次性加速初始化 |
-| `yjson_native` | Custom Native 高级 backend |
-| `yjson_yyjson` | vendored yyjson 高级 backend |
-| `yjson_schema_formats` | 可选的国际化 Schema formats |
+- Pure runtime 复用 generated codec 遍历协议，并集中 ASCII 转义和 Compact 数字回滚逻辑。
+- JSON Pointer、Patch、Path 和 Schema 的等价语义、编译、format 及 filter 职责分离，
+  对外入口保持不变。
+- Native writer 原语与统计 ABI 槽位按职责整理。外部使用方门禁改为直接执行已构建二进制，
+  runtime-freeze 门禁在首次编译失败时终止。
+- 性能与证据工具加强候选身份、工作量、归档来源和退出状态校验。Pure 回退资格使用
+  固定工作量的进程内直接测量；不同测量协议的样本不得拼接。
 
-`yjson_all` 已删除。使用 generated codec 或 JSON literal 的应用显式声明 runtime 与 macros：
+## 兼容性
 
-```toml
-[dependencies]
-yjson = { git = "https://github.com/lIlIIlIll/yjson.git", branch = "main" }
-yjson_macros = { git = "https://github.com/lIlIIlIll/yjson_macros.git", branch = "main" }
-```
+- 已检入的 Cangjie public API 和 C ABI 快照相对 `0.1.0` 没有变化。
+- generated-support v1 协议没有版本变更，九个包仍按 lockstep 方式配对。
+- 快照不等同于二进制兼容证明。冻结的旧 consumer 链接和调用矩阵完成并写入
+  [发布候选记录](release/0.1.1/evidence.md)前，本版本不声明二进制兼容。
 
-本地源码开发时，也可以将两个仓库放在同级目录后使用 `path` 依赖。
+## 验证与发布状态
 
-包的依赖顺序由 [`release/release-graph.toml`](release/release-graph.toml) 唯一定义。examples、
-benchmarks、conformance package 和 consumer fixture 都是仓库测试资产，不进入发布包。
+固定发布工具链为 Cangjie STS `1.1.3`。候选提交、托管 CI、平台矩阵、产物摘要、
+标签和 GitHub Release 状态以[发布候选记录](release/0.1.1/evidence.md)为准。
 
-## 兼容规则
+本版本不发布新的性能优化倍数，也不声明真实 Native provider 的加速效果。性能回退资格和
+Deep Nested decode 保护需要使用独立、干净候选完成 A/B 测量；未执行的项目在候选记录中标为
+`NOT RUN`。
 
-- `0.1.y` patch 保持已记录的 stable、advanced 和 experimental 应用 API 兼容。
-- 后续 `0.x.0` minor 可以破坏 API，但必须提供 API diff、迁移指南和版本化行为变更。
-- generated/native closed SPI 是第一方 lockstep 契约，不是应用扩展点；protocol 或 ABI 不匹配
-  必须明确失败。
+## 历史版本
 
-## API 与实现边界
+`0.1.0` 的发布证据保持在 [`release/0.1.0/evidence.md`](release/0.1.0/evidence.md)。
+更早的 `1.x`、`2.0` tag、Release、性能报告和 evidence 是历史原型，不定义
+`0.1.x` 的兼容性。
 
-- 普通应用只使用 `YJson`、`JsonCodec<T>`、`JsonNode` 和 GC 管理的 `JsonDocument`。普通入口
-  不接受 backend 参数，也不暴露 `close()`。
-- `JsonReadOptions` 和 `JsonWriteOptions` 直接承载有限资源预算；所有 JSON 失败统一为
-  `JsonException`，调用方匹配稳定的 `code`。
-- `@JsonCodec` 生成 provider-backed codec。`@Json({...})` 和 `@JsonValue({...})` 在编译期校验
-  JSON-like 语法并生成可修改的 `JsonNode`；`YJson.toJson(value)` 和
-  `YJson.fromJson<T>(text)` 是 generated 类型的最短入口；custom codec 继续使用同一方法并传
-  `codec:`。多态 subtype 的字段读写使用宏生成的 typed object bridge，不会解析到继承自
-  open base 的 provider。普通 generated provider 直接返回 `JsonCodec<T>`，不经过 `Any`
-  装箱、erase/reify adapter 或运行时类型转换。零状态 type token 区分继承链上的父/子
-  provider，直接 concrete subtype codec 会组合 base 和 subtype 字段。
-- JSONPath cursor 惰性产出匹配；`first()` 早停。Schema 在构造阶段冻结 resolver graph 并
-  编译受限 regex，重复 validation 不再执行 resolver I/O 或重新编译表达式。
-- process runtime 在首次调用或 Native 初始化时线性化；冻结后的普通 `YJson` 调用只读取
-  atomic flag，不再获取 process-wide Mutex。
-- Custom Native 与 yyjson document 的逐节点 view 操作继续通过读锁与 `close()` 线性化；
-  root serialization 和 document materialization 自动使用单次读锁 bulk 路径。
-
-完整 API 变更见[公开 API 清单](docs/public-api-inventory.md)，API 选择见
-[API 选择指南](docs/choosing-an-api.md)。
-
-## 验证范围
-
-Pure runtime 的本地正式验证平台是 Linux；Windows 与 macOS 使用 GitHub runner。`0.1.0`
-Native qualification 仅覆盖 Linux x86_64。API reference 由固定版本的 cjdoc 为九个发布包生成。
-
-开发机快速测量和高波动测量不用于发布性能倍数。任何公开性能结论必须记录候选 SHA、
-固定 SDK、等语义 workload、交替或反转的执行轮次、checksum、RSS 和跨 profile 复验结果。
-
-## 发布证据
-
-manifest 版本号本身不能证明发布。只有 annotated tag、GitHub Release、九个 artifact、checksum、
-SBOM、API diff、迁移指南、平台矩阵、API 文档和 digest-bound evidence 全部指向同一 clean commit
-时，`0.1.0` 才算发布。若 evidence 没有记录 registry publish，本版本只能声明为 GitHub artifacts
-可用。

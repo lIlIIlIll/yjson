@@ -33,7 +33,7 @@ let document = YJson.parseDocument(text)
 
 ## 构建要求
 
-`0.1.0` 的 Native 发布验证范围是 Linux x86_64。构建前置脚本会编译扫描器静态库，需要以下工具：
+`0.1.1` 的 Native 发布验证目标是 Linux x86_64。构建前置脚本会编译扫描器静态库，需要以下工具：
 
 - Python 3。
 - C11 编译器，默认使用 `clang`，可通过 `CC` 指定。

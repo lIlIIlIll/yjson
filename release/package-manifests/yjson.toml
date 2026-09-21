@@ -2,7 +2,7 @@
 cjc-version = "1.1.0"
 name = "yjson"
 description = "Generated JSON codecs, unified streams, AST, and managed Compact documents for Cangjie"
-version = "0.1.0"
+version = "0.1.1"
 output-type = "static"
 compile-option = "-O2"
 

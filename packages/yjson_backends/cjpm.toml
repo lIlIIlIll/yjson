@@ -3,7 +3,7 @@
   name = "yjson_backends"
   organization = ""
   description = "Explicit resource-owning and whole-document backends for yjson"
-  version = "0.1.0"
+  version = "0.1.1"
   output-type = "static"
   compile-option = "-O2"
 

@@ -14,7 +14,7 @@ private let YYJSON_METADATA = JsonBackendMetadata(
 
 private let YYJSON_FALLBACK_METADATA = JsonBackendMetadata(
     "custom-native-fallback",
-    "0.1.0",
+    "0.1.1",
     true,
     JsonStreamBufferingMode.WholeDocument,
     JsonStreamBufferingMode.WholeDocument

@@ -5,7 +5,7 @@
 
 ## 1. 固定候选版本
 
-候选记录精确提交、九包 `0.1.0` 版本、发布图、工具链和计划发布的版本信息。
+候选记录精确提交、九包 `0.1.1` 版本、发布图、工具链和计划发布的版本信息。
 发布期间不混入未经评审的公开 API、C ABI 或生成代码接口变化。
 
 `release/public-cangjie-delta-bfd29.toml` 必须逐项覆盖快照的全部删除和新增声明。
@@ -69,7 +69,7 @@ Pages deployment: PASS / FAIL / NOT RUN
 Release policy: BLOCKING / NON-BLOCKING
 ```
 
-本地 PASS 不能写成托管 CI 的 PASS。`0.1.0` 要求发布 PR 和合并后的 `main` 工作流都通过；
+本地 PASS 不能写成托管 CI 的 PASS。`0.1.1` 要求发布 PR 和合并后的 `main` 工作流都通过；
 分别记录推送、PR、CI、合并、打标签和发布状态。
 
 ## 4. 准备源码并演练发布
@@ -116,7 +116,7 @@ scripts/ci_fresh_checkout.sh
 cjdoc_path=$(scripts/codex_cangjie_env python3 scripts/prepare_cjdoc.py)
 scripts/codex_cangjie_env python3 scripts/generate_api_docs.py \
   --cjdoc "$cjdoc_path" \
-  --output /tmp/yjson-api-docs-0.1.0
+  --output /tmp/yjson-api-docs-0.1.1
 ```
 
 目标必须不存在。生成结果包含顶层 `api-docs.json`、索引及每包的 Doc IR 和 HTML。允许的 cjdoc
@@ -131,7 +131,7 @@ PR 只生成并上传 Pages 产物；合并到 `main` 后的工作流才部署�
 
 1. 通过普通 PR 合并到 `main`；
 2. 等待合并提交的全部必需工作流通过；
-3. 在该提交创建 `0.1.0` 附注标签；
+3. 在该提交创建 `0.1.1` 附注标签；
 4. 创建 GitHub Release；
 5. 上传九个 `.cjp`、`checksums.txt`、`manifest.json` 和 `environment.json`；
 6. 验证发布附件和 Pages 指向已验收的提交。

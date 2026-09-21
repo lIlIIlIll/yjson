@@ -12,14 +12,14 @@
   <a href="https://github.com/lIlIIlIll/yjson/actions/workflows/ci.yml"><img src="https://github.com/lIlIIlIll/yjson/actions/workflows/ci.yml/badge.svg?branch=main" alt="Tests" /></a>
   <a href="https://codecov.io/gh/lIlIIlIll/yjson"><img src="https://codecov.io/gh/lIlIIlIll/yjson/branch/main/graph/badge.svg?flag=core" alt="Core Coverage" /></a>
   <a href="https://github.com/lIlIIlIll/yjson/releases/latest"><img src="https://img.shields.io/github/v/release/lIlIIlIll/yjson?display_name=tag&sort=semver&label=historical%20release" alt="Latest historical GitHub release" /></a>
-  <img src="https://img.shields.io/badge/current%20line-0.1.0-F59E0B" alt="Current development line 0.1.0" />
+  <img src="https://img.shields.io/badge/current%20line-0.1.1-F59E0B" alt="Current development line 0.1.1" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache--2.0-yellow" alt="Apache License 2.0" /></a>
 </p>
 
 yjson 是仓颉 JSON 库，支持类型与 JSON 互转、构造和修改 JSON 树、只读查询以及流式读写。
 默认使用纯仓颉实现，由 GC 管理内存。
 
-当前开发版本为 `0.1.0`，API 仍可能发生不兼容变更，不提供旧 API 别名。
+当前开发版本为 `0.1.1`，API 仍可能发生不兼容变更，不提供旧 API 别名。
 历史 `1.x`、`2.0` 版本的接口不适用于当前版本。
 
 <p align="center">
@@ -67,7 +67,7 @@ yjson_macros = { git = "https://github.com/lIlIIlIll/yjson_macros.git", branch =
 `JsonNode.object()`、`JsonNode.array()` 和 `put()` API。
 
 只做 JSON 解析、节点操作、只读查询或使用手写编解码器时，添加 `yjson` 即可。
-这份安装说明使用源码仓库，不依赖包仓库中的发布状态。SDK 的测试范围见[发布记录](release/0.1.0/evidence.md)。
+这份安装说明使用源码仓库，不依赖包仓库中的发布状态。SDK 的测试范围见[发布记录](release/0.1.1/evidence.md)。
 
 ## 快速开始
 
@@ -167,8 +167,7 @@ let name = document.root().member("name").getOrThrow().asString()
   `JsonNode` 可以修改，仅通过 `JsonValueView` 访问它不会使底层数据不可变。
   `JsonPathCursor` 是有状态惰性迭代器，只能由一个线程消费。
 - yjson 不关闭调用方提供的流。一次调用只处理一份 JSON 文档，文档后仍有非空白内容时会报错。
-- Pure 的跨平台测试在 GitHub runners 上运行，结果见
-  [发布记录](release/0.1.0/evidence.md)。Native `0.1.0` 的验证范围限于 Linux x86_64。
+- `0.1.1` 的平台验收状态见[候选发布记录](release/0.1.1/evidence.md)。Native 发布验证目标为 Linux x86_64。
 
 配置和预算见[配置与错误](docs/configuration-and-errors.md)及
 [资源限制](docs/resource-limits.md)。

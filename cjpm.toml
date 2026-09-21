@@ -3,7 +3,7 @@ cjc-version = "1.1.0"
 name = "yjson"
 organization = ""
 description = "High-performance generated JSON library for Cangjie"
-version = "0.1.0"
+version = "0.1.1"
 target-dir = ""
 output-type = "static"
 compile-option = "-O2"
@@ -14,7 +14,7 @@ package-configuration = {}
 [dependencies]
 
 [test-dependencies]
-yjson_macros = { git = "https://github.com/lIlIIlIll/yjson_macros.git", commitId = "eb94e226b9d6d5c54c8418bfdaf515dcc819e5a9" }
+yjson_macros = { git = "https://github.com/lIlIIlIll/yjson_macros.git", commitId = "0847b59e0c8c47b7c5b52b550ef8765c0cbddb03" }
 
 [profile.bench]
 no-color = true
