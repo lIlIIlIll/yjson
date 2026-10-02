@@ -973,18 +973,25 @@ public class BackendTapeReaderV1 <: JsonReader & GeneratedReadStateV1Owner {
     /**
      * 消费一个数字并取得数字文本。
      *
-     * 整数条目转换为十进制文本，数字文本条目直接读取内容。
+     * 整数条目转换为十进制文本；数字文本条目先验证 JSON 数字语法，再返回原文。
      *
      * @group 20-generated-spi 生成代码 SPI
      * @return 原数字文本，或整数条目的十进制表示。
      * @throws JsonException 读取状态无效、值类型不符或 tape 截断，错误码为 parse_error。
+     * @throws JsonException 数字文本不符合 JSON 数字语法，错误码为 invalid_number。
      */
     public func readNumberLiteral(): String {
         let pathPushed = beforeValue()
         try {
             match {
                 case peekByte() == JSON_STREAM_TAPE_INT => position++; bitsToInt64(readUInt64Raw()).toString()
-                case peekByte() == JSON_STREAM_TAPE_NUMBER => position++; readStringRaw()
+                case peekByte() == JSON_STREAM_TAPE_NUMBER =>
+                    position++
+                    let literal = readStringRaw()
+                    if (!isValidJsonNumberLiteral(literal)) {
+                        throw error("Invalid JSON number literal in backend tape", "invalid_number")
+                    }
+                    literal
                 case _ => fail("Expected number")
             }
         } finally { generatedState.completeAutoValue(pathPushed) }
@@ -1047,7 +1054,7 @@ public class BackendTapeReaderV1 <: JsonReader & GeneratedReadStateV1Owner {
     /**
      * 消费一个 tape 值并构造可修改 AST。
      *
-     * 重名对象字段后值覆盖前值；数字优先表示为 Int64，其余保留数字文本。此重载不设置节点预算。
+     * 重名对象字段后值覆盖前值；数字优先表示为 Int64，精确字面量 -0 与其余非整数保留数字文本。此重载不设置节点预算。
      *
      * @group 20-generated-spi 生成代码 SPI
      * @return 独立构造的 JsonNode 树。
@@ -1060,6 +1067,7 @@ public class BackendTapeReaderV1 <: JsonReader & GeneratedReadStateV1Owner {
             case peekByte() == JSON_STREAM_TAPE_INT => JsonIntValue(readInt64())
             case peekByte() == JSON_STREAM_TAPE_NUMBER =>
                 let literal = readNumberLiteral()
+                if (literal == "-0") { return JsonNumberLiteralValue.fromParsedLiteral(literal) }
                 try { JsonIntValue(Int64.parse(literal)) }
                 catch (_: Exception) { JsonNumberLiteralValue.fromParsedLiteral(literal) }
             case peekByte() == JSON_STREAM_TAPE_STRING => JsonStringValue(readString())
@@ -1105,6 +1113,7 @@ public class BackendTapeReaderV1 <: JsonReader & GeneratedReadStateV1Owner {
             case peekByte() == JSON_STREAM_TAPE_INT => JsonIntValue(readInt64())
             case peekByte() == JSON_STREAM_TAPE_NUMBER =>
                 let literal = readNumberLiteral()
+                if (literal == "-0") { return JsonNumberLiteralValue.fromParsedLiteral(literal) }
                 try { JsonIntValue(Int64.parse(literal)) }
                 catch (_: Exception) { JsonNumberLiteralValue.fromParsedLiteral(literal) }
             case peekByte() == JSON_STREAM_TAPE_STRING => JsonStringValue(readString())

@@ -23,6 +23,14 @@
   仅实现接口的模型不再误当作继承 JSON 对象字段。
 - 修复 Pure/Native/yyjson 标量类型错误及无定位 OOM 的异常分类；Schema 构造时校验未使用分支，
   URI template 检查保留 Unicode literal。逐项验收与边界见 [Issue #15 实施记录](docs/implementation/issue-15.md)。
+- 跳过未知对象按对象维护解码名称集合，保留 Reject、LastWins 和父子作用域；流式资源错误使用
+  cursor 的真实 UTF-8 字节坐标，未知位置不再伪造第一行。
+- Patch 与 Merge Patch 在遍历和复制前累计检查节点预算，检测祖先循环与深度；同路径 move
+  仍验证源存在，失败不写回目标。
+- 零容量 buffer writer 从最小正容量增长，负容量拒绝，容量加乘溢出报告 `output_too_large`；
+  bytes 文档在拥有式复制前拒绝超限输入，合法输入仍拥有独立副本。
+- Float16 与 Float32 按完整数字文本直接舍入到目标精度；Pure、Native 和 yyjson 保留负零。
+  逐项实现与实际验收见 [Issue #9 验证记录](docs/maintainers/issue-9-verification.md)。
 - Custom Native 及 yyjson 的 Custom Native 回退路径在 backend metadata 中报告候选包版本 `0.2.0`。
 - 文档候选要求九包统一站点、八个应用包的中文契约与逐入口可执行示例，交付 HTML、
   Markdown、Doc IR v16 和完整 Agent 离线包。不建设旧 URL、Doc IR 或产物布局兼容层。

@@ -130,15 +130,15 @@ let Float64Json: JsonCodec<Float64> = LambdaFastRawJsonCodec<Float64>(
 
 let Float32Json: JsonCodec<Float32> = LambdaFastRawJsonCodec<Float32>(
     { value, writer => writer.writeFloat64(Float64(value)) },
-    { reader => Float32(reader.readFloat64()) },
-    { reader => Float32(Float64.parse(reader.readRawNumberLiteral())) },
+    { reader => jsonParseFloat32Literal(reader.readNumberLiteral()) },
+    { reader => jsonParseFloat32Literal(reader.readRawNumberLiteral()) },
     { value, writer => writer.writeRawFloat64(Float64(value)) }
 )
 
 let Float16Json: JsonCodec<Float16> = LambdaFastRawJsonCodec<Float16>(
     { value, writer => writer.writeFloat64(Float64(value)) },
-    { reader => Float16(reader.readFloat64()) },
-    { reader => Float16(Float64.parse(reader.readRawNumberLiteral())) },
+    { reader => jsonParseFloat16Literal(reader.readNumberLiteral()) },
+    { reader => jsonParseFloat16Literal(reader.readRawNumberLiteral()) },
     { value, writer => writer.writeRawFloat64(Float64(value)) }
 )
 
@@ -157,11 +157,11 @@ func jsonFastReadFloat64(reader: JsonFastReader): Float64 {
 }
 
 func jsonFastReadFloat32(reader: JsonFastReader): Float32 {
-    Float32(jsonFastReadFloat64(reader))
+    jsonParseFloat32Literal(reader.readRawNumberLiteral())
 }
 
 func jsonFastReadFloat16(reader: JsonFastReader): Float16 {
-    Float16(jsonFastReadFloat64(reader))
+    jsonParseFloat16Literal(reader.readRawNumberLiteral())
 }
 
 /**
@@ -182,13 +182,13 @@ public func jsonFastReadFloat64(reader: GeneratedSupportV1Reader): Float64 {
 /**
  * 为生成代码消费一个 Float32 浮点值。
  *
- * reader 必须是运行时拥有的 JsonFastReader。可用原生转换拒绝 token 时回退到核心 Float64.parse。之后转换为 Float32；此处不额外拒绝窄化产生的非有限结果。
+ * reader 必须是运行时拥有的 JsonFastReader。按完整十进制原文与目标 Float32 中点比较，采用最近值、平局取偶数舍入；保留负零，溢出可得到无穷大，不额外检查有限值。
  *
  * @group 20-generated-spi 生成代码 SPI
  * @param reader 供本次数值解码消费的 V1 读取器。
  * @return 解析并转换得到的 Float32 值。
  * @throws JsonException 读取器不匹配（generated_protocol_mismatch），或 JSON 数字语法、字节预算不符。
- * @throws Exception 核心 Float64 数值解析失败。
+ * @throws Exception 数值解析失败。
  */
 public func jsonFastReadFloat32(reader: GeneratedSupportV1Reader): Float32 {
     jsonFastReadFloat32(yJsonGeneratedReaderV1(reader))
@@ -197,13 +197,13 @@ public func jsonFastReadFloat32(reader: GeneratedSupportV1Reader): Float32 {
 /**
  * 为生成代码消费一个 Float16 浮点值。
  *
- * reader 必须是运行时拥有的 JsonFastReader。可用原生转换拒绝 token 时回退到核心 Float64.parse。之后转换为 Float16；此处不额外拒绝窄化产生的非有限结果。
+ * reader 必须是运行时拥有的 JsonFastReader。按完整十进制原文与目标 Float16 中点比较，采用最近值、平局取偶数舍入；保留负零，溢出可得到无穷大，不额外检查有限值。
  *
  * @group 20-generated-spi 生成代码 SPI
  * @param reader 供本次数值解码消费的 V1 读取器。
  * @return 解析并转换得到的 Float16 值。
  * @throws JsonException 读取器不匹配（generated_protocol_mismatch），或 JSON 数字语法、字节预算不符。
- * @throws Exception 核心 Float64 数值解析失败。
+ * @throws Exception 数值解析失败。
  */
 public func jsonFastReadFloat16(reader: GeneratedSupportV1Reader): Float16 {
     jsonFastReadFloat16(yJsonGeneratedReaderV1(reader))

@@ -297,6 +297,10 @@ class CompactJsonDocument {
      */
     public static func parseOwned(bytes: Array<Byte>,
         config!: JsonReadOptions = JsonReadOptions.defaults): CompactJsonDocument {
+        if (bytes.size > config.maxInputBytes) {
+            throw jsonResourceLimitException(bytes,
+                "JSON document exceeds ${config.maxInputBytes} bytes", "document_too_large", config.maxInputBytes)
+        }
         let owned = Array<Byte>(bytes.size, repeat: 0)
         bytes.copyTo(owned, 0, 0, bytes.size)
         parseBorrowed(owned, config: config)

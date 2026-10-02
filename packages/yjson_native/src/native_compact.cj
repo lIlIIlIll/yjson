@@ -830,19 +830,18 @@ struct NativeCompactJsonValue <: JsonValueView {
     }
 
     public func asInt64(): Int64 {
-        // An inline object scalar has no node index (it is stored as node 0),
-        // so every non-integer inline kind must fail instead of answering from
-        // an unrelated node. The resource check stays first so a closed
-        // document reports resource_closed rather than a type mismatch.
+        // Inline scalars have no independent node index. Check resource state
+        // before the kind; only the exact numeric literal -0 is an integer exception.
         if (inlineKind >= 0) {
             document.ensureOpen()
-            if (inlineKind != YJ_COMPACT_INT) {
-                throw JsonException("Expected number value", code: "type_mismatch")
+            if (inlineKind == YJ_COMPACT_INT) {
+                return nativeCompactBitsToInt64(inlinePayload)
             }
-            nativeCompactBitsToInt64(inlinePayload)
-        } else {
-            document.intAt(node)
+            if (inlineKind == YJ_COMPACT_NUMBER && asNumberText() == "-0") { return 0 }
+            throw JsonException("Expected number value", code: "type_mismatch")
         }
+        if (code() == YJ_COMPACT_NUMBER && asNumberText() == "-0") { return 0 }
+        document.intAt(node)
     }
 
     public func asBool(): Bool {
@@ -868,6 +867,7 @@ struct NativeCompactJsonValue <: JsonValueView {
         // `resource_closed`, while only the numeric conversion itself
         // classifies as a range failure.
         let text = asNumberText()
+        if (text == "-0") { return 0u64 }
         try { UInt64.parse(text) } catch (_: Exception) {
             throw JsonException("JSON number is outside UInt64 range", code: "number_out_of_range")
         }

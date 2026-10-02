@@ -304,6 +304,12 @@ static int fy_raw_int64(const char *text, size_t length, int64_t *out) {
     return 1;
 }
 
+/* Integer storage cannot retain the sign of -0; numeric conversion still can. */
+static int fy_foldable_int64(const char *text, size_t length, int64_t *out) {
+    if (length == 2u && text[0] == '-' && text[1] == '0') return 0;
+    return fy_raw_int64(text, length, out);
+}
+
 static int fy_duplicate_init(FyDuplicateSet *set, size_t count,
                              uint64_t *scratch_peak) {
     if (count <= 8) return 1;
@@ -401,10 +407,6 @@ static int fy_validate_value(FyDocument *document, yyjson_val *value,
     if (depth == 0) document->validation_walks++;
     if (depth >= max_depth) { *too_deep = 1; return 1; }
     document->node_count++;
-    if (yyjson_is_raw(value) &&
-        (document->flags & YJ_YYJSON_PRESERVE_NUMBERS) == 0 &&
-        yyjson_get_len(value) == 2u && yyjson_get_raw(value)[0] == '-' &&
-        yyjson_get_raw(value)[1] == '0') yyjson_set_sint(value, 0);
     if (yyjson_is_str(value) || yyjson_is_raw(value)) document->string_count++;
     if (yyjson_is_arr(value)) {
         size_t index, count;
@@ -686,7 +688,7 @@ static int fy_replay_value(FySourceReplay *replay, yyjson_val *value,
         size_t start = replay->at;
         size_t end = fy_number_end(replay->input, replay->length, start);
         int64_t integer = 0;
-        int safe_int = fy_raw_int64((const char *)replay->input + start,
+        int safe_int = fy_foldable_int64((const char *)replay->input + start,
                                     end - start, &integer);
         if (safe_int) replay->document->number_safe_ints++;
         else replay->document->number_raw_required++;
@@ -741,7 +743,7 @@ static int fy_numeric_array_dispatch_candidate(FyDocument *document,
         if (c == '-' || (c >= '0' && c <= '9')) {
             size_t end = fy_number_end(input, limit, at);
             int64_t integer = 0;
-            if (fy_raw_int64((const char *)input + at, end - at, &integer))
+            if (fy_foldable_int64((const char *)input + at, end - at, &integer))
                 document->number_safe_ints++;
             else document->number_raw_required++;
             numbers++;
@@ -822,7 +824,7 @@ static int fy_flat_value(FyFlatDocument *document, yyjson_val *value,
         const char *raw = yyjson_get_raw(value);
         uint32_t length = (uint32_t)yyjson_get_len(value);
         int64_t integer;
-        if (fy_raw_int64(raw, length, &integer)) {
+        if (fy_foldable_int64(raw, length, &integer)) {
             uint64_t payload;
             memcpy(&payload, &integer, sizeof(payload));
             return fy_flat_add_node(document, YJ_COMPACT_INT, payload, 0, out_node);
@@ -1158,7 +1160,7 @@ static int32_t fy_direct_kind(yyjson_val *value, uint32_t *out_kind) {
             ? YJ_COMPACT_INT : YJ_COMPACT_NUMBER;
     } else if (yyjson_is_raw(value)) {
         int64_t integer;
-        *out_kind = fy_raw_int64(yyjson_get_raw(value), yyjson_get_len(value),
+        *out_kind = fy_foldable_int64(yyjson_get_raw(value), yyjson_get_len(value),
                                  &integer)
             ? YJ_COMPACT_INT : YJ_COMPACT_NUMBER;
     } else if (yyjson_is_num(value)) *out_kind = YJ_COMPACT_NUMBER;

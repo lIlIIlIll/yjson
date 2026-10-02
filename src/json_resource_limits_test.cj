@@ -223,6 +223,178 @@ class JsonResourceLimitsTest {
     }
 
     @TestCase
+    func streamResourceLocationsMatchUtf8ByteCoordinates(): Unit {
+        let cases = [
+            ("\"ab\"", JsonReadOptions(maxStringBytes: 1), "string_too_large", 2, 1, 3),
+            ("\n\"ab\"", JsonReadOptions(maxStringBytes: 1), "string_too_large", 3, 2, 3),
+            ("\r\n\"ab\"", JsonReadOptions(maxStringBytes: 1), "string_too_large", 4, 2, 3),
+            ("\n\"中a\"", JsonReadOptions(maxStringBytes: 3), "string_too_large", 5, 2, 5),
+            ("\n\"\\u0061\\u0062\"", JsonReadOptions(maxStringBytes: 1), "string_too_large", 8, 2, 8),
+            ("\r\n\"\\u4e2da\"", JsonReadOptions(maxStringBytes: 3), "string_too_large", 9, 2, 8),
+            ("\n[\n[]]", JsonReadOptions(maxDepth: 1), "max_depth", 3, 3, 1),
+            ("\n[\n1]", JsonReadOptions(maxBufferedValueBytes: 3), "buffered_value_too_large", 4, 3, 2),
+            ("\n\"ab\"", JsonReadOptions(maxInputBytes: 3), "document_too_large", 3, 2, 3),
+            ("\r\n\"ab\"", JsonReadOptions(maxInputBytes: 4), "document_too_large", 4, 2, 3),
+            ("\n\"中a\"", JsonReadOptions(maxInputBytes: 5), "document_too_large", 5, 2, 5)
+        ]
+        for ((text, options, code, offset, line, column) in cases) {
+            let bytes = unsafe { text.rawData() }
+            let fromText = @AssertThrows[JsonException](JsonNode.parse(text, config: options))
+            let fromBytes = @AssertThrows[JsonException](JsonNode.parse(bytes, config: options))
+            @Expect(fromText.code, code)
+            @Expect(fromBytes.code, code)
+            @Expect(fromText.location.getOrThrow().byteOffset, offset)
+            @Expect(fromText.location.getOrThrow().line, line)
+            @Expect(fromText.location.getOrThrow().column, column)
+            @Expect(fromBytes.location.getOrThrow().byteOffset, offset)
+            @Expect(fromBytes.location.getOrThrow().line, line)
+            @Expect(fromBytes.location.getOrThrow().column, column)
+            for (chunk in 1..=text.size) {
+                let fromStream = @AssertThrows[JsonException](parseJsonValueFromStream(
+                    FixedChunkInputStream(text, chunk), config: options))
+                @Expect(fromStream.code, code)
+                @Expect(fromStream.location.getOrThrow().byteOffset, offset)
+                @Expect(fromStream.location.getOrThrow().line, line)
+                @Expect(fromStream.location.getOrThrow().column, column)
+                let skipped = @AssertThrows[JsonException](
+                    JsonDirectReader(FixedChunkInputStream(text, chunk), config: options).skipValue())
+                @Expect(skipped.code, code)
+                @Expect(skipped.location.getOrThrow().byteOffset, offset)
+                @Expect(skipped.location.getOrThrow().line, line)
+                @Expect(skipped.location.getOrThrow().column, column)
+            }
+        }
+    }
+
+    @TestCase
+    func streamTypedStringResourceLocationsMatchAcrossEveryChunk(): Unit {
+        for ((text, limit, offset, column) in [("\n\"ab\"", 1, 3, 3),
+            ("\r\n\"ab\"", 1, 4, 3), ("\n\"\\u0061\\u0062\"", 1, 8, 8),
+            ("\r\n\"\\u4e2da\"", 3, 9, 8)]) {
+            for (chunk in 1..=text.size) {
+                let error = @AssertThrows[JsonException](YJson.fromJson(
+                    FixedChunkInputStream(text, chunk), codec: JsonCodecs.string,
+                    options: JsonReadOptions(maxStringBytes: limit)))
+                @Expect(error.code, "string_too_large")
+                @Expect(error.location.getOrThrow().byteOffset, offset)
+                @Expect(error.location.getOrThrow().line, 2)
+                @Expect(error.location.getOrThrow().column, column)
+            }
+        }
+    }
+    @TestCase
+    func streamResourceLocationsSurviveMultipleRefills(): Unit {
+        // CR/LF and the UTF-8 scalar both cross default 4096-byte windows.
+        let text = String.fromUtf8(Array<Byte>(4095, repeat: b' ')) + "\r\n" +
+            String.fromUtf8(Array<Byte>(4093, repeat: b' ')) + "\"中a\""
+        let offset: Int64 = 8194
+        for (options in [JsonReadOptions(maxStringBytes: 3),
+            JsonReadOptions(maxInputBytes: offset)]) {
+            let expectedCode = if (options.maxStringBytes == 3) {
+                "string_too_large"
+            } else {
+                "document_too_large"
+            }
+            for (chunk in [1, 4095, 4096]) {
+                let typed = @AssertThrows[JsonException](YJson.fromJson(
+                    FixedChunkInputStream(text, chunk), codec: JsonCodecs.string, options: options))
+                let ast = @AssertThrows[JsonException](parseJsonValueFromStream(
+                    FixedChunkInputStream(text, chunk), config: options))
+                let skipped = @AssertThrows[JsonException](JsonDirectReader(
+                    FixedChunkInputStream(text, chunk), config: options).skipValue())
+                for (error in [typed, ast, skipped]) {
+                    @Expect(error.code, expectedCode)
+                    @Expect(error.location.getOrThrow().byteOffset, offset)
+                    @Expect(error.location.getOrThrow().line, 2)
+                    @Expect(error.location.getOrThrow().column, 4098)
+                }
+            }
+        }
+        let cursor = StreamInputCursor(FixedChunkInputStream(text, 4096))
+        for (_ in 0..8194) {
+            @Assert(cursor.hasMore())
+            let _ = cursor.consume()
+        }
+        @Expect(cursor.lineAt(4096), 1)
+        @Expect(cursor.columnAt(4096), 4097)
+        @Expect(cursor.lineAt(4097), 2)
+        @Expect(cursor.columnAt(4097), 1)
+    }
+
+
+    @TestCase
+    func unavailableStreamLocationKeepsTheResourceError(): Unit {
+        let cursor = StreamInputCursor(FixedChunkInputStream("null", 1))
+        let error = jsonResourceLimitException(cursor, "Input limit", "document_too_large", 9)
+        @Expect(error.code, "document_too_large")
+        @Expect(error.location.isNone())
+        @Expect(cursor.hasMore())
+        @Expect(cursor.lineAt(9), -1)
+        @Expect(cursor.columnAt(9), -1)
+        @Expect(jsonResourceLimitException(cursor, "Unknown", "max_depth", -1).location.isNone())
+    }
+
+    @TestCase
+    func streamLookaheadCoordinatesRemainStableAcrossConsumedNewlines(): Unit {
+        // Locations use UTF-8 byte columns. An LF belongs to the preceding
+        // line, and CRLF contributes only one line transition.
+        let text = "a\r\nb\n中z"
+        let coordinates = [
+            (0, 1, 1), (1, 1, 2), (2, 1, 3), (3, 2, 1),
+            (4, 2, 2), (5, 3, 1), (8, 3, 4), (9, 3, 5)
+        ]
+        let cursor = StreamInputCursor(FixedChunkInputStream(text, text.size))
+        @Expect(cursor.hasMore())
+        for ((offset, line, column) in coordinates) {
+            @Expect(cursor.lineAt(offset), line)
+            @Expect(cursor.columnAt(offset), column)
+        }
+        @Expect(cursor.position(), 0)
+        @Expect(cursor.lineAt(10), -1)
+        @Expect(cursor.columnAt(10), -1)
+
+        @Expect(cursor.consume(), b'a')
+        @Expect(cursor.consume(), b'\r')
+        @Expect(cursor.consume(), b'\n')
+        // Past locations now use recorded newlines, while future locations
+        // combine that history with the LF still in the unconsumed window.
+        for ((offset, line, column) in coordinates) {
+            @Expect(cursor.lineAt(offset), line)
+            @Expect(cursor.columnAt(offset), column)
+        }
+        @Expect(cursor.position(), 3)
+        @Expect(cursor.lineAt(10), -1)
+        @Expect(cursor.columnAt(10), -1)
+    }
+
+    @TestCase
+    func directContainerDepthErrorsPointAtTheRejectedOpeningToken(): Unit {
+        let text = "\r\n{\n \"child\": \r\n {}}"
+        let options = JsonReadOptions(maxDepth: 1)
+        // String and byte readers validate resource limits at construction.
+        // Stream readers enforce the same boundary as tokens are consumed.
+        let errors = [@AssertThrows[JsonException](JsonDirectReader(text, config: options)),
+            @AssertThrows[JsonException](JsonDirectReader(
+                unsafe { text.rawData().clone() }, config: options))]
+        for (error in errors) {
+            @Expect(error.code, "max_depth")
+            @Expect(error.location.getOrThrow().byteOffset, 17)
+            @Expect(error.location.getOrThrow().line, 4)
+            @Expect(error.location.getOrThrow().column, 2)
+        }
+        for (chunk in 1..=text.size) {
+            let reader = JsonDirectReader(FixedChunkInputStream(text, chunk), config: options)
+            reader.startObject()
+            @Expect(reader.readName(), "child")
+            let error = @AssertThrows[JsonException](reader.startObject())
+            @Expect(error.code, "max_depth")
+            @Expect(error.location.getOrThrow().byteOffset, 17)
+            @Expect(error.location.getOrThrow().line, 4)
+            @Expect(error.location.getOrThrow().column, 2)
+        }
+    }
+
+    @TestCase
     func astDepthCountsContainersOnlyForStringAndBytes(): Unit {
         let one = JsonReadOptions(maxDepth: 1)
         @Expect(JsonNode.parse("{\"name\":\"alice\"}", config: one).asObject().size(), 1)
