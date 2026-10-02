@@ -501,7 +501,13 @@ public class BackendTapeReaderV1 <: JsonReader & GeneratedReadStateV1Owner {
         try {
             match {
                 case peekByte() == JSON_STREAM_TAPE_INT => position++; bitsToInt64(readUInt64Raw()).toString()
-                case peekByte() == JSON_STREAM_TAPE_NUMBER => position++; readStringRaw()
+                case peekByte() == JSON_STREAM_TAPE_NUMBER =>
+                    position++
+                    let literal = readStringRaw()
+                    if (!isValidJsonNumberLiteral(literal)) {
+                        throw error("Invalid JSON number literal in backend tape", "invalid_number")
+                    }
+                    literal
                 case _ => fail("Expected number")
             }
         } finally { generatedState.completeAutoValue(pathPushed) }

@@ -32,17 +32,6 @@ private class JsonDirectReadContext {
 class JsonDirectReader <: JsonReader & GeneratedReadStateV1Owner {
     private let source: InputCursor
     private let config: JsonReadOptions
-    // Linear duplicate scan for policy-aware unknown-object skips; the
-    // window [base..count) holds only the current object level.
-    private var skipSeenNames: Array<String> = Array<String>(16, repeat: "")
-    private var skipSeenCount: Int64 = 0
-
-    private func ensureSkipSeenCapacity(): Unit {
-        if (skipSeenCount < skipSeenNames.size) { return }
-        let grown = Array<String>(skipSeenNames.size * 2, repeat: "")
-        for (position in 0..skipSeenCount) { grown[position] = skipSeenNames[position] }
-        skipSeenNames = grown
-    }
     private let streaming: Bool
     private let generatedState: GeneratedReadStateV1
     private let contexts = ArrayList<JsonDirectReadContext>()
@@ -378,7 +367,7 @@ class JsonDirectReader <: JsonReader & GeneratedReadStateV1Owner {
 
     private func requireContainerDepth(offset: Int64): Unit {
         if (contexts.size >= config.maxDepth) {
-            throw jsonResourceLimitException(config,
+            throw jsonResourceLimitException(source,
                 "Maximum JSON depth ${config.maxDepth} exceeded", "max_depth", offset)
         }
     }
@@ -466,7 +455,7 @@ class JsonDirectReader <: JsonReader & GeneratedReadStateV1Owner {
 
     private func skipRawArrayPolicyAware(depth: Int64, maxDepth: Int64): Unit {
         if (depth >= maxDepth) {
-            throw jsonResourceLimitException(config,
+            throw jsonResourceLimitException(source,
                 "Maximum JSON depth ${config.maxDepth} exceeded", "max_depth", source.position())
         }
         expectByte(b'[')
@@ -488,7 +477,7 @@ class JsonDirectReader <: JsonReader & GeneratedReadStateV1Owner {
 
     private func skipRawObjectPolicyAware(depth: Int64, maxDepth: Int64): Unit {
         if (depth >= maxDepth) {
-            throw jsonResourceLimitException(config,
+            throw jsonResourceLimitException(source,
                 "Maximum JSON depth ${config.maxDepth} exceeded", "max_depth", source.position())
         }
         expectByte(b'{')
@@ -497,22 +486,20 @@ class JsonDirectReader <: JsonReader & GeneratedReadStateV1Owner {
             consumeByte()
             return
         }
-        let seenBase = if (jsonReadOptionsRejectsDuplicateKeys(config)) {
-            skipSeenCount
+        // Each skipped object owns its decoded names. A child object cannot
+        // collide with a parent's names, and a wide object needs one set
+        // insertion per member instead of scanning every earlier name.
+        let seenNames = if (jsonReadOptionsRejectsDuplicateKeys(config)) {
+            Some(HashSet<String>())
         } else {
-            -1
+            None<HashSet<String>>
         }
         while (true) {
             let name = parseString()
-            if (seenBase >= 0) {
-                var duplicate = false
-                for (position in seenBase..skipSeenCount) {
-                    if (skipSeenNames[position] == name) { duplicate = true; break }
-                }
-                if (duplicate) { policyFail("Duplicate object key '${name}'", "duplicate_key") }
-                ensureSkipSeenCapacity()
-                skipSeenNames[skipSeenCount] = name
-                skipSeenCount++
+            match (seenNames) {
+                case Some(names) =>
+                    if (!names.add(name)) { policyFail("Duplicate object key '${name}'", "duplicate_key") }
+                case None => ()
             }
             skipSpaces()
             expectByte(b':')
@@ -520,10 +507,10 @@ class JsonDirectReader <: JsonReader & GeneratedReadStateV1Owner {
             skipSpaces()
             if (source.hasMore() && source.peek() == b'}') {
                 consumeByte()
-                if (seenBase >= 0) { skipSeenCount = seenBase }
                 return
             }
             expectByte(b',')
+            skipSpaces()
         }
     }
 

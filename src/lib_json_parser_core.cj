@@ -40,7 +40,7 @@ abstract class InputCursor {
     public func consumeJsonByte(): Byte {
         let value = consume()
         if (valueBudgetActive && position() - valueBudgetStart > valueBudgetLimit) {
-            throw jsonResourceLimitException(config(),
+            throw jsonResourceLimitException(this,
                 "JSON value exceeds ${valueBudgetLimit} bytes",
                 "buffered_value_too_large", valueBudgetStart + valueBudgetLimit)
         }
@@ -143,7 +143,7 @@ abstract class InputCursor {
                     }
             }
             if (decodedBytes > stringLimit) {
-                throw jsonResourceLimitException(readConfig,
+                throw jsonResourceLimitException(this,
                     "JSON string exceeds ${stringLimit} decoded UTF-8 bytes", "string_too_large", start)
             }
         }
@@ -793,11 +793,29 @@ class StreamInputCursor <: InputCursor {
     }
 
     public func lineAt(offset: Int64): Int64 {
-        jsonStreamLineAt(newlineOffsets, offset)
+        if (offset < 0 || (offset > this.offset && offset - this.offset > end - start)) { return -1 }
+        var line = jsonStreamLineAt(newlineOffsets, offset)
+        // Window lookahead and input limits can fail before these bytes have
+        // been consumed. Count only bytes preceding the queried position.
+        if (offset > this.offset) {
+            for (index in start..start + (offset - this.offset)) {
+                if (buffer[index] == b'\n') { line++ }
+            }
+        }
+        line
     }
 
     public func columnAt(offset: Int64): Int64 {
-        jsonStreamColumnAt(newlineOffsets, offset)
+        if (offset < 0 || (offset > this.offset && offset - this.offset > end - start)) { return -1 }
+        var column = jsonStreamColumnAt(newlineOffsets, offset)
+        if (offset > this.offset) {
+            for (index in start..start + (offset - this.offset)) {
+                if (buffer[index] == b'\n') {
+                    column = offset - this.offset - (index - start)
+                }
+            }
+        }
+        column
     }
 
     public func skipSpacesFast(): Unit {
@@ -826,7 +844,7 @@ class StreamInputCursor <: InputCursor {
             if (current == b'"') {
                 let length = cursor - contentStart
                 if (length > readConfig.maxStringBytes) {
-                    throw jsonResourceLimitException(readConfig,
+                    throw jsonResourceLimitException(this,
                         "JSON string exceeds ${readConfig.maxStringBytes} decoded UTF-8 bytes",
                         "string_too_large", offset + 1 + readConfig.maxStringBytes)
                 }
@@ -898,14 +916,14 @@ class StreamInputCursor <: InputCursor {
             reachedEnd = true
             return false
         }
-        if (loadedBytes + read > readConfig.maxInputBytes) {
-            throw jsonResourceLimitException(readConfig,
+        start = 0
+        end = read
+        if (read > readConfig.maxInputBytes - loadedBytes) {
+            throw jsonResourceLimitException(this,
                 "JSON document exceeds ${readConfig.maxInputBytes} bytes", "document_too_large",
                 readConfig.maxInputBytes)
         }
         loadedBytes += read
-        start = 0
-        end = read
         true
     }
 }
@@ -1170,7 +1188,7 @@ private class JsonParserCore {
 
     private func enterContainer(offset: Int64): Unit {
         if (containerDepth >= config.maxDepth) {
-            throw jsonResourceLimitException(config,
+            throw jsonResourceLimitException(source,
                 "Maximum JSON depth ${config.maxDepth} exceeded", "max_depth", offset)
         }
         containerDepth++

@@ -51,20 +51,6 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
     private var rawDateTimeCacheEpochSecond: Int64 = 0
     private var rawDateTimeCacheOffsetSeconds: Int64 = 0
     private var rawDateTimeCacheValue: Option<DateTime> = None<DateTime>
-    // Linear duplicate scan for policy-aware unknown-object skips. The
-    // window [base..count) always holds the current object level only;
-    // an aborted skip leaves the cursor stale, which the next level's
-    // base snapshot simply skips over.
-    private var skipSeenNames: Array<String> = Array<String>(16, repeat: "")
-    private var skipSeenCount: Int64 = 0
-
-    private func ensureSkipSeenCapacity(): Unit {
-        if (skipSeenCount < skipSeenNames.size) { return }
-        let grown = Array<String>(skipSeenNames.size * 2, repeat: "")
-        for (position in 0..skipSeenCount) { grown[position] = skipSeenNames[position] }
-        skipSeenNames = grown
-    }
-
     private let generatedState = GeneratedReadStateV1(JsonReadOptions.defaults)
 
     public init(text: String) {
@@ -1581,6 +1567,7 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
                 return
             }
             expectByte(b',')
+            skipSpaces()
         }
     }
 
@@ -1646,22 +1633,20 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
             index++
             return
         }
-        let seenBase = if (jsonReadOptionsRejectsDuplicateKeys(config)) {
-            skipSeenCount
+        // Keep decoded member names in a set owned by this object level.
+        // Nested objects have independent scopes and wide objects perform
+        // one insertion per name rather than a growing linear scan.
+        let seenNames = if (jsonReadOptionsRejectsDuplicateKeys(config)) {
+            Some(HashSet<String>())
         } else {
-            -1
+            None<HashSet<String>>
         }
         while (true) {
             let name = parseString()
-            if (seenBase >= 0) {
-                var duplicate = false
-                for (position in seenBase..skipSeenCount) {
-                    if (skipSeenNames[position] == name) { duplicate = true; break }
-                }
-                if (duplicate) { policyFail("Duplicate object key '${name}'") }
-                ensureSkipSeenCapacity()
-                skipSeenNames[skipSeenCount] = name
-                skipSeenCount++
+            match (seenNames) {
+                case Some(names) =>
+                    if (!names.add(name)) { policyFail("Duplicate object key '${name}'") }
+                case None => ()
             }
             skipSpaces()
             expectByte(b':')
@@ -1669,10 +1654,10 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
             skipSpaces()
             if (hasMore() && peek() == b'}') {
                 index++
-                if (seenBase >= 0) { skipSeenCount = seenBase }
                 return
             }
             expectByte(b',')
+            skipSpaces()
         }
     }
 

@@ -28,6 +28,7 @@ docs/maintainers/native-internals.md
 docs/maintainers/repository-layout.md
 docs/maintainers/releasing.md
 docs/maintainers/testing.md
+docs/maintainers/issue-9-verification.md
 docs/path-and-patch.md
 docs/public-api-inventory.md
 docs/resource-limits.md
@@ -74,6 +75,7 @@ src/lib_json_stream_parser.cj
 src/lib_json_stream_support.cj
 src/lib_json_stream_tape.cj
 src/lib_json_stream_writer.cj
+src/lib_json_target_float.cj
 src/lib_json_temporal_number_fast.cj
 src/lib_json_value.cj
 src/json_audit_contracts_test.cj
@@ -85,6 +87,9 @@ src/json_context_path_test.cj
 src/json_coverage_contracts_test.cj
 src/json_direct_writer_state_test.cj
 src/json_document_test.cj
+src/json_issue9_float_rounding_test.cj
+src/json_issue9_skip_test.cj
+src/json_issue9_writer_document_test.cj
 src/json_memory_test.cj
 src/json_parser_compliance_test.cj
 src/json_performance_test.cj
@@ -130,6 +135,8 @@ scripts/benchmark_pure_direct.py
 scripts/json_cjfast_perf_run.py
 scripts/json_cjfast_perf_summary.py
 scripts/check_json_numeric_equivalence.py
+scripts/check_target_float_rounding.py
+scripts/check_skip_work_scaling.py
 scripts/check_seven_library_evidence.py
 scripts/test_check_seven_library_evidence.py
 scripts/check_generated_change_risk.py
@@ -333,6 +340,8 @@ packages/codec_integration/src/api_documentation_contract_test.cj
 packages/codec_integration/src/codec_render_plan_consumer_test.cj
 packages/codec_integration/src/generated_collections_test.cj
 packages/codec_integration/src/generated_traversal_state_consumer_test.cj
+packages/codec_integration/src/issue9_float_rounding_test.cj
+packages/codec_integration/src/issue9_unknown_skip_test.cj
 packages/codec_integration/src/main.cj
 packages/codec_integration/src/json_literal_test.cj
 packages/standards_conformance/cjpm.toml

@@ -85,6 +85,38 @@ static int32_t root_lookup_int(uint64_t handle, const char *key,
     return YJ_Yyjson_GetInt(handle, value_node, out_value);
 }
 
+static void test_negative_zero_text_and_tape(void) {
+    const uint32_t strategies[] = {0, YJ_YYJSON_NUMBER_LEGACY_RAW,
+        YJ_YYJSON_NUMBER_DISPATCH_CUSTOM | YJ_YYJSON_NUMBER_LEGACY_RAW};
+    const uint8_t expected_tape[] = {'Y', 'J', 'T', '1', YJ_COMPACT_NUMBER,
+                                    2, 0, 0, 0, '-', '0'};
+    for (uint32_t mode = YJ_YYJSON_DIRECT; mode <= YJ_YYJSON_TRANSCODE; mode++) {
+        for (size_t i = 0; i < sizeof(strategies) / sizeof(strategies[0]); i++) {
+            uint64_t handle = parse_ok("-0", strategies[i], mode);
+            uint64_t root = 0;
+            uint32_t kind = 0;
+            assert(YJ_Yyjson_Root(handle, &root) == YJ_COMPACT_OK);
+            assert(YJ_Yyjson_Kind(handle, root, &kind) == YJ_COMPACT_OK);
+            assert(kind == YJ_COMPACT_NUMBER);
+            uint8_t text[2];
+            uint64_t written = 0;
+            assert(YJ_Yyjson_CopyText(handle, root, text, sizeof(text), &written) ==
+                   YJ_COMPACT_OK);
+            assert(written == sizeof(text) && memcmp(text, "-0", sizeof(text)) == 0);
+            uint64_t tape_handle = 0, tape_size = 0;
+            assert(YJ_Yyjson_ExportTapeAlloc(handle, &tape_handle, &tape_size) ==
+                   YJ_COMPACT_OK);
+            assert(tape_size == sizeof(expected_tape));
+            uint8_t tape[sizeof(expected_tape)];
+            assert(YJ_Yyjson_CopyOwnedBuffer(tape_handle, tape, sizeof(tape)) ==
+                   YJ_COMPACT_OK);
+            assert(memcmp(tape, expected_tape, sizeof(tape)) == 0);
+            YJ_Yyjson_FreeOwnedBuffer(tape_handle);
+            YJ_Yyjson_Free(handle);
+        }
+    }
+}
+
 static void test_modes_and_numbers(void) {
     const char *text = "{\"min\":-9223372036854775808,\"max\":9223372036854775807,"
                        "\"overflow\":9223372036854775808,\"decimal\":1.2300,\"exp\":1E-3,"
@@ -115,10 +147,11 @@ static void test_number_strategies(void) {
     uint64_t selective = parse_ok(mixed, 0, YJ_YYJSON_DIRECT);
     uint64_t stats[36];
     stats36(selective, stats);
-    assert(stats[21] == 3); /* overflow, decimal, exponent */
-    assert(stats[22] == strlen("9223372036854775808") + strlen("1.2300") + strlen("1E-3"));
+    assert(stats[21] == 4); /* negative zero, overflow, decimal, exponent */
+    assert(stats[22] == strlen("-0") + strlen("9223372036854775808") +
+                        strlen("1.2300") + strlen("1E-3"));
     assert(stats[24] == strlen(mixed) + 1u);
-    assert(stats[25] == 4 && stats[26] == 3);
+    assert(stats[25] == 3 && stats[26] == 4);
     uint64_t written_size = 0;
     char *written = serialize(selective, &written_size);
     assert(strstr(written, "9223372036854775808") != NULL);
@@ -172,13 +205,13 @@ static void test_number_strategies(void) {
     free(written);
     YJ_Yyjson_Free(huge_exponent);
 
-    uint64_t normalized_negative_zero = parse_ok("-0",
+    uint64_t preserved_negative_zero = parse_ok("-0",
         YJ_YYJSON_NUMBER_DISPATCH_CUSTOM | YJ_YYJSON_NUMBER_LEGACY_RAW,
         YJ_YYJSON_DIRECT);
-    written = serialize(normalized_negative_zero, &written_size);
-    assert(strcmp(written, "0") == 0);
+    written = serialize(preserved_negative_zero, &written_size);
+    assert(strcmp(written, "-0") == 0);
     free(written);
-    YJ_Yyjson_Free(normalized_negative_zero);
+    YJ_Yyjson_Free(preserved_negative_zero);
 }
 
 static char *make_large_object(size_t fields) {
@@ -346,6 +379,7 @@ static void test_stats_prefix_abi_layout(void) {
 }
 
 int main(void) {
+    test_negative_zero_text_and_tape();
     test_stats_prefix_abi_layout();
     test_modes_and_numbers();
     test_number_strategies();
