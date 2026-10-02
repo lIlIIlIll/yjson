@@ -852,7 +852,8 @@ static int yj_parse_number(YjParser *parser, YjValue *out) {
             magnitude = magnitude * 10u + digit;
         }
         uint64_t limit = negative ? (UINT64_C(1) << 63) : INT64_MAX;
-        if (!overflow && magnitude <= limit) {
+        /* Preserve the sign of JSON negative zero for floating-point reads. */
+        if (!overflow && magnitude <= limit && !(negative && magnitude == 0)) {
             int64_t value;
             if (negative) value = magnitude == (UINT64_C(1) << 63) ? INT64_MIN : -(int64_t)magnitude;
             else value = (int64_t)magnitude;

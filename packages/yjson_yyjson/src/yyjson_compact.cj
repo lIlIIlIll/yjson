@@ -888,6 +888,7 @@ struct YyjsonJsonValue <: JsonValueView {
 
     public func asUInt64(): UInt64 {
         let text = asNumberText()
+        if (text == "-0") { return 0u64 }
         try { UInt64.parse(text) } catch (_: Exception) {
             throw JsonException("JSON number is outside UInt64 range",
                 code: "number_out_of_range")
