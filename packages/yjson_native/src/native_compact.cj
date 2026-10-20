@@ -834,6 +834,7 @@ struct NativeCompactJsonValue <: JsonValueView {
             document.ensureOpen()
             nativeCompactBitsToInt64(inlinePayload)
         }
+        else if (code() == YJ_COMPACT_NUMBER && asNumberText() == "-0") { 0 }
         else { document.intAt(node) }
     }
 
@@ -856,6 +857,7 @@ struct NativeCompactJsonValue <: JsonValueView {
         // `resource_closed`, while only the numeric conversion itself
         // classifies as a range failure.
         let text = asNumberText()
+        if (text == "-0") { return 0u64 }
         try { UInt64.parse(text) } catch (_: Exception) {
             throw JsonException("JSON number is outside UInt64 range", code: "number_out_of_range")
         }

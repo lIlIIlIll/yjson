@@ -501,6 +501,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
                 }
                 UInt64(value.value)
             case value: JsonNumberLiteralValue =>
+                if (value.literal == "-0") { return 0u64 }
                 try { UInt64.parse(value.literal) } catch (_: Exception) {
                     throw JsonException("Expected an exact UInt64 value", code: "number_out_of_range")
                 }

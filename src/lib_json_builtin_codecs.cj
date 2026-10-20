@@ -130,15 +130,15 @@ let Float64Json: JsonCodec<Float64> = LambdaFastRawJsonCodec<Float64>(
 
 let Float32Json: JsonCodec<Float32> = LambdaFastRawJsonCodec<Float32>(
     { value, writer => writer.writeFloat64(Float64(value)) },
-    { reader => Float32(reader.readFloat64()) },
-    { reader => Float32(Float64.parse(reader.readRawNumberLiteral())) },
+    { reader => jsonParseFloat32Literal(reader.readNumberLiteral()) },
+    { reader => jsonParseFloat32Literal(reader.readRawNumberLiteral()) },
     { value, writer => writer.writeRawFloat64(Float64(value)) }
 )
 
 let Float16Json: JsonCodec<Float16> = LambdaFastRawJsonCodec<Float16>(
     { value, writer => writer.writeFloat64(Float64(value)) },
-    { reader => Float16(reader.readFloat64()) },
-    { reader => Float16(Float64.parse(reader.readRawNumberLiteral())) },
+    { reader => jsonParseFloat16Literal(reader.readNumberLiteral()) },
+    { reader => jsonParseFloat16Literal(reader.readRawNumberLiteral()) },
     { value, writer => writer.writeRawFloat64(Float64(value)) }
 )
 
@@ -157,11 +157,11 @@ func jsonFastReadFloat64(reader: JsonFastReader): Float64 {
 }
 
 func jsonFastReadFloat32(reader: JsonFastReader): Float32 {
-    Float32(jsonFastReadFloat64(reader))
+    jsonParseFloat32Literal(reader.readRawNumberLiteral())
 }
 
 func jsonFastReadFloat16(reader: JsonFastReader): Float16 {
-    Float16(jsonFastReadFloat64(reader))
+    jsonParseFloat16Literal(reader.readRawNumberLiteral())
 }
 
 public func jsonFastReadFloat64(reader: GeneratedSupportV1Reader): Float64 {

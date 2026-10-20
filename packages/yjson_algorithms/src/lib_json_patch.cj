@@ -97,8 +97,7 @@ public class JsonPatch {
             }
         }
         let copyWork = JsonPatchCopyWork(limits.maxCopiedNodes)
-        copyWork.charge(target)
-        applyJsonPatchOperations(target.materialize(), patchOperations, copyWork)
+        applyJsonPatchOperations(copyWork.copy(target), patchOperations, copyWork)
     }
 
     /**
@@ -115,11 +114,10 @@ public class JsonPatch {
 public class JsonMergePatch {
     public static func apply(target: JsonValueView, patch: JsonValueView,
         limits!: JsonPatchLimits = JsonPatchLimits.defaults): JsonNode {
-        enforceWorkLimit(jsonPatchNodeCount(target) + jsonPatchNodeCount(patch),
-            limits.maxCopiedNodes, "copied nodes")
-        let result = applyJsonMergePatch(target.materialize(), patch.materialize())
-        enforceWorkLimit(jsonPatchNodeCount(result), limits.maxCopiedNodes, "copied nodes")
-        result
+        let copyWork = JsonPatchCopyWork(limits.maxCopiedNodes)
+        copyWork.charge(target)
+        copyWork.charge(patch)
+        applyJsonMergePatch(target.materialize(), patch.materialize())
     }
 
     public static func applyInPlace(target: JsonNode, patch: JsonNode,
@@ -128,19 +126,20 @@ public class JsonMergePatch {
     }
 }
 
-private func jsonPatchNodeCount(value: JsonValueView): Int64 {
-    match (value.kind()) {
-        case JsonKind.Array =>
-            var total: Int64 = 1
-            for (index in 0..value.size()) {
-                total += jsonPatchNodeCount(value.element(index).getOrThrow())
-            }
-            total
-        case JsonKind.Object =>
-            var total: Int64 = 1
-            for (index in 0..value.size()) { total += jsonPatchNodeCount(value.memberValue(index)) }
-            total
-        case _ => 1
+// Match the fixed depth bound of JsonValueView.materialize(). Traversal must
+// reject before materialization, including when the caller disables node limits.
+private let JSON_PATCH_COPY_MAX_DEPTH: Int64 = 256
+
+private class JsonPatchCopyFrame {
+    let value: JsonValueView
+    let kind: JsonKind
+    let childCount: Int64
+    var nextChild: Int64 = 0
+
+    init(value: JsonValueView, kind: JsonKind) {
+        this.value = value
+        this.kind = kind
+        childCount = value.size()
     }
 }
 
@@ -150,14 +149,68 @@ private class JsonPatchCopyWork {
 
     init(limit: Int64) { this.limit = limit }
 
+    func copy(value: JsonValueView): JsonNode {
+        charge(value)
+        value.materialize()
+    }
+
     func charge(value: JsonValueView): Unit {
-        let count = jsonPatchNodeCount(value)
-        if (limit > 0 && (count > limit || copiedNodes > limit - count)) {
+        let frames = ArrayList<JsonPatchCopyFrame>()
+        chargeNode(0)
+        enter(value, frames)
+        while (!frames.isEmpty()) {
+            let frame = frames[frames.size - 1]
+            if (frame.nextChild >= frame.childCount) {
+                frames.remove(at: frames.size - 1)
+                continue
+            }
+            // Charge before fetching the next child. A wide container or
+            // exponentially expanded DAG only visits the permitted prefix.
+            chargeNode(frames.size)
+            let child = if (frame.kind == JsonKind.Array) {
+                frame.value.element(frame.nextChild).getOrThrow()
+            } else {
+                frame.value.memberValue(frame.nextChild)
+            }
+            frame.nextChild++
+            enter(child, frames)
+        }
+    }
+
+    private func chargeNode(depth: Int64): Unit {
+        if (depth > JSON_PATCH_COPY_MAX_DEPTH) {
             throw JsonException(
-                "JSON algorithm copied nodes budget exceeded: limit=${limit}, consumed=${copiedNodes + count}",
+                "Maximum JsonNode operation depth ${JSON_PATCH_COPY_MAX_DEPTH} exceeded",
+                code: "max_depth")
+        }
+        if ((limit > 0 && copiedNodes >= limit) || copiedNodes == Int64.Max) {
+            throw JsonException(
+                "JSON algorithm copied nodes budget exceeded: limit=${limit}, consumed=${copiedNodes}",
                 code: "work_limit_exceeded")
         }
-        copiedNodes += count
+        copiedNodes++
+    }
+
+    private func enter(value: JsonValueView, frames: ArrayList<JsonPatchCopyFrame>): Unit {
+        let kind = value.kind()
+        if (kind != JsonKind.Array && kind != JsonKind.Object) { return }
+        match (value) {
+            case node: JsonNode =>
+                for (frame in frames) {
+                    match (frame.value) {
+                        case ancestor: JsonNode =>
+                            if (refEq(node, ancestor)) {
+                                throw JsonException("Cyclic JsonNode graph is not supported",
+                                    code: "cyclic_json_node")
+                            }
+                        case _ => ()
+                    }
+                }
+            case _ => ()
+        }
+        // Only ancestors remain in the stack. Repeated siblings are legitimate
+        // DAG occurrences and each is charged again for its detached copy.
+        frames.add(JsonPatchCopyFrame(value, kind))
     }
 }
 
@@ -228,20 +281,16 @@ private func applyJsonPatchOperation(root: JsonNode, operation: JsonPatchOperati
     match (operation.kind) {
         case Add =>
             let value = operation.value.getOrThrow()
-            copyWork.charge(value)
-            jsonPatchAdd(root, operation.path, value.deepCopy())
+            jsonPatchAdd(root, operation.path, copyWork.copy(value))
         case Remove =>
             let (nextRoot, _) = jsonPatchRemove(root, operation.path)
             nextRoot
         case Replace =>
             let value = operation.value.getOrThrow()
-            copyWork.charge(value)
-            jsonPatchReplace(root, operation.path, value.deepCopy())
+            jsonPatchReplace(root, operation.path, copyWork.copy(value))
         case Copy =>
             let sourceValue = operation.source.getOrThrow().evaluate(root)
-            let copied = sourceValue.materialize()
-            copyWork.charge(copied)
-            jsonPatchAdd(root, operation.path, copied)
+            jsonPatchAdd(root, operation.path, copyWork.copy(sourceValue))
         case Move => jsonPatchMove(root, operation.source.getOrThrow(), operation.path)
         case Test =>
             let expected = operation.value.getOrThrow()
@@ -315,7 +364,10 @@ private func jsonPatchReplace(root: JsonNode, pointer: JsonPointer, value: JsonN
 }
 
 private func jsonPatchMove(root: JsonNode, source: JsonPointer, destination: JsonPointer): JsonNode {
-    if (source.toString() == destination.toString()) { return root }
+    if (source.toString() == destination.toString()) {
+        let _ = source.evaluate(root)
+        return root
+    }
     if (!source.isRoot() && destination.toString().startsWith(source.toString() + "/")) {
         throw jsonPatchError("JSON Patch move destination is inside the source", code: "json_patch_path",
             path: destination.toString())
@@ -350,7 +402,9 @@ private func applyJsonMergePatch(target: JsonNode, patch: JsonNode): JsonNode {
                 }
             }
             targetObject
-        case _ => patch.deepCopy()
+        // The patch was already detached and charged. Reusing its subtree
+        // avoids allocating a second, uncharged copy during merge traversal.
+        case _ => patch
     }
 }
 

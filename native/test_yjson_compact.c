@@ -47,6 +47,46 @@ static void expect_limit(const char *json, int64_t max_bytes,
     assert(offset >= 0);
 }
 
+static void test_negative_zero_text_and_tape(void) {
+    const uint32_t flags[] = {0, YJ_COMPACT_REJECT_DUPLICATES,
+                              YJ_COMPACT_MATERIALIZE_SOURCE};
+    const uint8_t expected_tape[] = {'Y', 'J', 'T', '1', YJ_COMPACT_NUMBER,
+                                    2, 0, 0, 0, '-', '0'};
+    for (size_t i = 0; i < sizeof(flags) / sizeof(flags[0]); i++) {
+        uint32_t root = 0, kind = 0;
+        uint64_t handle = parse("-0", flags[i], &root);
+        assert(YJ_Compact_Kind(handle, root, &kind) == YJ_COMPACT_OK);
+        assert(kind == YJ_COMPACT_NUMBER);
+        uint8_t text[2];
+        uint64_t written = 0;
+        assert(YJ_Compact_CopyText(handle, root, text, sizeof(text), &written) ==
+               YJ_COMPACT_OK);
+        assert(written == sizeof(text) && memcmp(text, "-0", sizeof(text)) == 0);
+        uint64_t tape_handle = 0, tape_size = 0;
+        assert(YJ_Compact_ExportTapeAlloc(handle, &tape_handle, &tape_size) ==
+               YJ_COMPACT_OK);
+        assert(tape_size == sizeof(expected_tape));
+        uint8_t tape[sizeof(expected_tape)];
+        assert(YJ_Compact_CopyOwnedBuffer(tape_handle, tape, sizeof(tape)) ==
+               YJ_COMPACT_OK);
+        assert(memcmp(tape, expected_tape, sizeof(tape)) == 0);
+        YJ_Compact_FreeOwnedBuffer(tape_handle);
+        YJ_Compact_Free(handle);
+    }
+    /* Ordinary integer folding remains available without preserve-number flags. */
+    for (int value = -1; value <= 1; value++) {
+        const char *text = value == -1 ? "-1" : value == 0 ? "0" : "1";
+        uint32_t root = 0, kind = 0;
+        uint64_t handle = parse(text, 0, &root);
+        int64_t actual = 0;
+        assert(YJ_Compact_Kind(handle, root, &kind) == YJ_COMPACT_OK);
+        assert(kind == YJ_COMPACT_INT);
+        assert(YJ_Compact_GetInt(handle, root, &actual) == YJ_COMPACT_OK);
+        assert(actual == value);
+        YJ_Compact_Free(handle);
+    }
+}
+
 static void test_stats_abi_layout(void) {
     const uint32_t field_count = 2048u;
     const size_t json_capacity = 65536u;
@@ -118,6 +158,7 @@ static void test_stats_abi_layout(void) {
 }
 
 int main(void) {
+    test_negative_zero_text_and_tape();
     test_stats_abi_layout();
     uint32_t root;
     uint64_t handle = parse(

@@ -67,4 +67,29 @@ class YJsonPointerPatchTest {
         let result = patch.apply(JsonNode.parse("{\"n\":1e0}"))
         @Expect(result["n"].asNumberText(), "1e0")
     }
+
+    @TestCase
+    func samePathMoveMustFindItsSource(): Unit {
+        for (path in ["/missing", "/items/1", "/items/-", "/a~1b~0c"]) {
+            let target = JsonNode.parse("{\"items\":[7],\"stable\":1}")
+            let patch = JsonPatch([JsonPatchOperation(JsonPatchOperationKind.Move,
+                JsonPointer.parse(path), source: Some(JsonPointer.parse(path)))])
+            let error = @AssertThrows[JsonException](patch.applyInPlace(target))
+            @Expect(error.code, "json_patch_path")
+            @Expect(error.path, path)
+            @Expect(target.toJson(), "{\"items\":[7],\"stable\":1}")
+        }
+    }
+
+    @TestCase
+    func samePathMovePreservesExistingKeysIndicesAndRoot(): Unit {
+        let target = JsonNode.parse("{\"items\":[7],\"a/b~c\":{\"value\":1}}")
+        for (path in ["", "/items", "/items/0", "/a~1b~0c"]) {
+            let patch = JsonPatch([JsonPatchOperation(JsonPatchOperationKind.Move,
+                JsonPointer.parse(path), source: Some(JsonPointer.parse(path)))])
+            @Expect(patch.apply(target).equivalentTo(target))
+            @Expect(patch.applyInPlace(target).equivalentTo(target))
+        }
+    }
+
 }

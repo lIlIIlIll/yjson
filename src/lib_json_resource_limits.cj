@@ -268,10 +268,16 @@ func jsonResourceLimitException(data: Array<Byte>, message: String,
         jsonLineFromUtf8Bytes(data, offset), jsonColumnFromUtf8Bytes(data, offset))))
 }
 
-func jsonResourceLimitException(config: JsonReadOptions, message: String, code: String,
+func jsonResourceLimitException(source: InputCursor, message: String, code: String,
     offset: Int64): JsonException {
-    let _ = config
-    JsonException(message, code: code, location: Some(JsonLocation(offset, 1, offset + 1)))
+    let line = source.lineAt(offset)
+    let column = source.columnAt(offset)
+    let location = if (offset >= 0 && line > 0 && column > 0) {
+        Some(JsonLocation(offset, line, column))
+    } else {
+        None<JsonLocation>
+    }
+    JsonException(message, code: code, location: location)
 }
 
 func validateJsonResourceLimits(data: Array<Byte>, config: JsonReadOptions): Unit {
