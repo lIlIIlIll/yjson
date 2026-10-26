@@ -131,6 +131,8 @@ cjdoc_path=$(scripts/codex_cangjie_env python3 scripts/prepare_cjdoc.py)
 scripts/codex_cangjie_env python3 scripts/generate_api_docs.py \
   --cjdoc "$cjdoc_path" \
   --output "$release_task/api-docs"
+scripts/codex_cangjie_env python3 scripts/run_api_doc_examples.py "$release_task/api-docs"
+python3 scripts/check_api_documentation.py "$release_task/api-docs"
 ```
 
 目标必须不存在。站点以根目录 `index.html` 为入口。候选要求 HTML、Markdown、Doc IR v16、

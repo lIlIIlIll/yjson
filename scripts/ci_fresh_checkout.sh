@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+export PYTHONDONTWRITEBYTECODE=1
 
 repo=$(cd "$(dirname "$0")/.." && pwd)
 tree=$(mktemp -d "${TMPDIR:-/tmp}/yjson-ci-source.XXXXXX")

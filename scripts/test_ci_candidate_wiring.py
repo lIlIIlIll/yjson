@@ -28,6 +28,27 @@ def write_executable(path: pathlib.Path, content: str) -> None:
     path.chmod(path.stat().st_mode | stat.S_IXUSR)
 
 
+def install_sts_fixture(root: pathlib.Path) -> None:
+    scripts = root / "scripts"
+    scripts.mkdir(exist_ok=True)
+    shutil.copy2(ROOT / "scripts/validate_cangjie_sts.py", scripts)
+    release = root / "release"
+    release.mkdir(exist_ok=True)
+    (release / "cjdoc-tool.toml").write_text('cjc_version = "1.2.0"\n', encoding="utf-8")
+
+
+def fake_cangjie_tool(path: pathlib.Path, extra: str = "") -> None:
+    version = "Cangjie Compiler: 1.2.0 (cjnative)" if path.name == "cjc" else "Cangjie Project Manager: 1.2.0"
+    write_executable(path, f'''#!/usr/bin/env bash
+if [[ "${{1:-}}" == "-v" || "${{1:-}}" == "--version" ]]; then
+    printf '%s\\n' '{version}'
+    exit 0
+fi
+{extra}
+exit 0
+''')
+
+
 class CandidateCiWiringTests(unittest.TestCase):
     def test_outer_fresh_checkout_creates_clean_provenance_candidate(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -36,6 +57,7 @@ class CandidateCiWiringTests(unittest.TestCase):
             fake_bin = fixture / "fake-bin"
             scripts.mkdir()
             fake_bin.mkdir()
+            install_sts_fixture(fixture)
             shutil.copy2(ROOT / "scripts/ci_fresh_checkout.sh", scripts)
             marker = fixture / "outer-registry-ran"
             write_executable(
@@ -53,6 +75,9 @@ class CandidateCiWiringTests(unittest.TestCase):
                 destination = pathlib.Path(sys.argv[1])
                 (destination / "scripts").mkdir(parents=True)
                 (destination / "release").mkdir()
+                source = pathlib.Path(__file__).resolve().parents[1]
+                shutil.copy2(source / "scripts/validate_cangjie_sts.py", destination / "scripts")
+                shutil.copy2(source / "release/cjdoc-tool.toml", destination / "release")
                 (destination / "release/candidate-provenance.json").write_text(
                     json.dumps({"clean_enforced": True}), encoding="utf-8")
                 shutil.copy2(
@@ -75,13 +100,7 @@ class CandidateCiWiringTests(unittest.TestCase):
                 """,
             )
             for command in ("cjc", "cjpm"):
-                write_executable(
-                    fake_bin / command,
-                    """
-                    #!/usr/bin/env bash
-                    exit 0
-                    """,
-                )
+                fake_cangjie_tool(fake_bin / command)
             env = os.environ.copy()
             env["PATH"] = str(fake_bin) + os.pathsep + env["PATH"]
             env["YJSON_CI_JOBS"] = "registry-rehearsal"
@@ -99,6 +118,58 @@ class CandidateCiWiringTests(unittest.TestCase):
             self.assertIn("--require-clean-candidate", recorded)
             self.assertIn("--candidate-root", recorded)
 
+    def test_cjdoc_cache_does_not_pollute_source_only_candidate(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            work = pathlib.Path(temporary)
+            candidate = work / "candidate"
+            candidate.mkdir()
+            install_sts_fixture(candidate)
+            scripts = candidate / "scripts"
+            shutil.copy2(ROOT / "scripts/ci_job.sh", scripts)
+            for name in ("test_check_cjdoc_qualification.py", "test_prepare_cjdoc.py"):
+                (scripts / name).write_text("# Isolated tool qualification prerequisite.\n", encoding="utf-8")
+            write_executable(scripts / "prepare_cjdoc.py", """
+                #!/usr/bin/env python3
+                import argparse, os, pathlib
+                root = pathlib.Path(__file__).resolve().parents[1]
+                parser = argparse.ArgumentParser()
+                parser.add_argument('--cache-dir', type=pathlib.Path, default=root / '.cache/cjdoc')
+                parser.add_argument('--archive')
+                args = parser.parse_args()
+                cache = args.cache_dir.resolve()
+                cache.mkdir(parents=True, exist_ok=True)
+                binary = cache / 'cjdoc'
+                binary.write_text('isolated prepared tool', encoding='utf-8')
+                pathlib.Path(os.environ['YJSON_TEST_CACHE_LOCATION']).write_text(str(cache), encoding='utf-8')
+                print(binary)
+                """)
+            write_executable(scripts / "check_cjdoc_qualification.py", """
+                #!/usr/bin/env python3
+                import argparse, json, os, pathlib
+                parser = argparse.ArgumentParser()
+                parser.add_argument('--binary', type=pathlib.Path, required=True)
+                args = parser.parse_args()
+                assert args.binary.is_file(), 'prepared tool is missing'
+                root = pathlib.Path(__file__).resolve().parents[1]
+                files = sorted(p.relative_to(root).as_posix() for p in root.rglob('*') if p.is_file())
+                assert files == json.loads(os.environ['YJSON_TEST_CANDIDATE_FILES']), 'source-only candidate was polluted by the tool cache'
+                """)
+            fake_bin = work / "bin"
+            fake_bin.mkdir()
+            for command in ("cjc", "cjpm"):
+                fake_cangjie_tool(fake_bin / command)
+            before = {p.relative_to(candidate): p.read_bytes() for p in candidate.rglob("*") if p.is_file()}
+            observed = work / "cache-location"
+            environment = dict(os.environ, YJSON_TEST_CACHE_LOCATION=str(observed),
+                               YJSON_TEST_CANDIDATE_FILES=json.dumps(sorted(p.as_posix() for p in before)))
+            environment.pop("YJSON_CJDOC_ARCHIVE", None)
+            environment["PATH"] = str(fake_bin) + os.pathsep + environment["PATH"]
+            result = subprocess.run(["bash", str(scripts / "ci_job.sh"), "cjdoc-qualification"],
+                                    cwd=candidate, env=environment, text=True, capture_output=True, check=False)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertNotIn(candidate.resolve(), pathlib.Path(observed.read_text()).parents)
+            self.assertEqual({p.relative_to(candidate): p.read_bytes() for p in candidate.rglob("*") if p.is_file()}, before)
+
     def test_registry_gate_reuses_existing_clean_candidate(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             candidate = pathlib.Path(temporary)
@@ -108,6 +179,7 @@ class CandidateCiWiringTests(unittest.TestCase):
             scripts.mkdir()
             release.mkdir()
             fake_bin.mkdir()
+            install_sts_fixture(candidate)
             shutil.copy2(ROOT / "scripts/ci_job.sh", scripts)
             (release / "candidate-provenance.json").write_text(
                 '{"clean_enforced": true}\n', encoding="utf-8"
@@ -152,16 +224,7 @@ class CandidateCiWiringTests(unittest.TestCase):
                 """,
             )
             for command in ("cjc", "cjpm"):
-                write_executable(
-                    fake_bin / command,
-                    """
-                    #!/usr/bin/env bash
-                    if [[ "$(basename "$0")" == "cjpm" ]]; then
-                        : > .diagnostic-build
-                    fi
-                    exit 0
-                    """,
-                )
+                fake_cangjie_tool(fake_bin / command, ': > .diagnostic-build' if command == "cjpm" else "")
             env = os.environ.copy()
             env["PATH"] = str(fake_bin) + os.pathsep + env["PATH"]
             env["YJSON_TEST_MARKER"] = str(registry_marker)
@@ -232,6 +295,19 @@ class CiGateRegressionTests(unittest.TestCase):
         retry = ROOT / ".github/workflows/ci-retry.yml"
         self.assertFalse(retry.exists(), "unclassified automatic reruns must remain disabled")
 
+    def test_workflow_qualifies_o2_on_every_product_platform(self) -> None:
+        workflow = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+        linux = workflow.split("\n  tests:\n", 1)[1].split("\n  pure-platforms:\n", 1)[0]
+        pure = workflow.split("\n  pure-platforms:\n", 1)[1].split("\n  api-docs:\n", 1)[0]
+        self.assertIn("optimization: ['-O2']", linux)
+        for platform in ("windows-2022", "macos-14"):
+            self.assertIn(f"- os: {platform}\n            optimization: '-O2'", pure)
+        for job in (linux, pure):
+            self.assertIn("YJSON_CI_DEPENDENCY_OVERRIDE: ${{ matrix.optimization }}", job)
+            self.assertNotIn("-O1", job)
+            self.assertIn("cangjie_optimization=$YJSON_CI_DEPENDENCY_OVERRIDE", job)
+        self.assertIn("ulimit -s 131072", linux)
+
     def coverage(self, diff, lcov):
         with tempfile.TemporaryDirectory() as temporary:
             root = pathlib.Path(temporary)
@@ -275,6 +351,7 @@ class CiGateRegressionTests(unittest.TestCase):
     def fixture(self, root):
         scripts = root / "scripts"
         scripts.mkdir()
+        install_sts_fixture(root)
         fake = root / "bin"
         fake.mkdir()
         for name in ("ci_job.sh", "release_native_checks.sh", "release_yyjson_colink_check.sh"):
@@ -284,7 +361,7 @@ class CiGateRegressionTests(unittest.TestCase):
         for name in ("release_package_stage.py", "release_consumer_checks.py"):
             (scripts / name).write_text("# Isolated build prerequisite stub.\n", encoding="utf-8")
         for name in ("cjc", "cjpm"):
-            write_executable(fake / name, "#!/usr/bin/env bash\nexit 0\n")
+            fake_cangjie_tool(fake / name)
         env = os.environ.copy()
         env.pop("YJSON_CI_DEPENDENCY_OVERRIDE", None)
         env["PATH"] = str(fake) + os.pathsep + env["PATH"]
@@ -339,7 +416,10 @@ class CiGateRegressionTests(unittest.TestCase):
             write_executable(fake / "uname", "#!/bin/sh\necho MINGW64_NT\n")
             write_executable(fake / "cjpm", r'''
                 #!/usr/bin/env python3
-                import os, pathlib
+                import os, pathlib, sys
+                if sys.argv[1:] == ['--version']:
+                    print('Cangjie Project Manager: 1.2.0')
+                    raise SystemExit(0)
                 path = pathlib.Path(os.environ['PROBE_COUNTER'])
                 count = int(path.read_text()) if path.exists() else 0
                 path.write_text(str(count + 1))
@@ -349,6 +429,66 @@ class CiGateRegressionTests(unittest.TestCase):
             self.assertEqual(result.returncode, 45, result.stdout)
             self.assertEqual(counter.read_text(), "1")
             self.assertEqual(manifest.read_text(), text)
+
+    def test_pure_gate_applies_explicit_o2_and_never_downgrades_failure(self) -> None:
+        for platform in ("MINGW64_NT", "Darwin"):
+            for status in (0, 139):
+                with self.subTest(platform=platform, status=status), tempfile.TemporaryDirectory() as temporary:
+                    root = pathlib.Path(temporary)
+                    scripts, fake, env = self.fixture(root)
+                    original = '[package]\ncompile-option = "-O2"\noverride-compile-option = ""\n'
+                    manifests = [root / "cjpm.toml", root / "packages/yjson_algorithms/cjpm.toml"]
+                    for manifest in manifests:
+                        manifest.write_text(original, encoding="utf-8")
+                    records = root / "build-records.jsonl"
+                    env.update({
+                        "YJSON_CI_DEPENDENCY_OVERRIDE": "-O2",
+                        "PROBE_RECORDS": str(records),
+                        "PROBE_ROOT": str(root),
+                        "PROBE_STATUS": str(status),
+                    })
+                    write_executable(fake / "uname", f"#!/bin/sh\necho {platform}\n")
+                    write_executable(fake / "cjpm", r'''
+                        #!/usr/bin/env python3
+                        import json, os, pathlib, sys
+                        if sys.argv[1:] == ['--version']:
+                            print('Cangjie Project Manager: 1.2.0')
+                            raise SystemExit(0)
+                        assert sys.argv[1:] == ['test', '--no-color']
+                        manifest = pathlib.Path.cwd() / 'cjpm.toml'
+                        record = {
+                            'manifest': manifest.relative_to(os.environ['PROBE_ROOT']).as_posix(),
+                            'content': manifest.read_text(),
+                        }
+                        with pathlib.Path(os.environ['PROBE_RECORDS']).open('a') as output:
+                            output.write(json.dumps(record) + '\n')
+                        raise SystemExit(int(os.environ['PROBE_STATUS']))
+                    ''')
+                    result = self.run_command(["bash", str(scripts / "ci_job.sh"), "pure-platform"], env=env)
+                    self.assertEqual(result.returncode, status, result.stdout)
+                    observed = [json.loads(line) for line in records.read_text().splitlines()]
+                    self.assertEqual([item["manifest"] for item in observed],
+                                     ["cjpm.toml", "packages/yjson_algorithms/cjpm.toml"] if status == 0
+                                     else ["cjpm.toml"])
+                    for item in observed:
+                        self.assertIn('compile-option = "-O2"', item["content"])
+                        self.assertIn('override-compile-option = "-O2"', item["content"])
+                        self.assertNotIn("-O1", item["content"])
+                    for manifest in manifests:
+                        self.assertEqual(manifest.read_text(), original)
+
+    def test_standalone_product_gate_rejects_old_and_daily_sdk_before_build(self) -> None:
+        for version in ("1.1.3", "1.2.0-alpha.20261026040003"):
+            with self.subTest(version=version), tempfile.TemporaryDirectory() as temporary:
+                root = pathlib.Path(temporary)
+                scripts, fake, env = self.fixture(root)
+                marker = root / "unexpected-build"
+                write_executable(fake / "cjc", f"#!/bin/sh\necho 'Cangjie Compiler: {version} (cjnative)'\n")
+                fake_cangjie_tool(fake / "cjpm", f": > '{marker}'")
+                result = self.run_command(["bash", str(scripts / "ci_job.sh"), "core"], env=env)
+                self.assertNotEqual(result.returncode, 0, result.stdout)
+                self.assertIn("invalid Cangjie STS version", result.stdout)
+                self.assertFalse(marker.exists())
 
     def test_runtime_freeze_llc_failure_is_not_retried(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

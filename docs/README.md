@@ -40,14 +40,18 @@ df -h "$HOME/.cache/agent-tmp"
 doc_task=$(mktemp -d -p "$HOME/.cache/agent-tmp" yjson-docs.XXXXXX)
 export TMPDIR="$doc_task" TMP="$doc_task" TEMP="$doc_task"
 scripts/codex_cangjie_env python3 scripts/validate_cangjie_sts.py --check-installed
-cjdoc_path=$(scripts/codex_cangjie_env python3 scripts/prepare_cjdoc.py)
+cjdoc_path=$(scripts/codex_cangjie_env python3 scripts/prepare_cjdoc.py \
+  --cache-dir "$doc_task/cjdoc")
 scripts/codex_cangjie_env python3 scripts/generate_api_docs.py \
   --cjdoc "$cjdoc_path" \
   --output "$doc_task/site"
+scripts/codex_cangjie_env python3 scripts/run_api_doc_examples.py "$doc_task/site"
+python3 scripts/check_api_documentation.py "$doc_task/site"
 ```
 
 `--output` 指定的目录必须不存在。脚本会校验工具来源、版本和校验和，再检查生成结果中的
-包信息、Doc IR 格式、错误和不支持的声明。站点入口为输出根部的 `index.html`。
+包信息、Doc IR 格式、错误和不支持的声明。随后执行真实消费方示例，完整检查通过后生成
+离线下载包。站点入口为输出根部的 `index.html`。
 CI 上传通过检查的文档，合并到 `main` 且全部必需门禁通过后才部署 GitHub Pages。
 
 工具候选目标为 cjdoc `0.7.5`，上游发布与资格冻结仍须完成，不将其写成已发布或已通过 CI。

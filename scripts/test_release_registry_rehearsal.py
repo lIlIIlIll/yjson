@@ -17,6 +17,7 @@ from release_registry_rehearsal import (
     deterministic_archive,
     inspect_artifact,
     ensure_module_unchanged,
+    main as registry_main,
     module_source_digest,
     rewrite_readme_links,
     validate_candidate_tree,
@@ -25,6 +26,34 @@ from release_temp_tree import manifest_paths, release_identity, write_provenance
 
 
 class ReleaseRegistryRehearsalTest(unittest.TestCase):
+    def test_cli_forwards_explicit_o2_for_bundle_and_consumers(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            candidate = root / "candidate"
+            destination = root / "artifacts"
+            arguments = [
+                "release_registry_rehearsal.py", str(destination),
+                "--candidate-root", str(candidate),
+                "--consumer-override-compile-option=-O2",
+                "--bundle-override-compile-option=-O2",
+            ]
+            with mock.patch.object(sys, "argv", arguments), mock.patch(
+                "release_registry_rehearsal.delegate_to_candidate", return_value=0
+            ) as delegate:
+                self.assertEqual(registry_main(), 0)
+            self.assertEqual(delegate.call_args.args[:2], (candidate, destination))
+            self.assertEqual(delegate.call_args.args[2], [
+                "--consumer-override-compile-option=-O2",
+                "--bundle-override-compile-option=-O2",
+            ])
+
+    def test_cli_rejects_unsupported_compile_override(self) -> None:
+        with mock.patch.object(sys, "argv", [
+            "release_registry_rehearsal.py", "artifacts", "--bundle-override-compile-option=-O3",
+        ]):
+            with self.assertRaisesRegex(SystemExit, "unsupported dependency override: -O3"):
+                registry_main()
+
     def candidate(self, root: pathlib.Path, clean: bool = False) -> pathlib.Path:
         candidate = root / "release-candidate"
         (candidate / "release").mkdir(parents=True)

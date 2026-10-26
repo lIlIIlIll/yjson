@@ -158,6 +158,8 @@ scripts/check_cjdoc_qualification.py
 scripts/test_check_cjdoc_qualification.py
 scripts/prepare_cjdoc.py
 scripts/test_prepare_cjdoc.py
+scripts/api_doc_source_guide.py
+scripts/test_api_doc_source_guide.py
 scripts/generate_api_docs.py
 scripts/test_generate_api_docs.py
 scripts/check_api_documentation.py
@@ -257,6 +259,7 @@ release/0.2.0/enum-case-inventory.json
 release/0.2.0/evidence.md
 
 # Macro, native primitives, optional backends, examples, and consumer fixtures
+packages/yjson_macros/LICENSE
 packages/yjson_macros/cjpm.toml
 packages/yjson_macros/cjpm.lock
 packages/yjson_macros/src/codec_analysis.cj
@@ -269,6 +272,9 @@ packages/yjson_macros/src/codec_write_plan.cj
 packages/yjson_macros/src/json_codec.cj
 packages/yjson_macros/src/json_literal.cj
 packages/yjson_macros/README.md
+packages/yjson_macros/tests/doc_examples/README.md
+packages/yjson_macros/tests/doc_examples/profile.json
+packages/yjson_macros/tests/doc_examples/prelude.cj
 packages/yjson_native_primitives/cjpm.toml
 packages/yjson_native_primitives/cjpm.lock
 packages/yjson_native_primitives/build.cj
@@ -352,3 +358,23 @@ packages/native_accel_benchmarks/cjpm.toml
 packages/native_accel_benchmarks/cjpm.lock
 packages/native_accel_benchmarks/src/bench_native_accel.cj
 packages/native_accel_benchmarks/README.md
+tests/doc_examples/core-codec/profile.json
+tests/doc_examples/core-codec/prelude.cj
+scripts/run_api_doc_examples.py
+scripts/test_run_api_doc_examples.py
+tests/doc_examples/core/profile.json
+tests/doc_examples/core-macro/profile.json
+tests/doc_examples/core-macro/prelude.cj
+tests/doc_examples/algorithms/profile.json
+tests/doc_examples/algorithms/prelude.cj
+tests/doc_examples/backends/profile.json
+tests/doc_examples/backends/prelude.cj
+tests/doc_examples/backends-native/profile.json
+tests/doc_examples/backends-native/prelude.cj
+tests/doc_examples/schema-formats/profile.json
+tests/doc_examples/schema-formats/prelude.cj
+tests/doc_examples/macros/profile.json
+tests/doc_examples/macros/prelude.cj
+tests/doc_examples/native-accel/profile.json
+tests/doc_examples/native/profile.json
+tests/doc_examples/yyjson/profile.json
