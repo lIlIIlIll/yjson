@@ -1,0 +1,46 @@
+{
+  "schema": "yjson.parent-seven-two-batch-components/1",
+  "status": "PASS_DATA_COMPONENTS_ONLY",
+  "archives": {
+    "seven-library-020-batch2": {
+      "archiveSha256": "4b9ef3e435de287df5ad21531ce87f146bbb6e95e5627a82ec1c07e4b3329f63",
+      "regularFilesByteVerified": 3016
+    },
+    "seven-library-020-harness": {
+      "archiveSha256": "1daf5e13c55050b6b60d87f1a8e2efbdb1fdaee28ddda7f55816cf9cdcbb43f8",
+      "regularFilesByteVerified": 526
+    },
+    "seven-library-020-build-audits": {
+      "archiveSha256": "5a76872b79107048f4483f0cfeaef4b571d2976596141793fd2de4b6fdba9dd3",
+      "regularFilesByteVerified": 133
+    }
+  },
+  "firstBatchPreviouslyByteVerifiedFiles": 3012,
+  "formalCells": 1540,
+  "yjsonFixedWorkProofs": 220,
+  "stableMetadataFieldsEqual": [
+    "host",
+    "platform",
+    "heap",
+    "runs",
+    "schedule",
+    "jmh",
+    "cangjie_bench",
+    "api_policy",
+    "canonical_decode_payload_bytes",
+    "versions",
+    "source_sha256",
+    "lscpu",
+    "api_paths",
+    "product_source_sha256",
+    "effective_harness_sha256",
+    "measured_overlay_sha256",
+    "time_binary",
+    "rss_unit"
+  ],
+  "canonicalSummaryReplays": 2,
+  "trustedHarnessFilesByteIdentical": 3,
+  "secondBatchStableReadmeRows": 9,
+  "sourceCommit": "5576cddb1e42a3b391385038ab5b2e3f6d76a77c",
+  "fullStrictCliStillRequired": true
+}

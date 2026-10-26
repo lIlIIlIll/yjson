@@ -1,0 +1,22 @@
+{
+  "status": "PASS",
+  "scope": "independent real Git object, full public tree, measured source and README declaration verification; not a legal compliance conclusion",
+  "publicCommit": "a185e9ac0df95ee2a9715941b13f21f2a2a4f674",
+  "publicTree": "585465ae5d92d65310dded727d40397d1998654f",
+  "publicTreeFiles": 219,
+  "measuredFiles": 197,
+  "exactFileMatches": 194,
+  "adaptedManifests": [
+    "json4cj-annotations/cjpm.toml",
+    "json4cj-core/cjpm.toml",
+    "json4cj-databind/cjpm.toml"
+  ],
+  "readmeSha256": "c03caed9790acea77b39777d241622f94794ec443d0dddca887529e73bc31c0d",
+  "readmeLicenseHeadingLine": 705,
+  "readmeLicenseValueLine": 707,
+  "readmeLicenseValue": "MIT",
+  "independentLicenseOrNoticeFiles": [],
+  "fullLicenseTextNotInvented": true,
+  "manifestPatchSha256": "23a49b9eeb9e758360f000081b4d4626a422450f468953de056461580034a32d",
+  "measurementRerun": false
+}

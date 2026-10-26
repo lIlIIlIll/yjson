@@ -1,0 +1,72 @@
+{
+  "status": "PASS",
+  "scope": "independent original-to-public complete byte comparison, additional input/source preservation and checksum acceptance; not clean-checkout strict",
+  "archives": {
+    "batch1": {
+      "originalFiles": 3012,
+      "publicFiles": 3012,
+      "retainedOriginalFiles": 3012,
+      "addedOriginalReadmeFiles": 0,
+      "excludedRecords": 0,
+      "byteIdenticalSourceRecords": 0,
+      "originalSha256": "2d65b6e7ed0dd1692a72d2cf30934f6b1362bf3accd7cb369555898db8502ca5",
+      "publicSha256": "589e7645697bf37df14b4ef8c264438c740268fd43adc946039f0939eeba8422"
+    },
+    "batch2": {
+      "originalFiles": 3016,
+      "publicFiles": 3016,
+      "retainedOriginalFiles": 3016,
+      "addedOriginalReadmeFiles": 0,
+      "excludedRecords": 0,
+      "byteIdenticalSourceRecords": 0,
+      "originalSha256": "4b9ef3e435de287df5ad21531ce87f146bbb6e95e5627a82ec1c07e4b3329f63",
+      "publicSha256": "9ebc1ec6806b0cbf162447728b87fff45435a0419df14d822a7546a998f1e7f7"
+    },
+    "build-audits": {
+      "originalFiles": 133,
+      "publicFiles": 118,
+      "retainedOriginalFiles": 117,
+      "addedOriginalReadmeFiles": 0,
+      "excludedRecords": 16,
+      "byteIdenticalSourceRecords": 0,
+      "originalSha256": "5a76872b79107048f4483f0cfeaef4b571d2976596141793fd2de4b6fdba9dd3",
+      "publicSha256": "62637a3b6f33886587b3ce17b1a0d00bf3d96edc5b8f41766e85d2f2a7ae6973"
+    },
+    "firstcause": {
+      "originalFiles": 61,
+      "publicFiles": 49,
+      "retainedOriginalFiles": 48,
+      "addedOriginalReadmeFiles": 0,
+      "excludedRecords": 13,
+      "byteIdenticalSourceRecords": 0,
+      "originalSha256": "d17419d9ad841f45594a9e0d577d111c479c94854aa43ffdaa17ee1b6684b5f1",
+      "publicSha256": "0e55085fe1c454cbadb8400df60cb5e7f8cac3398b76d227e49a2f902c9ff238"
+    },
+    "harness": {
+      "originalFiles": 527,
+      "publicFiles": 528,
+      "retainedOriginalFiles": 527,
+      "addedOriginalReadmeFiles": 1,
+      "excludedRecords": 0,
+      "byteIdenticalSourceRecords": 514,
+      "originalSha256": "5cf24615ab599d56d95110c3bc5c61177146decf1d685c005fc4ada9e3d3a3f1",
+      "publicSha256": "2e81018b88cec2e55b95e01b94b094642974ed0411a4ab00697278c7b2b06f88"
+    },
+    "source-digest": {
+      "originalFiles": 287,
+      "publicFiles": 287,
+      "retainedOriginalFiles": 287,
+      "addedOriginalReadmeFiles": 0,
+      "excludedRecords": 0,
+      "byteIdenticalSourceRecords": 285,
+      "originalSha256": "a8a123ef62d83de8192b4851b9e3019451d6c3da26078a8ff3a9d3378034c5ed",
+      "publicSha256": "729f9b142e330c8963191b88b3f7117b4976fd1eedbbaaa30d0849f0c2bf95d2"
+    }
+  },
+  "sourceRecordsVerified": 799,
+  "excludedCompiledRecords": 25,
+  "excludedTemporaryAutomationRecords": 4,
+  "additionalInputsVerified": 13,
+  "measurementRerun": false,
+  "verifiedExistingPayloadChecksums": 26
+}

@@ -1,0 +1,9 @@
+{
+  "field": "actualLicenseStatement",
+  "before": "215-file tree",
+  "after": "219-file tree",
+  "basis": "fixed publicCommit a185e9ac has trackedFiles=219 and licenseNoticeNamedFiles=[] in original source scan",
+  "beforeReceiptSha256": "ca48a74ce3655c73bb059c76a3ba1da996b96b1960be319130a1e8ea872db509",
+  "afterReceiptSha256": "ed62ca9c560eb919074819e02aac4b81095179a2d739c5ac423b0002f736cc81",
+  "sourceReadmeAndPatchChanged": false
+}

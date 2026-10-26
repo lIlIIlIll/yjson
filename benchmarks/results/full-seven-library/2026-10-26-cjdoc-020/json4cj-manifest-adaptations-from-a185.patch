@@ -1,0 +1,62 @@
+--- public-commit/json4cj-databind/cjpm.toml
++++ measured-snapshot/json4cj-databind/cjpm.toml
+@@ -1,14 +1,14 @@
+ [package]
+-  cjc-version = "1.0.5"
++  cjc-version = "1.1.0"
+   name = "json4cj_databind"
+   version = "0.1.0"
+   output-type = "static"
++compile-option = "-O2"
+ 
+ [dependencies]
+-  json4cj_core = { path = "../json4cj-core" }
+-  json4cj_annotations = { path = "../json4cj-annotations" }
+-
++json4cj_core = { path = "../json4cj-core" }
++json4cj_annotations = { path = "../json4cj-annotations" }
+ [target]
+-  [target.x86_64-w64-mingw32]
+-    [target.x86_64-w64-mingw32.bin-dependencies]
+-      path-option = [ "D:/Program Files (x86)/Cangjie/stdx/windows_x86_64_cjnative/static/stdx" ]
++  [target.x86_64-unknown-linux-gnu]
++    [target.x86_64-unknown-linux-gnu.bin-dependencies]
++      path-option = [ "${CANGJIE_STDX_PATH}" ]
+--- public-commit/json4cj-annotations/cjpm.toml
++++ measured-snapshot/json4cj-annotations/cjpm.toml
+@@ -1,8 +1,13 @@
+ [package]
+-  cjc-version = "1.0.5"
++  cjc-version = "1.1.0"
+   name = "json4cj_annotations"
+   version = "0.1.0"
+   output-type = "static"
++compile-option = "-O2"
+ 
+ [dependencies]
+-  json4cj_core = { path = "../json4cj-core" }
++json4cj_core = { path = "../json4cj-core" }
++[target]
++  [target.x86_64-unknown-linux-gnu]
++    [target.x86_64-unknown-linux-gnu.bin-dependencies]
++      path-option = [ "${CANGJIE_STDX_PATH}" ]
+--- public-commit/json4cj-core/cjpm.toml
++++ measured-snapshot/json4cj-core/cjpm.toml
+@@ -1,12 +1,12 @@
+ [package]
+-  cjc-version = "1.0.5"
++  cjc-version = "1.1.0"
+   name = "json4cj_core"
+   version = "0.1.0"
+   output-type = "static"
++compile-option = "-O2"
+ 
+ [dependencies]
+-
+ [target]
+-  [target.x86_64-w64-mingw32]
+-    [target.x86_64-w64-mingw32.bin-dependencies]
+-      path-option = [ "D:/Program Files (x86)/Cangjie/stdx/windows_x86_64_cjnative/static/stdx" ]
++  [target.x86_64-unknown-linux-gnu]
++    [target.x86_64-unknown-linux-gnu.bin-dependencies]
++      path-option = [ "${CANGJIE_STDX_PATH}" ]

@@ -180,21 +180,31 @@ let name = document.root().member("name").getOrThrow().asString()
 
 ## 性能
 
-`0.2.0` 要求重新测量。Pure 基线为 STS `1.2.0` 迁移后、旧包装清理前的源码，候选与基线
-使用同一 SDK 和测量程序。旧 SDK 的结果不证明当前候选通过，也不用于声明跨 SDK 性能。
+生产候选 `5576cdd` 在 STS `1.2.0` 下通过同 SDK 的 Pure 回退检查：24 个用例、
+528 个计时样本，最大候选/基线比率约 1.01394，全部不超过原有 1.05 门槛。
+七库两批独立构建各完成 770 个单元，第一批 8/10、第二批 9/10 workload 满足
+`Max CV <= 5%`；噪声行保留，没有第三批。完整 strict 资格仍待干净检出验证。
 
-以下为 `0.1.1` 的历史结果，七库测量绑定 `ce39e57ba6ade281d232bc0d82abfafdf91f5bb5`。
-两批各完成 770 个测量单元；第一批 1/10 行、第二批 0/10 行满足 `Max CV <= 5%`。
-因此这里不展示跨库精确比例；全部 noisy 行与原始结果保留在报告中，没有第三批。
-仓颉进程使用单核、`cjProcessorNum=1` 和 128 MiB 堆，不代表默认运行时配置。
+下表只列第二批满足稳定性标准的九项，单位为微秒/操作、中位数。
+全部仓颉程序及依赖实际采用显式 `-O2`，未禁用 CHIR 函数内联；进程配置
+`cjProcessorNum=1`、`cjHeapSize=128MB`，七库仍单核绑定，不代表默认运行时配置。
 
-**该历史候选的 Pure 回退门禁通过，七库两批测量完整。**
-[Pure A/B](docs/performance/results/2026-09-13-linux-release-pure.md)使用独立直接计时与三核线程放置：
-24 个用例各完成 11 轮，最大回退 3.539%，均不超过原有 5% 门槛，48 个单侧 CV 均不超过 5%。
-七库仍使用 SDKBench；两种协议不能拼接样本。完整波动、RSS、输入身份与旧失败记录见
-[七库报告](docs/performance/results/2026-09-13-release-seven-library.md)和 Pure 报告。
-[三库历史测量](docs/performance/results/2026-09-13-release-three-library.md)未覆盖该轮 Native 修改，不作为当前性能声明。
-方法见[性能文档](docs/performance/README.md)；结果仅适用于记录的源码、SDK、CPU 和数据。
+| Workload | yjson | stdx.json | cangjieJSON | json4cj | cjfast_json | Jackson | fastjson2 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Address encode | 0.389 | 1.046 | 0.901 | 1.005 | 0.911 | 0.178 | 0.066 |
+| Address decode | 0.249 | 1.876 | 0.562 | 1.781 | 0.694 | 0.327 | 0.072 |
+| Person encode | 1.072 | 4.067 | 5.659 | 2.226 | 3.736 | 0.573 | 0.274 |
+| Person decode | 1.529 | 7.136 | 4.931 | 6.194 | 4.732 | 1.127 | 0.422 |
+| Large Array encode | 18.582 | 38.068 | 80.519 | 37.754 | 34.651 | 9.100 | 4.150 |
+| Large Map encode | 3.741 | 25.576 | 46.896 | 29.436 | 27.811 | 1.785 | 1.740 |
+| Large Map decode | 11.873 | 53.633 | 58.544 | 50.433 | 49.665 | 5.418 | 3.957 |
+| Deep Nested encode | 20.798 | 29.941 | 51.388 | 29.257 | 26.026 | 4.515 | 2.456 |
+| Deep Nested decode | 47.085 | 48.827 | 36.425 | 44.393 | 32.946 | 10.377 | 3.398 |
+
+完整波动、RSS、输入身份与失败记录见[七库报告](docs/performance/results/2026-10-26-cjdoc-020-seven-library.md)
+和 [Pure 报告](docs/performance/results/2026-10-26-cjdoc-020-pure.md)。两种协议不拼接样本；
+旧 SDK 的历史结果不证明当前候选、跨 SDK 或 Native 性能。方法与历史导航见
+[性能文档](docs/performance/README.md)。本次不发布 yjson。
 
 ## 文档
 

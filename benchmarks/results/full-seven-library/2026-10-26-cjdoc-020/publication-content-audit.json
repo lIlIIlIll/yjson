@@ -1,0 +1,21 @@
+{
+  "actual_local_path_username_hostname_private_network_address_credential_findings": 0,
+  "deterministic_owner_mode_and_timestamp_headers_verified": true,
+  "email_content_classifications": {
+    "example documentation or fixture": 19,
+    "unchanged public third-party copyright source/license": 6,
+    "unchanged upstream test input": 14
+  },
+  "frozen_source_and_patch_records": 799,
+  "ipv4_like_tokens_classified_as_version_or_fixture": {
+    "1.1.3.1": 1,
+    "17.0.20.1": 1782,
+    "999.1.1.1": 4
+  },
+  "no_git_objects_history_links_devices_path_traversal_or_compiled_artifacts": true,
+  "regular_text_files_reviewed": 7030,
+  "schema_version": 1,
+  "scope": "Source-only evidence content review; fixed-commit source/license facts preserved, no legal conclusion, no full strict CLI claim",
+  "source_byte_identity_scope": "All retained frozen source, canonical runner/summary/fixed-work files and original fixture patch; license extension separately tracked",
+  "status": "PASS"
+}
