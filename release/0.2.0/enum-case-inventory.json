@@ -1,0 +1,55 @@
+{
+  "schema": "yjson.enum-case-inventory/1",
+  "baseline_commit": "0f2071a0ad59ad43a369abe51abaceaf873f0c63",
+  "baseline_snapshot_sha256": "f3a52279a2afd4097432031f2e0c6dcf545434c76e415412ad691923a07f4747",
+  "collector": {
+    "source": "scripts/generate_public_api_snapshot.py",
+    "sha256": "f30adf2462b4e72dd28bc4d95662965ff823225144f4066f41177dab6ca4fc1a"
+  },
+  "sources": [
+    {
+      "package": "yjson",
+      "source": "src/lib_json_value.cj",
+      "sha256": "421008f6adcbcfd9aa7ad5ee93e069958e8dd292604881a54613a3ed108ef10a"
+    },
+    {
+      "package": "yjson_algorithms",
+      "source": "packages/yjson_algorithms/src/lib_json_patch.cj",
+      "sha256": "2a02d1945cce3585a5a102a7b51961f13a8b0580ec4f4f5e61e831cd2106fbce"
+    },
+    {
+      "package": "yjson_algorithms",
+      "source": "packages/yjson_algorithms/src/lib_json_schema.cj",
+      "sha256": "2f055c0c531561f0560c3e4cfe0718002fe145b2979abd4b94b2e3606d6f2355"
+    },
+    {
+      "package": "yjson_backends",
+      "source": "packages/yjson_backends/src/backends.cj",
+      "sha256": "d7c222bac94c562758d6b2a3744f4dba0dfdb0699227fc5609b0ab0224b7ede5"
+    }
+  ],
+  "case_records": 20,
+  "cases_sha256": "9a641704fb94b27ce9160f439ec41afd7c26aff2f75c88afd66777c1a0ee1d8d",
+  "cases": [
+    "yjson_algorithms|packages/yjson_algorithms/src/lib_json_patch.cj|JsonPatchOperationKind|| Add",
+    "yjson_algorithms|packages/yjson_algorithms/src/lib_json_patch.cj|JsonPatchOperationKind|| Copy",
+    "yjson_algorithms|packages/yjson_algorithms/src/lib_json_patch.cj|JsonPatchOperationKind|| Move",
+    "yjson_algorithms|packages/yjson_algorithms/src/lib_json_patch.cj|JsonPatchOperationKind|| Remove",
+    "yjson_algorithms|packages/yjson_algorithms/src/lib_json_patch.cj|JsonPatchOperationKind|| Replace",
+    "yjson_algorithms|packages/yjson_algorithms/src/lib_json_patch.cj|JsonPatchOperationKind|| Test",
+    "yjson_algorithms|packages/yjson_algorithms/src/lib_json_schema.cj|JsonSchemaFormatMode|| Annotation",
+    "yjson_algorithms|packages/yjson_algorithms/src/lib_json_schema.cj|JsonSchemaFormatMode|| Assertion",
+    "yjson_backends|packages/yjson_backends/src/backends.cj|JsonStreamBufferingMode|| Incremental",
+    "yjson_backends|packages/yjson_backends/src/backends.cj|JsonStreamBufferingMode|| WholeDocument",
+    "yjson|src/lib_json_value.cj|JsonDuplicateKeyPolicy|| LastWins",
+    "yjson|src/lib_json_value.cj|JsonDuplicateKeyPolicy|| Reject",
+    "yjson|src/lib_json_value.cj|JsonKind|| Array",
+    "yjson|src/lib_json_value.cj|JsonKind|| Boolean",
+    "yjson|src/lib_json_value.cj|JsonKind|| Null",
+    "yjson|src/lib_json_value.cj|JsonKind|| Number",
+    "yjson|src/lib_json_value.cj|JsonKind|| Object",
+    "yjson|src/lib_json_value.cj|JsonKind|| String",
+    "yjson|src/lib_json_value.cj|JsonUnknownFieldPolicy|| Ignore",
+    "yjson|src/lib_json_value.cj|JsonUnknownFieldPolicy|| Reject"
+  ]
+}

@@ -1,11 +1,28 @@
 # Changelog
 
-本文件记录已发布版本和后续开发的用户可见变化。最新稳定版说明见
+本文件记录已发布版本和后续开发的用户可见变化。当前候选与历史发布说明见
 [RELEASE_NOTES.md](RELEASE_NOTES.md)。历史 `1.0.0-rc.1` 的迁移步骤和验收记录分别保存在
 [pre-1.0 → 1.0](docs/migration/pre-1.0-to-1.0.md) 与
 `release/1.0.0-rc.1/evidence.md`。后者是历史仓库路径，不进入 `0.1.0` source archive。
 
 ## [Unreleased]
+
+### 0.2.0 候选
+
+- 产品、宏、示例、文档与 CI 统一到 Cangjie STS `1.2.0`；第一方包版本统一为 `0.2.0`。
+- 整个 `0.x` 阶段不保证 patch 或 minor 的跨版本源码、API、ABI、生成代码或旧 SDK 兼容。
+  升级时同步第一方依赖、重新展开宏并编译消费方；破坏性修改仍须逐项确认。
+- 按已确认的迁移删除 `@JsonValue` 宏别名，改用 `@Json`。`JsonAlias` 字段读取别名、当前
+  生成协议、ABI 错配校验、预算与资源生命周期语义保留。
+- 修复 `@JsonCodec` 无参 struct 解码生成代码的字段赋值编译错误。
+- 修复 JSON Pointer URI fragment 的百分号编码，空白、控制字符和 UTF-8 字节使用两位大写十六进制。
+- Custom Native 及 yyjson 的 Custom Native 回退路径在 backend metadata 中报告候选包版本 `0.2.0`。
+- 文档候选要求九包统一站点、八个应用包的中文契约与逐入口可执行示例，交付 HTML、
+  Markdown、Doc IR v16 和完整 Agent 离线包。不建设旧 URL、Doc IR 或产物布局兼容层。
+- cjdoc `0.7.5` 为待发布、待资格冻结的工具候选。本轮不创建 yjson tag 或发布九个包；
+  实施、性能、托管 CI 和 Pages 的实际状态见[候选实施记录](docs/implementation/cjdoc-020.md)。
+- 新性能证据使用 STS `1.2.0`；Pure 基线为 SDK 迁移后、旧包装清理前的源码。旧版测量和
+  兼容结果保留为历史，不外推为新候选通过或跨 SDK 性能结论。
 
 ## [0.1.1] - 2026-09-21
 

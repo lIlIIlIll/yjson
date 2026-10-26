@@ -70,6 +70,12 @@ yjson_algorithms|packages/yjson_algorithms/src/lib_json_patch.cj|<top-level>|pub
 yjson_algorithms|packages/yjson_algorithms/src/lib_json_patch.cj|JsonMergePatch|public static func apply(target: JsonValueView, patch: JsonValueView, limits!: JsonPatchLimits = JsonPatchLimits.defaults): JsonNode
 yjson_algorithms|packages/yjson_algorithms/src/lib_json_patch.cj|JsonMergePatch|public static func applyInPlace(target: JsonNode, patch: JsonNode, limits!: JsonPatchLimits = JsonPatchLimits.defaults): JsonNode
 yjson_algorithms|packages/yjson_algorithms/src/lib_json_patch.cj|JsonPatchOperationKind|public func toString(): String
+yjson_algorithms|packages/yjson_algorithms/src/lib_json_patch.cj|JsonPatchOperationKind|| Add
+yjson_algorithms|packages/yjson_algorithms/src/lib_json_patch.cj|JsonPatchOperationKind|| Copy
+yjson_algorithms|packages/yjson_algorithms/src/lib_json_patch.cj|JsonPatchOperationKind|| Move
+yjson_algorithms|packages/yjson_algorithms/src/lib_json_patch.cj|JsonPatchOperationKind|| Remove
+yjson_algorithms|packages/yjson_algorithms/src/lib_json_patch.cj|JsonPatchOperationKind|| Replace
+yjson_algorithms|packages/yjson_algorithms/src/lib_json_patch.cj|JsonPatchOperationKind|| Test
 yjson_algorithms|packages/yjson_algorithms/src/lib_json_patch.cj|JsonPatchOperation|public init(kind: JsonPatchOperationKind, path: JsonPointer, source!: Option<JsonPointer> = None<JsonPointer>, value!: Option<JsonNode> = None<JsonNode>)
 yjson_algorithms|packages/yjson_algorithms/src/lib_json_patch.cj|JsonPatchOperation|public let kind: JsonPatchOperationKind
 yjson_algorithms|packages/yjson_algorithms/src/lib_json_patch.cj|JsonPatchOperation|public let path: JsonPointer
@@ -127,6 +133,8 @@ yjson_algorithms|packages/yjson_algorithms/src/lib_json_schema.cj|JsonSchemaConf
 yjson_algorithms|packages/yjson_algorithms/src/lib_json_schema.cj|JsonSchemaConfig|public let limits: JsonSchemaLimits
 yjson_algorithms|packages/yjson_algorithms/src/lib_json_schema.cj|JsonSchemaConfig|public let resolver: Option<UriResolver>
 yjson_algorithms|packages/yjson_algorithms/src/lib_json_schema.cj|JsonSchemaConfig|public static let defaults = JsonSchemaConfig( formats: JsonSchemaFormatRegistry.withCoreFormats().frozenCopy())
+yjson_algorithms|packages/yjson_algorithms/src/lib_json_schema.cj|JsonSchemaFormatMode|| Annotation
+yjson_algorithms|packages/yjson_algorithms/src/lib_json_schema.cj|JsonSchemaFormatMode|| Assertion
 yjson_algorithms|packages/yjson_algorithms/src/lib_json_schema.cj|JsonSchemaFormatProvider|func installInto(registry: JsonSchemaFormatRegistry): Unit
 yjson_algorithms|packages/yjson_algorithms/src/lib_json_schema.cj|JsonSchemaFormatRegistry|public func install(provider: JsonSchemaFormatProvider): Unit
 yjson_algorithms|packages/yjson_algorithms/src/lib_json_schema.cj|JsonSchemaFormatRegistry|public func register(name: String, format: JsonSchemaFormat, replace!: Bool = false): Unit
@@ -213,7 +221,6 @@ yjson_macros|packages/yjson_macros/src/json_codec.cj|<top-level>|public macro Js
 yjson_macros|packages/yjson_macros/src/json_codec.cj|<top-level>|public macro JsonSubtype(attrs: Tokens, input: Tokens): Tokens
 yjson_macros|packages/yjson_macros/src/json_codec.cj|<top-level>|public macro JsonUsing(attrs: Tokens, input: Tokens): Tokens
 yjson_macros|packages/yjson_macros/src/json_literal.cj|<top-level>|public macro Json(input: Tokens): Tokens
-yjson_macros|packages/yjson_macros/src/json_literal.cj|<top-level>|public macro JsonValue(input: Tokens): Tokens
 yjson_native_accel|packages/yjson_native_accel/src/native_accel.cj|<top-level>|public class YJsonNativeAccel
 yjson_native_accel|packages/yjson_native_accel/src/native_accel.cj|YJsonNativeAccel|public static func initialize(): Unit
 yjson_native_primitives|packages/yjson_native_primitives/src/native_primitives.cj|<top-level>|public func initializeYJsonNativePrimitivesV1(): Unit
@@ -996,11 +1003,19 @@ yjson|src/lib_json_value.cj|JsonArray|public func toString(): String
 yjson|src/lib_json_value.cj|JsonArray|public init()
 yjson|src/lib_json_value.cj|JsonArray|public init(items: Array<JsonNode>)
 yjson|src/lib_json_value.cj|JsonArray|public init(items: ArrayList<JsonNode>)
+yjson|src/lib_json_value.cj|JsonDuplicateKeyPolicy|| LastWins
+yjson|src/lib_json_value.cj|JsonDuplicateKeyPolicy|| Reject
 yjson|src/lib_json_value.cj|JsonException|public init( message: String, causedBy: Exception, code!: String = "json_error", path!: String = "", location!: Option<JsonLocation> = None<JsonLocation> )
 yjson|src/lib_json_value.cj|JsonException|public init( message: String, code!: String = "json_error", path!: String = "", location!: Option<JsonLocation> = None<JsonLocation> )
 yjson|src/lib_json_value.cj|JsonException|public let code: String
 yjson|src/lib_json_value.cj|JsonException|public let location: Option<JsonLocation>
 yjson|src/lib_json_value.cj|JsonException|public let path: String
+yjson|src/lib_json_value.cj|JsonKind|| Array
+yjson|src/lib_json_value.cj|JsonKind|| Boolean
+yjson|src/lib_json_value.cj|JsonKind|| Null
+yjson|src/lib_json_value.cj|JsonKind|| Number
+yjson|src/lib_json_value.cj|JsonKind|| Object
+yjson|src/lib_json_value.cj|JsonKind|| String
 yjson|src/lib_json_value.cj|JsonLocation|public init(byteOffset: Int64, line: Int64, column: Int64)
 yjson|src/lib_json_value.cj|JsonLocation|public let byteOffset: Int64
 yjson|src/lib_json_value.cj|JsonLocation|public let column: Int64
@@ -1079,6 +1094,8 @@ yjson|src/lib_json_value.cj|JsonReadOptions|public let maxInputBytes: Int64
 yjson|src/lib_json_value.cj|JsonReadOptions|public let maxStringBytes: Int64
 yjson|src/lib_json_value.cj|JsonReadOptions|public let unknownFieldPolicy: JsonUnknownFieldPolicy
 yjson|src/lib_json_value.cj|JsonReadOptions|public static let defaults: JsonReadOptions = JsonReadOptions()
+yjson|src/lib_json_value.cj|JsonUnknownFieldPolicy|| Ignore
+yjson|src/lib_json_value.cj|JsonUnknownFieldPolicy|| Reject
 yjson|src/lib_json_value.cj|JsonValueView|func asBool(): Bool
 yjson|src/lib_json_value.cj|JsonValueView|func asFloat64(): Float64
 yjson|src/lib_json_value.cj|JsonValueView|func asInt64(): Int64

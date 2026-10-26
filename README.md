@@ -12,15 +12,16 @@
   <a href="https://github.com/lIlIIlIll/yjson/actions/workflows/ci.yml"><img src="https://github.com/lIlIIlIll/yjson/actions/workflows/ci.yml/badge.svg?branch=main" alt="Tests" /></a>
   <a href="https://codecov.io/gh/lIlIIlIll/yjson"><img src="https://codecov.io/gh/lIlIIlIll/yjson/branch/main/graph/badge.svg?flag=core" alt="Core Coverage" /></a>
   <a href="https://github.com/lIlIIlIll/yjson/releases/latest"><img src="https://img.shields.io/github/v/release/lIlIIlIll/yjson?display_name=tag&sort=semver&label=historical%20release" alt="Latest historical GitHub release" /></a>
-  <img src="https://img.shields.io/badge/current%20line-0.1.1-F59E0B" alt="Current development line 0.1.1" />
+  <img src="https://img.shields.io/badge/current%20candidate-0.2.0-F59E0B" alt="Current candidate 0.2.0" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache--2.0-yellow" alt="Apache License 2.0" /></a>
 </p>
 
 yjson 是仓颉 JSON 库，支持类型与 JSON 互转、构造和修改 JSON 树、只读查询以及流式读写。
 默认使用纯仓颉实现，由 GC 管理内存。
 
-当前开发版本为 `0.1.1`，API 仍可能发生不兼容变更，不提供旧 API 别名。
-历史 `1.x`、`2.0` 版本的接口不适用于当前版本。
+当前开发候选为 `0.2.0`，使用 Cangjie STS `1.2.0`。整个 `0.x` 阶段不保证 patch 或 minor
+之间的源码、API、ABI、生成代码或旧 SDK 兼容。升级时同步第一方依赖，重新展开宏并编译应用。
+历史版本的接口与验证结果不定义当前候选的保证。
 
 <p align="center">
   <a href="#快速开始">快速开始</a> ·
@@ -41,6 +42,9 @@ yjson 是仓颉 JSON 库，支持类型与 JSON 互转、构造和修改 JSON �
 如果只需要 SDK 自带的基础 JSON 能力，先阅读[库能力对比](docs/library-comparison.md)。
 
 ## 安装
+
+准备 Cangjie STS `1.2.0` 及匹配的 stdx。九个第一方包使用同一候选版本；分别从源码获取
+宏与运行时时，也要选择已验证的配对提交。
 
 仓库包含多个独立的 `cjpm` 模块。`yjson_macros` 是必须单独编译的宏模块，不能作为
 runtime `yjson` 的子包。
@@ -67,7 +71,8 @@ yjson_macros = { git = "https://github.com/lIlIIlIll/yjson_macros.git", branch =
 `JsonNode.object()`、`JsonNode.array()` 和 `put()` API。
 
 只做 JSON 解析、节点操作、只读查询或使用手写编解码器时，添加 `yjson` 即可。
-这份安装说明使用源码仓库，不依赖包仓库中的发布状态。SDK 的测试范围见[发布记录](release/0.1.1/evidence.md)。
+这份安装说明使用源码仓库，不依赖包仓库中的发布状态。`0.2.0` 候选尚不代表九包已发布；
+当前变更与迁移要求见 [Release notes](RELEASE_NOTES.md)。
 
 ## 快速开始
 
@@ -139,7 +144,7 @@ let name = document.root().member("name").getOrThrow().asString()
 
 `JsonValueView` 用同一套只读接口访问 `JsonNode`、`JsonDocument` 和可选后端的文档。
 调用 `materialize()` 可以复制成可修改的树，默认最多复制 100,000 个节点，深度不超过 256 层。
-需要调整节点数量上限时，传入
+需要调整节点数量上限时，传入 `maxNodes` 参数。
 
 ## 可选包
 
@@ -167,24 +172,28 @@ let name = document.root().member("name").getOrThrow().asString()
   `JsonNode` 可以修改，仅通过 `JsonValueView` 访问它不会使底层数据不可变。
   `JsonPathCursor` 是有状态惰性迭代器，只能由一个线程消费。
 - yjson 不关闭调用方提供的流。一次调用只处理一份 JSON 文档，文档后仍有非空白内容时会报错。
-- `0.1.1` 的平台验收状态见[候选发布记录](release/0.1.1/evidence.md)。Native 发布验证目标为 Linux x86_64。
+- 当前候选要求 Windows、macOS Pure 和 Linux Native 验证。未执行的平台不能记为通过；
+  历史 `0.1.1` 结果见[发布记录](release/0.1.1/evidence.md)。
 
 配置和预算见[配置与错误](docs/configuration-and-errors.md)及
 [资源限制](docs/resource-limits.md)。
 
 ## 性能
 
-本轮 `0.1.1` 候选的七库测量绑定 `ce39e57ba6ade281d232bc0d82abfafdf91f5bb5`。
+`0.2.0` 要求重新测量。Pure 基线为 STS `1.2.0` 迁移后、旧包装清理前的源码，候选与基线
+使用同一 SDK 和测量程序。旧 SDK 的结果不证明当前候选通过，也不用于声明跨 SDK 性能。
+
+以下为 `0.1.1` 的历史结果，七库测量绑定 `ce39e57ba6ade281d232bc0d82abfafdf91f5bb5`。
 两批各完成 770 个测量单元；第一批 1/10 行、第二批 0/10 行满足 `Max CV <= 5%`。
 因此这里不展示跨库精确比例；全部 noisy 行与原始结果保留在报告中，没有第三批。
 仓颉进程使用单核、`cjProcessorNum=1` 和 128 MiB 堆，不代表默认运行时配置。
 
-**本轮 Pure 回退门禁通过，七库两批测量完整。**
+**该历史候选的 Pure 回退门禁通过，七库两批测量完整。**
 [Pure A/B](docs/performance/results/2026-09-13-linux-release-pure.md)使用独立直接计时与三核线程放置：
 24 个用例各完成 11 轮，最大回退 3.539%，均不超过原有 5% 门槛，48 个单侧 CV 均不超过 5%。
 七库仍使用 SDKBench；两种协议不能拼接样本。完整波动、RSS、输入身份与旧失败记录见
 [七库报告](docs/performance/results/2026-09-13-release-seven-library.md)和 Pure 报告。
-[三库历史测量](docs/performance/results/2026-09-13-release-three-library.md)未覆盖本轮 Native 修改，不作为当前性能声明。
+[三库历史测量](docs/performance/results/2026-09-13-release-three-library.md)未覆盖该轮 Native 修改，不作为当前性能声明。
 方法见[性能文档](docs/performance/README.md)；结果仅适用于记录的源码、SDK、CPU 和数据。
 
 ## 文档
@@ -198,6 +207,10 @@ let name = document.root().member("name").getOrThrow().asString()
 - [JSON Pointer、JSONPath 与 Patch](docs/path-and-patch.md)
 - [公开 API 清单](docs/public-api-inventory.md)
 - [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
+
+`0.2.0` 文档候选采用九包统一站点，补齐八个应用包的中文契约与逐入口可执行示例。
+站点入口为根目录 `index.html`；不提供旧 URL、旧 Doc IR 或旧产物布局的兼容层。
+生成与验收要求见 [API 文档维护指南](docs/maintainers/api-documentation.md)。
 
 维护者从[测试策略](docs/maintainers/testing.md)、
 [发布流程](docs/maintainers/releasing.md)和

@@ -111,8 +111,14 @@ open class Animal {
 
 ## 版本边界
 
-`yjson` 和 `yjson_macros` 必须来自同一次发布。宏生成代码使用协议版本 1，协议不匹配时报
+`yjson` 和 `yjson_macros` 必须来自同一候选或同一次发布，并使用 STS `1.2.0`。
+升级第一方依赖后重新展开宏、编译应用。整个 `0.x` 阶段不保证旧生成代码或旧 SDK 可继续使用。
+
+宏生成代码使用协议版本 1，协议不匹配时报
 `generated_protocol_mismatch`。
+
+V1 是当前候选中宏与运行时的匹配契约，不提供跨版本混用保证。`0.2.0` 删除 JSON literal
+宏别名 `@JsonValue`，调用改为 `@Json`。字段上的 `@JsonAlias` 仍用于接受额外的输入名称。
 
 生成代码通过 `generated_support.v1` 调用运行库。默认快速路径还直接引用
 `JsonFastReader`、`JsonDirectWriter` 和 `ReadCursor`，这些类型也随 V1 协议一起演进。

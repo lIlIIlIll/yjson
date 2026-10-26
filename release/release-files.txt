@@ -45,6 +45,8 @@ docs/performance/results/2026-09-07-main-seven-library.md
 docs/performance/results/2026-09-09-main-seven-library.md
 docs/performance/results/2026-09-10-main-seven-library.md
 docs/migration/pre-1.0-to-1.0.md
+docs/migration/0.1-to-0.2.md
+docs/implementation/cjdoc-020.md
 docs/release-checklist.md
 docs/schema.md
 benchmarks/README.md
@@ -249,6 +251,9 @@ release/public-api-inventory.toml
 release/public-api-snapshot.txt
 release/public-c-abi-delta-bfd29.toml
 release/public-cangjie-delta-bfd29.toml
+release/public-cangjie-delta-0.2.0.toml
+release/0.2.0/enum-case-inventory.json
+release/0.2.0/evidence.md
 
 # Macro, native primitives, optional backends, examples, and consumer fixtures
 packages/yjson_macros/cjpm.toml

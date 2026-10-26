@@ -1,5 +1,8 @@
 # 从 pre-1.0 snapshot 迁移到 1.0
 
+这是历史 `1.0.0-rc.1` 迁移记录，不描述当前 API 或兼容政策。当前候选请使用
+[0.1.x → 0.2.0 迁移说明](0.1-to-0.2.md)。下文的旧类型、宏和预算默认值不可用于新代码。
+
 1.0 固化 runtime 类型名、资源预算和 package/backend 边界。所有 yjson package 应一次升级
 到同一 checkout 或 release，并重新编译 generated code。
 

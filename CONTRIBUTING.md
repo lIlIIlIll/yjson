@@ -3,6 +3,10 @@
 开始修改前阅读[文档导航](docs/README.md)、[架构](docs/architecture.md)和
 [仓库布局](docs/maintainers/repository-layout.md)。
 
+当前候选为 `0.2.0`。产品、宏、示例和文档工具统一使用 Cangjie STS `1.2.0` 及匹配的 stdx。
+启用 SDK 后运行 `python3 scripts/validate_cangjie_sts.py --check-installed`，确认没有使用 daily
+或旧 SDK。
+
 ## 确定修改范围
 
 - Pure 运行时修改留在 `src/lib_*.cj`，不要引入无关的 Native 依赖。
@@ -34,12 +38,19 @@ python3 scripts/test_release_temp_tree.py
 
 ## 公开 API、文档与性能
 
+- 整个 `0.x` 阶段不保证 patch 或 minor 之间的源码、API、ABI、生成代码或旧 SDK 兼容。
+  升级时同步第一方依赖，重新展开宏并编译消费方。
+- 破坏性修改仍须逐项说明影响和迁移方法，并取得用户明确确认。`0.2.0` 删除
+  `@JsonValue` 已获确认，改用 `@Json`；`JsonAlias` 字段语义保留。
 - 公开声明、C ABI 或包版本配对变化必须同步机器可读的接口清单。
 - 生成代码接口变化必须由独立使用方测试证明。
 - 用户文档的 API 示例要以当前声明或可运行的示例验证。
 - 性能结论必须提供等语义、同环境、固定 CPU、交替/反转 A/B、校验和、RSS 和跨性能配置
   证据，并遵循[性能方法](docs/performance/methodology.md)。
 - 基准测试成绩提高不能替代正确性、覆盖率或兼容性测试。
+
+本候选用 STS `1.2.0` 迁移后、旧包装清理前的源码作 Pure 基线；基线与候选使用同一 SDK
+和测量程序。旧版性能与兼容矩阵保留为历史，不作为当前候选的验证结果。
 
 ## 提交质量
 
@@ -50,4 +61,6 @@ python3 scripts/test_release_temp_tree.py
 ## API 文档注释
 
 公开 API 使用 cjdoc 可绑定的 `/** ... */` 注释；每个重载分别说明参数、返回值和约束。
+八个应用包要求完整中文契约和逐入口可执行示例。示例正文来自 `@example`，页面与外部
+消费方验证使用相同代码；共享示例必须实际调用其覆盖的重载。
 格式、覆盖范围、构建与 CI 产物见[API 文档维护指南](docs/maintainers/api-documentation.md)。
