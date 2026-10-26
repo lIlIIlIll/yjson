@@ -25,7 +25,7 @@ private class JsonResourceLimitScanner {
     }
 
     private func parseValue(): Unit {
-        skipSpaces()
+        // 所有调用点已消费前导 JSON 空白。
         if (index >= size) { fail("Unexpected end of input", index) }
         let current = data[index]
         match {
@@ -210,7 +210,7 @@ private class JsonResourceLimitScanner {
     }
 
     private func expectByte(value: Byte): Unit {
-        skipSpaces()
+        // 调用方已消费前导空白；仍在分隔符后消费后续空白。
         if (index >= size || data[index] != value) { fail("Unexpected token", index) }
         index++
         skipSpaces()
