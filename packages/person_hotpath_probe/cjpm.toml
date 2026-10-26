@@ -1,9 +1,9 @@
 [package]
-cjc-version = "1.1.0"
+cjc-version = "1.2.0"
 name = "yjson_person_hotpath_probe"
 organization = ""
 description = "Fixed-iteration typed decode hot-path probe"
-version = "0.1.0"
+version = "0.2.0"
 target-dir = ""
 output-type = "executable"
 compile-option = "-O2"
@@ -13,4 +13,4 @@ package-configuration = {}
 
 [dependencies]
 "yjson" = { path = "../..", output-type = "static" }
-"yjson_macros" = { git = "https://github.com/lIlIIlIll/yjson_macros.git", commitId = "0847b59e0c8c47b7c5b52b550ef8765c0cbddb03" }
+"yjson_macros" = { git = "https://github.com/lIlIIlIll/yjson_macros.git", commitId = "c9ef52da9ba2d3f77916c40ccb9280db78ee2e07" }

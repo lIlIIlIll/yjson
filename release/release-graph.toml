@@ -1,6 +1,6 @@
 schema_version = 1
-release_version = "0.1.1"
-status = "release-ready"
+release_version = "0.2.0"
+status = "migration"
 
 # This file is the only ordered inventory of published yjson packages. Release
 # tooling must derive package names, versions, manifests, source roots, and
@@ -15,7 +15,7 @@ development_manifest = "cjpm.toml"
 release_manifest = "release/package-manifests/yjson.toml"
 source_root = "src"
 stage_kind = "core"
-stability = "stable"
+stability = "experimental"
 leaf_bundle = true
 dependencies = []
 test_dependencies = ["yjson_macros"]
@@ -27,7 +27,7 @@ development_manifest = "packages/yjson_macros/cjpm.toml"
 release_manifest = "release/package-manifests/yjson_macros.toml"
 source_root = "packages/yjson_macros/src"
 stage_kind = "package"
-stability = "stable"
+stability = "experimental"
 leaf_bundle = false
 dependencies = []
 
@@ -38,7 +38,7 @@ development_manifest = "packages/yjson_algorithms/cjpm.toml"
 release_manifest = "release/package-manifests/yjson_algorithms.toml"
 source_root = "packages/yjson_algorithms/src"
 stage_kind = "package"
-stability = "stable"
+stability = "experimental"
 leaf_bundle = false
 dependencies = ["yjson"]
 
