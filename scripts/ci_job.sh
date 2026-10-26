@@ -157,6 +157,7 @@ case "$job" in
         ;;
     cjdoc-qualification)
         python3 "$repo/scripts/test_check_cjdoc_qualification.py"
+        python3 "$repo/scripts/test_prepare_cjdoc.py"
         cjdoc_binary=$(prepare_cjdoc)
         python3 "$repo/scripts/check_cjdoc_qualification.py" \
             --binary "$cjdoc_binary"

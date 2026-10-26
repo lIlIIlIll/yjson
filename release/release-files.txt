@@ -157,6 +157,7 @@ scripts/test_check_api_inventory.py
 scripts/check_cjdoc_qualification.py
 scripts/test_check_cjdoc_qualification.py
 scripts/prepare_cjdoc.py
+scripts/test_prepare_cjdoc.py
 scripts/generate_api_docs.py
 scripts/test_generate_api_docs.py
 scripts/check_api_documentation.py
