@@ -168,7 +168,8 @@ private func rollbackYJsonAccelerationInitialization(): Unit {
 }
 
 /**
- * Version queried by generated codecs. Patch releases remain compatible as
- * long as this value stays unchanged.
+ * 当前生成代码查询的协议编号。
+ *
+ * 此值用于拒绝不匹配的协议，不承诺跨版本源码或二进制兼容。
  */
 public func yJsonGeneratedProtocolVersion(): Int64 { 1 }

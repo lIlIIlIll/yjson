@@ -302,13 +302,6 @@ class CompactJsonDocument {
         parseBorrowed(owned, config: config)
     }
 
-    /**
-     * Compatibility alias for the zero-copy borrowed-input entry point.
-     */
-    public static func parse(bytes: Array<Byte>, config!: JsonReadOptions = JsonReadOptions.defaults): CompactJsonDocument {
-        parseBorrowed(bytes, config: config)
-    }
-
     public func root(): CompactJsonValue { CompactJsonValue(this, rootIndex) }
     public func nodeCount(): Int64 { kinds.size }
     public func sourceSize(): Int64 { source.size }

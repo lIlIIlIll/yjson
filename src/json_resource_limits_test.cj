@@ -95,7 +95,7 @@ class JsonResourceLimitsTest {
             let _ = JsonNode.parse(arrayJson)
         }), "max_depth")
         @Expect(resourceLimitErrorCode({ =>
-            let _ = CompactJsonDocument.parse(unsafe { arrayJson.rawData().clone() })
+            let _ = CompactJsonDocument.parseBorrowed(unsafe { arrayJson.rawData().clone() })
         }), "max_depth")
         @Expect(resourceLimitErrorCode({ =>
             let _ = YJson.fromJson(deepNestedArrayJson(depth), codec: JsonCodecs.int64)
@@ -131,7 +131,7 @@ class JsonResourceLimitsTest {
             let _ = JsonNode.parse(text, config: JsonReadOptions(maxInputBytes: 6))
         }), "document_too_large")
         @Expect(resourceLimitErrorCode({ =>
-            let _ = CompactJsonDocument.parse(unsafe { text.rawData() },
+            let _ = CompactJsonDocument.parseBorrowed(unsafe { text.rawData() },
                 config: JsonReadOptions(maxInputBytes: 6))
         }), "document_too_large")
     }
