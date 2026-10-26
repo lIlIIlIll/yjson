@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "dependencies": ["yjson", "yjson_backends"],
+  "imports": ["yjson.*", "yjson_backends.*"],
+  "platforms": ["linux", "windows", "darwin"],
+  "compileOption": "-O2",
+  "overrideCompileOption": "-O2",
+  "linkNativeScanner": false
+}

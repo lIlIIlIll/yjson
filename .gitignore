@@ -50,8 +50,12 @@ benchmarks/java_fastjson2/build/
 !release/1.0.0-rc.2/artifacts/performance/checksums.txt
 !release/0.1.1/binary-compatibility.json
 !release/0.1.1/local-verification.json
+!release/0.2.0/enum-case-inventory.json
 target/api-docs
 target/cjdoc
 target/doc
 target/native
 target/release
+
+# Runnable API example profiles are source-controlled inputs.
+!tests/doc_examples/**/profile.json

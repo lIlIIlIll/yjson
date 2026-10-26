@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "dependencies": [
+    "yjson",
+    "yjson_native_accel"
+  ],
+  "imports": [
+    "yjson.*",
+    "yjson_native_accel.*"
+  ],
+  "platforms": [
+    "linux"
+  ],
+  "linkNativeScanner": true,
+  "compileOption": "-O2",
+  "overrideCompileOption": "-O2"
+}

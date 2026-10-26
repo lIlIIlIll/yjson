@@ -5,37 +5,80 @@ import std.convert.Parsable
 import std.deriving.Derive
 import std.io.*
 
+/**
+ * JSON 数据模型中的六种值类型。
+ *
+ * 数字统一标记为 Number；整数、无符号整数、浮点数和保留原文的数字不另设种类。
+ *
+ * @example 调用并检查结果 {run}
+ * ```cangjie
+ * println(JsonNode.parse("null").kind() == JsonKind.Null)
+ * ```
+ * ```output
+ * true
+ * ```
+ */
 @Derive[Equatable]
 public enum JsonKind {
-    Null | Boolean | Number | String | Array | Object
+    /** JSON 空值。 */
+    Null
+    /** JSON 布尔值。 */
+    | Boolean
+    /** JSON 数字，不区分整数和浮点数。 */
+    | Number
+    /** JSON 字符串。 */
+    | String
+    /** JSON 数组。 */
+    | Array
+    /** JSON 对象。 */
+    | Object
 }
 
 /**
- * Source position attached to a JSON failure.
+ * JSON 错误在 UTF-8 输入中的位置。
  *
- * byteOffset is zero-based and measured in UTF-8 bytes. line and column are one-based. Use the reported error position rather than reconstructing it from a string index.
+ * byteOffset 从 0 开始，line 和 column 从 1 开始。列按字节位置计算，不是字符或显示宽度；换行后重新从 1 计数。
  */
 public struct JsonLocation {
     /**
-     * Zero-based UTF-8 byte offset of the reported position.
+     * 从 0 开始的 UTF-8 字节偏移。
      */
     public let byteOffset: Int64
     /**
-     * One-based source line of the reported position.
+     * 从 1 开始的输入行号。
      */
     public let line: Int64
     /**
-     * One-based source column of the reported position.
+     * 从 1 开始的行内字节列号。
      */
     public let column: Int64
 
     /**
-     * Creates JsonLocation with the supplied values.
+     * 构造已知输入位置，不读取或校验实际输入。
      *
-     * @param byteOffset Zero-based UTF-8 byte offset; must not be negative.
-     * @param line One-based source line; must be positive.
-     * @param column One-based source column; must be positive.
-     * @throws IllegalArgumentException The byte offset is negative, or line or column is nonpositive.
+     * @param byteOffset 非负 UTF-8 字节偏移。
+     * @param line 正数行号。
+     * @param column 正数行内字节列号。
+     * @throws IllegalArgumentException 偏移为负，或行号、列号非正。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let position = JsonLocation(3, 2, 1)
+     * println(position.byteOffset == 3 && position.line == 2 && position.column == 1)
+     * ```
+     * ```output
+     * true
+     * ```
+     *
+     * @example 检查拒绝路径 {run}
+     * ```cangjie
+     * var rejected = false
+     * try { let _ = JsonLocation(-1, 1, 1) } catch (_: IllegalArgumentException) { rejected = true }
+     * println(rejected)
+     * ```
+     * ```output
+     * true
+     * ```
      */
     public init(byteOffset: Int64, line: Int64, column: Int64) {
         if (byteOffset < 0) { throw IllegalArgumentException("byteOffset must not be negative") }
@@ -48,32 +91,52 @@ public struct JsonLocation {
 }
 
 /**
- * Exception carrying a JSON failure code, path, and optional source position.
+ * 携带错误类别、JSON Pointer 和可选输入位置的 JSON 异常。
  *
- * Use code for programmatic error handling. path is an RFC 6901 JSON Pointer; the empty string denotes the root. Message text is descriptive, not a compatibility contract. I/O failures and custom-codec exceptions are not necessarily wrapped in this type.
+ * 使用 code 分支处理错误。path 为空串时表示根值；输入流 I/O 异常和自定义 codec 异常可能原样传播。message 用于诊断，不应从文本提取错误类别。
  */
 public open class JsonException <: Exception {
     /**
-     * Machine-readable category for programmatic error handling.
+     * 供程序判断的错误类别，如 type_mismatch 或 max_depth。
      */
     public let code: String
     /**
-     * JSON Pointer for the failing value; the empty string denotes the root.
+     * 错误值的 RFC 6901 JSON Pointer；空串表示根。
      */
     public let path: String
     /**
-     * Source position when known; None when no position is available.
+     * 有输入位置时为 Some，否则为 None。
      */
     public let location: Option<JsonLocation>
 
     /**
-     * Creates JsonException with the supplied values.
+     * 构造没有原始原因异常的 JSON 错误。
      *
-     * @param message Human-readable diagnostic message; do not parse it for error handling.
-     * @param code Machine-readable error code; defaults to json_error.
-     * @param path JSON Pointer identifying the failing value; the empty string denotes the root.
-     * @param location Source position when available; None when no position is known.
-     * @throws IllegalArgumentException A nonempty path does not begin with a slash.
+     * @param message 供人阅读的错误说明。
+     * @param code 错误类别；默认 json_error。
+     * @param path 空串或以 / 开始的 JSON Pointer；构造器只检查此前缀。
+     * @param location 已知输入位置；默认 None。
+     * @throws IllegalArgumentException 非空 path 不以 / 开始。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let error = JsonException("字段缺失", code: "missing_field", path: "/name",
+     *     location: Some(JsonLocation(1, 1, 2)))
+     * println(error.code == "missing_field" && error.path == "/name" && error.location.isSome())
+     * ```
+     * ```output
+     * true
+     * ```
+     *
+     * @example 检查拒绝路径 {run}
+     * ```cangjie
+     * var rejected = false
+     * try { let _ = JsonException("错误", path: "id") } catch (_: IllegalArgumentException) { rejected = true }
+     * println(rejected)
+     * ```
+     * ```output
+     * true
+     * ```
      */
     public init(
         message: String,
@@ -89,14 +152,24 @@ public open class JsonException <: Exception {
     }
 
     /**
-     * Creates JsonException with the supplied values.
+     * 构造并保留原始原因异常的 JSON 错误。
      *
-     * @param message Human-readable diagnostic message; do not parse it for error handling.
-     * @param causedBy Original exception to retain as the cause.
-     * @param code Machine-readable error code; defaults to json_error.
-     * @param path JSON Pointer identifying the failing value; the empty string denotes the root.
-     * @param location Source position when available; None when no position is known.
-     * @throws IllegalArgumentException A nonempty path does not begin with a slash.
+     * @param message 供人阅读的错误说明。
+     * @param causedBy 作为 cause 保留的原始异常。
+     * @param code 错误类别；默认 json_error。
+     * @param path 空串或以 / 开始的 JSON Pointer；构造器只检查此前缀。
+     * @param location 已知输入位置；默认 None。
+     * @throws IllegalArgumentException 非空 path 不以 / 开始。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let cause = IllegalArgumentException("输入不合法")
+     * let error = JsonException("无法转换", cause, code: "type_mismatch")
+     * println(error.code == "type_mismatch" && error.path.isEmpty())
+     * ```
+     * ```output
+     * true
+     * ```
      */
     public init(
         message: String,
@@ -112,6 +185,20 @@ public open class JsonException <: Exception {
         this.location = location
     }
 
+    /**
+     * 为继承的异常文本表示提供 JSON 异常类名。
+     *
+     * @return 字符串 JsonException；子类可以覆盖此名称。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let error = JsonException("输入不合法")
+     * println(error.toString().contains("JsonException"))
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     protected open override func getClassName(): String {
         "JsonException"
     }
@@ -124,65 +211,110 @@ private func validateJsonExceptionPath(path: String): Unit {
 }
 
 /**
- * Policy for object fields not recognized by a typed codec.
+ * 类型化 codec 遇到未知对象字段时的策略。
  *
- * Ignore is the default; Reject requests an unknown-field error.
+ * 默认 Ignore。这个策略不限制 JsonNode 或 JsonDocument 保存对象字段。
+ *
+ * @example 调用并检查结果 {run}
+ * ```cangjie
+ * let options = JsonReadOptions(unknownFieldPolicy: JsonUnknownFieldPolicy.Reject)
+ * println(options.rejectsUnknownFields())
+ * ```
+ * ```output
+ * true
+ * ```
  */
 public enum JsonUnknownFieldPolicy {
-    Ignore | Reject
+    /** 类型化解码时跳过 codec 不认识的字段。 */
+    Ignore
+    /** 遇到不允许的字段或重复键时抛出 JsonException。 */
+    | Reject
 }
 
 /**
- * Policy for duplicate member names within a JSON object.
+ * 同一个 JSON 对象中出现重复名称时的读取策略。
  *
- * Reject is the default. LastWins explicitly selects the last occurrence.
+ * 默认 Reject；显式选用 LastWins 才允许后值覆盖。
+ *
+ * @example 调用并检查结果 {run}
+ * ```cangjie
+ * let value = JsonNode.parse("{\"id\":1,\"id\":2}",
+ *     config: JsonReadOptions(duplicateKeyPolicy: JsonDuplicateKeyPolicy.LastWins))
+ * println(value["id"].asInt64() == 2)
+ * ```
+ * ```output
+ * true
+ * ```
  */
 public enum JsonDuplicateKeyPolicy {
-    LastWins | Reject
+    /** 对象中重复名称的最后一个值覆盖先前值。 */
+    LastWins
+    /** 遇到不允许的字段或重复键时抛出 JsonException。 */
+    | Reject
 }
 
 /**
- * Immutable parsing and typed-decoding policies with bounded resource use.
+ * 不可变的读取策略与单次文档资源预算。
  *
- * Defaults ignore unknown typed fields, reject duplicate object keys, and allow 64 MiB input, 16 MiB strings, 8 MiB captured-value buffers, and 256 nesting levels. All read budgets must be positive; zero does not mean unlimited.
+ * 默认忽略未知类型化字段、拒绝重复键；输入上限 64 MiB，解码后的单字符串上限 16 MiB，捕获值缓冲上限 8 MiB，容器深度上限 256。所有预算必须为正数，0 不表示无限。
  */
 public class JsonReadOptions {
     /**
-     * Policy for unknown object fields encountered during typed decoding.
+     * 类型化 codec 处理未知对象字段的策略。
      */
     public let unknownFieldPolicy: JsonUnknownFieldPolicy
     /**
-     * Policy for repeated member names in a JSON object.
+     * 读取同一对象内重复名称的策略。
      */
     public let duplicateKeyPolicy: JsonDuplicateKeyPolicy
     /**
-     * Maximum input size in bytes; must be positive.
+     * 单份文档输入的 UTF-8 字节上限；流读取不为检查此限制而预读到 EOF。
      */
     public let maxInputBytes: Int64
     /**
-     * Maximum JSON string size in bytes; must be positive.
+     * 单个键名或字符串解码后的 UTF-8 字节上限。
      */
     public let maxStringBytes: Int64
     /**
-     * Maximum captured-value buffer size in bytes; must be positive.
+     * 需要捕获完整值时的字节缓冲上限；不是整个进程的内存限制。
      */
     public let maxBufferedValueBytes: Int64
     /**
-     * Maximum permitted nesting depth; must be positive.
+     * 允许的数组和对象嵌套层数上限。
      */
     public let maxDepth: Int64
     let defaultFastPath: Bool
 
     /**
-     * Creates JsonReadOptions with the supplied values.
+     * 创建用于一次或多次读取的不可变配置。
      *
-     * @param unknownFieldPolicy Whether typed decoding ignores or rejects unknown object fields.
-     * @param duplicateKeyPolicy Whether duplicate object keys are rejected or the last value wins.
-     * @param maxInputBytes Positive input byte limit; defaults to 64 MiB.
-     * @param maxStringBytes Positive string byte limit; defaults to 16 MiB.
-     * @param maxBufferedValueBytes Positive captured-value buffer limit; defaults to 8 MiB.
-     * @param maxDepth Positive nesting-depth limit; defaults to 256.
-     * @throws IllegalArgumentException A read budget is zero or negative.
+     * @param unknownFieldPolicy 未知字段处理策略，默认 Ignore。
+     * @param duplicateKeyPolicy 重复键处理策略，默认 Reject。
+     * @param maxInputBytes 正数输入字节上限，默认 64 MiB。
+     * @param maxStringBytes 正数解码后字符串字节上限，默认 16 MiB。
+     * @param maxBufferedValueBytes 正数捕获值缓冲字节上限，默认 8 MiB。
+     * @param maxDepth 正数容器嵌套上限，默认 256。
+     * @throws IllegalArgumentException 任意预算为 0 或负数。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let options = JsonReadOptions(maxInputBytes: 32, maxStringBytes: 8,
+     *     maxBufferedValueBytes: 16, maxDepth: 2)
+     * println(JsonNode.parse("[1]", config: options).size() == 1)
+     * ```
+     * ```output
+     * true
+     * ```
+     *
+     * @example 检查拒绝路径 {run}
+     * ```cangjie
+     * var rejected = false
+     * try { let _ = JsonReadOptions(maxInputBytes: 0) } catch (_: IllegalArgumentException) { rejected = true }
+     * println(rejected)
+     * ```
+     * ```output
+     * true
+     * ```
      */
     public init(
         unknownFieldPolicy!: JsonUnknownFieldPolicy = JsonUnknownFieldPolicy.Ignore,
@@ -216,14 +348,23 @@ public class JsonReadOptions {
     }
 
     /**
-     * Shared immutable default configuration.
+     * 可以共享的不可变默认读取配置。
      */
     public static let defaults: JsonReadOptions = JsonReadOptions()
 
     /**
-     * Reports whether unknown typed fields are rejected.
+     * 检查是否拒绝类型化未知字段。
      *
-     * @return True when the corresponding policy is Reject.
+     * @return unknownFieldPolicy 为 Reject 时返回 true。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let options = JsonReadOptions(unknownFieldPolicy: JsonUnknownFieldPolicy.Reject)
+     * println(options.rejectsUnknownFields())
+     * ```
+     * ```output
+     * true
+     * ```
      */
     public func rejectsUnknownFields(): Bool {
         match (unknownFieldPolicy) {
@@ -233,9 +374,17 @@ public class JsonReadOptions {
     }
 
     /**
-     * Reports whether duplicate keys are rejected.
+     * 检查是否拒绝对象重复键。
      *
-     * @return True when the corresponding policy is Reject.
+     * @return duplicateKeyPolicy 为 Reject 时返回 true。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonReadOptions.defaults.rejectsDuplicateKeys())
+     * ```
+     * ```output
+     * true
+     * ```
      */
     public func rejectsDuplicateKeys(): Bool {
         match (duplicateKeyPolicy) {
@@ -326,76 +475,505 @@ func jsonStreamColumnAt(newlineOffsets: ArrayList<Int64>, offset: Int64): Int64 
 }
 
 /**
- * Read-only access to a JSON value, independent of its storage representation.
+ * 与存储表示无关的 JSON 只读访问接口。
  *
- * Read-only access does not make a mutable JsonNode immutable or thread-safe. Managed document views retain their storage; resource-backed views remain subject to their owning backend document's lifetime. Use materialize for a detached mutable copy.
+ * 只读访问不使底层 JsonNode 变为快照，也不提供线程安全。托管文档视图保留存储；Native 等资源后端视图依赖所属文档未关闭。需要独立可修改树时调用 materialize。
  */
 public interface JsonValueView {
+    /**
+     * 读取 JSON 值种类。
+     *
+     * @return 六种 JsonKind 之一。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let value: JsonValueView = YJson.parseDocument("[1]").root()
+     * println(value.kind() == JsonKind.Array)
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     func kind(): JsonKind
+    /**
+     * 读取数组长度或对象成员数。
+     *
+     * @return 容器的直接子项数；标量返回 0。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let value: JsonValueView = YJson.parseDocument("[1,2]").root()
+     * println(value.size())
+     * ```
+     * ```output
+     * 2
+     * ```
+     */
     func size(): Int64
+    /**
+     * 按从 0 开始的下标查询数组元素。
+     *
+     * @param index 数组元素下标。
+     * @return 存在时返回共享底层存储的视图，越界返回 None。
+     * @throws JsonException 具体实现拒绝非数组访问时抛出；调用前应先确认 kind() 为 Array。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let value: JsonValueView = YJson.parseDocument("[7]").root()
+     * println(value.element(0).getOrThrow().asInt64() == 7 && value.element(1).isNone())
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     func element(index: Int64): Option<JsonValueView>
+    /**
+     * 按名称查询对象成员。
+     *
+     * @param name 解码后的完整成员名。
+     * @return 存在时返回共享底层存储的视图，缺少名称返回 None。
+     * @throws JsonException 具体实现拒绝非对象访问时抛出；调用前应先确认 kind() 为 Object。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let value: JsonValueView = YJson.parseDocument("{\"id\":7}").root()
+     * println(value.member("id").getOrThrow().asInt64() == 7 && value.member("absent").isNone())
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     func member(name: String): Option<JsonValueView>
+    /**
+     * 按对象成员顺序读取名称。
+     *
+     * @param index 从 0 开始的成员序号；必须小于 size()。
+     * @return 该位置的解码后名称。
+     * @throws JsonException 值不是对象或序号越界。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let value: JsonValueView = YJson.parseDocument("{\"id\":7}").root()
+     * println(value.memberName(0))
+     * ```
+     * ```output
+     * id
+     * ```
+     */
     func memberName(index: Int64): String
+    /**
+     * 按对象成员顺序读取值视图。
+     *
+     * @param index 从 0 开始的成员序号；必须小于 size()。
+     * @return 与 memberName(index) 对应的值；共享底层存储。
+     * @throws JsonException 值不是对象或序号越界。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let value: JsonValueView = YJson.parseDocument("{\"id\":7}").root()
+     * println(value.memberValue(0).asInt64())
+     * ```
+     * ```output
+     * 7
+     * ```
+     */
     func memberValue(index: Int64): JsonValueView
+    /**
+     * 读取布尔值，不进行字符串或数字转换。
+     *
+     * @return 当前布尔值。
+     * @throws JsonException 值不是布尔类型；不同存储实现不保证同一错误 code。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let value: JsonValueView = YJson.parseDocument("true").root()
+     * println(value.asBool())
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     func asBool(): Bool
+    /**
+     * 读取解码后的字符串。
+     *
+     * @return 已处理 JSON 转义的字符串；不包含引号。
+     * @throws JsonException 值不是字符串；不同存储实现不保证同一错误 code。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let value: JsonValueView = YJson.parseDocument("\"hello\"").root()
+     * println(value.asString())
+     * ```
+     * ```output
+     * hello
+     * ```
+     */
     func asString(): String
+    /**
+     * 读取可精确表示为 Int64 的整数。
+     *
+     * @return Int64 整数；要求整数表示，不接受 1.0 或 1e0 之类的文本，也不截断小数。
+     * @throws JsonException 值类型不符或整数文本超出范围。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let value: JsonValueView = YJson.parseDocument("42").root()
+     * println(value.asInt64())
+     * ```
+     * ```output
+     * 42
+     * ```
+     */
     func asInt64(): Int64
+    /**
+     * 读取可精确表示为 UInt64 的非负整数。
+     *
+     * @return UInt64 整数；要求非负整数表示，不接受负数、小数或指数写法。
+     * @throws JsonException 值类型不符或整数文本超出范围。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let value: JsonValueView = YJson.parseDocument("42").root()
+     * println(value.asUInt64())
+     * ```
+     * ```output
+     * 42
+     * ```
+     */
     func asUInt64(): UInt64
+    /**
+     * 将 JSON 数字读取为 Float64。
+     *
+     * @return 浮点近似值；大整数转换可能舍入。
+     * @throws JsonException 值不是数字。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let value: JsonValueView = YJson.parseDocument("1.5").root()
+     * println(value.asFloat64() == 1.5)
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     func asFloat64(): Float64
+    /**
+     * 读取当前数字的 JSON 文本。
+     *
+     * @return 数字文本；是否保留原始拼写由存储表示决定。
+     * @throws JsonException 值不是数字。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let value: JsonValueView = YJson.parseDocument("1.20e2").root()
+     * println(value.asNumberText())
+     * ```
+     * ```output
+     * 1.20e2
+     * ```
+     */
     func asNumberText(): String
+    /**
+     * 复制为独立可修改树，默认最多访问 100,000 个节点和 256 层。
+     *
+     * @return 不共享可变子节点的 JsonNode 树。
+     * @throws JsonException 超出工作量或深度限制，或遇到循环节点。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let value: JsonValueView = YJson.parseDocument("{\"id\":1}").root()
+     * let copy = value.materialize()
+     * copy["id"] = 2
+     * println(value.member("id").getOrThrow().asInt64() == 1 && copy["id"].asInt64() == 2)
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     func materialize(): JsonNode
+    /**
+     * 在指定节点预算内复制为独立可修改树。
+     *
+     * @param maxNodes 正数节点访问上限，含根节点；深度上限仍为 256。
+     * @return 不共享可变子节点的 JsonNode 树。
+     * @throws IllegalArgumentException maxNodes 非正。
+     * @throws JsonException 超出节点或深度预算，或遇到循环节点。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let value: JsonValueView = YJson.parseDocument("[1]").root()
+     * println(value.materialize(2).toJson())
+     * ```
+     * ```output
+     * [1]
+     * ```
+     *
+     * @example 检查拒绝路径 {run}
+     * ```cangjie
+     * let value: JsonValueView = YJson.parseDocument("[1]").root()
+     * var code = ""
+     * try { let _ = value.materialize(1) } catch (error: JsonException) { code = error.code }
+     * println(code)
+     * ```
+     * ```output
+     * work_limit_exceeded
+     * ```
+     */
     func materialize(maxNodes: Int64): JsonNode
 }
 
 /**
- * Base type for GC-managed JSON tree nodes.
+ * 由 GC 管理的 JSON 树节点基类。
  *
- * Arrays and objects can be modified. Parsing and writing honor their read and write options. deepCopy and materialize create detached trees rather than sharing mutable children. A JsonValueView of a mutable node does not provide a frozen snapshot.
+ * JsonArray 和 JsonObject 可修改，插入子节点不会复制或冻结它。JsonValueView 只限制访问接口，不能隔离其他持有者的修改；deepCopy 和 materialize 才生成独立树。不要并发修改同一棵树。
  */
 public abstract class JsonNode <: ToString & JsonValueView {
+    /**
+     * 创建表示 JSON null 的节点。
+     *
+     * @return 新的 null 节点。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonNode.nullValue.isNull)
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public static prop nullValue: JsonNode {
         get() {
             freezeYJsonRuntime()
             JsonNullValue()
         }
     }
+    /**
+     * 创建布尔节点。
+     *
+     * @param value 要保存的布尔值。
+     * @return 保存该值的 JsonNode。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonNode.boolean(true).asBool())
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public static func boolean(value: Bool): JsonNode { JsonBoolValue(value) }
+    /**
+     * 创建有符号整数节点。
+     *
+     * @param value 要保存的 Int64 整数。
+     * @return 保存该值的 JsonNode。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonNode.int64(-2).asInt64())
+     * ```
+     * ```output
+     * -2
+     * ```
+     */
     public static func int64(value: Int64): JsonNode { JsonIntValue(value) }
+    /**
+     * 创建无符号整数节点。
+     *
+     * @param value 要保存的 UInt64 整数。
+     * @return 保存该值的 JsonNode。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonNode.uint64(2u64).asUInt64())
+     * ```
+     * ```output
+     * 2
+     * ```
+     */
     public static func uint64(value: UInt64): JsonNode { JsonUIntValue(value) }
+    /**
+     * 创建浮点数节点。
+     *
+     * @param value 要保存的 Float64。非有限值在序列化时被拒绝。
+     * @return 保存该值的 JsonNode。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonNode.float64(1.5).asFloat64() == 1.5)
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public static func float64(value: Float64): JsonNode { JsonFloatValue(value) }
+    /**
+     * 创建保留数字拼写节点。
+     *
+     * @param text 符合 JSON 数字语法的完整文本；不允许前后空白。
+     * @return 保存该值的 JsonNode。
+     * @throws IllegalArgumentException text 不是合法 JSON 数字文本。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonNode.number("1.20e2").asNumberText())
+     * ```
+     * ```output
+     * 1.20e2
+     * ```
+     *
+     * @example 检查拒绝路径 {run}
+     * ```cangjie
+     * var rejected = false
+     * try { let _ = JsonNode.number("01") } catch (_: IllegalArgumentException) { rejected = true }
+     * println(rejected)
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public static func number(text: String): JsonNode { JsonNumberLiteralValue(text) }
+    /**
+     * 创建字符串节点。
+     *
+     * @param value 未加 JSON 引号的字符串；写出时进行转义。
+     * @return 保存该值的 JsonNode。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonNode.string("hello").asString())
+     * ```
+     * ```output
+     * hello
+     * ```
+     */
     public static func string(value: String): JsonNode { JsonStringValue(value) }
+    /**
+     * 创建可修改的空数组。
+     *
+     * @return 新的空 JsonArray。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonNode.array().size())
+     * ```
+     * ```output
+     * 0
+     * ```
+     */
     public static func array(): JsonArray { JsonArray() }
+    /**
+     * 用现有节点创建可修改数组。
+     *
+     * @param items 按顺序放入数组的节点；只复制外层数组，子节点仍共享。
+     * @return 包含给定子节点的新 JsonArray。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let child = JsonNode.object()
+     * let array = JsonNode.array([child])
+     * child["id"] = 7
+     * println(array[0]["id"].asInt64())
+     * ```
+     * ```output
+     * 7
+     * ```
+     */
     public static func array(items: Array<JsonNode>): JsonArray { JsonArray(items) }
+    /**
+     * 创建按插入顺序枚举成员的空对象。
+     *
+     * @return 新的空 JsonObject。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonNode.object().size())
+     * ```
+     * ```output
+     * 0
+     * ```
+     */
     public static func object(): JsonObject { JsonObject() }
 
     /**
-     * Parses exactly one JSON document into a mutable tree.
+     * 解析一份完整 JSON 文档，生成可修改树。
      *
-     * @param text One complete JSON document as a string.
-     * @param config Parsing policies and positive resource limits for this document.
-     * @return Parsed JSON node.
+     * @param text 完整 JSON 文本。
+     * @param config 读取策略及正数资源预算。
+     * @return 新建的 JsonNode 树。
+     * @throws JsonException 语法、UTF-8、重复键或资源预算检查失败。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonNode.parse("[1]").toJson())
+     * ```
+     * ```output
+     * [1]
+     * ```
+     *
+     * @example 检查拒绝路径 {run}
+     * ```cangjie
+     * var code = ""
+     * try { let _ = JsonNode.parse("[1]", config: JsonReadOptions(maxInputBytes: 2)) }
+     * catch (error: JsonException) { code = error.code }
+     * println(code)
+     * ```
+     * ```output
+     * document_too_large
+     * ```
      */
     public static func parse(text: String, config!: JsonReadOptions = JsonReadOptions.defaults): JsonNode {
         JsonParser(text, config: config).parse()
     }
 
     /**
-     * Parses exactly one JSON document into a mutable tree.
+     * 解析一份完整 JSON 文档，生成可修改树。
      *
-     * @param bytes One complete JSON document encoded as UTF-8 bytes.
-     * @param config Parsing policies and positive resource limits for this document.
-     * @return Parsed JSON node.
+     * @param bytes 完整 JSON 文档的 UTF-8 字节。
+     * @param config 读取策略及正数资源预算。
+     * @return 新建的 JsonNode 树。
+     * @throws JsonException 语法、UTF-8、重复键或资源预算检查失败。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonNode.parse("[1]".toArray()).toJson())
+     * ```
+     * ```output
+     * [1]
+     * ```
      */
     public static func parse(bytes: Array<Byte>, config!: JsonReadOptions = JsonReadOptions.defaults): JsonNode {
         parseJsonValueFromBytes(bytes, config: config)
     }
 
     /**
-     * Serializes this node as JSON text.
+     * 按写出选项序列化当前节点。
      *
-     * @param options Read or write policies and resource limits for this call.
-     * @return JSON text.
+     * @param options 缩进、HTML 转义、输出字节和容器深度限制。
+     * @return 一份完整 JSON 文本。
+     * @throws JsonException 树存在循环、非有限数值，或超出写出预算。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let node = JsonNode.object().put("id", JsonNode.int64(1))
+     * println(node.toJson())
+     * ```
+     * ```output
+     * {"id":1}
+     * ```
+     *
+     * @example 检查拒绝路径 {run}
+     * ```cangjie
+     * let array = JsonArray()
+     * array.add(array)
+     * var code = ""
+     * try { let _ = array.toJson() } catch (error: JsonException) { code = error.code }
+     * println(code)
+     * ```
+     * ```output
+     * cyclic_json_node
+     * ```
      */
     public func toJson(options!: JsonWriteOptions = JsonWriteOptions.defaults): String {
         freezeYJsonRuntime()
@@ -403,12 +981,23 @@ public abstract class JsonNode <: ToString & JsonValueView {
     }
 
     /**
-     * Serializes this node to a caller-owned output stream.
+     * 将当前节点写入调用方持有的输出流。
      *
-     * The stream is not closed. A failure may leave an already-written prefix.
+     * 底层 I/O 异常原样传播。失败时流可能已包含前缀；不会回滚输出。
      *
-     * @param output Caller-owned output stream. This operation does not close it.
-     * @param options Read or write policies and resource limits for this call.
+     * @param output 输出目标；本操作不关闭该流。
+     * @param options 本次写入的格式和资源预算。
+     * @throws JsonException 树存在循环、非有限数值，或超出写出预算。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let output = YJsonMemoryOutputStream()
+     * JsonNode.parse("[1]").writeJson(output)
+     * println(output.toUtf8String())
+     * ```
+     * ```output
+     * [1]
+     * ```
      */
     public func writeJson(output: OutputStream,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): Unit {
@@ -416,59 +1005,193 @@ public abstract class JsonNode <: ToString & JsonValueView {
         writeJsonValueToStream(this, output, options)
     }
 
+    /**
+     * 读取当前节点的 JSON 类型。
+     *
+     * @return 六种 JsonKind 之一。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonNode.object().kind() == JsonKind.Object)
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public func kind(): JsonKind
+    /**
+     * 读取容器的直接子项数。
+     *
+     * @return 数组元素数、对象成员数；标量返回 0。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonNode.array([JsonNode.int64(1)]).size())
+     * ```
+     * ```output
+     * 1
+     * ```
+     */
     public func size(): Int64
 
     /**
-     * Creates a detached mutable copy of this tree.
+     * 深复制当前树，隔离所有可变子节点。
      *
-     * The operation is bounded to 256 levels and, unless maxNodes is supplied, 100,000 visited nodes.
+     * @return 独立可修改树；共享的输入子树会分别复制。
+     * @throws JsonException 超出 100,000 节点或 256 层预算，或发现循环；code 分别为 work_limit_exceeded、max_depth 或 cyclic_json_node。
      *
-     * @return Detached tree.
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let original = JsonNode.parse("{\"id\":1}")
+     * let copy = original.deepCopy()
+     * copy["id"] = 2
+     * println(original["id"].asInt64() == 1 && copy["id"].asInt64() == 2)
+     * ```
+     * ```output
+     * true
+     * ```
      */
     public func deepCopy(): JsonNode {
         deepCopyJsonNode(this)
     }
 
     /**
-     * Creates a detached mutable copy of this tree.
+     * 深复制当前树，隔离所有可变子节点。
      *
-     * The operation is bounded to 256 levels and, unless maxNodes is supplied, 100,000 visited nodes.
+     * @return 独立可修改树；共享的输入子树会分别复制。
+     * @throws JsonException 超出 100,000 节点或 256 层预算，或发现循环；code 分别为 work_limit_exceeded、max_depth 或 cyclic_json_node。
      *
-     * @return Detached tree.
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let original = JsonNode.parse("{\"id\":1}")
+     * let copy = original.materialize()
+     * copy["id"] = 2
+     * println(original["id"].asInt64() == 1 && copy["id"].asInt64() == 2)
+     * ```
+     * ```output
+     * true
+     * ```
      */
     public func materialize(): JsonNode { deepCopyJsonNode(this) }
 
     /**
-     * Creates a detached mutable copy of this tree.
+     * 在指定节点预算内深复制当前树。
      *
-     * The operation is bounded to 256 levels and, unless maxNodes is supplied, 100,000 visited nodes.
+     * @param maxNodes 正数节点访问上限，包含根节点；深度上限固定为 256。
+     * @return 不共享可变子节点的独立树。
+     * @throws IllegalArgumentException maxNodes 非正。
+     * @throws JsonException 节点预算、深度预算耗尽，或发现循环。
      *
-     * @param maxNodes Positive maximum number of nodes to copy.
-     * @return Detached tree.
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonNode.parse("[1]").materialize(2).toJson())
+     * ```
+     * ```output
+     * [1]
+     * ```
+     *
+     * @example 检查拒绝路径 {run}
+     * ```cangjie
+     * var code = ""
+     * try { let _ = JsonNode.parse("[1]").materialize(1) }
+     * catch (error: JsonException) { code = error.code }
+     * println(code)
+     * ```
+     * ```output
+     * work_limit_exceeded
+     * ```
      */
     public func materialize(maxNodes: Int64): JsonNode {
         deepCopyJsonNode(this, maxNodes)
     }
 
     /**
-     * Compares JSON data-model equality, including numeric equality across different number spellings.
+     * 按 JSON 数据模型比较两棵树。
      *
-     * The operation is bounded to 256 levels and, unless maxNodes is supplied, 100,000 visited nodes.
+     * 数组顺序参与比较。比较使用共享的 100,000 次节点访问预算和 256 层深度上限；对象大小不同等提前判定仍会检查输入循环。
      *
-     * @param other Tree to compare using JSON data-model equality.
-     * @return Whether the two trees are equivalent.
+     * @param other 另一棵要比较的树。
+     * @return 值等价时返回 true；忽略对象成员顺序，并比较不同数字拼写的数值。
+     * @throws JsonException 超出 100,000 节点或 256 层预算，或发现循环；code 分别为 work_limit_exceeded、max_depth 或 cyclic_json_node。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let left = JsonNode.parse("{\"n\":1,\"ok\":true}")
+     * let right = JsonNode.parse("{\"ok\":true,\"n\":1.0}")
+     * println(left.equivalentTo(right))
+     * ```
+     * ```output
+     * true
+     * ```
      */
     public func equivalentTo(other: JsonNode): Bool {
         jsonNodesEquivalent(this, other)
     }
 
+    /**
+     * 将节点写成缩进 JSON 文本。
+     *
+     * @return JSON 文本；无参形式每层使用两个空格。
+     * @throws IllegalArgumentException 容器的 indent 包含空格、制表符之外的字符。
+     * @throws JsonException 循环、非有限数值或默认 256 层写出预算失败。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let node = JsonNode.array([JsonNode.int64(1)])
+     * println(node.toPrettyString().contains("\n"))
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public func toPrettyString(): String {
         toPrettyString("  ")
     }
 
+    /**
+     * 将节点写成缩进 JSON 文本。
+     *
+     * @param indent 每层缩进；数组和对象只接受空格或制表符，空串为紧凑格式。
+     * @return JSON 文本；无参形式每层使用两个空格。
+     * @throws IllegalArgumentException 容器的 indent 包含空格、制表符之外的字符。
+     * @throws JsonException 循环、非有限数值或默认 256 层写出预算失败。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let node = JsonNode.array([JsonNode.int64(1)])
+     * println(node.toPrettyString(" ").contains("\n"))
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public func toPrettyString(indent: String): String
 
+    /**
+     * 读取布尔值，不进行字符串或数字转换。
+     *
+     * @return 当前布尔值。
+     * @throws JsonException 值不是布尔类型，code 为 type_mismatch。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let value: JsonNode = JsonNode.parse("true")
+     * println(value.asBool())
+     * ```
+     * ```output
+     * true
+     * ```
+     *
+     * @example 检查拒绝路径 {run}
+     * ```cangjie
+     * var code = ""
+     * try { let _ = JsonNode.int64(1).asBool() } catch (error: JsonException) { code = error.code }
+     * println(code)
+     * ```
+     * ```output
+     * type_mismatch
+     * ```
+     */
     public func asBool(): Bool {
         match (this) {
             case value: JsonBoolValue => value.value
@@ -476,6 +1199,32 @@ public abstract class JsonNode <: ToString & JsonValueView {
         }
     }
 
+    /**
+     * 读取可精确表示为 Int64 的整数。
+     *
+     * @return Int64 整数；要求整数表示，不接受 1.0 或 1e0 之类的文本，也不截断小数。
+     * @throws JsonException 值类型不符或整数文本超出范围。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let value: JsonNode = JsonNode.parse("42")
+     * println(value.asInt64())
+     * ```
+     * ```output
+     * 42
+     * ```
+     *
+     * @example 检查拒绝路径 {run}
+     * ```cangjie
+     * var code = ""
+     * try { let _ = JsonNode.uint64(UInt64.Max).asInt64() }
+     * catch (error: JsonException) { code = error.code }
+     * println(code)
+     * ```
+     * ```output
+     * number_out_of_range
+     * ```
+     */
     public func asInt64(): Int64 {
         match (this) {
             case value: JsonIntValue => value.value
@@ -492,6 +1241,21 @@ public abstract class JsonNode <: ToString & JsonValueView {
         }
     }
 
+    /**
+     * 读取可精确表示为 UInt64 的非负整数。
+     *
+     * @return UInt64 整数；要求非负整数表示，不接受负数、小数或指数写法。
+     * @throws JsonException 值类型不符或整数文本超出范围。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let value: JsonNode = JsonNode.parse("42")
+     * println(value.asUInt64())
+     * ```
+     * ```output
+     * 42
+     * ```
+     */
     public func asUInt64(): UInt64 {
         match (this) {
             case value: JsonUIntValue => value.value
@@ -508,6 +1272,21 @@ public abstract class JsonNode <: ToString & JsonValueView {
         }
     }
 
+    /**
+     * 将 JSON 数字读取为 Float64。
+     *
+     * @return 浮点近似值；大整数转换可能舍入。
+     * @throws JsonException 值不是数字。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let value: JsonNode = JsonNode.parse("1.5")
+     * println(value.asFloat64() == 1.5)
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public func asFloat64(): Float64 {
         match (this) {
             case value: JsonFloatValue => value.value
@@ -518,6 +1297,20 @@ public abstract class JsonNode <: ToString & JsonValueView {
         }
     }
 
+    /**
+     * 读取当前数字的 JSON 文本。
+     *
+     * @return 数字文本；是否保留原始拼写由存储表示决定。
+     * @throws JsonException 值不是数字。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonNode.number("1.20e2").asNumberText())
+     * ```
+     * ```output
+     * 1.20e2
+     * ```
+     */
     public func asNumberText(): String {
         match (this) {
             case value: JsonIntValue => value.value.toString()
@@ -528,6 +1321,21 @@ public abstract class JsonNode <: ToString & JsonValueView {
         }
     }
 
+    /**
+     * 读取解码后的字符串。
+     *
+     * @return 已处理 JSON 转义的字符串；不包含引号。
+     * @throws JsonException 值不是字符串，code 为 type_mismatch。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let value: JsonNode = JsonNode.parse("\"hello\"")
+     * println(value.asString())
+     * ```
+     * ```output
+     * hello
+     * ```
+     */
     public func asString(): String {
         match (this) {
             case value: JsonStringValue => value.value
@@ -535,6 +1343,23 @@ public abstract class JsonNode <: ToString & JsonValueView {
         }
     }
 
+    /**
+     * 将当前节点作为可修改数组访问。
+     *
+     * @return 当前容器本身；不复制、不会隔离后续修改。
+     * @throws JsonException 当前节点不是所需容器类型，code 为 type_mismatch。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let node: JsonNode = JsonNode.array()
+     * let array = node.asArray()
+     * array.add(JsonNode.int64(1))
+     * println(node.size())
+     * ```
+     * ```output
+     * 1
+     * ```
+     */
     public func asArray(): JsonArray {
         match (this) {
             case value: JsonArray => value
@@ -542,6 +1367,23 @@ public abstract class JsonNode <: ToString & JsonValueView {
         }
     }
 
+    /**
+     * 将当前节点作为可修改对象访问。
+     *
+     * @return 当前容器本身；不复制、不会隔离后续修改。
+     * @throws JsonException 当前节点不是所需容器类型，code 为 type_mismatch。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let node: JsonNode = JsonNode.object()
+     * let object = node.asObject()
+     * object.put("id", JsonNode.int64(1))
+     * println(node.size())
+     * ```
+     * ```output
+     * 1
+     * ```
+     */
     public func asObject(): JsonObject {
         match (this) {
             case value: JsonObject => value
@@ -549,6 +1391,22 @@ public abstract class JsonNode <: ToString & JsonValueView {
         }
     }
 
+    /**
+     * 按从 0 开始的下标查询数组元素。
+     *
+     * @param index 数组元素下标。
+     * @return 存在时返回共享底层存储的视图，越界返回 None。
+     * @throws JsonException 当前值不是数组，code 为 type_mismatch。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let value: JsonNode = JsonNode.parse("[7]")
+     * println(value.element(0).getOrThrow().asInt64() == 7 && value.element(1).isNone())
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public func element(index: Int64): Option<JsonValueView> {
         match (asArray().get(index)) {
             case Some(value) => Some<JsonValueView>(value)
@@ -556,6 +1414,22 @@ public abstract class JsonNode <: ToString & JsonValueView {
         }
     }
 
+    /**
+     * 按名称查询对象成员。
+     *
+     * @param name 解码后的完整成员名。
+     * @return 存在时返回共享底层存储的视图，缺少名称返回 None。
+     * @throws JsonException 当前值不是对象，code 为 type_mismatch。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let value: JsonNode = JsonNode.parse("{\"id\":7}")
+     * println(value.member("id").getOrThrow().asInt64() == 7 && value.member("absent").isNone())
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public func member(name: String): Option<JsonValueView> {
         match (asObject().get(name)) {
             case Some(value) => Some<JsonValueView>(value)
@@ -563,9 +1437,54 @@ public abstract class JsonNode <: ToString & JsonValueView {
         }
     }
 
+    /**
+     * 按对象成员顺序读取名称。
+     *
+     * @param index 从 0 开始的成员序号；必须小于 size()。
+     * @return 该位置的解码后名称。
+     * @throws JsonException 值不是对象或序号越界。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let value: JsonNode = JsonNode.parse("{\"id\":7}")
+     * println(value.memberName(0))
+     * ```
+     * ```output
+     * id
+     * ```
+     */
     public func memberName(index: Int64): String { asObject().nameAt(index) }
+    /**
+     * 按对象成员顺序读取值视图。
+     *
+     * @param index 从 0 开始的成员序号；必须小于 size()。
+     * @return 与 memberName(index) 对应的值；共享底层存储。
+     * @throws JsonException 值不是对象或序号越界。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let value: JsonNode = JsonNode.parse("{\"id\":7}")
+     * println(value.memberValue(0).asInt64())
+     * ```
+     * ```output
+     * 7
+     * ```
+     */
     public func memberValue(index: Int64): JsonValueView { asObject().valueAt(index) }
 
+    /**
+     * 检查当前节点是否为 JSON 空值。
+     *
+     * @return null 节点返回 true，其他节点返回 false。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonNode.nullValue.isNull && !JsonNode.boolean(false).isNull)
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public prop isNull: Bool {
         get() {
             match (this) {
@@ -575,70 +1494,342 @@ public abstract class JsonNode <: ToString & JsonValueView {
         }
     }
 
+    /**
+     * 读取对象成员；缺失时抛出异常。
+     *
+     * @param key 对象成员名。
+     * @return 共享的子节点；修改该子节点会影响当前树。
+     * @throws JsonException 不是对象或名称缺失；缺失 code 为 missing_key。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let node: JsonNode = JsonNode.object()
+     * node["id"] = 7
+     * println(node["id"].asInt64())
+     * ```
+     * ```output
+     * 7
+     * ```
+     */
     public operator func [](key: String): JsonNode {
         asObject().get(key).getOrThrow({
             => JsonException("Missing object key '${key}'", code: "missing_key")
         })
     }
 
+    /**
+     * 设置对象成员。
+     *
+     * @param key 对象成员名。
+     * @param value 替换值。直接共享所传子节点，不复制。
+     * @throws JsonException 当前节点不是对象。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let node: JsonNode = JsonNode.object()
+     * node["id"] = JsonNode.int64(7)
+     * println(node["id"].asInt64())
+     * ```
+     * ```output
+     * 7
+     * ```
+     */
     public operator func [](key: String, value!: JsonNode): Unit {
         asObject().put(key, value)
     }
 
+    /**
+     * 设置对象成员。
+     *
+     * @param key 对象成员名。
+     * @param value 替换值。将值包装为 JSON 节点。
+     * @throws JsonException 当前节点不是对象。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let node: JsonNode = JsonNode.object()
+     * node["id"] = true
+     * println(node["id"].asBool())
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public operator func [](key: String, value!: Bool): Unit {
         asObject().put(key, value)
     }
 
+    /**
+     * 设置对象成员。
+     *
+     * @param key 对象成员名。
+     * @param value 替换值。将值包装为 JSON 节点。
+     * @throws JsonException 当前节点不是对象。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let node: JsonNode = JsonNode.object()
+     * node["id"] = 7
+     * println(node["id"].asInt64())
+     * ```
+     * ```output
+     * 7
+     * ```
+     */
     public operator func [](key: String, value!: Int64): Unit {
         asObject().put(key, value)
     }
 
+    /**
+     * 设置对象成员。
+     *
+     * @param key 对象成员名。
+     * @param value 替换值。将值包装为 JSON 节点。
+     * @throws JsonException 当前节点不是对象。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let node: JsonNode = JsonNode.object()
+     * node["id"] = 1.5
+     * println(node["id"].asFloat64() == 1.5)
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public operator func [](key: String, value!: Float64): Unit {
         asObject().put(key, value)
     }
 
+    /**
+     * 设置对象成员。
+     *
+     * @param key 对象成员名。
+     * @param value 替换值。将值包装为 JSON 节点；Rune 保存为一个字符的字符串。
+     * @throws JsonException 当前节点不是对象。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let node: JsonNode = JsonNode.object()
+     * node["id"] = r'x'
+     * println(node["id"].asString())
+     * ```
+     * ```output
+     * x
+     * ```
+     */
     public operator func [](key: String, value!: Rune): Unit {
         asObject().put(key, value)
     }
 
+    /**
+     * 设置对象成员。
+     *
+     * @param key 对象成员名。
+     * @param value 替换值。将值包装为 JSON 节点。
+     * @throws JsonException 当前节点不是对象。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let node: JsonNode = JsonNode.object()
+     * node["id"] = "hello"
+     * println(node["id"].asString())
+     * ```
+     * ```output
+     * hello
+     * ```
+     */
     public operator func [](key: String, value!: String): Unit {
         asObject().put(key, value)
     }
 
+    /**
+     * 设置对象成员。
+     *
+     * @param key 对象成员名。
+     * @param value 替换值。复制外层数组，数组内子节点仍共享。
+     * @throws JsonException 当前节点不是对象。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let node: JsonNode = JsonNode.object()
+     * node["id"] = [JsonNode.int64(7)]
+     * println(node["id"].size())
+     * ```
+     * ```output
+     * 1
+     * ```
+     */
     public operator func [](key: String, value!: Array<JsonNode>): Unit {
         asObject().put(key, jsonNodeValue(value))
     }
 
+    /**
+     * 读取数组元素；缺失时抛出异常。
+     *
+     * @param index 从 0 开始的数组下标。
+     * @return 共享的子节点；修改该子节点会影响当前树。
+     * @throws JsonException 不是数组或下标越界；越界 code 为 index_out_of_bounds。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let node: JsonNode = JsonNode.array([JsonNode.nullValue])
+     * node[0] = 7
+     * println(node[0].asInt64())
+     * ```
+     * ```output
+     * 7
+     * ```
+     */
     public operator func [](index: Int64): JsonNode {
         asArray().get(index).getOrThrow({
             => JsonException("Array index ${index} is out of bounds", code: "index_out_of_bounds")
         })
     }
 
+    /**
+     * 设置已有数组元素。
+     *
+     * @param index 从 0 开始的数组下标。
+     * @param value 替换值。直接共享所传子节点，不复制。
+     * @throws JsonException 当前节点不是数组，或下标越界。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let node: JsonNode = JsonNode.array([JsonNode.nullValue])
+     * node[0] = JsonNode.int64(7)
+     * println(node[0].asInt64())
+     * ```
+     * ```output
+     * 7
+     * ```
+     */
     public operator func [](index: Int64, value!: JsonNode): Unit {
         asArray().set(index, value)
     }
 
+    /**
+     * 设置已有数组元素。
+     *
+     * @param index 从 0 开始的数组下标。
+     * @param value 替换值。将值包装为 JSON 节点。
+     * @throws JsonException 当前节点不是数组，或下标越界。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let node: JsonNode = JsonNode.array([JsonNode.nullValue])
+     * node[0] = true
+     * println(node[0].asBool())
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public operator func [](index: Int64, value!: Bool): Unit {
         asArray().set(index, value)
     }
 
+    /**
+     * 设置已有数组元素。
+     *
+     * @param index 从 0 开始的数组下标。
+     * @param value 替换值。将值包装为 JSON 节点。
+     * @throws JsonException 当前节点不是数组，或下标越界。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let node: JsonNode = JsonNode.array([JsonNode.nullValue])
+     * node[0] = 7
+     * println(node[0].asInt64())
+     * ```
+     * ```output
+     * 7
+     * ```
+     */
     public operator func [](index: Int64, value!: Int64): Unit {
         asArray().set(index, value)
     }
 
+    /**
+     * 设置已有数组元素。
+     *
+     * @param index 从 0 开始的数组下标。
+     * @param value 替换值。将值包装为 JSON 节点。
+     * @throws JsonException 当前节点不是数组，或下标越界。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let node: JsonNode = JsonNode.array([JsonNode.nullValue])
+     * node[0] = 1.5
+     * println(node[0].asFloat64() == 1.5)
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public operator func [](index: Int64, value!: Float64): Unit {
         asArray().set(index, value)
     }
 
+    /**
+     * 设置已有数组元素。
+     *
+     * @param index 从 0 开始的数组下标。
+     * @param value 替换值。将值包装为 JSON 节点；Rune 保存为一个字符的字符串。
+     * @throws JsonException 当前节点不是数组，或下标越界。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let node: JsonNode = JsonNode.array([JsonNode.nullValue])
+     * node[0] = r'x'
+     * println(node[0].asString())
+     * ```
+     * ```output
+     * x
+     * ```
+     */
     public operator func [](index: Int64, value!: Rune): Unit {
         asArray().set(index, value)
     }
 
+    /**
+     * 设置已有数组元素。
+     *
+     * @param index 从 0 开始的数组下标。
+     * @param value 替换值。将值包装为 JSON 节点。
+     * @throws JsonException 当前节点不是数组，或下标越界。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let node: JsonNode = JsonNode.array([JsonNode.nullValue])
+     * node[0] = "hello"
+     * println(node[0].asString())
+     * ```
+     * ```output
+     * hello
+     * ```
+     */
     public operator func [](index: Int64, value!: String): Unit {
         asArray().set(index, value)
     }
 
+    /**
+     * 设置已有数组元素。
+     *
+     * @param index 从 0 开始的数组下标。
+     * @param value 替换值。复制外层数组，数组内子节点仍共享。
+     * @throws JsonException 当前节点不是数组，或下标越界。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let node: JsonNode = JsonNode.array([JsonNode.nullValue])
+     * node[0] = [JsonNode.int64(7)]
+     * println(node[0].size())
+     * ```
+     * ```output
+     * 1
+     * ```
+     */
     public operator func [](index: Int64, value!: Array<JsonNode>): Unit {
         asArray().set(index, jsonNodeValue(value))
     }
@@ -850,34 +2041,153 @@ class JsonStringValue <: JsonNode {
     }
 }
 
+/**
+ * 可修改、保留元素顺序的 JSON 数组。
+ *
+ * 元素以引用共享；add、set 和 insert 不深复制子节点。允许重复引用，但形成循环后不能序列化、深复制或比较。
+ */
 public class JsonArray <: JsonNode {
     private let items: ArrayList<JsonNode>
 
+    /**
+     * 创建空数组。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonArray().size())
+     * ```
+     * ```output
+     * 0
+     * ```
+     */
     public init() {
         items = ArrayList<JsonNode>()
     }
 
+    /**
+     * 直接使用现有可变列表作为数组存储。
+     *
+     * @param items 共享的元素列表；对该列表的后续修改会影响数组。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let items = ArrayList<JsonNode>()
+     * let array = JsonArray(items)
+     * items.add(JsonNode.int64(7))
+     * println(array[0].asInt64())
+     * ```
+     * ```output
+     * 7
+     * ```
+     */
     public init(items: ArrayList<JsonNode>) {
         this.items = items
     }
 
+    /**
+     * 复制外层数组，保留各子节点引用。
+     *
+     * @param items 要按原顺序保存的子节点。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let child = JsonNode.object()
+     * let array = JsonArray([child])
+     * child["id"] = 7
+     * println(array[0]["id"].asInt64())
+     * ```
+     * ```output
+     * 7
+     * ```
+     */
     public init(items: Array<JsonNode>) {
         this.items = ArrayList<JsonNode>(items)
     }
 
+    /**
+     * 读取数组类型标记。
+     *
+     * @return JsonKind.Array。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonArray().kind() == JsonKind.Array)
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public func kind(): JsonKind {
         JsonKind.Array
     }
 
+    /**
+     * 在末尾添加共享的子节点。
+     *
+     * @param value 要添加的节点；不进行深复制。
+     * @return 当前数组，便于链式调用。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonArray().add(JsonNode.int64(7)).toJson())
+     * ```
+     * ```output
+     * [7]
+     * ```
+     */
     public func add(value: JsonNode): JsonArray {
         items.add(value)
         this
     }
 
+    /**
+     * 通过类型的生成 codec 转为节点并追加。
+     *
+     * @param value 实现匹配运行时生成协议的值；编码后重新解析为独立节点。
+     * @return 当前数组。
+     * @throws JsonException 编码、默认读取预算或解析失败。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let array = JsonArray().add(DocPoint(7))
+     * println(array[0]["x"].asInt64())
+     * ```
+     * ```output
+     * 7
+     * ```
+     */
     public func add<T>(value: T): JsonArray where T <: GeneratedCodecProviderV1<T> {
         add(jsonNodeValue(value))
     }
 
+    /**
+     * 替换已有位置的元素，不改变数组长度。
+     *
+     * @param index 从 0 开始、必须小于 size() 的下标。
+     * @param value 直接共享的新节点。
+     * @return 当前数组。
+     * @throws JsonException 下标越界，code 为 index_out_of_bounds。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let array = JsonArray([JsonNode.int64(1)])
+     * println(array.set(0, JsonNode.int64(7)).toJson())
+     * ```
+     * ```output
+     * [7]
+     * ```
+     *
+     * @example 检查拒绝路径 {run}
+     * ```cangjie
+     * var code = ""
+     * try { let _ = JsonArray().set(0, JsonNode.int64(1)) }
+     * catch (error: JsonException) { code = error.code }
+     * println(code)
+     * ```
+     * ```output
+     * index_out_of_bounds
+     * ```
+     */
     public func set(index: Int64, value: JsonNode): JsonArray {
         if (index < 0 || index >= items.size) {
             throw JsonException("Array index ${index} is out of bounds", code: "index_out_of_bounds")
@@ -886,10 +2196,45 @@ public class JsonArray <: JsonNode {
         this
     }
 
+    /**
+     * 将生成 codec 的值转为节点并替换已有元素。
+     *
+     * @param index 从 0 开始、必须小于 size() 的下标。
+     * @param value 编码并重新解析的值；不保留对该值的共享引用。
+     * @return 当前数组。
+     * @throws JsonException 转换失败、默认预算耗尽或下标越界。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let array = JsonArray([JsonNode.nullValue])
+     * array.set(0, DocPoint(7))
+     * println(array[0]["x"].asInt64())
+     * ```
+     * ```output
+     * 7
+     * ```
+     */
     public func set<T>(index: Int64, value: T): JsonArray where T <: GeneratedCodecProviderV1<T> {
         set(index, jsonNodeValue(value))
     }
 
+    /**
+     * 在指定位置插入节点并后移后续元素。
+     *
+     * @param index 插入位置，允许 0 到 size()，包含末尾。
+     * @param value 直接共享的节点。
+     * @return 当前数组。
+     * @throws JsonException index 小于 0 或大于 size()。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let array = JsonArray([JsonNode.int64(2)])
+     * println(array.insert(0, JsonNode.int64(1)).toJson())
+     * ```
+     * ```output
+     * [1,2]
+     * ```
+     */
     public func insert(index: Int64, value: JsonNode): JsonArray {
         if (index < 0 || index > items.size) {
             throw JsonException("Array index ${index} is out of bounds", code: "index_out_of_bounds")
@@ -898,6 +2243,22 @@ public class JsonArray <: JsonNode {
         this
     }
 
+    /**
+     * 移除元素并前移后续元素。
+     *
+     * @param index 从 0 开始的现有元素下标。
+     * @return 被移除的原节点；不复制它。
+     * @throws JsonException 下标越界，code 为 index_out_of_bounds。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let array = JsonArray([JsonNode.int64(7)])
+     * println(array.removeAt(0).asInt64() == 7 && array.size() == 0)
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public func removeAt(index: Int64): JsonNode {
         if (index < 0 || index >= items.size) {
             throw JsonException("Array index ${index} is out of bounds", code: "index_out_of_bounds")
@@ -905,6 +2266,19 @@ public class JsonArray <: JsonNode {
         items.remove(at: index)
     }
 
+    /**
+     * 读取当前数组长度。
+     *
+     * @return 直接元素个数，不递归统计子节点。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonArray([JsonNode.int64(1), JsonNode.int64(2)]).size())
+     * ```
+     * ```output
+     * 2
+     * ```
+     */
     public func size(): Int64 {
         items.size
     }
@@ -913,62 +2287,245 @@ public class JsonArray <: JsonNode {
         items
     }
 
+    /**
+     * 查询数组元素，越界时返回 None。
+     *
+     * @param index 从 0 开始的下标。
+     * @return 存在时返回共享子节点，否则 None。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let array = JsonArray([JsonNode.int64(7)])
+     * println(array.get(0).getOrThrow().asInt64() == 7 && array.get(1).isNone())
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public func get(index: Int64): Option<JsonNode> {
         items.get(index)
     }
 
+    /**
+     * 以紧凑格式序列化数组。
+     *
+     * @return 完整 JSON 数组文本。
+     * @throws JsonException 含循环或非有限数值，或超过默认深度限制。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonArray([JsonNode.int64(7)]).toString())
+     * ```
+     * ```output
+     * [7]
+     * ```
+     */
     public func toString(): String {
         freezeYJsonRuntime()
         writeJsonValueToString(this, JsonWriteOptions.compact)
     }
 
+    /**
+     * 按指定缩进序列化数组。
+     *
+     * @param indent 只含空格或制表符的每层缩进；空串为紧凑格式。
+     * @return JSON 数组文本。
+     * @throws IllegalArgumentException indent 含其他字符。
+     * @throws JsonException 含循环或非有限数值，或超过默认深度限制。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonArray([JsonNode.int64(7)]).toPrettyString(" ").contains("\n"))
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public func toPrettyString(indent: String): String {
         freezeYJsonRuntime()
         writeJsonValueToString(this, JsonWriteOptions.pretty(indent: indent))
     }
 }
 
+/**
+ * 按成员插入顺序枚举的可修改 JSON 对象。
+ *
+ * 名称唯一，put 已有名称时更新值并保留原位置。子节点以引用共享；移除后重新插入的名称排在末尾。
+ */
 public class JsonObject <: JsonNode {
     private let fields: HashMap<String, JsonNode>
     private let names: ArrayList<String>
 
+    /**
+     * 创建空对象。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonObject().size())
+     * ```
+     * ```output
+     * 0
+     * ```
+     */
     public init() {
         fields = HashMap<String, JsonNode>()
         names = ArrayList<String>()
     }
 
+    /**
+     * 复制给定映射的成员，但共享子节点。
+     *
+     * @param fields 初始化成员；初始顺序取决于该 HashMap 的迭代顺序。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let fields = HashMap<String, JsonNode>()
+     * let child = JsonNode.object()
+     * fields.add("child", child)
+     * let object = JsonObject(fields)
+     * fields.clear()
+     * child["id"] = 7
+     * println(object["child"]["id"].asInt64() == 7 && object.size() == 1)
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public init(fields: HashMap<String, JsonNode>) {
         this.fields = HashMap<String, JsonNode>()
         names = ArrayList<String>()
         for ((name, value) in fields) { put(name, value) }
     }
 
+    /**
+     * 读取对象类型标记。
+     *
+     * @return JsonKind.Object。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonObject().kind() == JsonKind.Object)
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public func kind(): JsonKind {
         JsonKind.Object
     }
 
+    /**
+     * 读取当前对象成员数。
+     *
+     * @return 不同名称的直接成员个数。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonObject().put("id", JsonNode.int64(7)).size())
+     * ```
+     * ```output
+     * 1
+     * ```
+     */
     public func size(): Int64 {
         fields.size
     }
 
+    /**
+     * 检查对象是否包含给定名称。
+     *
+     * @param key 要查询的完整名称。
+     * @return 名称存在时为 true，包括值为 null 的成员。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonObject().put("id", JsonNode.nullValue).contains("id"))
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public func contains(key: String): Bool {
         fields.contains(key)
     }
 
+    /**
+     * 新增或替换对象成员，直接共享子节点。
+     *
+     * @param key 解码后的成员名；已有名称保留原顺序。
+     * @param value 要保存的子节点，不深复制。
+     * @return 当前对象。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let object = JsonObject().put("id", JsonNode.int64(1))
+     * println(object.put("id", JsonNode.int64(7)).toJson())
+     * ```
+     * ```output
+     * {"id":7}
+     * ```
+     */
     public func put(key: String, value: JsonNode): JsonObject {
         if (!fields.contains(key)) { names.add(key) }
         fields.add(key, value)
         this
     }
 
+    /**
+     * 通过生成 codec 转为节点后保存到对象。
+     *
+     * @param key 新增或替换的成员名。
+     * @param value 编码并重新解析的值；不共享其可变状态。
+     * @return 当前对象。
+     * @throws JsonException 编码、默认读取预算或解析失败。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let object = JsonObject().put("point", DocPoint(7))
+     * println(object["point"]["x"].asInt64())
+     * ```
+     * ```output
+     * 7
+     * ```
+     */
     public func put<T>(key: String, value: T): JsonObject where T <: GeneratedCodecProviderV1<T> {
         put(key, jsonNodeValue(value))
     }
 
+    /**
+     * 查询成员，名称缺失时返回 None。
+     *
+     * @param key 要查询的完整名称。
+     * @return 存在时返回共享子节点，否则 None。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let object = JsonObject().put("id", JsonNode.int64(7))
+     * println(object.get("id").getOrThrow().asInt64() == 7 && object.get("absent").isNone())
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public func get(key: String): Option<JsonNode> {
         fields.get(key)
     }
 
+    /**
+     * 删除成员及其枚举位置。
+     *
+     * @param key 要删除的完整名称。
+     * @return 存在时返回被移除的原节点，否则 None。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let object = JsonObject().put("id", JsonNode.int64(7))
+     * println(object.remove("id").getOrThrow().asInt64() == 7 && !object.contains("id"))
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public func remove(key: String): Option<JsonNode> {
         let removed = fields.remove(key)
         if (removed.isSome()) {
@@ -979,12 +2536,52 @@ public class JsonObject <: JsonNode {
         removed
     }
 
+    /**
+     * 按插入顺序读取名称。
+     *
+     * @param index 从 0 开始、必须小于 size() 的成员序号。
+     * @return 该序号的成员名。
+     * @throws JsonException 序号越界，code 为 index_out_of_bounds。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonObject().put("id", JsonNode.int64(7)).nameAt(0))
+     * ```
+     * ```output
+     * id
+     * ```
+     *
+     * @example 检查拒绝路径 {run}
+     * ```cangjie
+     * var code = ""
+     * try { let _ = JsonObject().nameAt(0) } catch (error: JsonException) { code = error.code }
+     * println(code)
+     * ```
+     * ```output
+     * index_out_of_bounds
+     * ```
+     */
     public func nameAt(index: Int64): String {
         names.get(index).getOrThrow({ =>
             JsonException("Object member index ${index} is out of bounds", code: "index_out_of_bounds")
         })
     }
 
+    /**
+     * 按插入顺序读取值。
+     *
+     * @param index 从 0 开始、必须小于 size() 的成员序号。
+     * @return 该序号的共享子节点。
+     * @throws JsonException 序号越界，code 为 index_out_of_bounds。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonObject().put("id", JsonNode.int64(7)).valueAt(0).asInt64())
+     * ```
+     * ```output
+     * 7
+     * ```
+     */
     public func valueAt(index: Int64): JsonNode {
         fields.get(nameAt(index)).getOrThrow({ =>
             JsonException("Object member index ${index} is out of bounds", code: "index_out_of_bounds")
@@ -995,11 +2592,41 @@ public class JsonObject <: JsonNode {
         fields
     }
 
+    /**
+     * 按成员插入顺序生成紧凑 JSON 文本。
+     *
+     * @return 完整 JSON 对象文本。
+     * @throws JsonException 含循环或非有限数值，或超过默认深度限制。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonObject().put("id", JsonNode.int64(7)).toString())
+     * ```
+     * ```output
+     * {"id":7}
+     * ```
+     */
     public func toString(): String {
         freezeYJsonRuntime()
         writeJsonValueToString(this, JsonWriteOptions.compact)
     }
 
+    /**
+     * 按成员插入顺序生成缩进 JSON 文本。
+     *
+     * @param indent 只含空格或制表符的每层缩进；空串为紧凑格式。
+     * @return 完整 JSON 对象文本。
+     * @throws IllegalArgumentException indent 含其他字符。
+     * @throws JsonException 含循环或非有限数值，或超过默认深度限制。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(JsonObject().put("id", JsonNode.int64(7)).toPrettyString(" ").contains("\n"))
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public func toPrettyString(indent: String): String {
         freezeYJsonRuntime()
         writeJsonValueToString(this, JsonWriteOptions.pretty(indent: indent))

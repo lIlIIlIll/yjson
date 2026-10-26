@@ -6,12 +6,51 @@ import std.collection.*
 import std.convert.Parsable
 import std.math.numeric.*
 
+/**
+ * 一次 JSON Schema 不匹配的诊断，记录实例路径、模式路径、错误码和可读消息。
+ *
+ */
 public class JsonSchemaViolation {
+    /**
+     * 未通过验证的实例位置，使用 JSON Pointer，根位置为空字符串。
+     *
+     */
     public let instancePath: String
+    /**
+     * 产生诊断的模式位置，根位置为 `#`。
+     *
+     */
     public let schemaPath: String
+    /**
+     * 诊断的机器可读错误码，默认 `schema_validation`。
+     *
+     */
     public let code: String
+    /**
+     * 解释不匹配原因的消息；应用逻辑应依据错误码和路径。
+     *
+     */
     public let message: String
 
+    /**
+     * 构造一条诊断；路径和错误码按提供的文本保存，不执行模式验证。
+     *
+     * @param instancePath 实例中的 JSON Pointer。
+     * @param schemaPath 对应模式中的位置。
+     * @param message 可读的不匹配原因。
+     * @param code 机器可读错误码，默认 `schema_validation`。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let violation = JsonSchemaViolation("/age", "#/properties/age/type", "expected integer")
+     * println(violation.instancePath)
+     * println(violation.code)
+     * ```
+     * ```output
+     * /age
+     * schema_validation
+     * ```
+     */
     public init(instancePath: String, schemaPath: String, message: String,
         code!: String = "schema_validation") {
         this.instancePath = instancePath
@@ -22,18 +61,94 @@ public class JsonSchemaViolation {
 }
 
 /**
- * Immutable result of one JSON Schema validation.
+ * 一次完整 JSON Schema 验证的不可变结果；不匹配保存为诊断，工作预算或读取错误通过异常报告。
+ *
  */
 public class JsonSchemaResult {
     private let items: Array<JsonSchemaViolation>
 
     init(items: Array<JsonSchemaViolation>) { this.items = items }
 
+    /**
+     * 判断此次验证是否没有诊断。
+     *
+     * @return 诊断列表为空时为 `true`。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let result = JsonSchema.parse("{\"type\":\"integer\"}").validate(JsonNode.string("x"))
+     * println(result.valid)
+     * ```
+     * ```output
+     * false
+     * ```
+     */
     public prop valid: Bool { get() { items.isEmpty() } }
+    /**
+     * 取得本次验证产生的诊断条目数。
+     *
+     * @return 诊断列表的长度。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let result = JsonSchema.parse("{\"type\":\"integer\"}").validate(JsonNode.string("x"))
+     * println(result.size)
+     * ```
+     * ```output
+     * 1
+     * ```
+     */
     public prop size: Int64 { get() { items.size } }
+    /**
+     * 判断诊断列表是否为空，与 `valid` 相同。
+     *
+     * @return 没有诊断时为 `true`。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let result = JsonSchema.parse("{\"type\":\"integer\"}").validate(JsonNode.string("x"))
+     * println(result.isEmpty())
+     * ```
+     * ```output
+     * false
+     * ```
+     */
     public func isEmpty(): Bool { items.isEmpty() }
+    /**
+     * 按诊断产生顺序读取条目。
+     *
+     * @param index 从 0 开始的诊断下标，必须小于 size。
+     * @return 指定位置的不可变诊断。
+     * @throws IndexOutOfBoundsException 下标不在有效范围内。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let result = JsonSchema.parse("{\"type\":\"integer\"}").validate(JsonNode.string("x"))
+     * println(result[0].code)
+     * ```
+     * ```output
+     * schema_validation
+     * ```
+     */
     public operator func [](index: Int64): JsonSchemaViolation { items[index] }
 
+    /**
+     * 取得诊断数组副本，修改数组不改变验证结果。
+     *
+     * @return 保持诊断顺序的数组；诊断条目本身不可变。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let result = JsonSchema.parse("{\"type\":\"integer\"}").validate(JsonNode.string("x"))
+     * let violations = result.violations()
+     * println(violations.size)
+     * println(violations[0].code)
+     * ```
+     * ```output
+     * 1
+     * schema_validation
+     * ```
+     */
     public func violations(): Array<JsonSchemaViolation> {
         let copy = ArrayList<JsonSchemaViolation>(items.size)
         for (item in items) { copy.add(item) }
@@ -44,30 +159,88 @@ public class JsonSchemaResult {
 private class JsonSchemaMismatchSignal <: Exception {}
 
 /**
- * A named JSON Schema format assertion.
+ * 一个命名格式的字符串断言。实例可被多个验证器共享，且可能并发调用；实现须保持不可变或自行同步状态。
  *
- * Implementations must be immutable or synchronize their own state: a single
- * validator instance can be shared across threads, and the same format
- * instance may be invoked concurrently without yjson-side locking.
  */
 public interface JsonSchemaFormat {
+    /**
+     * 检验字符串是否满足该格式；Schema Assertion 模式会对字符串实例调用此方法。
+     *
+     * @param value 待检验的字符串，不包含 JSON 引号。
+     * @return 满足该格式时为 `true`。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let formats = JsonSchemaFormatRegistry.withCoreFormats()
+     * let format: JsonSchemaFormat = formats.resolve("date").getOrThrow()
+     * println(format.validate("2026-10-26"))
+     * let config = JsonSchemaConfig(formatMode: JsonSchemaFormatMode.Assertion, formats: formats)
+     * println(JsonSchema.parse("{\"format\":\"date\"}", config: config).isValid(JsonNode.string("2026-10-26")))
+     * ```
+     * ```output
+     * true
+     * true
+     * ```
+     */
     func validate(value: String): Bool
 }
 
 /**
- * Installs a coherent group of format assertions into a registry.
+ * 将一组相关格式安装到显式注册表的提供者；安装规则和名称冲突处理由实现决定。
+ *
  */
 public interface JsonSchemaFormatProvider {
+    /**
+     * 把提供者支持的格式注册到目标；通过 registry.install 调用时也进入此方法。
+     *
+     * @param registry 接收格式的注册表，安装过程可以因名称冲突或冻结状态失败。
+     *
+     * @example 用法（profile: schema-formats） {run}
+     * ```cangjie
+     * let formats = JsonSchemaFormatRegistry.withCoreFormats()
+     * let provider: JsonSchemaFormatProvider = StandardInternationalFormats()
+     * provider.installInto(formats)
+     * let config = JsonSchemaConfig(formatMode: JsonSchemaFormatMode.Assertion, formats: formats)
+     * let schema = JsonSchema.parse("{\"format\":\"idn-hostname\"}", config: config)
+     * println(schema.isValid(JsonNode.string("실례.테스트")))
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     func installInto(registry: JsonSchemaFormatRegistry): Unit
 }
 
 /**
- * Explicit format registry used by Assertion mode.
+ * Assertion 模式使用的命名格式注册表；构建模式时会复制并冻结表，格式实例本身仍由调用者提供。
+ *
  */
 public class JsonSchemaFormatRegistry {
     private let formats = HashMap<String, JsonSchemaFormat>()
     private var frozen: Bool = false
 
+    /**
+     * 注册一个格式实例；构建模式后修改原注册表不会改变已构建模式的名称映射。
+     *
+     * @param name 非空且区分大小写的格式名称。
+     * @param format 字符串断言实例，可能被多个验证器共享。
+     * @param replace 是否允许替换已注册的同名格式，默认 false。
+     * @throws IllegalStateException 注册表已经冻结。
+     * @throws IllegalArgumentException 名称为空，或已有同名格式且未允许替换。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let core = JsonSchemaFormatRegistry.withCoreFormats()
+     * let formats = JsonSchemaFormatRegistry()
+     * formats.register("calendar-day", core.resolve("date").getOrThrow())
+     * formats.register("calendar-day", core.resolve("date").getOrThrow(), replace: true)
+     * let config = JsonSchemaConfig(formatMode: JsonSchemaFormatMode.Assertion, formats: formats)
+     * println(JsonSchema.parse("{\"format\":\"calendar-day\"}", config: config).isValid(JsonNode.string("2026-10-26")))
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public func register(name: String, format: JsonSchemaFormat, replace!: Bool = false): Unit {
         if (frozen) { throw IllegalStateException("Schema format registry is immutable") }
         if (name.isEmpty()) { throw IllegalArgumentException("Schema format name must not be empty") }
@@ -77,10 +250,62 @@ public class JsonSchemaFormatRegistry {
         formats[name] = format
     }
 
+    /**
+     * 调用格式提供者，把其支持的格式安装到当前注册表；不提供事务回滚。
+     *
+     * @param provider 要安装的格式提供者。
+     * @throws Exception 提供者报告的注册错误向调用者传播。
+     *
+     * @example 用法（profile: schema-formats） {run}
+     * ```cangjie
+     * let formats = JsonSchemaFormatRegistry.withCoreFormats()
+     * formats.install(StandardInternationalFormats())
+     * let config = JsonSchemaConfig(formatMode: JsonSchemaFormatMode.Assertion, formats: formats)
+     * println(JsonSchema.parse("{\"format\":\"idn-hostname\"}", config: config).isValid(JsonNode.string("실례.테스트")))
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public func install(provider: JsonSchemaFormatProvider): Unit { provider.installInto(this) }
 
+    /**
+     * 按名称查找格式断言，不执行格式验证。
+     *
+     * @param name 区分大小写的格式名称。
+     * @return 已注册的格式实例；名称不存在时为 None。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let formats = JsonSchemaFormatRegistry.withCoreFormats()
+     * println(formats.resolve("date").getOrThrow().validate("2026-10-26"))
+     * println(formats.resolve("not-registered").isNone())
+     * ```
+     * ```output
+     * true
+     * true
+     * ```
+     */
     public func resolve(name: String): Option<JsonSchemaFormat> { formats.get(name) }
 
+    /**
+     * 创建内置核心格式注册表；不包含依赖 libidn2 的国际化格式。
+     *
+     * @return 包含 date、time、date-time、duration、email、ipv4、ipv6、uuid、regex、json-pointer 和 relative-json-pointer 的可变注册表。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let formats = JsonSchemaFormatRegistry.withCoreFormats()
+     * let config = JsonSchemaConfig(formatMode: JsonSchemaFormatMode.Assertion, formats: formats)
+     * let schema = JsonSchema.parse("{\"format\":\"date\"}", config: config)
+     * println(schema.isValid(JsonNode.string("2026-10-26")))
+     * println(schema.isValid(JsonNode.string("2026-02-30")))
+     * ```
+     * ```output
+     * true
+     * false
+     * ```
+     */
     public static func withCoreFormats(): JsonSchemaFormatRegistry {
         let registry = JsonSchemaFormatRegistry()
         for (name in ["date", "time", "date-time", "duration", "email", "ipv4", "ipv6", "uuid",
@@ -98,18 +323,64 @@ public class JsonSchemaFormatRegistry {
     }
 }
 
+/**
+ * 模式构建期间使用的资源解析器；可以读取内存、磁盘或应用缓存，yjson 自身不执行网络 I/O。构建完成后验证器不再持有解析器。
+ *
+ */
 public interface UriResolver {
     /**
-     * Resolves an absolute or application-defined schema resource URI.
-     * Implementations may load from memory, disk, or an application cache;
-     * yjson itself never performs network I/O.
+     * 解析绝对或应用定义的模式资源 URI；结果由模式构造器复制。
+     *
+     * @param uri 不含片段的资源 URI。
+     * @return 资源对应的模式树；无法解析时为 None。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let registry = JsonSchemaRegistry()
+     * registry.register("https://example.test/count", "{\"type\":\"integer\"}")
+     * let resolver: UriResolver = registry
+     * println(resolver.resolve("https://example.test/count").isSome())
+     * let config = JsonSchemaConfig(resolver: Some(resolver))
+     * let schema = JsonSchema.parse("{\"$ref\":\"https://example.test/count\"}", config: config)
+     * println(schema.isValid(JsonNode.int64(7)))
+     * ```
+     * ```output
+     * true
+     * true
+     * ```
      */
     func resolve(uri: String): Option<JsonNode>
 }
 
+/**
+ * 内存中的模式资源解析器；注册和读取均深复制，外部修改不会改变已登记的资源。
+ *
+ */
 public class JsonSchemaRegistry <: UriResolver {
     private let resources = HashMap<String, JsonNode>()
 
+    /**
+     * 复制并注册模式树；同一个 URI 再次注册会替换原资源。
+     *
+     * @param uri 非空且不含 # 的资源 URI。
+     * @param schema 要保存的模式树。
+     * @throws IllegalArgumentException URI 为空或包含片段标记 #。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let registry = JsonSchemaRegistry()
+     * registry.register("https://example.test/allow", JsonNode.boolean(true))
+     * registry.register("https://example.test/count", "{\"type\":\"integer\"}")
+     * let config = JsonSchemaConfig(resolver: Some<UriResolver>(registry))
+     * let schema = JsonSchema.parse("{\"$ref\":\"https://example.test/count\"}", config: config)
+     * println(schema.isValid(JsonNode.int64(7)))
+     * println(registry.resolve("https://example.test/allow").getOrThrow().asBool())
+     * ```
+     * ```output
+     * true
+     * true
+     * ```
+     */
     public func register(uri: String, schema: JsonNode): Unit {
         if (uri.isEmpty() || uri.contains("#")) {
             throw IllegalArgumentException("Schema registry URI must be a non-empty resource URI without a fragment")
@@ -117,8 +388,49 @@ public class JsonSchemaRegistry <: UriResolver {
         resources[uri] = schema.deepCopy()
     }
 
+    /**
+     * 解析 JSON 文本并注册其独立副本；同一个 URI 再次注册会替换原资源。
+     *
+     * @param uri 非空且不含 # 的资源 URI。
+     * @param schemaText 包含模式的完整 JSON 文本。
+     * @throws IllegalArgumentException URI 为空或包含片段标记 #。
+     * @throws JsonException 文本不是有效 JSON。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let registry = JsonSchemaRegistry()
+     * registry.register("https://example.test/allow", JsonNode.boolean(true))
+     * registry.register("https://example.test/count", "{\"type\":\"integer\"}")
+     * let config = JsonSchemaConfig(resolver: Some<UriResolver>(registry))
+     * let schema = JsonSchema.parse("{\"$ref\":\"https://example.test/count\"}", config: config)
+     * println(schema.isValid(JsonNode.int64(7)))
+     * println(registry.resolve("https://example.test/allow").getOrThrow().asBool())
+     * ```
+     * ```output
+     * true
+     * true
+     * ```
+     */
     public func register(uri: String, schemaText: String): Unit { register(uri, JsonNode.parse(schemaText)) }
 
+    /**
+     * 复制并返回已登记的资源，调用者可以修改返回树而不影响注册表。
+     *
+     * @param uri 注册时使用的资源 URI。
+     * @return 资源的深副本；没有登记时为 None。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let registry = JsonSchemaRegistry()
+     * registry.register("https://example.test/allow", "true")
+     * println(registry.resolve("https://example.test/allow").getOrThrow().asBool())
+     * println(registry.resolve("https://example.test/missing").isNone())
+     * ```
+     * ```output
+     * true
+     * true
+     * ```
+     */
     public func resolve(uri: String): Option<JsonNode> {
         match (resources.get(uri)) {
             case Some(value) => Some(value.deepCopy())
@@ -127,14 +439,68 @@ public class JsonSchemaRegistry <: UriResolver {
     }
 }
 
-public enum JsonSchemaFormatMode { Annotation | Assertion }
+/**
+ * JSON Schema 中 format 关键字的求值策略。
+ *
+ */
+public enum JsonSchemaFormatMode {
+    /**
+     * 将 format 视为注解，不对实例字符串执行格式断言。
+     *
+     */
+    | Annotation
+    /**
+     * 对已经注册的格式执行断言；未知格式名称仍被忽略。
+     *
+     */
+    | Assertion
+}
 
+/**
+ * 模式构建与验证配置；构建模式时会分离资源和冻结格式名称映射，预算对象本身不可变。
+ *
+ */
 public class JsonSchemaConfig {
+    /**
+     * 构建时解析外部模式资源的可选解析器；验证阶段不再调用它。
+     *
+     */
     public let resolver: Option<UriResolver>
+    /**
+     * format 关键字作为注解或断言的求值策略。
+     *
+     */
     public let formatMode: JsonSchemaFormatMode
+    /**
+     * 可用的格式名称映射；构建模式时快照并冻结，格式实例可能被共享。
+     *
+     */
     public let formats: JsonSchemaFormatRegistry
+    /**
+     * 模式编译和每次验证的工作预算。
+     *
+     */
     public let limits: JsonSchemaLimits
 
+    /**
+     * 创建模式配置；默认把 format 当作注解，并使用内置核心格式和有限预算。
+     *
+     * @param resolver 外部资源解析器，默认 None。
+     * @param formatMode 格式求值模式，默认 Annotation。
+     * @param formats 格式名称注册表，默认包含核心格式。
+     * @param limits 编译与验证预算，默认 JsonSchemaLimits.defaults。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let config = JsonSchemaConfig(formatMode: JsonSchemaFormatMode.Assertion,
+     *     formats: JsonSchemaFormatRegistry.withCoreFormats(), limits: JsonSchemaLimits(maxErrors: 1))
+     * let schema = JsonSchema.parse("{\"format\":\"date\"}", config: config)
+     * println(schema.isValid(JsonNode.string("2026-10-26")))
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public init(resolver!: Option<UriResolver> = None<UriResolver>,
         formatMode!: JsonSchemaFormatMode = JsonSchemaFormatMode.Annotation,
         formats!: JsonSchemaFormatRegistry = JsonSchemaFormatRegistry.withCoreFormats(),
@@ -145,25 +511,75 @@ public class JsonSchemaConfig {
         this.limits = limits
     }
 
+    /**
+     * 默认注解模式配置，使用已冻结的核心格式注册表和默认工作预算。
+     *
+     */
     public static let defaults = JsonSchemaConfig(
         formats: JsonSchemaFormatRegistry.withCoreFormats().frozenCopy())
 }
 
+/**
+ * JSON Schema Draft 2020-12 的已编译快照；构建时复制模式、解析外部资源并编译正则，验证期间不再调用资源解析器。
+ *
+ */
 public class JsonSchema {
     private let documentValue: JsonNode
     private let compiledResources: HashMap<String, JsonNode>
     private let compiledRegexes: HashMap<String, LinearRegex>
+    /**
+     * 模式使用的方言 URI；当前构造入口接受 Draft 2020-12 的标准 URI 及其 # 形式。
+     *
+     */
     public let draft: String
+    /**
+     * 构建后的配置快照；解析器引用已清除，格式名称映射已冻结，保留格式模式和预算。
+     *
+     */
     public let config: JsonSchemaConfig
     let validationVocabulary: Bool
 
     /**
-     * Returns a detached copy so callers cannot mutate the compiled schema.
+     * 返回原始模式的独立副本，修改返回树不会影响已编译模式。
+     *
+     * @return 可变且与编译快照分离的模式树。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let schema = JsonSchema.parse("{\"type\":\"integer\"}")
+     * let copy = schema.document
+     * copy.asObject().put("type", JsonNode.string("string"))
+     * println(schema.document["type"].asString())
+     * println(schema.isValid(JsonNode.int64(7)))
+     * ```
+     * ```output
+     * integer
+     * true
+     * ```
      */
     public prop document: JsonNode {
         get() { documentValue.deepCopy() }
     }
 
+    /**
+     * 复制并编译模式及可达外部资源，创建可复用的验证快照。
+     *
+     * @param document 布尔模式或模式对象的只读视图。
+     * @param draft 方言 URI，默认 Draft 2020-12。
+     * @param config 资源解析器、格式模式、格式注册表及工作预算。
+     * @throws JsonException 方言不受支持、模式关键字或正则无效、资源读取失败或超过编译预算。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let schema = JsonSchema(JsonNode.parse("{\"type\":\"integer\"}"))
+     * println(schema.isValid(JsonNode.int64(7)))
+     * println(schema.isValid(JsonNode.string("7")))
+     * ```
+     * ```output
+     * true
+     * false
+     * ```
+     */
     public init(document: JsonValueView, draft!: String = "https://json-schema.org/draft/2020-12/schema",
         config!: JsonSchemaConfig = JsonSchemaConfig.defaults) {
         if (draft != "https://json-schema.org/draft/2020-12/schema" &&
@@ -210,29 +626,161 @@ public class JsonSchema {
         validateJsonSchemaDocument(frozenDocument, "#")
     }
 
+    /**
+     * 解析 JSON 文本并编译模式快照。
+     *
+     * @param text 包含布尔模式或模式对象的完整 JSON 文本。
+     * @param config 构建与验证配置，默认使用注解模式和有限预算。
+     * @return 与输入资源分离的已编译模式。
+     * @throws JsonException JSON、模式、方言或正则无效，或超过编译预算。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let schema = JsonSchema.parse("{\"minimum\":3}")
+     * println(schema.isValid(JsonNode.int64(7)))
+     * println(schema.isValid(JsonNode.int64(2)))
+     * ```
+     * ```output
+     * true
+     * false
+     * ```
+     */
     public static func parse(text: String, config!: JsonSchemaConfig = JsonSchemaConfig.defaults): JsonSchema {
         JsonSchema(JsonNode.parse(text), config: config)
     }
 
+    /**
+     * 从只读值视图复制并编译模式，不保留该视图的存储依赖。
+     *
+     * @param value 布尔模式或模式对象的视图。
+     * @param config 构建与验证配置。
+     * @return 与原始值分离的已编译模式。
+     * @throws JsonException 模式、方言或正则无效，或超过编译预算。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let schema = JsonSchema.fromValue(JsonNode.parse("{\"type\":\"integer\"}"))
+     * println(schema.isValid(JsonNode.int64(7)))
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public static func fromValue(value: JsonValueView,
         config!: JsonSchemaConfig = JsonSchemaConfig.defaults): JsonSchema {
         JsonSchema(value, config: config)
     }
 
+    /**
+     * 创建共享当前模式快照的可复用验证器；每次验证使用独立计数器。
+     *
+     * @return 引用此编译快照的验证器。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let validator = JsonSchema.parse("{\"type\":\"integer\"}").validator()
+     * println(validator.isValid(JsonNode.int64(7)))
+     * println(validator.isValid(JsonNode.string("x")))
+     * ```
+     * ```output
+     * true
+     * false
+     * ```
+     */
     public func validator(): JsonSchemaValidator {
         JsonSchemaValidator(this)
     }
 
+    /**
+     * 执行完整验证并收集诊断；普通不匹配记录在结果中。
+     *
+     * @param instance 要验证的只读实例视图。
+     * @return 不可变验证结果；没有诊断表示通过。
+     * @throws JsonException 验证或正则工作量超过预算，或读取实例视图失败；预算错误码为 work_limit_exceeded。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let schema = JsonSchema.parse("{\"type\":\"integer\"}")
+     * let root = JsonNode.int64(7)
+     * let document = YJson.parseDocument("7")
+     * println(schema.validate(root).valid)
+     * println(schema.validate(document).valid)
+     * ```
+     * ```output
+     * true
+     * true
+     * ```
+     */
     public func validate(instance: JsonValueView): JsonSchemaResult {
         validator().validate(instance)
     }
 
+    /**
+     * 执行完整验证并收集诊断；普通不匹配记录在结果中。
+     *
+     * @param document 提供待验证根视图的托管文档。
+     * @return 不可变验证结果；没有诊断表示通过。
+     * @throws JsonException 验证或正则工作量超过预算，或读取实例视图失败；预算错误码为 work_limit_exceeded。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let schema = JsonSchema.parse("{\"type\":\"integer\"}")
+     * let root = JsonNode.int64(7)
+     * let document = YJson.parseDocument("7")
+     * println(schema.validate(root).valid)
+     * println(schema.validate(document).valid)
+     * ```
+     * ```output
+     * true
+     * true
+     * ```
+     */
     public func validate(document: JsonDocument): JsonSchemaResult {
         validator().validate(document.root())
     }
 
+    /**
+     * 验证并在确认首个不匹配后停止；不会收集完整诊断列表。
+     *
+     * @param instance 要验证的只读实例视图。
+     * @return 实例满足模式时为 true，不匹配时为 false。
+     * @throws JsonException 验证或正则工作量超过预算，或读取实例视图失败；预算错误码为 work_limit_exceeded。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let schema = JsonSchema.parse("{\"type\":\"integer\"}")
+     * let root = JsonNode.int64(7)
+     * let document = YJson.parseDocument("7")
+     * println(schema.isValid(root))
+     * println(schema.isValid(document))
+     * ```
+     * ```output
+     * true
+     * true
+     * ```
+     */
     public func isValid(instance: JsonValueView): Bool { validator().isValid(instance) }
 
+    /**
+     * 验证并在确认首个不匹配后停止；不会收集完整诊断列表。
+     *
+     * @param document 提供待验证根视图的托管文档。
+     * @return 实例满足模式时为 true，不匹配时为 false。
+     * @throws JsonException 验证或正则工作量超过预算，或读取实例视图失败；预算错误码为 work_limit_exceeded。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let schema = JsonSchema.parse("{\"type\":\"integer\"}")
+     * let root = JsonNode.int64(7)
+     * let document = YJson.parseDocument("7")
+     * println(schema.isValid(root))
+     * println(schema.isValid(document))
+     * ```
+     * ```output
+     * true
+     * true
+     * ```
+     */
     public func isValid(document: JsonDocument): Bool { validator().isValid(document.root()) }
 
     func internalDocument(): JsonNode { documentValue }
@@ -259,13 +807,52 @@ private class ValidationContext {
     }
 }
 
+/**
+ * 可复用的 JSON Schema 验证器；每次调用创建独立的验证上下文，已编译模式和格式实例可以共享。
+ *
+ */
 public class JsonSchemaValidator {
     private let schema: JsonSchema
 
+    /**
+     * 以已编译模式创建验证器；不重新解析或编译模式。
+     *
+     * @param schema 要复用的模式快照。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let schema = JsonSchema.parse("{\"type\":\"integer\"}")
+     * let validator = JsonSchemaValidator(schema)
+     * println(validator.isValid(JsonNode.int64(7)))
+     * ```
+     * ```output
+     * true
+     * ```
+     */
     public init(schema: JsonSchema) {
         this.schema = schema
     }
 
+    /**
+     * 完整验证实例并返回诊断；工作预算每次调用重新计数。
+     *
+     * @param instance 待验证的只读值视图。
+     * @return 不可变诊断集合，没有诊断表示通过。
+     * @throws JsonException 验证或正则工作量超过预算，或读取实例视图失败；预算错误码为 work_limit_exceeded。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let validator = JsonSchema.parse("{\"type\":\"integer\"}").validator()
+     * let root = JsonNode.int64(7)
+     * let document = YJson.parseDocument("7")
+     * println(validator.validate(root).valid)
+     * println(validator.validate(document).valid)
+     * ```
+     * ```output
+     * true
+     * true
+     * ```
+     */
     public func validate(instance: JsonValueView): JsonSchemaResult {
         JsonSchemaResult(runValidation(instance, false).toArray())
     }
@@ -286,6 +873,26 @@ public class JsonSchemaValidator {
         errors
     }
 
+    /**
+     * 在首个不匹配处停止验证，避免构造完整诊断集合。
+     *
+     * @param instance 待验证的只读值视图。
+     * @return 满足模式时为 true，不匹配时为 false。
+     * @throws JsonException 验证或正则工作量超过预算，或读取实例视图失败；预算错误码为 work_limit_exceeded。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let validator = JsonSchema.parse("{\"type\":\"integer\"}").validator()
+     * let root = JsonNode.int64(7)
+     * let document = YJson.parseDocument("7")
+     * println(validator.isValid(root))
+     * println(validator.isValid(document))
+     * ```
+     * ```output
+     * true
+     * true
+     * ```
+     */
     public func isValid(instance: JsonValueView): Bool {
         try {
             let _ = runValidation(instance, true)
@@ -295,10 +902,50 @@ public class JsonSchemaValidator {
         }
     }
 
+    /**
+     * 完整验证实例并返回诊断；工作预算每次调用重新计数。
+     *
+     * @param document 提供待验证根视图的托管文档。
+     * @return 不可变诊断集合，没有诊断表示通过。
+     * @throws JsonException 验证或正则工作量超过预算，或读取实例视图失败；预算错误码为 work_limit_exceeded。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let validator = JsonSchema.parse("{\"type\":\"integer\"}").validator()
+     * let root = JsonNode.int64(7)
+     * let document = YJson.parseDocument("7")
+     * println(validator.validate(root).valid)
+     * println(validator.validate(document).valid)
+     * ```
+     * ```output
+     * true
+     * true
+     * ```
+     */
     public func validate(document: JsonDocument): JsonSchemaResult {
         validate(document.root())
     }
 
+    /**
+     * 在首个不匹配处停止验证，避免构造完整诊断集合。
+     *
+     * @param document 提供待验证根视图的托管文档。
+     * @return 满足模式时为 true，不匹配时为 false。
+     * @throws JsonException 验证或正则工作量超过预算，或读取实例视图失败；预算错误码为 work_limit_exceeded。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let validator = JsonSchema.parse("{\"type\":\"integer\"}").validator()
+     * let root = JsonNode.int64(7)
+     * let document = YJson.parseDocument("7")
+     * println(validator.isValid(root))
+     * println(validator.isValid(document))
+     * ```
+     * ```output
+     * true
+     * true
+     * ```
+     */
     public func isValid(document: JsonDocument): Bool { isValid(document.root()) }
     private func validateSchemaValue(context: ValidationContext,
         schemaValue: JsonNode,

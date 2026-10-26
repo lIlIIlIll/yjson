@@ -35,7 +35,7 @@ class YyjsonDocumentBackendTest {
         try (document = YyjsonBackends.yyjson.parseDocument(
             "{\"a\":1,\"\\u0061\":2}", options: options)) {
             @Expect(document.metadata().name, "custom-native-fallback")
-            @Expect(document.metadata().version, "0.1.1")
+            @Expect(document.metadata().version, "0.2.0")
         }
     }
 
