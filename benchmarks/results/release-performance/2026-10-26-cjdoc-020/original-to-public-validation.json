@@ -1,0 +1,65 @@
+{
+  "batches": {
+    "a": {
+      "byte_identical_retained_text_files": 1776,
+      "elf_files_excluded_with_exact_sha": 2,
+      "git_commit_api_responses_replaced_with_identity_receipt": 1,
+      "git_regular_files_excluded": 546,
+      "original_archive_sha256": "9baff78bd4f9dca198614880a341953776091db94ed20f0fc2d18a652f688da4",
+      "original_archive_unchanged_after_validation": true,
+      "original_regular_files_verified": 2988,
+      "retained_text_files_exact_declared_substitutions": 2982,
+      "source_capsules_represented": 3,
+      "source_files_byte_identical": 426
+    },
+    "b": {
+      "byte_identical_retained_text_files": 1752,
+      "elf_files_excluded_with_exact_sha": 2,
+      "git_commit_api_responses_replaced_with_identity_receipt": 0,
+      "git_regular_files_excluded": 472,
+      "original_archive_sha256": "d7d9be698641f7634c9cc34c236c1ed74c34606568367188f79e280da786d9d2",
+      "original_archive_unchanged_after_validation": true,
+      "original_regular_files_verified": 2939,
+      "retained_text_files_exact_declared_substitutions": 2935,
+      "source_capsules_represented": 2,
+      "source_files_byte_identical": 400
+    }
+  },
+  "deterministic_rebuild": {
+    "all_bytes_identical": true,
+    "files": {
+      "path-normalization.json": "65cf5be424071f90d36fb47f286ac9e0e765811cf78085667bfe4691bbbdde9e",
+      "pure-baseline-source-manifest.json": "a247cbce55174848503e307735df9d564be5d17e1915abc898599d0299801165",
+      "pure-candidate-a-source-manifest.json": "2e505ed1217efad5dc4efbe42b1d4cb1b6cba21ba7a0ae692e17bd7ca0a67290",
+      "pure-candidate-b-source-manifest.json": "08951d17b1d7927b80eebc849f3cd7110c7e0bee48fd0d7802e89749fd09ba6e",
+      "pure-release-020-a-failure-source-only-evidence.tar.gz": "d37c54cb4ef2a9636b5e406347a75c517ea859ed62311f03fff89151732257d7",
+      "pure-release-020-b-source-only-evidence.tar.gz": "c1c5622de15ec2a2f6d19fcd361879fc3eb54dba6fd0a448fa10d10e31df7a3d",
+      "yjson-macros-c9-source-manifest.json": "29c775cef75f62ac23483ef96c8e02ad3371a559bece0deb8ec2b453ba586413"
+    },
+    "independent_regeneration_file_count": 7,
+    "status": "PASS"
+  },
+  "original_source_git_objects_sha1_checked_without_rewriting_or_publishing": true,
+  "publication_audit": {
+    "compiled_binary_members": 0,
+    "deterministic_archive_metadata_verified": true,
+    "email_content_classifications": [
+      "unchanged public third-party yyjson copyright in source/license",
+      "example-domain documentation and fixtures",
+      "public GitHub SSH service identity"
+    ],
+    "git_metadata_members": 0,
+    "ipv4_like_content_classified_as_versions_or_fixtures": true,
+    "local_paths_users_hostnames_private_network_addresses_or_credentials_found": false,
+    "malformed_archive_and_git_object_rejection_checks": 9,
+    "path_traversal_or_link_members": 0,
+    "recursive_text_files_reviewed": 6757,
+    "source_files_including_repeated_baseline": 826,
+    "status": "PASS",
+    "third_party_source_license_bytes_preserved": true,
+    "unreviewed_git_commit_objects": 0
+  },
+  "schema_version": 1,
+  "scope": "Byte comparison against original immutable private archives; only declared path prefix substitutions in retained text; no source-byte changes",
+  "status": "PASS"
+}

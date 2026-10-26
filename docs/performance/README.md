@@ -5,12 +5,16 @@
 
 ## 当前候选状态
 
-候选 `7d086a6` 的 Pure 直接计时完成 24 个用例 × 11 轮 A/B，共 528 个正式样本；
-全部通过 `candidate/baseline <= 1.05`，最大回退 3.29%，两侧均无 CV 超过 5% 的用例。
-七库保留 SDKBench，两批各完成 770 个单元，第一批 0/10、第二批 1/10 workload stable。
-仓颉进程采用 `cjProcessorNum=1` 和 128 MiB 堆；Pure 分别绑定业务与两组 GC 线程，
-七库仍为单核绑定。结果不代表默认运行时配置，也不代表未重测的 Native 性能或发布资格。
-旧 `f4aed80` 和 `c844aa9` 的 Pure 失败仍保留，不因新协议通过而改判。
+`0.2.0` 候选以 STS `1.2.0` 迁移后的同 SDK 源码作基线。生产候选 `5576cdd` 的
+Pure 直接计时完成 24 个用例 × 11 轮 A/B，共 528 个正式样本和另外 48 个预检进程；
+全部通过 `candidate/baseline <= 1.05`，最大回退约 1.39%，最大单侧 CV 约 4.02%。
+旧候选 `0e1753c` 的失败批保留，不改判为通过。
+
+七库第一次调用因缺少语料目录配置在预检退出，正式计时样本为零。首批有效测量的 770 个
+单元和汇总重放已通过独立复核，第二批与最终 strict 仍待完成；不能用旧 SDK 的历史七库
+结果代替。运行时配置、当前结果和
+适用边界见[本轮 Pure 报告](results/2026-10-26-cjdoc-020-pure.md)。本次不发布 yjson，
+不声明跨 SDK 或未重测 Native 性能。
 
 发布前至少完成以下检查：
 
@@ -30,14 +34,16 @@
 
 当前证据分开阅读：
 
-- [七库报告](results/2026-09-13-release-seven-library.md)：两批各 770/770 单元、分别 0/10 与 1/10 stable；每批 110 份固定工作量证明，所有进程保留 RSS sidecar。
-- [Pure A/B](results/2026-09-13-linux-release-pure.md)：48/48 预检及 528/528 正式样本通过；Deep Nested 的 String/Bytes 解码中位数变化为 −0.23% / +0.33%。旧协议失败和新协议预检修复分别留档，不拼接样本。
-- [三库历史结果](results/2026-09-13-release-three-library.md)：属于较早候选，未重测本轮 Native 更改。
+- [本轮 Pure A/B](results/2026-10-26-cjdoc-020-pure.md)：同 SDK、实际 O2 的完整 24 项结果、RSS、输入身份和独立复核。
+- [0.2.0 候选验证记录](../../release/0.2.0/evidence.md)：首次失败、新候选通过及剩余门禁。
 
 ## 历史证据
 
 以下页面记录了旧版本或开发快照的结果，可用来查看历史数据或选择测试基线：
 
+- [历史七库报告](results/2026-09-13-release-seven-library.md)：各批原始结果和 stable/noisy 状态按原身份保留。
+- [历史 Pure A/B](results/2026-09-13-linux-release-pure.md)：包含旧 SDK 发布候选与更早的失败记录。
+- [三库历史结果](results/2026-09-13-release-three-library.md)：不证明当前候选或 Native 性能。
 - [`c844aa9` 维护性候选](../../benchmarks/results/full-seven-library/2026-09-18-maintainability-c844aa9/README.md)：七库完整，Pure 第二批两项超过 `1.05`，不改判为通过。
 
 - [2026-09-05 T9 A/B qualification](results/2026-09-05-t9-ab-qualification.md)
@@ -46,7 +52,7 @@
 - [2026-08-26 Native acceleration](results/2026-08-26-native-acceleration.md)
 - [2026-08-25 Linux release baseline](results/2026-08-25-linux-release-three-library.md)
 
-历史页面保留测量时的信息，不随 `0.1.x` 的实现变化而更新。
+历史页面按各自的源码、SDK 和运行环境保留，不证明当前候选通过。
 
 ## 如何读表
 

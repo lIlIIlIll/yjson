@@ -24,6 +24,11 @@ CPU 频率和后台负载造成的偏差。先验证输出和校验和，再记�
 进程或报告关联检查失败，脚本都会在记录第一条正式样本前终止。检查日志和完成标记属于
 结果证据。计时用例中用于消耗结果的代码或耗时记录不能替代这些断言。
 
+调用七库 `run_full.py` 前，设置 `YJSON_CROSSLANG_CORPUS_DIR`，指向本批冻结的 JSON
+语料目录，并记录目录内输入文件的摘要。仓颉测试发现会先初始化文档生命周期测试组，
+即使当前选择的是 typed-codec 用例，也会读取该目录。缺少目录时预检会在第一条计时样本前
+失败；应保留失败输出，补齐准备配置后使用新的结果目录，不覆盖原记录。
+
 cangjieJSON、json4cj、Jackson 和 fastjson2 的外部测试程序必须先应用
 `benchmarks/full-seven-library/fixture-preflight-overlay.patch`，然后再构建。测量脚本会检查
 五个实际测试程序（包含 yjson/stdx.json 与 cjfast_json）中的
