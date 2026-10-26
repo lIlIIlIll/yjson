@@ -107,7 +107,7 @@ class QualificationScheduleTest(unittest.TestCase):
 
 
 class PurePerfProvenanceTest(unittest.TestCase):
-    def make_tree(self, root: pathlib.Path) -> None:
+    def make_tree(self, root: pathlib.Path) -> tuple[str, ...]:
         files = {
             "cjpm.toml": "root manifest\n",
             "cjpm.lock": "root lock\n",
@@ -118,50 +118,70 @@ class PurePerfProvenanceTest(unittest.TestCase):
             "packages/yjson_macros/src/json_codec.cj": "macro codec\n",
             "packages/yjson_macros/src/json_literal.cj": "macro literal\n",
             "packages/yjson_macros/cjpm.toml": "macro manifest\n",
+            "packages/yjson_algorithms/cjpm.toml": "algorithms manifest\n",
+            "packages/yjson_algorithms/cjpm.lock": "algorithms lock\n",
+            "scripts/benchmark_input_identity.py": "def files_manifest(root, paths): pass\n",
             "scripts/benchmark_fixed_work.py": "def parse_fixed_work(text, case): pass\n",
             "scripts/benchmark_pure_direct.py": "def parse_direct_result(text, case): pass\n",
             "scripts/json_pure_perf_compare.py": "def main(): pass\n",
             "benchmarks/full-seven-library/run_full.py": "def main(): pass\n",
+            "benchmarks/full-seven-library/summarize_full.py": "def load_cangjie_case(): pass\n",
             "packages/yjson_macros/cjpm.lock": "macro lock\n",
             "scripts/build_native_scanner.py": "pass\n",
             "native/yjson_scanner.c": "void scanner(void) {}\n",
             "native/yjson_writer_format.c": "void writer(void) {}\n",
+            "native/yjson_float_format.c": "#include \"vendor/yyjson/yyjson.c\"\n",
+            "native/vendor/yyjson/yyjson.c": "#include \"yyjson.h\"\n",
+            "native/vendor/yyjson/yyjson.h": "void float_format(void);\n",
             "native/yjson_scanner.h": "void scanner(void);\n",
             "native/yjson_compact.c": "void compact(void) {}\n",
             "native/yjson_compact.h": "void compact(void);\n",
         }
+        for source in (
+            "json_path_filter.cj",
+            "json_path_test.cj",
+            "json_pointer_patch_test.cj",
+            "json_schema_compilation.cj",
+            "json_schema_core_formats.cj",
+            "json_schema_test.cj",
+            "json_value_semantics.cj",
+            "lib_json_patch.cj",
+            "lib_json_path.cj",
+            "lib_json_pointer.cj",
+            "lib_json_schema.cj",
+            "linear_regex.cj",
+            "linear_regex_test.cj",
+            "schema_orchestration_contract_test.cj",
+            "work_limits.cj",
+            "work_limits_test.cj",
+        ):
+            files[f"packages/yjson_algorithms/src/{source}"] = "package yjson_algorithms\n"
         for relative, content in files.items():
             path = root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(content, encoding="utf-8")
+        return tuple(
+            relative for relative in files
+            if not relative.startswith("packages/yjson_macros/src/")
+        )
 
     def test_harness_digest_changes_for_every_declared_build_input(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = pathlib.Path(directory)
-            self.make_tree(root)
+            build_inputs = self.make_tree(root)
             initial = identity.manifest_digest(identity.harness_manifest(root))
-            for relative in (
-                "cjpm.toml",
-                "cjpm.lock",
-                "packages/benchmarks/cjpm.toml",
-                "packages/benchmarks/cjpm.lock",
-                "packages/benchmarks/build.cj",
-                "scripts/benchmark_fixed_work.py",
-                "scripts/benchmark_pure_direct.py",
-                "scripts/json_pure_perf_compare.py",
-                "benchmarks/full-seven-library/run_full.py",
-                "scripts/build_native_scanner.py",
-                "native/yjson_scanner.c",
-                "native/yjson_writer_format.c",
-            ):
-                path = root / relative
-                original = path.read_text(encoding="utf-8")
-                path.write_text(original + "changed\n", encoding="utf-8")
-                self.assertNotEqual(
-                    identity.manifest_digest(identity.harness_manifest(root)), initial,
-                    relative,
-                )
-                path.write_text(original, encoding="utf-8")
+            for relative in build_inputs:
+                with self.subTest(relative=relative):
+                    path = root / relative
+                    original = path.read_text(encoding="utf-8")
+                    path.write_text(original + "changed\n", encoding="utf-8")
+                    try:
+                        self.assertNotEqual(
+                            identity.manifest_digest(identity.harness_manifest(root)), initial,
+                            relative,
+                        )
+                    finally:
+                        path.write_text(original, encoding="utf-8")
 
     def test_product_digest_ignores_unmeasured_literal_macro(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -185,80 +205,52 @@ class PurePerfProvenanceTest(unittest.TestCase):
                 else:
                     codec.write_bytes(original)
 
-    def test_standalone_macro_dependency_is_canonicalized(self) -> None:
+    def test_macro_manifest_keeps_sdk_and_candidate_version(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = pathlib.Path(directory)
-            data = (
-                "[dependencies]\n"
-                f'yjson_macros = {{ {identity.STANDALONE_MACRO_GIT} }}\n'
-            ).encode("utf-8")
-            normalized = identity.canonical_benchmark_input_bytes(
-                root, "packages/benchmarks/cjpm.toml", data
-            ).decode("utf-8")
-            self.assertIn('yjson_macros = { path = "../yjson_macros" }', normalized)
-            self.assertNotIn("commitId", normalized)
+            old = (b'[package]\ncjc-version = "1.1.0"\nversion = "0.1.0"\n'
+                   b'description = "AST codec and JSON literal macros for yjson"\n')
+            current = old.replace(b'1.1.0', b'1.2.0').replace(b'0.1.0', b'0.2.0')
+            for relative in ("packages/yjson_macros/cjpm.toml",
+                             "release/package-manifests/yjson_macros.toml"):
+                with self.subTest(relative=relative):
+                    old_identity = identity.canonical_benchmark_input_bytes(root, relative, old)
+                    current_identity = identity.canonical_benchmark_input_bytes(root, relative, current)
+                    self.assertEqual(current_identity, current)
+                    self.assertNotEqual(old_identity, current_identity)
 
-    def test_previous_standalone_macro_dependency_is_canonicalized(self) -> None:
+    def test_macro_git_pin_is_a_real_build_input(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = pathlib.Path(directory)
-            data = (
-                "[dependencies]\n"
-                'yjson_macros = { git = "https://github.com/lIlIIlIll/yjson_macros.git", '
-                'commitId = "fec0adce41f73d037d876cbac7a28aee8108bb5c" }\n'
-            ).encode("utf-8")
-            normalized = identity.canonical_benchmark_input_bytes(
-                root, "packages/benchmarks/cjpm.toml", data
-            ).decode("utf-8")
-            self.assertIn('yjson_macros = { path = "../yjson_macros" }', normalized)
-            self.assertNotIn("commitId", normalized)
+            for pin in ("5961c2f448f989fb23a9731265ce025aad8bffaf",
+                        "0847b59e0c8c47b7c5b52b550ef8765c0cbddb03",
+                        "fec0adce41f73d037d876cbac7a28aee8108bb5c",
+                        "30c3def793054c4b5ba25be2e22598e141923a51"):
+                data = ('[dependencies]\nyjson_macros = { '
+                        'git = "https://github.com/lIlIIlIll/yjson_macros.git", '
+                        f'commitId = "{pin}" }}\n').encode()
+                with self.subTest(pin=pin):
+                    self.assertEqual(identity.canonical_benchmark_input_bytes(
+                        root, "packages/benchmarks/cjpm.toml", data), data)
+                    self.assertEqual(identity.canonical_benchmark_input_bytes(
+                        root, "packages/benchmarks/cjpm.lock", data), data)
 
-    def test_legacy_standalone_macro_dependency_is_canonicalized(self) -> None:
+    def test_release_graph_does_not_acquire_historical_dependencies(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = pathlib.Path(directory)
-            data = (
-                "[dependencies]\n"
-                f'yjson_macros = {{ {identity.LEGACY_STANDALONE_MACRO_GIT} }}\n'
-            ).encode("utf-8")
-            normalized = identity.canonical_benchmark_input_bytes(
-                root, "packages/benchmarks/cjpm.toml", data
-            ).decode("utf-8")
-            self.assertIn('yjson_macros = { path = "../yjson_macros" }', normalized)
-            self.assertNotIn("commitId", normalized)
-
-    def test_local_macro_binding_preserves_release_graph_identity(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            root = pathlib.Path(directory)
-            macro_manifest = root / "packages/yjson_macros/cjpm.toml"
-            macro_manifest.parent.mkdir(parents=True)
-            macro_manifest.write_text(
-                '[package]\nname = "yjson_macros"\n'
-                'description = "AST codec and JSON literal macros for yjson"\n',
-                encoding="utf-8",
-            )
-            graph = (
-                'name = "yjson_macros"\nrole = "macros"\n'
-                'development_manifest = "packages/yjson_macros/cjpm.toml"\n'
-                'release_manifest = "release/package-manifests/yjson_macros.toml"\n'
-                'source_root = "packages/yjson_macros/src"\n'
-                'stage_kind = "package"\nstability = "stable"\n'
-                'leaf_bundle = false\ndependencies = []\n'
-            ).encode("utf-8")
-            root_manifest = root / "cjpm.toml"
-            root_manifest.write_text(
-                f'[test-dependencies]\nyjson_macros = {{ {identity.STANDALONE_MACRO_GIT} }}\n',
-                encoding="utf-8",
-            )
-            git_graph = identity.canonical_benchmark_input_bytes(
-                root, "release/release-graph.toml", graph
-            )
-            root_manifest.write_text(
-                '[test-dependencies]\nyjson_macros = { path = "packages/yjson_macros" }\n',
-                encoding="utf-8",
-            )
-            local_graph = identity.canonical_benchmark_input_bytes(
-                root, "release/release-graph.toml", graph
-            )
-            self.assertEqual(local_graph, git_graph)
+            macro = root / "packages/yjson_macros/cjpm.toml"
+            macro.parent.mkdir(parents=True)
+            macro.write_text('[package]\ndescription = '
+                             '"AST codec and JSON literal macros for yjson"\n')
+            (root / "cjpm.toml").write_text('[package]\nname = "yjson"\n')
+            graph = ('name = "yjson_macros"\nrole = "macros"\n'
+                     'development_manifest = "packages/yjson_macros/cjpm.toml"\n'
+                     'release_manifest = "release/package-manifests/yjson_macros.toml"\n'
+                     'source_root = "packages/yjson_macros/src"\n'
+                     'stage_kind = "package"\nstability = "stable"\n'
+                     'leaf_bundle = false\ndependencies = []').encode()
+            self.assertEqual(identity.canonical_benchmark_input_bytes(
+                root, "release/release-graph.toml", graph), graph)
 
     def test_artifact_identity_rejects_symlink_and_hashes_regular_binary(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
