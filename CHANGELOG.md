@@ -19,7 +19,7 @@
 - Custom Native 及 yyjson 的 Custom Native 回退路径在 backend metadata 中报告候选包版本 `0.2.0`。
 - 文档候选要求九包统一站点、八个应用包的中文契约与逐入口可执行示例，交付 HTML、
   Markdown、Doc IR v16 和完整 Agent 离线包。不建设旧 URL、Doc IR 或产物布局兼容层。
-- cjdoc `0.7.5` 为待发布、待资格冻结的工具候选。本轮不创建 yjson tag 或发布九个包；
+- 文档工具固定为已发布并通过两次源码冷构建资格验证的 cjdoc `0.7.6`。本轮不创建 yjson tag 或发布九个包；
   实施、性能、托管 CI 和 Pages 的实际状态见[候选实施记录](docs/implementation/cjdoc-020.md)。
 - 新性能证据使用 STS `1.2.0`；Pure 基线为 SDK 迁移后、旧包装清理前的源码。旧版测量和
   兼容结果保留为历史，不外推为新候选通过或跨 SDK 性能结论。

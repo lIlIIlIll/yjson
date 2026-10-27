@@ -183,10 +183,10 @@ let name = document.root().member("name").getOrThrow().asString()
 生产候选 `5576cdd` 在 STS `1.2.0` 下通过同 SDK 的 Pure 回退检查：24 个用例、
 528 个计时样本，最大候选/基线比率约 1.01394，全部不超过原有 1.05 门槛。
 七库两批独立构建各完成 770 个单元，第一批 8/10、第二批 9/10 workload 满足
-`Max CV <= 5%`；噪声行保留，没有第三批。完整 strict 资格仍待干净检出验证。
+`Max CV <= 5%`；噪声行保留，没有第三批。整合提交 `7d48eb2` 的干净检出通过完整 strict 检查。
 
 下表只列第二批满足稳定性标准的九项，单位为微秒/操作、中位数。
-全部仓颉程序及依赖实际采用显式 `-O2`，未禁用 CHIR 函数内联；进程配置
+本次构建的仓颉测量程序及源码依赖实际采用显式 `-O2`，未禁用 CHIR 函数内联；进程配置
 `cjProcessorNum=1`、`cjHeapSize=128MB`，七库仍单核绑定，不代表默认运行时配置。
 
 | Workload | yjson | stdx.json | cangjieJSON | json4cj | cjfast_json | Jackson | fastjson2 |

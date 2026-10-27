@@ -54,7 +54,8 @@ python3 scripts/check_api_documentation.py "$doc_task/site"
 离线下载包。站点入口为输出根部的 `index.html`。
 CI 上传通过检查的文档，合并到 `main` 且全部必需门禁通过后才部署 GitHub Pages。
 
-工具候选目标为 cjdoc `0.7.5`，上游发布与资格冻结仍须完成，不将其写成已发布或已通过 CI。
+文档工具固定为 cjdoc `0.7.6`；精确源码、SDK 和构建策略见[工具配置](../release/cjdoc-tool.toml)，
+资格与交付结果见[候选实施记录](implementation/cjdoc-020.md)。
 `0.2.0` 保留四个应用宏：`@Json`、`@JsonCodec`、`@JsonUsing` 和 `@JsonSubtype`。
 `@JsonValue` 已批准删除，旧调用迁到 `@Json`。字段上的 `@JsonAlias` 读取别名保留。
 

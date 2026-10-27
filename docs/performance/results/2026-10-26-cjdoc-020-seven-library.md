@@ -4,8 +4,8 @@
 每批 `10 workloads × 7 libraries × 11 rounds = 770` 个单元，共 1540 个。
 主 agent 已逐项复核原始记录并重放汇总。第一批 8/10、第二批 9/10 workload 满足
 七库的 `Max CV <= 5%`；其余行仍保留，不能用于稳定的跨库比例结论。
-公开证据、完整来源摘要和报告绑定已复核；干净检出的 strict 检查尚待完成，
-不将数据组件复核计作完整发布资格。
+公开证据、完整来源摘要和报告绑定已复核；整合提交 `7d48eb2` 的干净检出通过
+`bash scripts/ci_job.sh perf-evidence-drift strict`。该结果不代表 yjson 已发布。
 
 同 SDK 的 [Pure 回退检查](2026-10-26-cjdoc-020-pure.md)已通过。完整候选状态见
 [实施记录](../../implementation/cjdoc-020.md)，原始记录、冻结源码和构建审计见

@@ -13,7 +13,8 @@
 Noisy 行完整保留，不改判为 stable，不据此声明稳定的跨库精确倍数。
 两批使用同一 STS `1.2.0`、产品、peer 和测量协议；归档分别保存 fresh 构建、SDK、参数、
 依赖来源与锁范围、产物摘要、预检、raw reports、RSS、metadata 和 summary。
-本次整理验证公开层和数据组件，**未执行完整 CLI strict，也不证明发布资格通过**。
+公开层和数据组件已独立复核；整合提交 `7d48eb2` 的干净检出已通过完整 CLI strict。
+该结果不代表全部发布门禁通过或 yjson 已发布。
 
 ## 证据文件
 
@@ -94,5 +95,7 @@ cd benchmarks/results/full-seven-library/2026-10-26-cjdoc-020
 sha256sum -c checksums.txt
 ```
 
-完整 `perf-evidence-drift strict` 还需父任务在整合 README、报告、marker 和来源绑定后的干净检出中执行。
-本目录的数据组件复核和私有 trusted summary 重放不替代该命令，不使用 `integrity-only` 作为通过声明。
+整合 README、报告、marker 和来源绑定后的干净检出 `7d48eb2` 已执行
+`bash scripts/ci_job.sh perf-evidence-drift strict`，退出码 0；40 项回归及 strict freshness、
+checksums、manifests、identities、summaries 均通过，主 agent 另独立重放实际 strict checker。
+未使用 `integrity-only`，没有修改证据或重跑计时。
