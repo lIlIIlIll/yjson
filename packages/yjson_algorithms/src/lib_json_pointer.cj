@@ -12,7 +12,8 @@ func jsonPointerError(message: String, pointer: String,
 }
 
 /**
- * An immutable RFC 6901 JSON Pointer.
+ * 不可变的 RFC 6901 JSON Pointer；空字符串表示根，令牌中的 `~0` 和 `~1` 分别表示 `~` 和 `/`。
+ *
  */
 public class JsonPointer <: ToString {
     private let source: String
@@ -23,10 +24,42 @@ public class JsonPointer <: ToString {
         this.segments = segments
     }
 
+    /**
+     * 解析 JSON Pointer 字符串，不访问 JSON 文档。
+     *
+     * @param pointer 空字符串，或以 `/` 开头且转义合法的指针。
+     * @return 保留原始指针文本的不可变指针。
+     * @throws JsonException 指针格式或 `~` 转义无效，错误码为 `invalid_json_pointer`。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let pointer = JsonPointer.parse("/a~1b/0")
+     * println(pointer.tokens()[0])
+     * ```
+     * ```output
+     * a/b
+     * ```
+     */
     public static func parse(pointer: String): JsonPointer {
         JsonPointer(pointer, parseJsonPointerSegments(pointer))
     }
 
+    /**
+     * 解析以 `#` 开头的 URI 片段，先解码百分号转义，再解析 JSON Pointer。
+     *
+     * @param fragment 包含 `#` 前缀的 UTF-8 URI 片段。
+     * @return 解码后的不可变指针。
+     * @throws JsonException 缺少 `#`、百分号转义不合法、UTF-8 无效或指针格式无效。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let pointer = JsonPointer.parseUriFragment("#/a%20b")
+     * println(pointer.tokens()[0])
+     * ```
+     * ```output
+     * a b
+     * ```
+     */
     public static func parseUriFragment(fragment: String): JsonPointer {
         if (!fragment.startsWith("#")) {
             throw jsonPointerError("JSON Pointer URI fragment must start with '#'", fragment)
@@ -35,16 +68,73 @@ public class JsonPointer <: ToString {
         JsonPointer(decoded, parseJsonPointerSegments(decoded))
     }
 
+    /**
+     * 返回已经解码的路径令牌副本；修改返回数组不影响指针。
+     *
+     * @return 按从根到目标顺序排列的令牌，根指针返回空数组。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let tokens = JsonPointer.parse("/a~0b/c").tokens()
+     * println(tokens[0])
+     * println(tokens[1])
+     * ```
+     * ```output
+     * a~b
+     * c
+     * ```
+     */
     public func tokens(): Array<String> {
         let result = ArrayList<String>(segments.size)
         for (segment in segments) { result.add(segment) }
         result.toArray()
     }
 
+    /**
+     * 判断指针是否指向文档根。
+     *
+     * @return 指针没有路径令牌时为 `true`。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * println(JsonPointer.parse("").isRoot())
+     * println(JsonPointer.parse("/").isRoot())
+     * ```
+     * ```output
+     * true
+     * false
+     * ```
+     */
     public func isRoot(): Bool { segments.isEmpty() }
 
+    /**
+     * 返回解析时的 JSON Pointer 文本；URI 片段输入返回解码后的文本。
+     *
+     * @return 不包含 URI 片段 `#` 前缀的指针。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * println(JsonPointer.parseUriFragment("#/a%20b").toString())
+     * ```
+     * ```output
+     * /a b
+     * ```
+     */
     public func toString(): String { source }
 
+    /**
+     * 将指针编码为 URI 片段，保留 `/` 和 `~`，其余必要字节使用大写百分号转义。
+     *
+     * @return 以 `#` 开头的 UTF-8 URI 片段。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * println(JsonPointer.parse("/a b").toUriFragment())
+     * ```
+     * ```output
+     * #/a%20b
+     * ```
+     */
     public func toUriFragment(): String {
         let bytes = unsafe { source.rawData() }
         let builder = StringBuilder()
@@ -62,6 +152,25 @@ public class JsonPointer <: ToString {
         builder.toString()
     }
 
+    /**
+     * 查找目标；成员缺失、数组下标无效或中途遇到标量时返回 `None`。
+     *
+     * @param root 查询起点；结果视图仍引用该起点的底层存储。
+     * @return 目标的只读视图；根指针返回输入根。
+     *
+     * @example 查询树和文档（profile: algorithms） {run}
+     * ```cangjie
+     * let pointer = JsonPointer.parse("/items/0")
+     * let root = JsonNode.parse("{\"items\":[7]}")
+     * let document = YJson.parseDocument("{\"items\":[7]}")
+     * println(pointer.find(root).getOrThrow().asInt64())
+     * println(pointer.find(document).getOrThrow().asInt64())
+     * ```
+     * ```output
+     * 7
+     * 7
+     * ```
+     */
     public func find(root: JsonValueView): Option<JsonValueView> {
         var current: JsonValueView = root
         for (segment in segments) {
@@ -82,8 +191,47 @@ public class JsonPointer <: ToString {
         Some(current)
     }
 
+    /**
+     * 查找目标；成员缺失、数组下标无效或中途遇到标量时返回 `None`。
+     *
+     * @param document 提供查询根视图的托管文档。
+     * @return 目标的只读视图；根指针返回输入根。
+     *
+     * @example 查询树和文档（profile: algorithms） {run}
+     * ```cangjie
+     * let pointer = JsonPointer.parse("/items/0")
+     * let root = JsonNode.parse("{\"items\":[7]}")
+     * let document = YJson.parseDocument("{\"items\":[7]}")
+     * println(pointer.find(root).getOrThrow().asInt64())
+     * println(pointer.find(document).getOrThrow().asInt64())
+     * ```
+     * ```output
+     * 7
+     * 7
+     * ```
+     */
     public func find(document: JsonDocument): Option<JsonValueView> { find(document.root()) }
 
+    /**
+     * 取得指针目标，目标不存在时抛出带指针路径的异常。
+     *
+     * @param root 查询起点；返回视图保留该起点的存储依赖。
+     * @return 目标的只读视图。
+     * @throws JsonException 目标不存在，错误码为 `json_pointer_not_found`。
+     *
+     * @example 取得树和文档中的值（profile: algorithms） {run}
+     * ```cangjie
+     * let pointer = JsonPointer.parse("/items/0")
+     * let root = JsonNode.parse("{\"items\":[7]}")
+     * let document = YJson.parseDocument("{\"items\":[7]}")
+     * println(pointer.evaluate(root).asInt64())
+     * println(pointer.evaluate(document).asInt64())
+     * ```
+     * ```output
+     * 7
+     * 7
+     * ```
+     */
     public func evaluate(root: JsonValueView): JsonValueView {
         find(root).getOrThrow({ =>
             jsonPointerError("JSON Pointer target does not exist: ${source}", source,
@@ -91,6 +239,26 @@ public class JsonPointer <: ToString {
         })
     }
 
+    /**
+     * 取得指针目标，目标不存在时抛出带指针路径的异常。
+     *
+     * @param document 提供查询根视图的托管文档。
+     * @return 目标的只读视图。
+     * @throws JsonException 目标不存在，错误码为 `json_pointer_not_found`。
+     *
+     * @example 取得树和文档中的值（profile: algorithms） {run}
+     * ```cangjie
+     * let pointer = JsonPointer.parse("/items/0")
+     * let root = JsonNode.parse("{\"items\":[7]}")
+     * let document = YJson.parseDocument("{\"items\":[7]}")
+     * println(pointer.evaluate(root).asInt64())
+     * println(pointer.evaluate(document).asInt64())
+     * ```
+     * ```output
+     * 7
+     * 7
+     * ```
+     */
     public func evaluate(document: JsonDocument): JsonValueView { evaluate(document.root()) }
 
     func rawTokens(): Array<String> { segments }
@@ -175,7 +343,7 @@ private func jsonPointerHexValue(value: Byte): Int64 {
 }
 
 private func jsonPointerHexDigit(value: Int64): String {
-    "0123456789ABCDEF"[value].toString()
+    "0123456789ABCDEF"[value..value + 1]
 }
 
 private func jsonPointerUriByteIsUnreserved(value: UInt8): Bool {

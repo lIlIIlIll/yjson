@@ -239,12 +239,6 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         index = currentIndex + 2
         true
     }
-    // Retained for package-level coverage probes; generated codecs use the
-    // inlined public bridge above so the compatibility helper is off hot paths.
-    func tryReadRawAsciiNameTokenBytes(nameBytes: Array<Byte>, first: Bool): Bool {
-        tryReadRawCompactNameTokenBytes(first, nameBytes)
-    }
-
     public func startRawObject(): Unit {
         skipSpaces()
         expectByte(b'{')

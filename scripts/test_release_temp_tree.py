@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import pathlib
+import json
 import subprocess
 import sys
 import tempfile
@@ -18,6 +19,21 @@ from release_temp_tree import (
 
 
 class ReleaseTempTreeTest(unittest.TestCase):
+    def test_api_example_profiles_are_in_release_manifest(self) -> None:
+        root = pathlib.Path(__file__).resolve().parents[1]
+        contract = json.loads((root / "release/api-documentation-required.json").read_text(encoding="utf-8"))
+        profiles = {entry["profile"] for entry in contract["declarations"].values() if entry.get("profile")}
+        self.assertTrue(profiles, "application example profiles are missing")
+        required = set()
+        for name in profiles:
+            directory = pathlib.Path("tests/doc_examples") / name
+            required.add(directory / "profile.json")
+            if (root / directory / "prelude.cj").is_file():
+                required.add(directory / "prelude.cj")
+        listed = set(manifest_paths(root / "release/release-files.txt"))
+        self.assertEqual(sorted(path.as_posix() for path in required - listed), [],
+                         "release staging must retain every executable example profile")
+
     def git_fixture(self, root: pathlib.Path) -> list[pathlib.Path]:
         (root / "release").mkdir()
         (root / "src").mkdir()
@@ -93,6 +109,22 @@ class ReleaseTempTreeTest(unittest.TestCase):
             paths.append(pathlib.Path("packages/feature/cjpm.toml"))
             with self.assertRaisesRegex(ValueError, "feature_test.cj"):
                 validate_manifest_closure(root, paths)
+
+    def test_rejects_missing_license_in_included_package(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            paths = self.fixture(root)
+            package = root / "packages" / "feature"
+            (package / "src").mkdir(parents=True)
+            (package / "cjpm.toml").write_text("[package]\n", encoding="utf-8")
+            (package / "src" / "feature.cj").write_text("package feature\n", encoding="utf-8")
+            (package / "LICENSE").write_text("Fixture license\n", encoding="utf-8")
+            paths.extend((pathlib.Path("packages/feature/cjpm.toml"),
+                          pathlib.Path("packages/feature/src/feature.cj")))
+            with self.assertRaisesRegex(ValueError, "packages/feature/LICENSE"):
+                validate_manifest_closure(root, paths)
+            paths.append(pathlib.Path("packages/feature/LICENSE"))
+            validate_manifest_closure(root, paths)
 
     def test_rejects_missing_executed_script(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

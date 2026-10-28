@@ -1,0 +1,8 @@
+{
+  "status": "PASS_INDEPENDENT_ARCHIVE_REEXTRACTION",
+  "archiveFiles": 287,
+  "sourceDigest": "b179395b3b60ea90a114306fbea9b56062ac75c44a5633e14e55ff11969f7e76",
+  "productSha256": "eb31d8ab82a5ed9149fc1fbf2955f7b9f6796acf4af1ab612fb03a1d6f446e99",
+  "harnessSha256": "230ccd61c2dd5bc85de33db9f2f27745c0f95e6fe7512bf8a1427a7b35cc2904",
+  "archiveSha256": "a8a123ef62d83de8192b4851b9e3019451d6c3da26078a8ff3a9d3378034c5ed"
+}

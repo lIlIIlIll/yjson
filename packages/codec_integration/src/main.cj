@@ -90,9 +90,9 @@ main(): Unit {
     require(interpolated.asObject().get("user").getOrThrow().asObject()
         .get("name").getOrThrow().asString() == "Bob",
         "@Json interpolation was not converted")
-    let alias = @JsonValue({"alias": true})
-    require(alias.asObject().get("alias").getOrThrow().asBool(),
-        "@JsonValue alias was not converted")
+    let literalFlag = @Json({"enabled": true})
+    require(literalFlag.asObject().get("enabled").getOrThrow().asBool(),
+        "@Json boolean literal was not converted")
 
     let sameKey = "same"
     let overwritten = @Json({

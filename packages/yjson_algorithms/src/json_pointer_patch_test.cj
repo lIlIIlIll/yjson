@@ -68,3 +68,41 @@ class YJsonPointerPatchTest {
         @Expect(result["n"].asNumberText(), "1e0")
     }
 }
+
+
+@Test
+class JsonPointerUriFragmentTest {
+    @TestCase
+    func fragmentEncodesWhitespaceAsPercentOctets(): Unit {
+        let pointer = JsonPointer.parse("/a b\t\n\r")
+        let expected = "#/a%20b%09%0A%0D"
+        @Expect(pointer.toUriFragment(), expected)
+        @Expect(JsonPointer.parseUriFragment(expected).toString(), pointer.toString())
+    }
+
+    @TestCase
+    func fragmentEncodesEachUtf8Byte(): Unit {
+        let pointer = JsonPointer.parse("/中文/🙂")
+        let expected = "#/%E4%B8%AD%E6%96%87/%F0%9F%99%82"
+        @Expect(pointer.toUriFragment(), expected)
+        @Expect(JsonPointer.parseUriFragment(expected).toString(), pointer.toString())
+    }
+
+    @TestCase
+    func fragmentPreservesRootUnreservedAndPointerEscapes(): Unit {
+        @Expect(JsonPointer.parse("").toUriFragment(), "#")
+        let source = "/AZaz09-._~0~1/a~1b/m~0n"
+        let expected = "#" + source
+        @Expect(JsonPointer.parse(source).toUriFragment(), expected)
+        @Expect(JsonPointer.parseUriFragment(expected).toString(), source)
+    }
+
+    @TestCase
+    func fragmentUsesOneUppercaseHexCharacterPerNibble(): Unit {
+        let source = "/\u{0000}\u{0001}\u{0002}\u{0003}\u{0004}\u{0005}\u{0006}\u{0007}" +
+            "\u{0008}\u{0009}\u{000A}\u{000B}\u{000C}\u{000D}\u{000E}\u{000F}"
+        let expected = "#/%00%01%02%03%04%05%06%07%08%09%0A%0B%0C%0D%0E%0F"
+        @Expect(JsonPointer.parse(source).toUriFragment(), expected)
+        @Expect(JsonPointer.parseUriFragment(expected).toString(), source)
+    }
+}

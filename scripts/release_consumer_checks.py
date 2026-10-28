@@ -34,7 +34,7 @@ def run_fixture(
         if link_native_scanner else ""
     )
     manifest = f'''[package]
-cjc-version = "1.1.0"
+cjc-version = "1.2.0"
 name = "yjson_release_{name}"
 version = "0.0.0"
 output-type = "executable"

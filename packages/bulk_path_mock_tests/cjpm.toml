@@ -1,12 +1,12 @@
 [package]
-cjc-version = "1.1.0"
+cjc-version = "1.2.0"
 name = "yjson_bulk_path_mock_tests"
 organization = ""
 description = "Isolated unittest mock checks for generated bulk writer hooks"
-version = "0.1.0"
+version = "0.2.0"
 output-type = "static"
 compile-option = "-Woff unused"
 
 [dependencies]
 yjson = { path = "../.." }
-yjson_macros = { git = "https://github.com/lIlIIlIll/yjson_macros.git", commitId = "0847b59e0c8c47b7c5b52b550ef8765c0cbddb03" }
+yjson_macros = { git = "https://github.com/lIlIIlIll/yjson_macros.git", commitId = "c9ef52da9ba2d3f77916c40ccb9280db78ee2e07" }

@@ -1,0 +1,32 @@
+{
+  "archive_helpers_sha256": "0a187efc0f34df3f366a0af771c7ef3dd408ade77cd7ff59f1b941d5a808f775",
+  "files": {
+    "final-5576-seven-preflight-firstcause-source-only.tar.gz": "0e55085fe1c454cbadb8400df60cb5e7f8cac3398b76d227e49a2f902c9ff238",
+    "json4cj-df204-source-binding.json": "fd296a4ba0e3435ff6ae80d49ec880914c12579f901b374b86fa5eef1620c461",
+    "json4cj-license-source-receipt.json": "ed62ca9c560eb919074819e02aac4b81095179a2d739c5ac423b0002f736cc81",
+    "json4cj-manifest-adaptations-from-a185.patch": "23a49b9eeb9e758360f000081b4d4626a422450f468953de056461580034a32d",
+    "json4cj-opt29e51-source-binding.json": "333276711fc145eb9c986660bd807f9a33b8ff82ed0eabe20790f9431c6f3353",
+    "json4cj-public-history-source-correlation.json": "07f7fd17728fcd44585fc944a8a159d16b6258ce9b1c5cfdc176ae526c06751a",
+    "license-extension-validation.json": "623fe18cbc30db1ae170fd3391558f597a267206c4331a9842c25b3e99adf2d5",
+    "license-receipt-correction.json": "a3879b884afa0ce843f40ed49254e815e24b2aa40ba82b7db03f9cada15a7dad",
+    "lock-and-peer-source-evidence-scope.json": "44830c7793f0609aff3c493d162793e019f49d24c171ca7b913f8b258eb9d92e",
+    "parent-json4cj-source-verification.json": "59c97a9751a7d6bfcbb777861694ddc017ecbc90e4ece4e4945b0ae413174731",
+    "parent-seven-two-batch-verification.json": "0da259ac6471fa6504e2427943e08dd17d4eb41fef00be5776263554f2a6fb84",
+    "parent-source-digest-verification.json": "0ba94e5d8a83da6d8cfd3a2337970baa9e2ca2c77e4272a2b537ea2d4ccd7df9",
+    "path-normalization.json": "52ea3ab19e985007514aad8d8d34c6e3a8f4f5319e3143d3f6dffe56da97d68a",
+    "seven-canonical-rows.json": "04d103e02dd99be3e66c3a20defe9199f9541538c45dbbd0bb731eaad5843219",
+    "seven-library-020-batch1.tar.gz": "589e7645697bf37df14b4ef8c264438c740268fd43adc946039f0939eeba8422",
+    "seven-library-020-batch2.tar.gz": "9ebc1ec6806b0cbf162447728b87fff45435a0419df14d822a7546a998f1e7f7",
+    "seven-library-020-build-audits-source-only.tar.gz": "62637a3b6f33886587b3ce17b1a0d00bf3d96edc5b8f41766e85d2f2a7ae6973",
+    "seven-library-020-harness.tar.gz": "2e81018b88cec2e55b95e01b94b094642974ed0411a4ab00697278c7b2b06f88",
+    "seven-two-batch-independent-verification.json": "59c63dffe906c5ee3c19f20303e62fd4315b0af8cefea58d74a7fb015c18ec26",
+    "source-input-manifest.json": "72772c01ce12a70ba9e7ac3cd3cef92b6cd6370881bf43e1a5b79989a57c9dc7",
+    "supplement-source-digest-independent-verification.json": "f20299dcb53d70bfa76263f250402f8511258906edf00f3e1e0c59556b6aa26e",
+    "yjson-020-source-digest-inputs.tar.gz": "729f9b142e330c8963191b88b3f7117b4976fd1eedbbaaa30d0849f0c2bf95d2"
+  },
+  "original_archives_unchanged": true,
+  "packager_sha256": "d31b5ba1eca3a29d03acd2c67834c56a764aafb08ea2453ea770c584b94d1f3c",
+  "repeated_generation_files_byte_identical": 22,
+  "schema_version": 1,
+  "status": "PASS"
+}

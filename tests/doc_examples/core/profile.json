@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "dependencies": [
+    "yjson"
+  ],
+  "imports": [
+    "yjson.*",
+    "std.collection.*",
+    "std.io.*",
+    "std.math.numeric.*",
+    "std.time.*"
+  ],
+  "platforms": [
+    "linux",
+    "windows",
+    "darwin"
+  ],
+  "linkNativeScanner": false
+}

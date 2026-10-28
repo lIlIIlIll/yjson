@@ -13,6 +13,7 @@ trap 'rm -rf "$modules"' EXIT
 require_cangjie() {
     command -v cjc >/dev/null || { echo 'cjc is required on the CI runner' >&2; exit 2; }
     command -v cjpm >/dev/null || { echo 'cjpm is required on the CI runner' >&2; exit 2; }
+    python3 "$repo/scripts/validate_cangjie_sts.py" --check-installed >/dev/null
 }
 
 dependency_override_args() {
@@ -40,7 +41,7 @@ import sys
 
 manifest = pathlib.Path(sys.argv[1])
 override = sys.argv[2]
-if override not in ("-O0", "-O1"):
+if override not in ("-O0", "-O1", "-O2"):
     raise SystemExit(f"unsupported dependency override: {override}")
 text = manifest.read_text(encoding="utf-8")
 marker = 'override-compile-option = ""'
@@ -71,7 +72,8 @@ stage_modules() {
 
 prepare_cjdoc() {
     require_cangjie
-    local -a args=()
+    # Keep build artifacts outside the source-only candidate's strict inventory.
+    local -a args=(--cache-dir "$modules/cjdoc")
     if [[ -n "${YJSON_CJDOC_ARCHIVE:-}" ]]; then
         args+=(--archive "$YJSON_CJDOC_ARCHIVE")
     fi
@@ -157,19 +159,24 @@ case "$job" in
         ;;
     cjdoc-qualification)
         python3 "$repo/scripts/test_check_cjdoc_qualification.py"
+        python3 "$repo/scripts/test_prepare_cjdoc.py"
         cjdoc_binary=$(prepare_cjdoc)
         python3 "$repo/scripts/check_cjdoc_qualification.py" \
             --binary "$cjdoc_binary"
         ;;
     api-docs)
+        export PYTHONDONTWRITEBYTECODE=1
         python3 "$repo/scripts/test_check_api_documentation.py"
         python3 "$repo/scripts/test_generate_api_docs.py"
+        python3 "$repo/scripts/test_run_api_doc_examples.py"
+        python3 "$repo/scripts/test_api_doc_source_guide.py"
         cjdoc_binary=$(prepare_cjdoc)
         docs_output=${YJSON_API_DOCS_OUTPUT:-"$modules/api-docs"}
         python3 "$repo/scripts/generate_api_docs.py" \
             --cjdoc "$cjdoc_binary" --output "$docs_output"
         test -f "$docs_output/index.html"
         test -f "$docs_output/api-docs.json"
+        python3 "$repo/scripts/run_api_doc_examples.py" "$docs_output"
         python3 "$repo/scripts/check_api_documentation.py" "$docs_output"
         ;;
     runtime-freeze)

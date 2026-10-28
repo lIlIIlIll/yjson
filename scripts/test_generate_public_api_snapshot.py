@@ -100,7 +100,6 @@ public class PublicOuter {
 }
 """
         )
-
         self.assertEqual(
             declarations,
             [
@@ -109,6 +108,44 @@ public class PublicOuter {
                 "fixture|fixture.cj|VisibleNested|public func visible(): Unit",
             ],
         )
+
+    def test_enum_cases_ignore_line_layout_and_documentation(self) -> None:
+        inline = self.declarations("public enum Choice { First | Second(Int64, String) }\n")
+        documented = self.declarations("""
+public enum Choice {
+    /** First case. */
+    First
+    /** Second case. */
+    | Second(
+        Int64,
+        String
+    )
+}
+""")
+        expected = {
+            "fixture|fixture.cj|<top-level>|public enum Choice",
+            "fixture|fixture.cj|Choice|| First",
+            "fixture|fixture.cj|Choice|| Second(Int64, String)",
+        }
+        self.assertEqual(set(inline), expected)
+        self.assertEqual(set(documented), expected)
+
+    def test_enum_case_collection_stops_before_members(self) -> None:
+        declarations = self.declarations("""
+private enum Hidden { Secret | Other }
+public enum Choice {
+    @JsonName["wire"] First | Second
+    @Marker
+    public func accepts(value: String): Bool {
+        value == "First | Invented"
+    }
+}
+""")
+        self.assertIn("fixture|fixture.cj|Choice|| First", declarations)
+        self.assertIn("fixture|fixture.cj|Choice|| Second", declarations)
+        self.assertIn("fixture|fixture.cj|Choice|public func accepts(value: String): Bool", declarations)
+        self.assertFalse(any("Secret" in record or "Invented" in record
+                             for record in declarations))
 
     def test_generate_discovers_public_api_in_nested_source_directory(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

@@ -132,8 +132,38 @@ def normalized_header(lines: list[str], sanitized: list[str], start: int) -> str
     raise ValueError(f"unterminated declaration near line {start + 1}")
 
 
-def cangjie_declarations(package: str, path: pathlib.Path) -> list[str]:
-    text = path.read_text(encoding="utf-8")
+def enum_case_signatures(lines: list[str]) -> list[str]:
+    """Normalize an enum's constructor region independently of line layout."""
+    text = " ".join(lines)
+    pieces: list[str] = []
+    start = 0
+    depth = 0
+    for index, char in enumerate(text):
+        if char in "([":
+            depth += 1
+        elif char in ")]":
+            depth -= 1
+        elif char == "|" and depth == 0:
+            pieces.append(text[start:index])
+            start = index + 1
+    pieces.append(text[start:])
+    result: list[str] = []
+    for piece in pieces:
+        signature = re.sub(r"\s+", " ", piece).strip()
+        signature = re.sub(r"^(?:@[A-Za-z_]\w*(?:\s*\[[^\]]*\])?\s*)+", "", signature)
+        if not signature:
+            continue
+        if not re.fullmatch(r"[A-Za-z_]\w*(?:\s*\(.*\))?", signature):
+            raise ValueError(f"unsupported enum constructor: {signature}")
+        signature = re.sub(r"\s*([()<>\[\]])\s*", r"\1", signature)
+        signature = re.sub(r"\s*,\s*", ", ", signature)
+        result.append("| " + signature)
+    return result
+
+
+def cangjie_declarations(package: str, path: pathlib.Path, *,
+        source_text: str | None = None) -> list[str]:
+    text = path.read_text(encoding="utf-8") if source_text is None else source_text
     lines = text.splitlines()
     sanitized = sanitize_lines(text)
     declarations: list[str] = []
@@ -143,6 +173,8 @@ def cangjie_declarations(package: str, path: pathlib.Path) -> list[str]:
     # declaration and leaks into the API snapshot.
     type_scopes: list[tuple[int, str, str, bool]] = []
     pending_type: tuple[str, str, bool] | None = None
+    enum_regions: dict[tuple[int, str], list[str]] = {}
+    closed_enum_regions: set[tuple[int, str]] = set()
     for index, clean_line in enumerate(sanitized[: len(lines)]):
         stripped = clean_line.strip()
         while type_scopes and depth < type_scopes[-1][0]:
@@ -159,12 +191,17 @@ def cangjie_declarations(package: str, path: pathlib.Path) -> list[str]:
             and owner[1] == "interface"
             and INTERFACE_MEMBER_RE.match(stripped) is not None
         )
-        is_enum_case = (
-            is_public_owner
-            and owner[1] == "enum"
-            and stripped.startswith("|")
-        )
-        if is_explicit_public or is_interface_member or is_enum_case:
+        if is_public_owner and owner[1] == "enum":
+            key = (owner[0], owner[2])
+            constructor_line = re.sub(
+                r"^(?:@[A-Za-z_]\w*(?:\s*\[[^\]]*\])?\s*)+", "", stripped)
+            if re.match(r"^(?:(?:public|private|protected|internal|static|open|override|"
+                        r"operator|unsafe)\s+)*(?:func|prop|init|let|var|class|struct|"
+                        r"interface|enum|type)\b", constructor_line):
+                closed_enum_regions.add(key)
+            if key not in closed_enum_regions:
+                enum_regions[key].append(constructor_line.split("}", 1)[0])
+        if is_explicit_public or is_interface_member:
             signature = normalized_header(lines, sanitized, index)
             owner_name = owner[2] if is_direct_type_member else "<top-level>"
             declarations.append(f"{package}|{path.relative_to(ROOT)}|{owner_name}|{signature}")
@@ -180,10 +217,17 @@ def cangjie_declarations(package: str, path: pathlib.Path) -> list[str]:
         opening_type = declared_type if declared_type is not None else pending_type
         if opening_type is not None and opens > 0:
             type_scopes.append((depth + 1, opening_type[0], opening_type[1], opening_type[2]))
+            if opening_type[0] == "enum" and opening_type[2]:
+                key = (depth + 1, opening_type[1])
+                enum_regions[key] = [clean_line.split("{", 1)[1].split("}", 1)[0]]
+                closed_enum_regions.discard(key)
             pending_type = None
         elif declared_type is not None:
             pending_type = declared_type
         depth += opens - closes
+    for (_, owner_name), region in enum_regions.items():
+        for signature in enum_case_signatures(region):
+            declarations.append(f"{package}|{path.relative_to(ROOT)}|{owner_name}|{signature}")
     return declarations
 
 

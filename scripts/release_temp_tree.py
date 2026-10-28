@@ -272,7 +272,7 @@ def validate_manifest_closure(root: pathlib.Path, paths: list[pathlib.Path]) -> 
             path.relative_to(root) for path in source_root.rglob("*.cj")
             if path.is_file()
             )
-        for metadata_name in ("cjpm.lock", "build.cj"):
+        for metadata_name in ("cjpm.lock", "build.cj", "LICENSE"):
             metadata = root / project_root / metadata_name
             if metadata.is_file():
                 discovered_sources.add(metadata.relative_to(root))

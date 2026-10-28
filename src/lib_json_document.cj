@@ -1,38 +1,86 @@
 package yjson
 
 /**
- * Managed immutable JSON document with read-only value views.
+ * 由 GC 管理的不可变 JSON 文档。
  *
- * The document is GC-managed and has no close operation. Views retain the storage they need. Use materialize to obtain a detached mutable tree. The default copy budget is 100,000 nodes with a maximum depth of 256.
+ * 不需要 close。root 返回的视图保留底层存储；materialize 生成不共享可变节点的副本。默认复制上限为 100,000 个节点和 256 层。
  */
 public interface JsonDocument {
     /**
-     * Returns a read-only view of the document root.
+     * 读取文档根值的只读视图。
      *
-     * @return Root view retaining its underlying document storage.
+     * @return 保留文档存储的根视图；不复制整份文档。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let document = YJson.parseDocument("{\"id\":7}")
+     * println(document.root().member("id").getOrThrow().asInt64())
+     * ```
+     * ```output
+     * 7
+     * ```
      */
     func root(): JsonValueView
     /**
-     * Copies the document into a detached mutable JsonNode tree.
+     * 在默认预算内复制出独立的可修改树。
      *
-     * Copying is limited to 256 levels and, without maxNodes, 100,000 nodes.
+     * @return 与当前文档隔离的 JsonNode 树。
+     * @throws JsonException 超过 100,000 个节点或 256 层复制预算。
      *
-     * @return Mutable tree independent of the document storage.
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let document = YJson.parseDocument("{\"id\":1}")
+     * let copy = document.materialize()
+     * copy["id"] = 2
+     * println(document.root().member("id").getOrThrow().asInt64() == 1 && copy["id"].asInt64() == 2)
+     * ```
+     * ```output
+     * true
+     * ```
      */
     func materialize(): JsonNode
     /**
-     * Copies the document into a detached mutable JsonNode tree.
+     * 在指定节点预算内复制出独立的可修改树。
      *
-     * Copying is limited to 256 levels and, without maxNodes, 100,000 nodes.
+     * @param maxNodes 正数节点访问上限，包含根节点；深度上限仍为 256。
+     * @return 与文档存储隔离的 JsonNode 树。
+     * @throws IllegalArgumentException maxNodes 非正。
+     * @throws JsonException 节点或深度预算耗尽。
      *
-     * @param maxNodes Positive maximum number of nodes to copy.
-     * @return Mutable tree independent of the document storage.
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * let document = YJson.parseDocument("[1]")
+     * println(document.materialize(2).toJson())
+     * ```
+     * ```output
+     * [1]
+     * ```
+     *
+     * @example 检查拒绝路径 {run}
+     * ```cangjie
+     * let document = YJson.parseDocument("[1]")
+     * var code = ""
+     * try { let _ = document.materialize(1) } catch (error: JsonException) { code = error.code }
+     * println(code)
+     * ```
+     * ```output
+     * work_limit_exceeded
+     * ```
      */
     func materialize(maxNodes: Int64): JsonNode
     /**
-     * Returns the document as JSON text.
+     * 将文档重新序列化为紧凑 JSON 文本。
      *
-     * @return JSON text representing the document.
+     * @return 表示同一 JSON 数据的文本；不保证保留输入空白和数字拼写。
+     * @throws JsonException 超过默认写出深度限制。
+     *
+     * @example 调用并检查结果 {run}
+     * ```cangjie
+     * println(YJson.parseDocument(" [ 1 ] ").toString())
+     * ```
+     * ```output
+     * [1]
+     * ```
      */
     func toString(): String
 }

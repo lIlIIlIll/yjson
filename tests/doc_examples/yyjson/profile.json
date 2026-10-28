@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "dependencies": [
+    "yjson",
+    "yjson_backends",
+    "yjson_yyjson"
+  ],
+  "imports": [
+    "yjson.*",
+    "yjson_backends.*",
+    "yjson_yyjson.*",
+    "std.io.*"
+  ],
+  "platforms": [
+    "linux"
+  ],
+  "linkNativeScanner": false,
+  "compileOption": "-O2",
+  "overrideCompileOption": "-O2"
+}

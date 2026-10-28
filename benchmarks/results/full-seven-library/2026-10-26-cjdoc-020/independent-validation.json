@@ -1,0 +1,244 @@
+{
+  "actual_frozen_source_digests": {
+    "canonical_product_and_harness_file_bytes_verified": {
+      "harness": 51,
+      "product": 51
+    },
+    "complete_yjson_source_digest_supplement": {
+      "actual_run_full_source_digest": "b179395b3b60ea90a114306fbea9b56062ac75c44a5633e14e55ff11969f7e76",
+      "digest_input_files": 262,
+      "harness_closure_sha256": "230ccd61c2dd5bc85de33db9f2f27745c0f95e6fe7512bf8a1427a7b35cc2904",
+      "old_230_subset_not_relabelled": true,
+      "original_1964_source_archive_sha256": "d5afcef7c4a347737807c2c6d0057c91e48ba6932af69386c47e03831f20909b",
+      "product_closure_sha256": "eb31d8ab82a5ed9149fc1fbf2955f7b9f6796acf4af1ab612fb03a1d6f446e99",
+      "regular_source_files": 285,
+      "source_bytes_match_original_archive_receipt": true
+    },
+    "peer_tree_sha256": {
+      "cangjieJSON_source_tree_sha256": "3cbc88bec383ce9b2a4bddf1d19dfc2e3cdd27520ecad46caa17ee2910f80dc2",
+      "json4cj_source_tree_sha256": "cfe474e19fd040b82c037ce34695c713564b19f2600ede8da8ee65189725f4ce"
+    },
+    "scope": "Peer/harness digests reproduced (6/6); separate complete yjson source-digest supplement exactly reproduces original whole-workspace metadata digest; selected 230-file subset retained without relabelling",
+    "source_sha256": {
+      "cangjieJSON_harness": "f88531b32bfbbf2a897a6a6b4d2bd52f3da19c6db257f29f573e07c1d66ba398",
+      "cjfast_json": "cca9574435230c10928df3fdf97ac2173098d56fc268f53fc845d6761c10d350",
+      "java_harness": "26fc932638449295066eae5da5ca8c0c036041e337217e5533e824e8b7840cc9",
+      "json4cj_harness": "9d394e35bc1411c8e06ccc7accd3d1b906a354a7b53689280e91fdad676ba8eb",
+      "yjson": "095e6eacd40160ef8cce814194404401bfbe28771e09f5c4dfebe72610726274"
+    },
+    "yjson_frozen_subset_digest_matches_full_workspace_metadata": false,
+    "yjson_original_full_workspace_source_sha256": "b179395b3b60ea90a114306fbea9b56062ac75c44a5633e14e55ff11969f7e76"
+  },
+  "additional_input_receipts_verified": 13,
+  "archives": {
+    "batch1": {
+      "all_paths_metadata_and_source_only_content_verified": true,
+      "excluded_members": 0,
+      "frozen_source_files_byte_verified": 0,
+      "json_numeric_values_unchanged_files": 350,
+      "noisy_workloads": [
+        "large_array_decode",
+        "large_map_encode"
+      ],
+      "original_regular_files": 3012,
+      "original_sha256": "2d65b6e7ed0dd1692a72d2cf30934f6b1362bf3accd7cb369555898db8502ca5",
+      "original_unchanged_after_verification": true,
+      "preflight_fixture_reports": 7,
+      "public_regular_files": 3012,
+      "public_sha256": "589e7645697bf37df14b4ef8c264438c740268fd43adc946039f0939eeba8422",
+      "retained_original_files": 3012,
+      "stable_workloads": 8,
+      "summary_json_csv_md_byte_identical_after_trusted_replay": true,
+      "timed_cells": 770,
+      "yjson_fixed_work_proofs": 110
+    },
+    "batch2": {
+      "all_paths_metadata_and_source_only_content_verified": true,
+      "excluded_members": 0,
+      "frozen_source_files_byte_verified": 0,
+      "json_numeric_values_unchanged_files": 354,
+      "noisy_workloads": [
+        "large_array_decode"
+      ],
+      "original_regular_files": 3016,
+      "original_sha256": "4b9ef3e435de287df5ad21531ce87f146bbb6e95e5627a82ec1c07e4b3329f63",
+      "original_unchanged_after_verification": true,
+      "preflight_fixture_reports": 7,
+      "public_regular_files": 3016,
+      "public_sha256": "9ebc1ec6806b0cbf162447728b87fff45435a0419df14d822a7546a998f1e7f7",
+      "retained_original_files": 3016,
+      "stable_workloads": 9,
+      "summary_json_csv_md_byte_identical_after_trusted_replay": true,
+      "timed_cells": 770,
+      "yjson_fixed_work_proofs": 110
+    },
+    "build-audits": {
+      "all_paths_metadata_and_source_only_content_verified": true,
+      "excluded_members": 16,
+      "frozen_source_files_byte_verified": 0,
+      "json_numeric_values_unchanged_files": 58,
+      "original_regular_files": 133,
+      "original_sha256": "5a76872b79107048f4483f0cfeaef4b571d2976596141793fd2de4b6fdba9dd3",
+      "original_unchanged_after_verification": true,
+      "public_regular_files": 118,
+      "public_sha256": "62637a3b6f33886587b3ce17b1a0d00bf3d96edc5b8f41766e85d2f2a7ae6973",
+      "retained_original_files": 117
+    },
+    "firstcause": {
+      "all_paths_metadata_and_source_only_content_verified": true,
+      "excluded_members": 13,
+      "frozen_source_files_byte_verified": 0,
+      "json_numeric_values_unchanged_files": 19,
+      "original_regular_files": 61,
+      "original_sha256": "d17419d9ad841f45594a9e0d577d111c479c94854aa43ffdaa17ee1b6684b5f1",
+      "original_unchanged_after_verification": true,
+      "public_regular_files": 49,
+      "public_sha256": "0e55085fe1c454cbadb8400df60cb5e7f8cac3398b76d227e49a2f902c9ff238",
+      "retained_original_files": 48
+    },
+    "harness": {
+      "all_paths_metadata_and_source_only_content_verified": true,
+      "excluded_members": 0,
+      "frozen_source_files_byte_verified": 513,
+      "json_numeric_values_unchanged_files": 14,
+      "original_regular_files": 527,
+      "original_sha256": "5cf24615ab599d56d95110c3bc5c61177146decf1d685c005fc4ada9e3d3a3f1",
+      "original_unchanged_after_verification": true,
+      "public_regular_files": 528,
+      "public_sha256": "2e81018b88cec2e55b95e01b94b094642974ed0411a4ab00697278c7b2b06f88",
+      "retained_original_files": 527
+    },
+    "source-digest": {
+      "all_paths_metadata_and_source_only_content_verified": true,
+      "excluded_members": 0,
+      "frozen_source_files_byte_verified": 285,
+      "json_numeric_values_unchanged_files": 2,
+      "original_regular_files": 287,
+      "original_sha256": "a8a123ef62d83de8192b4851b9e3019451d6c3da26078a8ff3a9d3378034c5ed",
+      "original_unchanged_after_verification": true,
+      "public_regular_files": 287,
+      "public_sha256": "729f9b142e330c8963191b88b3f7117b4976fd1eedbbaaa30d0849f0c2bf95d2",
+      "retained_original_files": 287
+    }
+  },
+  "json4cj_source_binding": {
+    "all_3_patch_reversed_bytes_match_public_sha_and_git_blob": true,
+    "exact_public_git_blob_matches": 194,
+    "license_basis": "original fixed-commit README MIT statement; no independent full LICENSE/NOTICE/copyright text found; no legal conclusion",
+    "original_197_measured_files_unchanged": true,
+    "original_adapted_manifests": 3,
+    "original_readme_bytes": 17365,
+    "original_readme_sha256": "c03caed9790acea77b39777d241622f94794ec443d0dddca887529e73bc31c0d",
+    "public_commit": "a185e9ac0df95ee2a9715941b13f21f2a2a4f674",
+    "public_tree": "585465ae5d92d65310dded727d40397d1998654f"
+  },
+  "preparation_failure": {
+    "formal_timed_cells": 0,
+    "formatter_firstcause_receipt_also_retained": true,
+    "retained_in_public_firstcause_archive": true,
+    "root_cause": "required YJSON_CROSSLANG_CORPUS_DIR was absent in the calling environment; SDK test discovery initialized DocumentLifecycleBenchmarks before selected-case execution",
+    "source_sdk_locks_unchanged": true,
+    "status": "STOPPED_BEFORE_FIRST_TIMED_SEVEN_CELL"
+  },
+  "schema_version": 1,
+  "scope": "Original-to-public byte comparison and trusted seven-library data/summary components only; full strict CLI and clean-checkout integration not run",
+  "status": "PASS",
+  "trusted_harness": {
+    "benchmark_fixed_work.py": "abde65c29851617a74311b1bdf21194c3a96656e4dfc940ce4c59fb028304de6",
+    "run_full.py": "069fb131500a786f03bf604a852e3f18bcd3088fdbede467fb5f6b73139f9a5f",
+    "summarize_full.py": "4f4762200fbbd020157883329b64288f933b2ef6b1cf9364faa4fc9d5877dc12"
+  },
+  "two_batch_identity": {
+    "canonical_rows_equal_original_receipt": true,
+    "effective_harness_sha256": "230ccd61c2dd5bc85de33db9f2f27745c0f95e6fe7512bf8a1427a7b35cc2904",
+    "fixed_work": {
+      "address_decode": {
+        "batch_size": 16384,
+        "batches": 200,
+        "case": "yjsonStringDecodeAddress",
+        "operations": 3276800
+      },
+      "address_encode": {
+        "batch_size": 16384,
+        "batches": 200,
+        "case": "yjsonStringEncodeAddress",
+        "operations": 3276800
+      },
+      "deep_nested_decode": {
+        "batch_size": 64,
+        "batches": 200,
+        "case": "yjsonStringDecodeDeepNestedProfiles",
+        "operations": 12800
+      },
+      "deep_nested_encode": {
+        "batch_size": 512,
+        "batches": 200,
+        "case": "yjsonStringEncodeDeepNestedProfiles",
+        "operations": 102400
+      },
+      "large_array_decode": {
+        "batch_size": 256,
+        "batches": 200,
+        "case": "yjsonStringDecodeLargeProfileArray",
+        "operations": 51200
+      },
+      "large_array_encode": {
+        "batch_size": 1024,
+        "batches": 200,
+        "case": "yjsonStringEncodeLargeProfileArray",
+        "operations": 204800
+      },
+      "large_map_decode": {
+        "batch_size": 1024,
+        "batches": 200,
+        "case": "yjsonStringDecodeLargeInt64Map",
+        "operations": 204800
+      },
+      "large_map_encode": {
+        "batch_size": 4096,
+        "batches": 200,
+        "case": "yjsonStringEncodeLargeInt64Map",
+        "operations": 819200
+      },
+      "person_decode": {
+        "batch_size": 2048,
+        "batches": 200,
+        "case": "yjsonStringDecodePerson",
+        "operations": 409600
+      },
+      "person_encode": {
+        "batch_size": 16384,
+        "batches": 200,
+        "case": "yjsonStringEncodePerson",
+        "operations": 3276800
+      }
+    },
+    "fixed_work_cases_equal": 10,
+    "full_strict_cli": "not run; parent clean-checkout integration required",
+    "measured_commit": "5576cddb1e42a3b391385038ab5b2e3f6d76a77c",
+    "product_source_sha256": "eb31d8ab82a5ed9149fc1fbf2955f7b9f6796acf4af1ab612fb03a1d6f446e99",
+    "stable_metadata_fields": [
+      "host",
+      "platform",
+      "heap",
+      "runs",
+      "schedule",
+      "jmh",
+      "cangjie_bench",
+      "api_policy",
+      "canonical_decode_payload_bytes",
+      "versions",
+      "source_sha256",
+      "lscpu",
+      "api_paths",
+      "product_source_sha256",
+      "effective_harness_sha256",
+      "measured_overlay_sha256",
+      "time_binary",
+      "rss_unit"
+    ],
+    "stable_metadata_fields_equal": true,
+    "trusted_summary_replays": 2
+  },
+  "verifier_sha256": "d82ff0a6feffb2fe83becf105415436cfc7d9a728ebbdc2d0c9314a56534102f"
+}

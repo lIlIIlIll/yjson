@@ -3,9 +3,11 @@
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import pathlib
+import re
 import subprocess
 import sys
 import tomllib
@@ -16,7 +18,7 @@ from release_graph import ROOT, load_release_graph
 INVENTORY = ROOT / "release" / "public-api-inventory.toml"
 SNAPSHOT = ROOT / "release" / "public-api-snapshot.txt"
 C_ABI_DELTA = ROOT / "release" / "public-c-abi-delta-bfd29.toml"
-CANGJIE_DELTA = ROOT / "release" / "public-cangjie-delta-bfd29.toml"
+CANGJIE_DELTA = ROOT / "release" / f"public-cangjie-delta-{load_release_graph().version}.toml"
 REQUIRED_PACKAGE_BUILD_FIELDS = ("cjc-version", "output-type")
 OPTIONAL_STRING_BUILD_FIELDS = (
     "compile-option", "override-compile-option", "script-dir", "link-option",
@@ -186,6 +188,16 @@ def _record_digest(records: set[str]) -> str:
 
 
 CANGJIE_REVIEW_RATIONALES = {
+    "existing-enum-case-inventory": (
+        "Record enum cases already present in the frozen baseline source but omitted by "
+        "the previous line-based inventory collector. These records correct inventory "
+        "coverage; they do not add public API."
+    ),
+    "literal-alias-removal": (
+        "Remove only the @JsonValue literal alias; retain @Json, @JsonCodec, @JsonUsing, "
+        "and @JsonSubtype. Replace @JsonValue calls with @Json and rebuild consumers "
+        "with matching first-party packages."
+    ),
     "typed-generated-spi": (
         "Freeze the v1 generated bridge on GeneratedCodecProviderV1<T> -> JsonCodec<T>; "
         "remove Any erasure, reification adapters, casts, and the previous raw codec interfaces."
@@ -232,6 +244,12 @@ def _classify_cangjie_delta_record(record: str) -> str:
     if len(parts) != 4:
         return "unclassified"
     package, source, owner, declaration = parts
+    if declaration.startswith("| "):
+        return "existing-enum-case-inventory"
+    if (package == "yjson_macros" and source == "packages/yjson_macros/src/json_literal.cj"
+            and owner == "<top-level>" and
+            declaration == "public macro JsonValue(input: Tokens): Tokens"):
+        return "literal-alias-removal"
     if source == "src/lib_json_native_scanner.cj" and declaration.startswith(
         "public func activateJsonNativePrimitivesV1("
     ):
@@ -360,13 +378,73 @@ def check_c_abi_delta(inventory: dict, delta: dict, *, snapshot: pathlib.Path = 
         fail("inventory C ABI declarations do not match all classified additions")
 
 
+def _enum_inventory_cases(delta: dict, target_version: str, *, root: pathlib.Path) -> set[str]:
+    """Validate frozen baseline evidence before admitting inventory-only additions."""
+    relative = f"release/{target_version}/enum-case-inventory.json"
+    if delta.get("inventory_correction_artifact") != relative:
+        fail("enum inventory correction must bind its baseline evidence artifact")
+    path = root / relative
+    if not path.is_file():
+        fail("enum inventory correction baseline evidence is missing")
+    payload = path.read_bytes()
+    if delta.get("inventory_correction_sha256") != hashlib.sha256(payload).hexdigest():
+        fail("enum inventory correction evidence digest mismatch")
+    evidence = json.loads(payload)
+    if evidence.get("schema") != "yjson.enum-case-inventory/1":
+        fail("unsupported enum inventory correction evidence schema")
+    if (evidence.get("baseline_commit") != delta["baseline_commit"] or
+            evidence.get("baseline_snapshot_sha256") != delta.get("baseline_snapshot_sha256")):
+        fail("enum inventory correction evidence does not match the frozen baseline")
+    collector = root / "scripts/generate_public_api_snapshot.py"
+    expected_collector = {"source": "scripts/generate_public_api_snapshot.py",
+                          "sha256": hashlib.sha256(collector.read_bytes()).hexdigest()}
+    if evidence.get("collector") != expected_collector:
+        fail("enum inventory correction collector identity drifted")
+    sources = evidence.get("sources")
+    if not isinstance(sources, list) or not sources:
+        fail("enum inventory correction must identify its baseline source files")
+    source_keys = set()
+    for source in sources:
+        if (not isinstance(source, dict) or set(source) != {"package", "source", "sha256"}
+                or not isinstance(source["package"], str) or not source["package"]
+                or not isinstance(source["source"], str)
+                or pathlib.PurePosixPath(source["source"]).is_absolute()
+                or ".." in pathlib.PurePosixPath(source["source"]).parts
+                or not isinstance(source["sha256"], str)
+                or re.fullmatch(r"[0-9a-f]{64}", source["sha256"]) is None):
+            fail("invalid enum inventory correction baseline source identity")
+        key = (source["package"], source["source"])
+        if key in source_keys:
+            fail("duplicate enum inventory correction baseline source")
+        source_keys.add(key)
+    cases = evidence.get("cases")
+    if not isinstance(cases, list) or not all(isinstance(case, str) for case in cases):
+        fail("invalid enum inventory correction baseline cases")
+    records = set(cases)
+    if (len(records) != len(cases) or evidence.get("case_records") != len(records) or
+            evidence.get("cases_sha256") != _record_digest(records)):
+        fail("enum inventory correction baseline case count or digest mismatch")
+    for record in records:
+        parts = record.split("|", 3)
+        if (len(parts) != 4 or (parts[0], parts[1]) not in source_keys or
+                not parts[2] or not parts[3].startswith("| ")):
+            fail("enum inventory correction case has no baseline source identity")
+    return records
+
+
 def check_cangjie_delta(inventory: dict, delta: dict, *, snapshot: pathlib.Path = SNAPSHOT,
-        release_status: str) -> None:
+        release_status: str, release_version: str | None = None,
+        root: pathlib.Path = ROOT) -> None:
     """Verify a complete, declaration-by-declaration Cangjie migration review."""
-    if delta.get("schema_version") != 2 or delta.get("domain") != "cangjie":
+    if delta.get("schema_version") != 3 or delta.get("domain") != "cangjie":
         fail("unsupported Cangjie delta schema or domain")
-    if inventory.get("cangjie_delta_artifact") != str(CANGJIE_DELTA.relative_to(ROOT)):
+    if release_version is None:
+        release_version = load_release_graph().version
+    expected_artifact = f"release/public-cangjie-delta-{release_version}.toml"
+    if inventory.get("cangjie_delta_artifact") != expected_artifact:
         fail("inventory is not bound to the reviewed Cangjie delta artifact")
+    if delta.get("target_version") != release_version:
+        fail("Cangjie delta target_version does not match the release graph version")
     baseline_commit = delta.get("baseline_commit")
     if not isinstance(baseline_commit, str) or len(baseline_commit) != 40 or any(
             char not in "0123456789abcdef" for char in baseline_commit):
@@ -399,10 +477,18 @@ def check_cangjie_delta(inventory: dict, delta: dict, *, snapshot: pathlib.Path 
         if group["rationale"] != CANGJIE_REVIEW_RATIONALES[classification]:
             fail(f"Cangjie review rationale drifted for {classification}")
         group_status = group["review_status"]
-        if group_status not in {"pending-migration-review", "reviewed-for-0.1.0"}:
+        reviewed_status = f"reviewed-for-{release_version}"
+        if group_status not in {"pending-migration-review", reviewed_status}:
             fail(f"invalid Cangjie review group status: {classification}")
-        if group_status != "reviewed-for-0.1.0":
+        if group_status != reviewed_status:
             pending_groups.append(classification)
+        if classification == "literal-alias-removal" and (
+                group["added"] or not group["removed"]):
+            fail("literal-alias-removal must only remove the exact @JsonValue alias")
+        if classification == "existing-enum-case-inventory":
+            baseline_cases = _enum_inventory_cases(delta, release_version, root=root)
+            if group["removed"] or not set(group["added"]) <= baseline_cases:
+                fail("enum inventory correction may only add cases proven in baseline source")
         for direction in ("added", "removed"):
             records = group[direction]
             if not isinstance(records, list) or not all(
@@ -440,9 +526,44 @@ def check_cangjie_delta(inventory: dict, delta: dict, *, snapshot: pathlib.Path 
         fail("Cangjie classified delta does not reconstruct the frozen baseline")
 
 
+def _write_enum_inventory_evidence(baseline_commit: str, baseline_text: str,
+        destination: pathlib.Path) -> None:
+    from generate_public_api_snapshot import cangjie_declarations
+
+    sources = set()
+    for record in baseline_text.splitlines():
+        parts = record.split("|", 3)
+        if len(parts) == 4 and re.match(r"public\s+enum\s+", parts[3]):
+            sources.add((parts[0], parts[1]))
+    identities = []
+    cases = set()
+    for package, source in sorted(sources):
+        content = subprocess.check_output(["git", "show", f"{baseline_commit}:{source}"], cwd=ROOT)
+        identities.append({"package": package, "source": source,
+                           "sha256": hashlib.sha256(content).hexdigest()})
+        records = cangjie_declarations(package, ROOT / source, source_text=content.decode("utf-8"))
+        cases.update(record for record in records if record.split("|", 3)[3].startswith("| "))
+    evidence = {
+        "schema": "yjson.enum-case-inventory/1", "baseline_commit": baseline_commit,
+        "baseline_snapshot_sha256": hashlib.sha256(baseline_text.encode("utf-8")).hexdigest(),
+        "collector": {"source": "scripts/generate_public_api_snapshot.py",
+                      "sha256": hashlib.sha256(
+                          (ROOT / "scripts/generate_public_api_snapshot.py").read_bytes()).hexdigest()},
+        "sources": identities, "case_records": len(cases),
+        "cases_sha256": _record_digest(cases), "cases": sorted(cases),
+    }
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf-8")
+
+
 def write_cangjie_delta_artifact(baseline_commit: str,
-        destination: pathlib.Path = CANGJIE_DELTA) -> None:
+        destination: pathlib.Path = CANGJIE_DELTA, *, target_version: str | None = None) -> None:
     """Regenerate an exact, classified, pending-approval delta from a Git baseline."""
+    if (len(baseline_commit) != 40 or any(
+            char not in "0123456789abcdef" for char in baseline_commit)):
+        fail("Cangjie delta baseline_commit must be a full lowercase SHA")
+    if target_version is None:
+        target_version = load_release_graph().version
     baseline_text = subprocess.check_output(
         ["git", "show", f"{baseline_commit}:release/public-api-snapshot.txt"],
         cwd=ROOT, text=True,
@@ -465,9 +586,11 @@ def write_cangjie_delta_artifact(baseline_commit: str,
     lines = [
         "# Exact Cangjie declaration delta. Every declaration belongs to exactly one",
         "# reviewed migration group; global release approval remains explicit.",
-        "schema_version = 2",
+        "schema_version = 3",
         'domain = "cangjie"',
+        f"target_version = {json.dumps(target_version)}",
         f"baseline_commit = {json.dumps(baseline_commit)}",
+        f"baseline_snapshot_sha256 = {json.dumps(hashlib.sha256(baseline_text.encode('utf-8')).hexdigest())}",
         f"baseline_records = {len(baseline)}",
         f"baseline_sha256 = {json.dumps(_record_digest(baseline))}",
         'review_status = "pending-migration-review"',
@@ -476,18 +599,21 @@ def write_cangjie_delta_artifact(baseline_commit: str,
         f"added_records = {len(added)}",
         f"added_sha256 = {json.dumps(_record_digest(set(added)))}",
     ]
+    if "existing-enum-case-inventory" in grouped:
+        evidence_path = destination.parent / target_version / "enum-case-inventory.json"
+        _write_enum_inventory_evidence(baseline_commit, baseline_text, evidence_path)
+        lines.extend([
+            f"inventory_correction_artifact = {json.dumps(f'release/{target_version}/enum-case-inventory.json')}",
+            f"inventory_correction_sha256 = {json.dumps(hashlib.sha256(evidence_path.read_bytes()).hexdigest())}",
+        ])
     for classification in sorted(grouped):
         group = grouped[classification]
-        group_status = (
-            "pending-migration-review" if classification == "unclassified"
-            else "reviewed-for-0.1.0"
-        )
         lines.extend([
             "",
             "[[review_groups]]",
             f"classification = {json.dumps(classification)}",
             f"rationale = {json.dumps(CANGJIE_REVIEW_RATIONALES[classification])}",
-            f"review_status = {json.dumps(group_status)}",
+            'review_status = "pending-migration-review"',
             "removed = [",
         ])
         lines.extend(f"  {json.dumps(record)}," for record in group["removed"])
@@ -499,6 +625,14 @@ def write_cangjie_delta_artifact(baseline_commit: str,
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--write-cangjie-delta", metavar="BASELINE_SHA",
+        help="generate the candidate Cangjie delta; all review groups start pending")
+    args = parser.parse_args()
+    if args.write_cangjie_delta:
+        write_cangjie_delta_artifact(args.write_cangjie_delta)
+        print(f"wrote {CANGJIE_DELTA.relative_to(ROOT)} with pending review groups")
+        return 0
     inventory = load_toml(INVENTORY)
     if inventory.get("inventory_version") != 2:
         fail("unsupported inventory_version")
@@ -506,7 +640,8 @@ def main() -> int:
     check_declarations(inventory)
     check_c_abi_delta(inventory, load_toml(C_ABI_DELTA))
     graph = load_release_graph()
-    check_cangjie_delta(inventory, load_toml(CANGJIE_DELTA), release_status=graph.status)
+    check_cangjie_delta(inventory, load_toml(CANGJIE_DELTA), release_status=graph.status,
+        release_version=graph.version)
     subprocess.run([sys.executable, str(ROOT / "scripts/test_release_graph.py")],
         cwd=ROOT, check=True)
     subprocess.run([sys.executable, str(ROOT / "scripts/test_generate_public_api_snapshot.py")],

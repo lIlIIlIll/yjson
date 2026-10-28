@@ -14,20 +14,54 @@ func jsonPathError(message: String, expression: String,
         })
 }
 
+/**
+ * JSONPath 的一次匹配，包含值视图和 RFC 9535 规范路径；值视图保留输入的存储依赖。
+ *
+ */
 public class JsonPathMatch {
+    /**
+     * 本次匹配的只读视图；不会物化为独立树，输入为原生文档时必须保持文档打开。
+     *
+     */
     public let value: JsonValueView
     /**
-     * RFC 9535 normalized path, rooted at `$`.
+     * 以 `$` 为根的 RFC 9535 规范路径；使用单引号成员选择器和规范数组下标。
+     *
      */
     public let normalizedPath: String
 
+    /**
+     * 组合值视图和路径文本；不检查路径是否真的指向该值。
+     *
+     * @param value 匹配的值视图，不复制底层 JSON 数据。
+     * @param normalizedPath 与值关联的规范路径。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let matched = JsonPathMatch(JsonNode.int64(7), "$[0]")
+     * println(matched.value.asInt64())
+     * println(matched.normalizedPath)
+     * ```
+     * ```output
+     * 7
+     * $[0]
+     * ```
+     */
     public init(value: JsonValueView, normalizedPath: String) {
         this.value = value
         this.normalizedPath = normalizedPath
     }
 }
 
+/**
+ * 已经解析的 JSONPath 表达式。可以复用解析结果，每次查询创建独立工作预算；结果视图依赖输入存储。
+ *
+ */
 public class JsonPath {
+    /**
+     * 解析时的原始 JSONPath 表达式文本。
+     *
+     */
     public let expression: String
     private let segments: Array<JsonPathSegment>
 
@@ -36,39 +70,154 @@ public class JsonPath {
         this.segments = segments
     }
 
+    /**
+     * 解析 JSONPath；使用默认编译期过滤预算。
+     *
+     * @param expression 以 `$` 开头的 JSONPath 表达式。
+     * @return 可复用的已解析路径。
+     * @throws JsonException 表达式无效或超过编译预算，错误码为 `invalid_json_path`。
+     *
+     * @example 使用默认与显式解析预算（profile: algorithms） {run}
+     * ```cangjie
+     * let root = JsonNode.parse("[7]")
+     * let defaultPath = JsonPath.parse("$[0]")
+     * let boundedPath = JsonPath.parse("$[0]", limits: JsonPathLimits(maxFilterDepth: 8))
+     * println(defaultPath.first(root).getOrThrow().value.asInt64())
+     * println(boundedPath.first(root).getOrThrow().value.asInt64())
+     * ```
+     * ```output
+     * 7
+     * 7
+     * ```
+     */
     public static func parse(expression: String): JsonPath {
         parse(expression, limits: JsonPathLimits.defaults)
     }
 
     /**
-     * Parses with compile-time filter budgets from `limits`: expression
-     * bytes, logical operator count, and logical nesting depth. Filters
-     * exceeding a budget throw `JsonException(code: "invalid_json_path")`
-     * instead of being accepted for evaluation.
+     * 解析 JSONPath；使用指定配置中的编译期过滤预算。
+     *
+     * @param expression 以 `$` 开头的 JSONPath 表达式。
+     * @param limits 编译时的过滤表达式字节数、逻辑运算符数与逻辑嵌套深度预算；运行时预算由查询方法单独接收。
+     * @return 可复用的已解析路径。
+     * @throws JsonException 表达式无效或超过编译预算，错误码为 `invalid_json_path`。
+     *
+     * @example 使用默认与显式解析预算（profile: algorithms） {run}
+     * ```cangjie
+     * let root = JsonNode.parse("[7]")
+     * let defaultPath = JsonPath.parse("$[0]")
+     * let boundedPath = JsonPath.parse("$[0]", limits: JsonPathLimits(maxFilterDepth: 8))
+     * println(defaultPath.first(root).getOrThrow().value.asInt64())
+     * println(boundedPath.first(root).getOrThrow().value.asInt64())
+     * ```
+     * ```output
+     * 7
+     * 7
+     * ```
      */
     public static func parse(expression: String, limits!: JsonPathLimits): JsonPath {
         JsonPathParser(expression, JsonPathFilterBudget(limits)).parse()
     }
 
     /**
-     * Creates a single-threaded lazy cursor. No candidate is visited until
-     * `next()` is called.
+     * 创建单线程惰性游标，调用 `next` 前不访问候选节点。
+     *
+     * @param root 查询起点，查询结果不改变其内容。
+     * @param limits 此次查询独立使用的运行时工作预算。
+     * @return 逐个产生匹配的游标；源存储需保持可读直到游标使用结束。
+     * @throws JsonException 求值超过预算，错误码为 `work_limit_exceeded`。异常延迟至游标的 `next` 调用。
+     *
+     * @example 查询树与文档（profile: algorithms） {run}
+     * ```cangjie
+     * let path = JsonPath.parse("$[*]")
+     * let root = JsonNode.parse("[7,8]")
+     * let document = YJson.parseDocument("[7,8]")
+     * println(path.matches(root).next().getOrThrow().value.asInt64())
+     * println(path.matches(document).next().getOrThrow().value.asInt64())
+     * ```
+     * ```output
+     * 7
+     * 7
+     * ```
      */
     public func matches(root: JsonValueView,
         limits!: JsonPathLimits = JsonPathLimits.defaults): JsonPathCursor {
         cursorWithWork(root, JsonPathWork(limits))
     }
 
+    /**
+     * 创建单线程惰性游标，调用 `next` 前不访问候选节点。
+     *
+     * @param document 提供查询起点的托管文档。
+     * @param limits 此次查询独立使用的运行时工作预算。
+     * @return 逐个产生匹配的游标；源存储需保持可读直到游标使用结束。
+     * @throws JsonException 求值超过预算，错误码为 `work_limit_exceeded`。异常延迟至游标的 `next` 调用。
+     *
+     * @example 查询树与文档（profile: algorithms） {run}
+     * ```cangjie
+     * let path = JsonPath.parse("$[*]")
+     * let root = JsonNode.parse("[7,8]")
+     * let document = YJson.parseDocument("[7,8]")
+     * println(path.matches(root).next().getOrThrow().value.asInt64())
+     * println(path.matches(document).next().getOrThrow().value.asInt64())
+     * ```
+     * ```output
+     * 7
+     * 7
+     * ```
+     */
     public func matches(document: JsonDocument,
         limits!: JsonPathLimits = JsonPathLimits.defaults): JsonPathCursor {
         matches(document.root(), limits: limits)
     }
 
+    /**
+     * 执行查询并收集全部匹配值及其规范路径。
+     *
+     * @param root 查询起点，查询结果不改变其内容。
+     * @param limits 此次查询独立使用的运行时工作预算。
+     * @return 保持查询顺序的匹配列表；值视图仍依赖输入存储。
+     * @throws JsonException 求值超过预算，错误码为 `work_limit_exceeded`。
+     *
+     * @example 查询树与文档（profile: algorithms） {run}
+     * ```cangjie
+     * let path = JsonPath.parse("$[*]")
+     * let root = JsonNode.parse("[7,8]")
+     * let document = YJson.parseDocument("[7,8]")
+     * println(path.collect(root).size)
+     * println(path.collect(document).size)
+     * ```
+     * ```output
+     * 2
+     * 2
+     * ```
+     */
     public func collect(root: JsonValueView,
         limits!: JsonPathLimits = JsonPathLimits.defaults): ArrayList<JsonPathMatch> {
         collectWithWork(root, JsonPathWork(limits))
     }
 
+    /**
+     * 执行查询并收集全部匹配值及其规范路径。
+     *
+     * @param document 提供查询起点的托管文档。
+     * @param limits 此次查询独立使用的运行时工作预算。
+     * @return 保持查询顺序的匹配列表；值视图仍依赖输入存储。
+     * @throws JsonException 求值超过预算，错误码为 `work_limit_exceeded`。
+     *
+     * @example 查询树与文档（profile: algorithms） {run}
+     * ```cangjie
+     * let path = JsonPath.parse("$[*]")
+     * let root = JsonNode.parse("[7,8]")
+     * let document = YJson.parseDocument("[7,8]")
+     * println(path.collect(root).size)
+     * println(path.collect(document).size)
+     * ```
+     * ```output
+     * 2
+     * 2
+     * ```
+     */
     public func collect(document: JsonDocument,
         limits!: JsonPathLimits = JsonPathLimits.defaults): ArrayList<JsonPathMatch> {
         collect(document.root(), limits: limits)
@@ -81,11 +230,53 @@ public class JsonPath {
         result
     }
 
+    /**
+     * 执行查询并收集全部值视图，不返回匹配路径。
+     *
+     * @param root 查询起点，查询结果不改变其内容。
+     * @param limits 此次查询独立使用的运行时工作预算。
+     * @return 保持查询顺序的值视图列表；不会复制为独立树。
+     * @throws JsonException 求值超过预算，错误码为 `work_limit_exceeded`。
+     *
+     * @example 查询树与文档（profile: algorithms） {run}
+     * ```cangjie
+     * let path = JsonPath.parse("$[*]")
+     * let root = JsonNode.parse("[7,8]")
+     * let document = YJson.parseDocument("[7,8]")
+     * println(path.collectValues(root)[1].asInt64())
+     * println(path.collectValues(document)[1].asInt64())
+     * ```
+     * ```output
+     * 8
+     * 8
+     * ```
+     */
     public func collectValues(root: JsonValueView,
         limits!: JsonPathLimits = JsonPathLimits.defaults): ArrayList<JsonValueView> {
         collectValuesWithWork(root, JsonPathWork(limits))
     }
 
+    /**
+     * 执行查询并收集全部值视图，不返回匹配路径。
+     *
+     * @param document 提供查询起点的托管文档。
+     * @param limits 此次查询独立使用的运行时工作预算。
+     * @return 保持查询顺序的值视图列表；不会复制为独立树。
+     * @throws JsonException 求值超过预算，错误码为 `work_limit_exceeded`。
+     *
+     * @example 查询树与文档（profile: algorithms） {run}
+     * ```cangjie
+     * let path = JsonPath.parse("$[*]")
+     * let root = JsonNode.parse("[7,8]")
+     * let document = YJson.parseDocument("[7,8]")
+     * println(path.collectValues(root)[1].asInt64())
+     * println(path.collectValues(document)[1].asInt64())
+     * ```
+     * ```output
+     * 8
+     * 8
+     * ```
+     */
     public func collectValues(document: JsonDocument,
         limits!: JsonPathLimits = JsonPathLimits.defaults): ArrayList<JsonValueView> {
         collectValues(document.root(), limits: limits)
@@ -98,10 +289,52 @@ public class JsonPath {
         result
     }
 
+    /**
+     * 只取得首个匹配，找到后停止遍历。
+     *
+     * @param root 查询起点，查询结果不改变其内容。
+     * @param limits 此次查询独立使用的运行时工作预算。
+     * @return 首个匹配；没有结果时为 `None`。
+     * @throws JsonException 求值超过预算，错误码为 `work_limit_exceeded`。
+     *
+     * @example 查询树与文档（profile: algorithms） {run}
+     * ```cangjie
+     * let path = JsonPath.parse("$[*]")
+     * let root = JsonNode.parse("[7,8]")
+     * let document = YJson.parseDocument("[7,8]")
+     * println(path.first(root).getOrThrow().value.asInt64())
+     * println(path.first(document).getOrThrow().value.asInt64())
+     * ```
+     * ```output
+     * 7
+     * 7
+     * ```
+     */
     public func first(root: JsonValueView, limits!: JsonPathLimits = JsonPathLimits.defaults): Option<JsonPathMatch> {
         matches(root, limits: limits).next()
     }
 
+    /**
+     * 只取得首个匹配，找到后停止遍历。
+     *
+     * @param document 提供查询起点的托管文档。
+     * @param limits 此次查询独立使用的运行时工作预算。
+     * @return 首个匹配；没有结果时为 `None`。
+     * @throws JsonException 求值超过预算，错误码为 `work_limit_exceeded`。
+     *
+     * @example 查询树与文档（profile: algorithms） {run}
+     * ```cangjie
+     * let path = JsonPath.parse("$[*]")
+     * let root = JsonNode.parse("[7,8]")
+     * let document = YJson.parseDocument("[7,8]")
+     * println(path.first(root).getOrThrow().value.asInt64())
+     * println(path.first(document).getOrThrow().value.asInt64())
+     * ```
+     * ```output
+     * 7
+     * 7
+     * ```
+     */
     public func first(document: JsonDocument,
         limits!: JsonPathLimits = JsonPathLimits.defaults): Option<JsonPathMatch> {
         first(document.root(), limits: limits)
@@ -168,7 +401,8 @@ class JsonPathWork {
 }
 
 /**
- * Single-threaded lazy JSONPath result cursor.
+ * 单线程使用的惰性 JSONPath 结果游标；持续持有根视图，调用期间保持底层后端文档打开。游标没有单独的关闭操作。
+ *
  */
 public class JsonPathCursor <: Iterator<JsonPathMatch> {
     private let root: JsonValueView
@@ -185,6 +419,25 @@ public class JsonPathCursor <: Iterator<JsonPathMatch> {
         this.work = work
     }
 
+    /**
+     * 推进查询并取得下一个匹配；预算在推进时累计，耗尽后持续返回 `None`。
+     *
+     * @return 下一个匹配，遍历结束后为 `None`。
+     * @throws JsonException 推进过程中超过工作预算，错误码为 `work_limit_exceeded`；读取关闭的后端视图也可能失败。
+     *
+     * @example 用法（profile: algorithms） {run}
+     * ```cangjie
+     * let cursor = JsonPath.parse("$[*]").matches(JsonNode.parse("[7]"))
+     * println(cursor.next().getOrThrow().value.asInt64())
+     * println(cursor.next().isNone())
+     * println(cursor.next().isNone())
+     * ```
+     * ```output
+     * 7
+     * true
+     * true
+     * ```
+     */
     public func next(): Option<JsonPathMatch> {
         if (finished) { return None<JsonPathMatch> }
         if (!started) {

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "dependencies": ["yjson", "yjson_algorithms", "yjson_schema_formats"],
+  "imports": ["yjson.*", "yjson_algorithms.*", "yjson_schema_formats.*"],
+  "platforms": ["linux"],
+  "compileOption": "-O2",
+  "overrideCompileOption": "-O2",
+  "linkNativeScanner": false,
+  "nativeLibraries": ["yjson_schema_formats", "idn2"]
+}

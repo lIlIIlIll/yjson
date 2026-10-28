@@ -1,0 +1,26 @@
+{
+  "schema": "yjson.parent-published-pure-review/1",
+  "status": "PASS",
+  "independentFullOriginalToPublicByteComparison": true,
+  "allSourceBytesUnchanged": true,
+  "allRetainedEvidenceOnlyDeclaredPathSubstitutions": true,
+  "standaloneRawStatisticsReplay": "PASS",
+  "sha256sum": "PASS",
+  "batches": {
+    "a": {
+      "originalFilesVerified": 2988,
+      "pathOnlyNormalizedText": 1206,
+      "byteIdenticalText": 1776,
+      "nestedSourceFilesByteIdentical": 426,
+      "measurementExpected": "FAIL"
+    },
+    "b": {
+      "originalFilesVerified": 2939,
+      "pathOnlyNormalizedText": 1183,
+      "byteIdenticalText": 1752,
+      "nestedSourceFilesByteIdentical": 400,
+      "measurementExpected": "PASS"
+    }
+  },
+  "notYjsonReleaseQualification": true
+}

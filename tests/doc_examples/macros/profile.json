@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "dependencies": [
+    "yjson",
+    "yjson_macros"
+  ],
+  "imports": [
+    "yjson.*",
+    "yjson_macros.*",
+    "std.collection.*"
+  ],
+  "platforms": [
+    "linux",
+    "windows",
+    "darwin"
+  ],
+  "linkNativeScanner": false
+}

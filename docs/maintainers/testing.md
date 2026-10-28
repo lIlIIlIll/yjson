@@ -15,7 +15,7 @@
 | 加速 | Pure/Native 实现选择、ABI、并发、故障和性能验证 | `runtime-freeze` 和发布性能脚本 |
 | Native C | 编译警告、ASan、UBSan、LSan、差分模糊测试、符号隔离 | Native 发布脚本 |
 | 打包 | 仅含源码的暂存目录、九包发布图、隔离的使用方测试、许可证 | 发布脚本 |
-| API 文档 | cjdoc 源码验证、九包 Doc IR/HTML、已知限制清单 | `api-docs` |
+| API 文档 | cjdoc 资格、九包统一站点、Doc IR v16、中文契约与可执行示例 | `api-docs` |
 | 覆盖率 | 项目及改动的行和分支覆盖率 | `scripts/coverage.sh` + 改动覆盖率检查器 |
 | 性能 | 固定 CPU 的交替/反转 A/B、校验和、RSS、跨性能配置 | 发布性能脚本 |
 
@@ -38,13 +38,35 @@ python3 scripts/test_generate_api_docs.py
 
 ## 工具链选择
 
-托管 CI 固定使用 Cangjie STS `1.1.3`，所有需要 Cangjie 的任务使用同一
-解析结果。`workflow_dispatch` 可以显式指定一个 STS 版本，以便重跑一个候选。
+产品、宏、示例、文档与托管 CI 固定使用 Cangjie STS `1.2.0` 及匹配的 stdx。
+SDK 精确版本由 `release/cjdoc-tool.toml` 提供，所有 Cangjie 任务使用 `sts` job 的同一解析结果。
+`workflow_dispatch` 只接受与该固定版本一致的输入。单独运行产品 gate 时也校验实际编译器
+和包管理器，拒绝 daily、旧 SDK 或版本不一致的环境。
 cjdoc 从固定源码版本构建，但编译时使用同一个 STS SDK；验证证据
 记录实际 `cjc` 和 `cjpm` 输出，并拒绝与统一版本不一致的编译器。
 
+Linux 测试矩阵和 Windows/macOS Pure 矩阵均显式使用 `-O2`，不自动降级为 `-O1`。
+STS `1.2.0` 的本地 Linux 构建、算法、Native 和格式验证已经执行 `-O2` 检查；这些结果
+不代表托管三平台通过。各平台仍须保留实际 CI 的命令、优化级别、退出码及首次失败记录，
+未执行的托管验证记为 `NOT RUN`。显式优化级别覆盖只用于单独诊断，不改变发布资格要求。
+
 checkout、setup、Codecov 和 Pages Action 使用完整 commit SHA。发布证据还要记录 SDK
-归档校验和、运行器镜像、工作流运行 ID 和产物校验和。
+归档与安装回执摘要、cjc/cjpm 摘要、stdx 安装清单摘要、运行器镜像、工作流运行 ID 和产物校验和。
+
+## 候选文档与升级验证
+
+`0.2.0` 文档候选要求八个应用包的摘要、参数、适用返回值和示例覆盖率达到 100%。
+示例从实际 Doc IR 提取，以独立消费方编译运行，验证声明绑定、正常输出、错误和资源释放。
+Linux 验证全部适用示例与真实 Native 链接；Windows/macOS 验证 Pure 示例。
+进程级加速初始化分别放入独立进程。下载 Agent 包后断网验证 `query` 与 stdio MCP 查询。
+
+`0.x` patch 和 minor 不保证旧 API、ABI、生成代码或旧 SDK 兼容。升级验证使用当前候选的
+配对依赖和重新编译的消费方；不再把冻结旧二进制跨版本链接矩阵设为未来发布要求。
+当前生成协议、ABI 错配检查、预算、错误及资源生命周期的回归测试仍须通过。
+
+Pure 性能基线为 STS `1.2.0` 迁移后、旧包装清理前的源码，与候选使用同一 SDK 和测量程序。
+24 个用例各跑 11 轮，保留 5% 回退门槛；七库重新执行两批各 770 个单元。
+历史 SDK 的测量仅供查阅，不证明新候选性能通过。
 
 ## CI 任务对应关系
 
@@ -155,5 +177,5 @@ scripts/ci_fresh_checkout.sh
 CI 对 `standards-conformance` 和 `schema-formats-conformance` 任务先执行一次 `--prefetch`（下载并 SHA-256 校验固定
 版本的官方测试集归档），结果作为缓存产物复用；运行检查时显式传
 `--offline`（`YJSON_STANDARDS_OFFLINE=1`），只使用缓存，缓存缺失即失败并打印预取命令。
-本地开发者无网络时可预先 `python3 scripts/run_standards_conformance.py --prefetch
---cache /tmp/yjson-standards-suites`，之后加 `--offline` 运行。
+本地开发者可以预先下载测试集，在无网络时加 `--offline` 运行。
+使用磁盘上的缓存目录，例如 `--cache "$HOME/.cache/yjson-standards-suites"`，并保留固定归档的校验和。

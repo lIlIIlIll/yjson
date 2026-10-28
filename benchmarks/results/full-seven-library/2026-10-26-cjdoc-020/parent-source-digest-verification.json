@@ -1,0 +1,18 @@
+{
+  "status": "PASS",
+  "scope": "independent source capsule, original archive and actual frozen digest implementations; data components only, not clean checkout strict",
+  "productionCommit": "5576cddb1e42a3b391385038ab5b2e3f6d76a77c",
+  "macroCommit": "c9ef52da9ba2d3f77916c40ccb9280db78ee2e07",
+  "originalArchiveSha256": "d5afcef7c4a347737807c2c6d0057c91e48ba6932af69386c47e03831f20909b",
+  "originalArchiveFileCount": 1964,
+  "sourceCapsuleSha256": "a8a123ef62d83de8192b4851b9e3019451d6c3da26078a8ff3a9d3378034c5ed",
+  "sourceCapsuleFileCount": 287,
+  "byteAndModeIdenticalSourceFiles": 285,
+  "completeSourceDigestInputs": 262,
+  "actualRunFullSourceDigest": "b179395b3b60ea90a114306fbea9b56062ac75c44a5633e14e55ff11969f7e76",
+  "productClosureCount": 51,
+  "productClosureSha256": "eb31d8ab82a5ed9149fc1fbf2955f7b9f6796acf4af1ab612fb03a1d6f446e99",
+  "harnessClosureCount": 51,
+  "harnessClosureSha256": "230ccd61c2dd5bc85de33db9f2f27745c0f95e6fe7512bf8a1427a7b35cc2904",
+  "measurementRerun": false
+}

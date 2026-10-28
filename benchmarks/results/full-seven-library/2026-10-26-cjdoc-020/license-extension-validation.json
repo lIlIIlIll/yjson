@@ -1,0 +1,60 @@
+{
+  "added_members": [
+    {
+      "matches_verified_c9_license_and_current_macro_license": true,
+      "member": "seven-library-020-harness/source-inputs/repo/packages/yjson_macros/LICENSE",
+      "original_git_blob": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "size_bytes": 11357,
+      "source_commit": "c9ef52da9ba2d3f77916c40ccb9280db78ee2e07",
+      "source_tree": "8ab6c8d5bbc5875e203d6e205c07d3a6fe9d7635"
+    }
+  ],
+  "frozen_json4cj_source_license_notice_file_present": false,
+  "json4cj_original_readme_added_to_public_harness": {
+    "member": "seven-library-020-harness/source-inputs/json4cj/README.md",
+    "original_git_blob": "2f7c6c32f79b7b2bfea2bbe5a71e252d9a525d9e",
+    "sha256": "c03caed9790acea77b39777d241622f94794ec443d0dddca887529e73bc31c0d",
+    "size_bytes": 17365,
+    "source_commit": "a185e9ac0df95ee2a9715941b13f21f2a2a4f674",
+    "source_tree": "585465ae5d92d65310dded727d40397d1998654f"
+  },
+  "licensed_harness_527_sha256": "5cf24615ab599d56d95110c3bc5c61177146decf1d685c005fc4ada9e3d3a3f1",
+  "licenses": [
+    {
+      "member": "seven-library-020-harness/source-inputs/cangjieJSON-upstream/LICENSE",
+      "sha256": "c5accbbd8546e94c34aed24afe689a617627d18eed5a6c48277e48db57c23851",
+      "size_bytes": 11356,
+      "unchanged_from_original_526": true
+    },
+    {
+      "member": "seven-library-020-harness/source-inputs/cjfast-json/LICENSE",
+      "sha256": "c5accbbd8546e94c34aed24afe689a617627d18eed5a6c48277e48db57c23851",
+      "size_bytes": 11356,
+      "unchanged_from_original_526": true
+    },
+    {
+      "member": "seven-library-020-harness/source-inputs/repo/LICENSE",
+      "sha256": "ff2bfac16f9884d002e66b1b2c75c20c626bc41ff31cdf411c5acdf224288295",
+      "size_bytes": 10254,
+      "unchanged_from_original_526": true
+    },
+    {
+      "member": "seven-library-020-harness/source-inputs/repo/native/vendor/yyjson/LICENSE",
+      "sha256": "45e384d3d52c73cba3a64d6e6c25d47cd738cd8a55c30629e3201046eda62947",
+      "size_bytes": 1084,
+      "unchanged_from_original_526": true
+    },
+    {
+      "member": "seven-library-020-harness/source-inputs/repo/packages/yjson_macros/LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "size_bytes": 11357,
+      "unchanged_from_original_526": false
+    }
+  ],
+  "original_526_members_unchanged": true,
+  "original_harness_526_sha256": "1daf5e13c55050b6b60d87f1a8e2efbdb1fdaee28ddda7f55816cf9cdcbb43f8",
+  "schema_version": 1,
+  "scope": "Source-file identity only; json4cj license basis is original README MIT declaration, no independent full MIT LICENSE/NOTICE found; no legal conclusion; old parent receipt covers original 526 only",
+  "status": "PASS_BYTE_IDENTITY"
+}

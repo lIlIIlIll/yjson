@@ -1,6 +1,7 @@
 package yjson_schema_formats
 
 import std.collection.*
+import yjson.*
 import yjson_algorithms.*
 
 // The native seam is deliberately a Boolean validator; no libidn2-owned
@@ -9,11 +10,32 @@ import yjson_algorithms.*
 foreign func YJ_Schema_IdnaValidate(input: CPointer<UInt8>, length: Int64, asciiOnly: Int32): Int32
 
 /**
- * Installs the internationalized hostname, email, URI, IRI, and URI Template formats.
- * The hostname validators use the system libidn2 implementation of IDNA2008,
- * including Punycode round-trip, Bidi, and ContextJ checks.
+ * 为 JSON Schema 安装国际化主机名、电子邮件、URI、IRI 与 URI Template 格式。主机名验证使用系统 libidn2 的 IDNA2008、Punycode 往返、Bidi 和 ContextJ 检查；需要可用的原生 libidn2。
+ *
  */
 public class StandardInternationalFormats <: JsonSchemaFormatProvider {
+    /**
+     * 向注册表添加八个格式断言；已注册的同名格式不会被覆盖。
+     *
+     * @param registry 接收 `hostname`、`idn-hostname`、`idn-email`、`uri`、`uri-reference`、`iri`、`iri-reference` 和 `uri-template` 的可变注册表。
+     * @throws IllegalStateException 注册表已冻结。
+     * @throws IllegalArgumentException 任一格式名称已经注册；此前成功注册的格式仍会保留。
+     *
+     * @example 用法（profile: schema-formats） {run}
+     * ```cangjie
+     * let formats = JsonSchemaFormatRegistry.withCoreFormats()
+     * let provider: JsonSchemaFormatProvider = StandardInternationalFormats()
+     * provider.installInto(formats)
+     * let config = JsonSchemaConfig(formatMode: JsonSchemaFormatMode.Assertion, formats: formats)
+     * let schema = JsonSchema.parse("{\"format\":\"idn-hostname\"}", config: config)
+     * println(schema.isValid(JsonNode.string("실례.테스트")))
+     * println(schema.isValid(JsonNode.string("a·l")))
+     * ```
+     * ```output
+     * true
+     * false
+     * ```
+     */
     public func installInto(registry: JsonSchemaFormatRegistry): Unit {
         registry.register("hostname", InternationalSchemaFormat("hostname"))
         registry.register("idn-hostname", InternationalSchemaFormat("idn-hostname"))

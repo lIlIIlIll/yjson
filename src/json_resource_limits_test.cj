@@ -95,7 +95,7 @@ class JsonResourceLimitsTest {
             let _ = JsonNode.parse(arrayJson)
         }), "max_depth")
         @Expect(resourceLimitErrorCode({ =>
-            let _ = CompactJsonDocument.parse(unsafe { arrayJson.rawData().clone() })
+            let _ = CompactJsonDocument.parseBorrowed(unsafe { arrayJson.rawData().clone() })
         }), "max_depth")
         @Expect(resourceLimitErrorCode({ =>
             let _ = YJson.fromJson(deepNestedArrayJson(depth), codec: JsonCodecs.int64)
@@ -131,7 +131,7 @@ class JsonResourceLimitsTest {
             let _ = JsonNode.parse(text, config: JsonReadOptions(maxInputBytes: 6))
         }), "document_too_large")
         @Expect(resourceLimitErrorCode({ =>
-            let _ = CompactJsonDocument.parse(unsafe { text.rawData() },
+            let _ = CompactJsonDocument.parseBorrowed(unsafe { text.rawData() },
                 config: JsonReadOptions(maxInputBytes: 6))
         }), "document_too_large")
     }
@@ -285,5 +285,95 @@ class JsonResourceLimitsTest {
         @Expect(directNewlineError.location.getOrThrow().byteOffset, 4)
         @Expect(directNewlineError.location.getOrThrow().line, 1)
         @Expect(directNewlineError.location.getOrThrow().column, 5)
+    }
+}
+
+@Test
+class JsonResourcePreflightSemanticsTest {
+    private func expectErrorAt(error: JsonException, code: String, offset: Int64,
+        line: Int64, column: Int64): Unit {
+        @Expect(error.code, code)
+        let location = error.location.getOrThrow()
+        @Expect(location.byteOffset, offset)
+        @Expect(location.line, line)
+        @Expect(location.column, column)
+    }
+
+    @TestCase
+    func preflightAcceptsEachJsonWhitespaceAtEveryValueEntry(): Unit {
+        let mapCodec = JsonCodecs.stringMap(JsonCodecs.int64)
+        for (space in [" ", "\t", "\r", "\n"]) {
+            let scalar = space + "7" + space
+            @Expect(YJson.fromJson(scalar, codec: JsonCodecs.int64), 7)
+            @Expect(YJson.fromJson(scalar.toArray(), codec: JsonCodecs.int64), 7)
+
+            let array = "[" + space + "1," + space + "2]"
+            @Expect(YJson.parseDocument(array).materialize().toJson(), "[1,2]")
+            @Expect(YJson.parseDocument(array.toArray()).materialize().toJson(), "[1,2]")
+
+            let object = space + "{\"a\":" + space + "1,\"b\":" + space + "2}" + space
+            let fromString = YJson.fromJson(object, codec: mapCodec)
+            @Expect(fromString.size, 2)
+            @Expect(fromString["a"], 1)
+            @Expect(fromString["b"], 2)
+            let fromBytes = YJson.fromJson(object.toArray(), codec: mapCodec)
+            @Expect(fromBytes.size, 2)
+            @Expect(fromBytes["a"], 1)
+            @Expect(fromBytes["b"], 2)
+
+            let nested = "{\"a\":" + space + "[" + space + "1," + space +
+                "{\"b\":" + space + "2}]}"
+            @Expect(YJson.parseDocument(nested).materialize().toJson(), "{\"a\":[1,{\"b\":2}]}")
+            @Expect(YJson.parseDocument(nested.toArray()).materialize().toJson(), "{\"a\":[1,{\"b\":2}]}")
+        }
+    }
+
+    @TestCase
+    func preflightValueEntryFailuresKeepExactByteLocations(): Unit {
+        // Each pair ends at EOF or at '?', after the same four JSON spaces.
+        // The last case puts a two-byte key before the newline to distinguish
+        // the absolute byte offset from a character count.
+        let inputs = [
+            "\n\r\t ", "\n\r\t ?",
+            "[\n\r\t ", "[\n\r\t ?]",
+            "[0,\n\r\t ", "[0,\n\r\t ?]",
+            "{\"a\":\n\r\t ", "{\"a\":\n\r\t ?}",
+            "{\"a\":[0,\n\r\t ", "{\"a\":[0,\n\r\t ?]}",
+            "{\"é\":1,\n  \"b\":?}"
+        ]
+        let offsets: Array<Int64> = [4, 4, 5, 5, 7, 7, 9, 9, 12, 12, 15]
+        let columns: Array<Int64> = [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 7]
+        for (index in 0..inputs.size) {
+            let text = inputs[index]
+            let fromString = @AssertThrows[JsonException](YJson.parseDocument(text))
+            expectErrorAt(fromString, "parse_error", offsets[index], 2, columns[index])
+            let fromBytes = @AssertThrows[JsonException](YJson.parseDocument(text.toArray()))
+            expectErrorAt(fromBytes, "parse_error", offsets[index], 2, columns[index])
+        }
+    }
+
+    @TestCase
+    func typedPreflightKeepsLateSyntaxAndUtf8ErrorsBeforeDuplicateKeys(): Unit {
+        let codec = JsonCodecs.stringMap(JsonCodecs.int64)
+        let malformed = "{\"a\":1,\"a\":2,\n \"b\":?}"
+        let syntaxFromString = @AssertThrows[JsonException](YJson.fromJson(malformed, codec: codec))
+        expectErrorAt(syntaxFromString, "parse_error", 19, 2, 6)
+        let syntaxFromBytes = @AssertThrows[JsonException](YJson.fromJson(malformed.toArray(), codec: codec))
+        expectErrorAt(syntaxFromBytes, "parse_error", 19, 2, 6)
+
+        let invalidUtf8 = "{\"a\":1,\"a\":2,\n \"b\":\"x\"}".toArray()
+        invalidUtf8[20] = 0x80u8
+        let utf8Error = @AssertThrows[JsonException](YJson.fromJson(invalidUtf8, codec: codec))
+        expectErrorAt(utf8Error, "parse_error", 20, 2, 7)
+    }
+
+    @TestCase
+    func documentPreflightKeepsLateStringBudgetBeforeDuplicateKeys(): Unit {
+        let config = JsonReadOptions(maxStringBytes: 1)
+        let text = "{\"a\":1,\"a\":2,\n \"b\":\"xy\"}"
+        let fromString = @AssertThrows[JsonException](YJson.parseDocument(text, config: config))
+        expectErrorAt(fromString, "string_too_large", 21, 2, 8)
+        let fromBytes = @AssertThrows[JsonException](YJson.parseDocument(text.toArray(), config: config))
+        expectErrorAt(fromBytes, "string_too_large", 21, 2, 8)
     }
 }

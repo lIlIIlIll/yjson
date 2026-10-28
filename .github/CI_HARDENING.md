@@ -23,13 +23,17 @@ Patch coverage 在求交集前拒绝空行记录和缺失的变更文件。完�
 Schema adapter 将构造或验证异常计为失败，不再把异常视为正常的 `valid=false`。
 标准门禁先运行含两个正常对照和一个错误 Schema 的真实 adapter 回归，再运行官方套件。
 
-CI 不再安装 `harden_llc.sh` 包装器，Pure 检查不重写优化等级、不重试测试失败。
+CI 不再安装 `harden_llc.sh` 包装器。Linux 与 Windows/macOS Pure 矩阵显式使用 `-O2`，
+该配置传入真实包与外部消费方构建，不自动降级或重试测试失败。
 `ci-retry.yml` 自动重跑 watchdog 被移除；手工诊断需要保留第一次失败证据。
 覆盖率显式 `-O0` 插桩策略保持不变。
 
-默认 SDK 直接固定为 STS `1.1.3`，不先请求 latest，resolution 为
-`pinned-sts`。手工指定版本仍优先。`Cangjie STS (pinned)` 检查名表示
+默认 SDK 直接固定为 STS `1.2.0`，不先请求 latest，resolution 为
+`pinned-sts`。手工指定版本必须与统一固定版本一致。`Cangjie STS (pinned)` 检查名表示
 所有 GitHub 托管任务共享同一个 STS 版本。
+
+当前本地 Linux 的 `-O2` 检查不能代替托管 Linux、Windows 或 macOS 的资格；
+尚未执行的托管平台仍记录为 `NOT RUN`，不能复用旧 SDK 的 `-O1` 结果。
 
 ## 验证命令
 

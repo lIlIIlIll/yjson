@@ -1,0 +1,88 @@
+{
+  "historyCommitCount": 91,
+  "best": [
+    {
+      "commit": "a185e9ac0df95ee2a9715941b13f21f2a2a4f674",
+      "matches": 194,
+      "differences": [
+        "json4cj-databind/cjpm.toml",
+        "json4cj-annotations/cjpm.toml",
+        "json4cj-core/cjpm.toml"
+      ],
+      "sourceFiles": 197,
+      "tree": "585465ae5d92d65310dded727d40397d1998654f"
+    },
+    {
+      "commit": "c306ad8cf584f771514b34ca8cdc1e8c6e6dc531",
+      "matches": 194,
+      "differences": [
+        "json4cj-databind/cjpm.toml",
+        "json4cj-annotations/cjpm.toml",
+        "json4cj-core/cjpm.toml"
+      ],
+      "sourceFiles": 197,
+      "tree": "585465ae5d92d65310dded727d40397d1998654f"
+    },
+    {
+      "commit": "6684b0c37acbfe7e63548ada59c030296b156e76",
+      "matches": 194,
+      "differences": [
+        "json4cj-databind/cjpm.toml",
+        "json4cj-annotations/cjpm.toml",
+        "json4cj-core/cjpm.toml"
+      ],
+      "sourceFiles": 197,
+      "tree": "daaa2707ef782d449ca5d2f045c20cee59021046"
+    },
+    {
+      "commit": "318fadc2f635dd3227a0237da7d6b7b8aa91de93",
+      "matches": 194,
+      "differences": [
+        "json4cj-databind/cjpm.toml",
+        "json4cj-annotations/cjpm.toml",
+        "json4cj-core/cjpm.toml"
+      ],
+      "sourceFiles": 197,
+      "tree": "1688273eb4aec0810743808126219c581ea87b65"
+    },
+    {
+      "commit": "aa3e6b4f9d6a379d884473a78d523c1f23fcb40f",
+      "matches": 194,
+      "differences": [
+        "json4cj-databind/cjpm.toml",
+        "json4cj-annotations/cjpm.toml",
+        "json4cj-core/cjpm.toml"
+      ],
+      "sourceFiles": 197,
+      "tree": "8183dfe67076322acd34c3b597a45d9d0e467dfe"
+    },
+    {
+      "commit": "98c2939aa2cccb5db65071e249d268c9d6e79bc8",
+      "matches": 177,
+      "differences": [
+        "docs/jackson-bench/JacksonBench.java",
+        "json4cj-databind/cjpm.toml",
+        "json4cj-databind/src/deser/StdDecoders.cj",
+        "json4cj-databind/src/deser/BeanDecoder.cj",
+        "json4cj-databind/src/ser/StdEncoders.cj",
+        "json4cj-databind/src/ser/BeanEncoder.cj",
+        "json4cj-databind/src/ser/EncoderFactory.cj",
+        "json4cj-databind/src/test/macros_test/T4CollectionTypes_test.cj",
+        "json4cj-databind/src/test/macros_test/T3UserTypes_test.cj",
+        "json4cj-databind/src/test/macros_test/T9SmokeBench_test.cj",
+        "json4cj-databind/src/test/macros_test/T9ReflectVerify_test.cj",
+        "json4cj-databind/src/test/bind/JsonCodec_test.cj",
+        "json4cj-databind/src/bind/JsonCodec.cj",
+        "json4cj-databind/src/bind/CodecWriter.cj",
+        "json4cj-annotations/cjpm.toml",
+        "json4cj-annotations/src/macros/HandleStruct.cj",
+        "json4cj-annotations/src/macros/HandleClass.cj",
+        "json4cj-core/cjpm.toml",
+        "json4cj-core/src/stream/JsonWriter.cj",
+        "json4cj-core/src/codec/BuiltinEncoders.cj"
+      ],
+      "sourceFiles": 197,
+      "tree": "c830498377aee40325a31e0371523ca0a23c8a8d"
+    }
+  ]
+}

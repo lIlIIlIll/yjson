@@ -5,24 +5,28 @@
 
 ## 1. 固定候选版本
 
-候选记录精确提交、九包 `0.1.1` 版本、发布图、工具链和计划发布的版本信息。
+当前准备九包 `0.2.0` 候选，记录主仓与独立宏仓的精确提交、发布图、工具链及版本。
+本轮只交付候选、cjdoc 工具发布与 Pages，不发布 yjson 九包或创建其 tag。
+以下打包和发布步骤供另行授权的正式发布使用。
 发布期间不混入未经评审的公开 API、C ABI 或生成代码接口变化。
 
-`release/public-cangjie-delta-bfd29.toml` 必须逐项覆盖快照的全部删除和新增声明。
+`release/public-cangjie-delta-0.2.0.toml` 必须逐项覆盖当前候选相对精确基线快照的全部删除和新增记录。
 每条记录只能属于一个说明了理由的评审组；存在重复、漏项、`unclassified` 或尚未完成评审的组时，不得把发布图改为 `release-ready`。
+组评审状态必须对应发布图版本；生成器不会自动批准已分类的变更。enum 采集修正还必须绑定
+`release/0.2.0/enum-case-inventory.json`，证明记录在基线源码中已经存在。历史 `bfd29` 差异文件保留原样。
 
-托管 CI 固定使用 Cangjie STS `1.1.3`。一个候选的所有托管 CI 任务必须使用同一
-精确 SDK 版本，并在证据中记录解析出的版本和归档校验和。手工验证可以显式指定
-API 参考文档按 `release/cjdoc-tool.toml` 使用 `cjdoc 0.7.2`，
-提交为 `a56343875d4106a7f14d2c1c5685e3cdb411c4b4`。`cjdoc` 使用同一发布源中的
-经过清理的 yjson 兼容快照 `78b84e6e110bcc84adcc97e8ec24995c7272782e`，
-避免依赖旧仓库中包含开发机路径的不可发布提交。
+产品、宏、示例、文档与托管 CI 统一使用 Cangjie STS `1.2.0` 及匹配的 stdx。
+`release/cjdoc-tool.toml` 是 SDK 精确版本来源；CI 的 `sts` job 导出同一版本，所有包 manifest
+的 `cjc-version` 下限同步为 `1.2.0`。证据记录实际 `cjc`、`cjpm`、SDK 安装回执、归档摘要
+和可执行文件摘要。daily 或旧 SDK 不能替代这一资格检查。
 
-本次基线迁移只改变发布资格和托管 CI 使用的 SDK，不自动提高各包 manifest 的
-`cjc-version` 兼容性声明；包 manifest 的兼容性下限若要提高，必须单独完成公开
-兼容性评审。
+API 文档工具固定为 cjdoc `0.7.6`。升级工具时，先完成上游发布及源码资格验证，再将准确的
+源码提交、归档摘要和二进制证据写入工具配置。未完成这些步骤时，不得记录为工具已发布或资格已通过。
+归档、可执行文件和 Action 均按真实来源记录校验和或完整 SHA。
 
-归档、二进制文件和 Action 版本必须通过仓库中的校验和/SHA 配置验证。
+整个 `0.x` 阶段不保证 patch 或 minor 之间的 API、ABI、生成代码或旧 SDK 兼容。
+每项破坏性变更仍须说明影响、给出迁移方法并取得用户确认。发布检查保留当前 API 差异评审、
+包配对和外部消费方验证，不再要求旧消费方二进制跨版本矩阵。历史结果保持原样。
 
 ## 2. 发布前检查
 
@@ -40,7 +44,12 @@ API 参考文档按 `release/cjdoc-tool.toml` 使用 `cjdoc 0.7.2`，
 10. 发布验证平台存在尚未处理的正确性或安全问题；
 11. GitHub Actions Linux、Windows 或 macOS Pure 检查，或 Linux Native 检查失败；
 12. 覆盖率低于项目行 80%、分支 70%，或改动行 90%、分支 80%；
-13. cjdoc 源码验证、九包生成、已知限制清单、链接或可复现性检查失败。
+13. cjdoc 资格、九包统一文档、应用注释与可执行示例、离线查询、链接或可复现性检查失败。
+
+`0.2.0` 的 Pure 基线固定为 STS `1.2.0` 迁移后、旧包装清理前的源码，候选与基线使用
+同一 SDK 和测量程序。冻结生产源码、宏指针、锁文件和测量输入后，执行 24 个 Pure 用例
+各 11 轮，以及七库两批各 770 个单元，并通过 `perf-evidence-drift strict`。
+旧 SDK 的历史结果不作为本候选通过的证据，不发布跨 SDK 性能结论。
 
 Pure 的普通 Release 验收使用 `json_pure_perf_compare.py --gate-mode release`：
 正式 `--enforce` 运行要求完整的 11 轮配对结果，且所有用例的 `candidate/baseline <= 1.05`；
@@ -69,16 +78,21 @@ Pages deployment: PASS / FAIL / NOT RUN
 Release policy: BLOCKING / NON-BLOCKING
 ```
 
-本地 PASS 不能写成托管 CI 的 PASS。`0.1.1` 要求发布 PR 和合并后的 `main` 工作流都通过；
+本地 PASS 不能写成托管 CI 的 PASS。候选 PR 和合并后的 `main` 工作流都须通过；
 分别记录推送、PR、CI、合并、打标签和发布状态。
 
 ## 4. 准备源码并演练发布
 
-创建仅含源码的工作树：
+先在磁盘上创建任务目录，确认文件系统和可用空间，再创建仅含源码的工作树：
 
 ```terminal
-python3 scripts/stage_source_tree.py /tmp/yjson-source-stage
-python3 scripts/stage_source_tree.py --check /tmp/yjson-source-stage
+install -d -m 0700 "$HOME/.cache/agent-tmp"
+findmnt -T "$HOME/.cache/agent-tmp"
+df -h "$HOME/.cache/agent-tmp"
+release_task=$(mktemp -d -p "$HOME/.cache/agent-tmp" yjson-release.XXXXXX)
+export TMPDIR="$release_task" TMP="$release_task" TEMP="$release_task"
+python3 scripts/stage_source_tree.py "$release_task/source-stage"
+python3 scripts/stage_source_tree.py --check "$release_task/source-stage"
 ```
 
 目标必须为空且不能与源码树重叠。暂存目录拒绝构建产物、可执行文件、归档、
@@ -87,7 +101,7 @@ python3 scripts/stage_source_tree.py --check /tmp/yjson-source-stage
 按发布文件清单创建候选树：
 
 ```terminal
-python3 scripts/release_temp_tree.py /tmp/yjson-release-stage --enforce-clean
+python3 scripts/release_temp_tree.py "$release_task/release-stage" --enforce-clean
 ```
 
 该命令只复制 `release/release-files.txt` 中的路径，并再次执行仅含源码的检查。正式候选
@@ -110,19 +124,23 @@ scripts/ci_fresh_checkout.sh
 
 ## 5. 生成 API 文档并部署 Pages
 
-先从固定源码构建并验证 cjdoc，再生成九个包的文档站点：
+使用前述任务目录，从固定源码构建并验证 cjdoc，再生成九包统一站点：
 
 ```terminal
 cjdoc_path=$(scripts/codex_cangjie_env python3 scripts/prepare_cjdoc.py)
 scripts/codex_cangjie_env python3 scripts/generate_api_docs.py \
   --cjdoc "$cjdoc_path" \
-  --output /tmp/yjson-api-docs-0.1.1
+  --output "$release_task/api-docs"
+scripts/codex_cangjie_env python3 scripts/run_api_doc_examples.py "$release_task/api-docs"
+python3 scripts/check_api_documentation.py "$release_task/api-docs"
 ```
 
-目标必须不存在。生成结果包含顶层 `api-docs.json`、索引及每包的 Doc IR 和 HTML。允许的 cjdoc
-不支持项必须精确匹配 `release/cjdoc-policy.toml`。
+目标必须不存在。站点以根目录 `index.html` 为入口。候选要求 HTML、Markdown、Doc IR v16、
+质量报告与完整 Agent 离线包，并实测 `query` 和 stdio MCP。应用范围中文契约与逐入口
+可执行示例的规则见 [API 文档维护指南](api-documentation.md)。解析限制必须精确记录，
+不为旧 URL、旧 Doc IR 或旧目录建立兼容层。
 
-PR 只生成并上传 Pages 产物；合并到 `main` 后的工作流才部署。发布证据记录
+PR 构建并上传文档 artifact；合并到 `main` 后，全部必需门禁通过且部署提交仍为 HEAD 时才部署。发布证据记录
 部署 URL、运行 ID 和产物校验和。本地生成 HTML 后，还需要单独确认 Pages 部署成功。
 
 ## 6. 打标签并发布
@@ -131,7 +149,7 @@ PR 只生成并上传 Pages 产物；合并到 `main` 后的工作流才部署�
 
 1. 通过普通 PR 合并到 `main`；
 2. 等待合并提交的全部必需工作流通过；
-3. 在该提交创建 `0.1.1` 附注标签；
+3. 在该提交创建与候选版本一致的附注标签；
 4. 创建 GitHub Release；
 5. 上传九个 `.cjp`、`checksums.txt`、`manifest.json` 和 `environment.json`；
 6. 验证发布附件和 Pages 指向已验收的提交。

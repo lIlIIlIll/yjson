@@ -1,0 +1,53 @@
+# Exact Cangjie declaration delta. Every declaration belongs to exactly one
+# reviewed migration group; global release approval remains explicit.
+schema_version = 3
+domain = "cangjie"
+target_version = "0.2.0"
+baseline_commit = "0f2071a0ad59ad43a369abe51abaceaf873f0c63"
+baseline_snapshot_sha256 = "f3a52279a2afd4097432031f2e0c6dcf545434c76e415412ad691923a07f4747"
+baseline_records = 1030
+baseline_sha256 = "06b7cde26b9eb3b544ad4b4ff62ff5f8885f2d9c4bc556042c8c6b98edfa303a"
+review_status = "pending-migration-review"
+removed_records = 1
+removed_sha256 = "e134ef33acb59d82749aaac19909839239f2ca78280560347428ea5f199acd4c"
+added_records = 18
+added_sha256 = "1057e1e867d87439c79a0d54e327f9f6405f08055aec26d331f0adaa9733a257"
+inventory_correction_artifact = "release/0.2.0/enum-case-inventory.json"
+inventory_correction_sha256 = "2259b8d5588a5eac284a85ac872c71d6050017e98992f7491ce20a930ade041d"
+
+[[review_groups]]
+classification = "existing-enum-case-inventory"
+rationale = "Record enum cases already present in the frozen baseline source but omitted by the previous line-based inventory collector. These records correct inventory coverage; they do not add public API."
+review_status = "reviewed-for-0.2.0"
+removed = [
+]
+added = [
+  "yjson_algorithms|packages/yjson_algorithms/src/lib_json_patch.cj|JsonPatchOperationKind|| Add",
+  "yjson_algorithms|packages/yjson_algorithms/src/lib_json_patch.cj|JsonPatchOperationKind|| Copy",
+  "yjson_algorithms|packages/yjson_algorithms/src/lib_json_patch.cj|JsonPatchOperationKind|| Move",
+  "yjson_algorithms|packages/yjson_algorithms/src/lib_json_patch.cj|JsonPatchOperationKind|| Remove",
+  "yjson_algorithms|packages/yjson_algorithms/src/lib_json_patch.cj|JsonPatchOperationKind|| Replace",
+  "yjson_algorithms|packages/yjson_algorithms/src/lib_json_patch.cj|JsonPatchOperationKind|| Test",
+  "yjson_algorithms|packages/yjson_algorithms/src/lib_json_schema.cj|JsonSchemaFormatMode|| Annotation",
+  "yjson_algorithms|packages/yjson_algorithms/src/lib_json_schema.cj|JsonSchemaFormatMode|| Assertion",
+  "yjson|src/lib_json_value.cj|JsonDuplicateKeyPolicy|| LastWins",
+  "yjson|src/lib_json_value.cj|JsonDuplicateKeyPolicy|| Reject",
+  "yjson|src/lib_json_value.cj|JsonKind|| Array",
+  "yjson|src/lib_json_value.cj|JsonKind|| Boolean",
+  "yjson|src/lib_json_value.cj|JsonKind|| Null",
+  "yjson|src/lib_json_value.cj|JsonKind|| Number",
+  "yjson|src/lib_json_value.cj|JsonKind|| Object",
+  "yjson|src/lib_json_value.cj|JsonKind|| String",
+  "yjson|src/lib_json_value.cj|JsonUnknownFieldPolicy|| Ignore",
+  "yjson|src/lib_json_value.cj|JsonUnknownFieldPolicy|| Reject",
+]
+
+[[review_groups]]
+classification = "literal-alias-removal"
+rationale = "Remove only the @JsonValue literal alias; retain @Json, @JsonCodec, @JsonUsing, and @JsonSubtype. Replace @JsonValue calls with @Json and rebuild consumers with matching first-party packages."
+review_status = "reviewed-for-0.2.0"
+removed = [
+  "yjson_macros|packages/yjson_macros/src/json_literal.cj|<top-level>|public macro JsonValue(input: Tokens): Tokens",
+]
+added = [
+]

@@ -1,23 +1,31 @@
-schema_version = 3
+schema_version = 4
 status = "qualified"
+reason = "Exact source cold-build qualification; public release evidence is recorded separately"
 distribution = "source"
 platform = "linux-x86_64"
 
-version = "0.7.2"
-version_output = "cjdoc 0.7.2"
+version = "0.7.6"
+version_output = "cjdoc 0.7.6"
 version_args = ["--version"]
 
-source_url = "https://github.com/lIlIIlIll/cjdoc/tree/a56343875d4106a7f14d2c1c5685e3cdb411c4b4"
-source_archive_url = "https://github.com/lIlIIlIll/cjdoc/archive/a56343875d4106a7f14d2c1c5685e3cdb411c4b4.tar.gz"
-source_archive_sha256 = "7b850efe40307f240eec6e6547175b771bea205d77b323dec3c76443490df9f4"
-source_revision = "a56343875d4106a7f14d2c1c5685e3cdb411c4b4"
-source_directory = "cjdoc-a56343875d4106a7f14d2c1c5685e3cdb411c4b4"
+source_url = "https://github.com/lIlIIlIll/cjdoc/tree/653457d1aa46ef2939cd10e130d7e1b16fd5d999"
+source_archive_url = "https://github.com/lIlIIlIll/cjdoc/archive/653457d1aa46ef2939cd10e130d7e1b16fd5d999.tar.gz"
+source_archive_sha256 = "ac116b3fb587505f7ebae93c0b44fd6befa9a61464dbe77af208e31f8125646d"
+source_revision = "653457d1aa46ef2939cd10e130d7e1b16fd5d999"
+source_directory = "cjdoc-653457d1aa46ef2939cd10e130d7e1b16fd5d999"
 binary_path = "target/release/bin/main"
-build_command = ["cjpm", "build"]
+build_command = ["python3", "scripts/with_stdx.py", "--variant", "static", "--", "bash", "-c", "source scripts/with_sts_cjpm.sh; ulimit -s 131072; cjpm build --jobs 1"]
+compile_options = ["-O2", "--fno-chir-function-inlining"]
+stdx_variant = "static"
+stdx_sha256 = "e62289d5b88af440de04a26a30c79403d024f6accfacfd96607ae409ad9c1df2"
+cjc_sha256 = "023be1bb2ded1078906fc91919b3c1175ad14436ad88d23d505f7b8dcd0d7118"
+cjpm_sha256 = "a565d86540656c62340aacf6ac89c175b50c1f4d9ba4f69cee6a0fdacdee412d"
+build_policy_sha256 = "fa0c1c7de7f12741d97242f7cd443f710a5c610a8e92ae264fb2cb171c884bd9"
+build_wrapper_sha256 = "7cebc7dd0a53238ce71e44fe779bc014b69bbab61882124235ac95d141794146"
 
 cjc_channel = "sts"
-cjc_version = "1.1.3"
+cjc_version = "1.2.0"
 
 license_spdx = "MIT"
-license_url = "https://github.com/lIlIIlIll/cjdoc/blob/a56343875d4106a7f14d2c1c5685e3cdb411c4b4/LICENSE"
-manual_url = "https://github.com/lIlIIlIll/cjdoc/blob/a56343875d4106a7f14d2c1c5685e3cdb411c4b4/README.md"
+license_url = "https://github.com/lIlIIlIll/cjdoc/blob/653457d1aa46ef2939cd10e130d7e1b16fd5d999/LICENSE"
+manual_url = "https://github.com/lIlIIlIll/cjdoc/blob/653457d1aa46ef2939cd10e130d7e1b16fd5d999/README.md"

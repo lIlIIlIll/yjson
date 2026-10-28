@@ -23,8 +23,61 @@ class ApiDocumentationRecord {
     }
 }
 
+private class ApiDocumentationPairCodec <: JsonCodec<ApiDocumentationRecord> {
+    public func write(value: ApiDocumentationRecord, writer: JsonWriter): Unit {
+        writer.startArray()
+        writer.writeInt64(value.id)
+        match (value.nickname) {
+            case Some(name) => writer.writeString(name)
+            case None => writer.writeNull()
+        }
+        writer.endArray()
+    }
+
+    public func read(reader: JsonReader): ApiDocumentationRecord {
+        reader.startArray()
+        if (!reader.hasArrayItem()) { throw reader.error("missing id", "pair_shape") }
+        let id = reader.readInt64()
+        if (!reader.hasArrayItem()) { throw reader.error("missing nickname", "pair_shape") }
+        let nickname = if (reader.tryReadNull()) { None<String> } else { Some(reader.readString()) }
+        reader.endArray()
+        ApiDocumentationRecord(id, nickname)
+    }
+}
+
 @Test
 class ApiDocumentationContractConsumerTest {
+    @TestCase
+    func handwrittenCodecUsesTheSameUtf8ContractForStringBytesAndStream(): Unit {
+        let codec = ApiDocumentationPairCodec()
+        let input = "[7,\"\\u4E2D\"]"
+        let fromString = YJson.fromJson(input, codec: codec)
+        let fromBytes = YJson.fromJson(unsafe { input.rawData() }, codec: codec)
+        let fromStream = YJson.fromJson(YJsonByteArrayInputStream(input), codec: codec)
+        for (value in [fromString, fromBytes, fromStream]) {
+            @Expect(value.id, 7)
+            @Expect(value.nickname.getOrThrow(), "中")
+            @Expect(YJson.toJson(value, codec: codec), "[7,\"中\"]")
+        }
+    }
+
+    @TestCase
+    func handwrittenCodecPreservesNullAndDecodedStringByteBudgets(): Unit {
+        let codec = ApiDocumentationPairCodec()
+        let value = YJson.fromJson("[8,null]", codec: codec)
+        @Expect(value.id, 8)
+        @Expect(value.nickname.isNone(), true)
+        @Expect(YJson.toJson(value, codec: codec), "[8,null]")
+        for (input in ["[7,\"中\"]", "[7,\"\\u4E2D\"]"]) {
+            @Expect(YJson.fromJson(input, codec: codec,
+                options: JsonReadOptions(maxStringBytes: 3)).nickname.getOrThrow(), "中")
+            let error = @AssertThrows[JsonException](YJson.fromJson(input, codec: codec,
+                options: JsonReadOptions(maxStringBytes: 2)))
+            @Expect(error.code, "string_too_large")
+            @Expect(error.location.isSome(), true)
+        }
+    }
+
     @TestCase
     func explicitCodecRoundTripsUtf8Bytes(): Unit {
         let value = "仓颉 JSON"

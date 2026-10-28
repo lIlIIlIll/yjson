@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Create and exercise isolated registry-style release artifacts.
 
-cjpm 1.1.3 has no local-registry or publish dry-run command. Leaf packages are
+cjpm 1.2.0 has no local-registry or publish dry-run command. Leaf packages are
 bundled with cjpm itself. Packages whose exact release dependencies are not yet in
 the central repository are archived in the same source layout, then extracted
 and resolved to sibling artifact directories only for the release consumer rehearsal.
@@ -36,7 +36,7 @@ from release_temp_tree import (
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-SUPPORTED_COMPILE_OVERRIDES = ("-O0", "-O1")
+SUPPORTED_COMPILE_OVERRIDES = ("-O0", "-O1", "-O2")
 REPOSITORY_URL = "https://github.com/lIlIIlIll/yjson"
 MARKDOWN_LINK_PATTERN = re.compile(r"(?<!!)\[([^\]]+)\]\(([^)]+)\)")
 
@@ -176,7 +176,7 @@ def bundle_leaf(
                 lock.chmod(original_lock_mode)
 
     if use_override:
-        # The override is a hosted-compiler workaround, not release metadata.
+        # The explicit build override does not change release metadata.
         # Archive the restored staging tree so consumers still inspect the O2
         # release manifest. Build output is excluded by deterministic_archive.
         deterministic_archive(module, output, version)
@@ -477,8 +477,8 @@ def rehearse(args: argparse.Namespace) -> int:
     artifacts.mkdir(parents=True)
     env = os.environ.copy()
     env["PYTHONDONTWRITEBYTECODE"] = "1"
-    # CJPM_CONFIG is deprecated in cjpm 1.1.3. All rehearsal dependencies are
-    # resolved from the staged sibling modules, so the central-repository cache
+    # All rehearsal dependencies are resolved from the staged sibling modules,
+    # so the central-repository cache
     # does not participate in this check.
     env.pop("CJPM_CONFIG", None)
 

@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       cangjie_version:
-        description: Pinned Cangjie STS version for release qualification (currently 1.1.3)
+        description: Pinned Cangjie STS version for release qualification (currently 1.2.0)
         required: false
         type: string
 
@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           clean: true
           submodules: recursive
@@ -43,8 +43,9 @@ jobs:
   generated-change-risk:
     name: Generated code change risk
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           clean: true
           fetch-depth: 0
@@ -65,8 +66,9 @@ jobs:
   perf-evidence-drift:
     name: Seven-library evidence drift
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           clean: true
           fetch-depth: 0
@@ -82,8 +84,9 @@ jobs:
   stream-docs:
     name: Stream evidence drift
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           clean: true
           submodules: recursive
@@ -93,11 +96,12 @@ jobs:
   sts:
     name: Cangjie STS (pinned)
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     outputs:
       version: ${{ steps.version.outputs.value }}
       resolution: ${{ steps.version.outputs.resolution }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           clean: true
           submodules: recursive
@@ -114,7 +118,7 @@ jobs:
               --validate-version "$REQUESTED_VERSION")
             resolution=workflow-dispatch-exact
           else
-            value=1.1.3
+            value=$(python3 scripts/validate_cangjie_sts.py --print-pinned-version)
             python3 scripts/validate_cangjie_sts.py \
               --validate-version "$value" >/dev/null
             resolution=pinned-sts
@@ -137,6 +141,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        optimization: ['-O2']
         gate:
           - api-inventory
           - cjdoc-qualification
@@ -156,16 +161,17 @@ jobs:
           - fuzz-short
           - yyjson-colink
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           clean: true
           submodules: recursive
       - name: Setup Cangjie
-        uses: Zxilly/setup-cangjie@f959b3d1078c92173ea67d398f293727639000f7
+        uses: Zxilly/setup-cangjie@91463316b1c359f216c2ac49e35900f9341c1571
         with:
           channel: sts
           version: ${{ needs.sts.outputs.version }}
-          archive-path: ${{ runner.temp }}/cangjie-sts.tar.gz
+          cjv-version: v0.5.0
+          components: stdx
       - name: Install native prerequisites
         if: contains(fromJSON('["standards-conformance","schema-formats-conformance","algorithms-consumer","registry-rehearsal","custom-native","yyjson-native","native-clang","native-gcc","sanitizer","fuzz-short","yyjson-colink"]'), matrix.gate)
         run: |
@@ -175,7 +181,7 @@ jobs:
       - name: Restore pinned standards suites cache
         if: contains(fromJSON('["standards-conformance","schema-formats-conformance"]'), matrix.gate)
         id: standards-cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: /tmp/yjson-standards-suites
           # The key fingerprints the pinned suite revisions embedded in the
@@ -197,18 +203,28 @@ jobs:
           echo "runner_image=${ImageOS:-unknown} runner_image_version=${ImageVersion:-unknown}"
           cjc -v
           cjpm --version
-          sha256sum "$RUNNER_TEMP/cangjie-sts.tar.gz"
+          python3 scripts/validate_cangjie_sts.py --check-installed \
+            --record-installation "$RUNNER_TEMP/cangjie-installation.json"
+          cat "$RUNNER_TEMP/cangjie-installation.json"
+          python3 - <<'PY_STDX'
+          import os
+          import pathlib
+          stdx = pathlib.Path(os.environ["CANGJIE_STDX_PATH_DYNAMIC"]) / "stdx"
+          if not stdx.is_dir():
+              raise SystemExit("installed stdx dynamic directory is missing")
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as output:
+              output.write("CANGJIE_STDX_PATH=" + stdx.as_posix() + "\n")
+          PY_STDX
       - name: Run gate
         env:
           YJSON_RESOLVED_CANGJIE: ${{ needs.sts.outputs.version }}
           YJSON_SECOND_YYJSON_ROOT: ${{ matrix.gate == 'yyjson-colink' && '/tmp/yjson-yyjson-second/yyjson-0.11.1' || '' }}
           YJSON_STANDARDS_OFFLINE: ${{ contains(fromJSON('["standards-conformance","schema-formats-conformance"]'), matrix.gate) && '1' || '' }}
-          # The pinned STS toolchain's LLVM llc crashes at -O2 in external-consumer,
-          # examples, and conformance builds on ubuntu-24.04.
-          YJSON_CI_DEPENDENCY_OVERRIDE: ${{ contains(fromJSON('["algorithms-consumer","examples","macro-consumer","registry-rehearsal","custom-native","yyjson-native","schema-formats-conformance","standards-conformance"]'), matrix.gate) && '-O1' || '' }}
+          YJSON_CI_DEPENDENCY_OVERRIDE: ${{ matrix.optimization }}
         run: |
           ulimit -s 131072
           ulimit -s
+          echo "cangjie_optimization=$YJSON_CI_DEPENDENCY_OVERRIDE"
           scripts/ci_job.sh "${{ matrix.gate }}"
 
   pure-platforms:
@@ -221,62 +237,89 @@ jobs:
       matrix:
         include:
           - os: windows-2022
-            archive: cangjie-sts.zip
-            checksum: sha256sum
+            optimization: '-O2'
           - os: macos-14
-            archive: cangjie-sts.tar.gz
-            checksum: shasum -a 256
+            optimization: '-O2'
     defaults:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           clean: true
           submodules: recursive
       - name: Setup Cangjie
-        uses: Zxilly/setup-cangjie@f959b3d1078c92173ea67d398f293727639000f7
+        uses: Zxilly/setup-cangjie@91463316b1c359f216c2ac49e35900f9341c1571
         with:
           channel: sts
           version: ${{ needs.sts.outputs.version }}
-          archive-path: ${{ runner.temp }}/${{ matrix.archive }}
+          cjv-version: v0.5.0
+          components: stdx
       - name: Record toolchain
         run: |
           echo "resolved_cangjie_version=${{ needs.sts.outputs.version }} resolution=${{ needs.sts.outputs.resolution }}"
           echo "runner_image=${ImageOS:-unknown} runner_image_version=${ImageVersion:-unknown}"
           cjc -v
           cjpm --version
-          ${{ matrix.checksum }} "$RUNNER_TEMP/${{ matrix.archive }}"
+          python3 scripts/validate_cangjie_sts.py --check-installed \
+            --record-installation "$RUNNER_TEMP/cangjie-installation.json"
+          cat "$RUNNER_TEMP/cangjie-installation.json"
+          python3 - <<'PY_STDX'
+          import os
+          import pathlib
+          stdx = pathlib.Path(os.environ["CANGJIE_STDX_PATH_DYNAMIC"]) / "stdx"
+          if not stdx.is_dir():
+              raise SystemExit("installed stdx dynamic directory is missing")
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as output:
+              output.write("CANGJIE_STDX_PATH=" + stdx.as_posix() + "\n")
+          PY_STDX
       - name: Run Pure package gates
         env:
-          # The pinned STS toolchain's LLVM llc also crashes at -O2 in macOS Pure;
-          # Windows uses -O1 for the same pinned-SDK issue.
-          YJSON_CI_DEPENDENCY_OVERRIDE: ${{ contains(fromJSON('["windows-2022","macos-14"]'), matrix.os) && '-O1' || '' }}
-        run: scripts/ci_job.sh pure-platform
+          YJSON_CI_DEPENDENCY_OVERRIDE: ${{ matrix.optimization }}
+        run: |
+          echo "cangjie_optimization=$YJSON_CI_DEPENDENCY_OVERRIDE"
+          scripts/ci_job.sh pure-platform
 
   api-docs:
     name: API Documentation
     needs: sts
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 360
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           clean: true
           submodules: recursive
+      - name: Install native example prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang gcc libidn2-dev
+          dpkg-query -W -f='${Package}=${Version}\n' clang gcc libidn2-dev
       - name: Setup Cangjie
-        uses: Zxilly/setup-cangjie@f959b3d1078c92173ea67d398f293727639000f7
+        uses: Zxilly/setup-cangjie@91463316b1c359f216c2ac49e35900f9341c1571
         with:
           channel: sts
           version: ${{ needs.sts.outputs.version }}
-          archive-path: ${{ runner.temp }}/cangjie-sts.tar.gz
+          cjv-version: v0.5.0
+          components: stdx
       - name: Record toolchain
         run: |
           echo "resolved_cangjie_version=${{ needs.sts.outputs.version }} resolution=${{ needs.sts.outputs.resolution }}"
           echo "runner_image=${ImageOS:-unknown} runner_image_version=${ImageVersion:-unknown}"
           cjc -v
           cjpm --version
-          sha256sum "$RUNNER_TEMP/cangjie-sts.tar.gz"
+          python3 scripts/validate_cangjie_sts.py --check-installed \
+            --record-installation "$RUNNER_TEMP/cangjie-installation.json"
+          cat "$RUNNER_TEMP/cangjie-installation.json"
+          python3 - <<'PY_STDX'
+          import os
+          import pathlib
+          stdx = pathlib.Path(os.environ["CANGJIE_STDX_PATH_DYNAMIC"]) / "stdx"
+          if not stdx.is_dir():
+              raise SystemExit("installed stdx dynamic directory is missing")
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as output:
+              output.write("CANGJIE_STDX_PATH=" + stdx.as_posix() + "\n")
+          PY_STDX
       - name: Generate source-qualified cjdoc site
         env:
           YJSON_RESOLVED_CANGJIE: ${{ needs.sts.outputs.version }}
@@ -285,20 +328,86 @@ jobs:
           ulimit -s 131072
           scripts/ci_job.sh api-docs
       - name: Upload downloadable API documentation
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: yjson-api-docs-${{ github.run_id }}-${{ github.run_attempt }}
           path: target/api-docs
           if-no-files-found: error
           retention-days: 30
+          include-hidden-files: true
       - name: Configure GitHub Pages
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d
       - name: Upload API documentation
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9
         with:
           path: target/api-docs
+
+  api-doc-examples-pure:
+    name: API examples (${{ matrix.os }})
+    needs: [sts, api-docs]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, macos-14]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          clean: true
+          submodules: recursive
+      - name: Setup Cangjie
+        uses: Zxilly/setup-cangjie@91463316b1c359f216c2ac49e35900f9341c1571
+        with:
+          channel: sts
+          version: ${{ needs.sts.outputs.version }}
+          cjv-version: v0.5.0
+          components: stdx
+      - name: Record actual platform toolchain
+        run: |
+          echo "resolved_cangjie_version=${{ needs.sts.outputs.version }} resolution=${{ needs.sts.outputs.resolution }}"
+          cjc -v
+          cjpm --version
+          python3 scripts/validate_cangjie_sts.py --check-installed \
+            --record-installation "$RUNNER_TEMP/cangjie-installation.json"
+          python3 - <<'PY_STDX'
+          import os
+          import pathlib
+          stdx = pathlib.Path(os.environ["CANGJIE_STDX_PATH_DYNAMIC"]) / "stdx"
+          if not stdx.is_dir():
+              raise SystemExit("installed stdx dynamic directory is missing")
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as output:
+              output.write("CANGJIE_STDX_PATH=" + stdx.as_posix() + "\n")
+          PY_STDX
+      - name: Download the qualified Linux documentation and frozen sources
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: yjson-api-docs-${{ github.run_id }}-${{ github.run_attempt }}
+          path: target/api-docs
+      - name: Execute the same Doc IR examples on this platform
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+          YJSON_CI_DEPENDENCY_OVERRIDE: '-O2'
+          TMPDIR: ${{ runner.temp }}
+          TMP: ${{ runner.temp }}
+          TEMP: ${{ runner.temp }}
+        run: |
+          python3 scripts/run_api_doc_examples.py target/api-docs
+      - name: Upload platform execution evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: yjson-api-examples-${{ matrix.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            target/api-docs/example-execution.json
+            target/api-docs/example-mapping.json
+          if-no-files-found: warn
+          retention-days: 30
 
   pages:
     name: Deploy API Documentation
@@ -332,7 +441,7 @@ jobs:
       - name: Deploy GitHub Pages
         if: steps.current.outputs.deploy == 'true'
         id: deployment
-        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346
 
   coverage:
     name: Core Coverage
@@ -343,24 +452,36 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           clean: true
           fetch-depth: 0
           submodules: recursive
       - name: Setup Cangjie
-        uses: Zxilly/setup-cangjie@f959b3d1078c92173ea67d398f293727639000f7
+        uses: Zxilly/setup-cangjie@91463316b1c359f216c2ac49e35900f9341c1571
         with:
           channel: sts
           version: ${{ needs.sts.outputs.version }}
-          archive-path: ${{ runner.temp }}/cangjie-sts.tar.gz
+          cjv-version: v0.5.0
+          components: stdx
       - name: Record toolchain
         run: |
           echo "resolved_cangjie_version=${{ needs.sts.outputs.version }} resolution=${{ needs.sts.outputs.resolution }}"
           echo "runner_image=${ImageOS:-unknown} runner_image_version=${ImageVersion:-unknown}"
           cjc -v
           cjpm --version
-          sha256sum "$RUNNER_TEMP/cangjie-sts.tar.gz"
+          python3 scripts/validate_cangjie_sts.py --check-installed \
+            --record-installation "$RUNNER_TEMP/cangjie-installation.json"
+          cat "$RUNNER_TEMP/cangjie-installation.json"
+          python3 - <<'PY_STDX'
+          import os
+          import pathlib
+          stdx = pathlib.Path(os.environ["CANGJIE_STDX_PATH_DYNAMIC"]) / "stdx"
+          if not stdx.is_dir():
+              raise SystemExit("installed stdx dynamic directory is missing")
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as output:
+              output.write("CANGJIE_STDX_PATH=" + stdx.as_posix() + "\n")
+          PY_STDX
       - name: Generate cjcov and LCOV reports
         run: scripts/coverage.sh
       - name: Detect established coverage baseline
@@ -386,7 +507,7 @@ jobs:
             --lcov coverage/lcov.info \
             --baseline coverage-baseline.toml
       - name: Upload core coverage to Codecov
-        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5
         with:
           use_oidc: true
           files: coverage/lcov.info
@@ -401,7 +522,7 @@ jobs:
       # simply not reported.
       - name: Upload algorithms coverage to Codecov
         if: hashFiles('coverage/lcov.algorithms.info') != ''
-        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5
         with:
           use_oidc: true
           files: coverage/lcov.algorithms.info
@@ -411,7 +532,7 @@ jobs:
           verbose: true
       - name: Upload native coverage to Codecov
         if: hashFiles('coverage/lcov.native.info') != ''
-        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5
         with:
           use_oidc: true
           files: coverage/lcov.native.info
@@ -421,7 +542,7 @@ jobs:
           verbose: true
       - name: Upload yyjson coverage to Codecov
         if: hashFiles('coverage/lcov.yyjson.info') != ''
-        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5
         with:
           use_oidc: true
           files: coverage/lcov.yyjson.info
@@ -431,7 +552,7 @@ jobs:
           verbose: true
       - name: Upload schema-formats coverage to Codecov
         if: hashFiles('coverage/lcov.schema-formats.info') != ''
-        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5
         with:
           use_oidc: true
           files: coverage/lcov.schema-formats.info
@@ -453,6 +574,7 @@ jobs:
       - tests
       - pure-platforms
       - api-docs
+      - api-doc-examples-pure
       - coverage
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -468,7 +590,7 @@ jobs:
 
           expected = {
               "ci-guardrails", "generated-change-risk", "perf-evidence-drift",
-              "stream-docs", "sts", "tests", "pure-platforms", "api-docs", "coverage",
+              "stream-docs", "sts", "tests", "pure-platforms", "api-docs", "api-doc-examples-pure", "coverage",
           }
           results = json.loads(os.environ["NEEDS_JSON"])
           if not isinstance(results, dict) or set(results) != expected:

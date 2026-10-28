@@ -1,104 +1,3685 @@
 {
-  "YJson": {
-    "acquireGeneratedCompactStringWriter": 1,
-    "fromJson": 8,
-    "parseDocument": 2,
-    "releaseGeneratedCompactStringWriter": 1,
-    "toJson": 4,
-    "toJsonBytes": 4,
-    "writeJson": 3
+  "schemaVersion": 2,
+  "cjcVersion": "1.2.0",
+  "packages": [
+    "yjson",
+    "yjson_algorithms",
+    "yjson_backends",
+    "yjson_macros",
+    "yjson_native",
+    "yjson_native_accel",
+    "yjson_native_primitives",
+    "yjson_schema_formats",
+    "yjson_yyjson"
+  ],
+  "requiredOwners": {
+    "YJson": {
+      "acquireGeneratedCompactStringWriter": 1,
+      "fromJson": 8,
+      "parseDocument": 2,
+      "releaseGeneratedCompactStringWriter": 1,
+      "toJson": 4,
+      "toJsonBytes": 4,
+      "writeJson": 3
+    },
+    "JsonCodecs": {
+      "array": 1,
+      "arrayList": 1,
+      "option": 1,
+      "stringMap": 1,
+      "bigInt": 1,
+      "bool": 1,
+      "decimal": 1,
+      "float16": 1,
+      "float32": 1,
+      "float64": 1,
+      "int16": 1,
+      "int32": 1,
+      "int64": 1,
+      "int8": 1,
+      "rfc3339DateTime": 1,
+      "rune": 1,
+      "string": 1,
+      "uint16": 1,
+      "uint32": 1,
+      "uint64": 1,
+      "uint8": 1
+    },
+    "JsonReadOptions": {
+      "init": 1,
+      "rejectsDuplicateKeys": 1,
+      "rejectsUnknownFields": 1,
+      "defaults": 1,
+      "duplicateKeyPolicy": 1,
+      "maxBufferedValueBytes": 1,
+      "maxDepth": 1,
+      "maxInputBytes": 1,
+      "maxStringBytes": 1,
+      "unknownFieldPolicy": 1
+    },
+    "JsonWriteOptions": {
+      "init": 1,
+      "pretty": 1,
+      "compact": 1,
+      "defaults": 1,
+      "htmlSafe": 1,
+      "htmlSafePreset": 1,
+      "indent": 1,
+      "maxDepth": 1,
+      "maxOutputBytes": 1
+    },
+    "JsonDocument": {
+      "materialize": 2,
+      "root": 1,
+      "toString": 1
+    },
+    "JsonCodec": {
+      "read": 1,
+      "write": 1
+    },
+    "JsonLocation": {
+      "init": 1,
+      "byteOffset": 1,
+      "column": 1,
+      "line": 1
+    },
+    "JsonException": {
+      "init": 2,
+      "code": 1,
+      "location": 1,
+      "path": 1
+    },
+    "JsonName": {
+      "init": 1,
+      "value": 1
+    },
+    "JsonAlias": {
+      "init": 1,
+      "value": 1
+    },
+    "JsonIgnore": {
+      "init": 1
+    },
+    "JsonIncludeNull": {
+      "init": 1
+    },
+    "JsonUsingMetadata": {
+      "init": 1,
+      "expression": 1
+    },
+    "JsonSubtypeMetadata": {
+      "init": 1,
+      "expression": 1
+    },
+    "JsonPolymorphic": {
+      "init": 1,
+      "discriminator": 1
+    }
   },
-  "JsonCodecs": {
-    "array": 1,
-    "arrayList": 1,
-    "option": 1,
-    "stringMap": 1,
-    "bigInt": 1,
-    "bool": 1,
-    "decimal": 1,
-    "float16": 1,
-    "float32": 1,
-    "float64": 1,
-    "int16": 1,
-    "int32": 1,
-    "int64": 1,
-    "int8": 1,
-    "rfc3339DateTime": 1,
-    "rune": 1,
-    "string": 1,
-    "uint16": 1,
-    "uint32": 1,
-    "uint64": 1,
-    "uint8": 1
-  },
-  "JsonReadOptions": {
-    "init": 1,
-    "rejectsDuplicateKeys": 1,
-    "rejectsUnknownFields": 1,
-    "defaults": 1,
-    "duplicateKeyPolicy": 1,
-    "maxBufferedValueBytes": 1,
-    "maxDepth": 1,
-    "maxInputBytes": 1,
-    "maxStringBytes": 1,
-    "unknownFieldPolicy": 1
-  },
-  "JsonWriteOptions": {
-    "init": 1,
-    "pretty": 1,
-    "compact": 1,
-    "defaults": 1,
-    "htmlSafe": 1,
-    "htmlSafePreset": 1,
-    "indent": 1,
-    "maxDepth": 1,
-    "maxOutputBytes": 1
-  },
-  "JsonDocument": {
-    "materialize": 2,
-    "root": 1,
-    "toString": 1
-  },
-  "JsonCodec": {
-    "read": 1,
-    "write": 1
-  },
-  "JsonLocation": {
-    "init": 1,
-    "byteOffset": 1,
-    "column": 1,
-    "line": 1
-  },
-  "JsonException": {
-    "init": 2,
-    "code": 1,
-    "location": 1,
-    "path": 1
-  },
-  "JsonName": {
-    "init": 1,
-    "value": 1
-  },
-  "JsonAlias": {
-    "init": 1,
-    "value": 1
-  },
-  "JsonIgnore": {
-    "init": 1
-  },
-  "JsonIncludeNull": {
-    "init": 1
-  },
-  "JsonUsingMetadata": {
-    "init": 1,
-    "expression": 1
-  },
-  "JsonSubtypeMetadata": {
-    "init": 1,
-    "expression": 1
-  },
-  "JsonPolymorphic": {
-    "init": 1,
-    "discriminator": 1
+  "declarations": {
+    "yjson.BackendTapeReaderV1.endArray|function|public func endArray(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.endObject|function|public func endObject(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.error|function|public func error(message: String, code: String): JsonException": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.expectEnd|function|public func expectEnd(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.generatedReadStateV1|function|public func generatedReadStateV1(): GeneratedReadStateV1": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.hasArrayItem|function|public func hasArrayItem(): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.hasObjectField|function|public func hasObjectField(): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.init|constructor|public init(bytes: Array<Byte>, config!: JsonReadOptions = JsonReadOptions.defaults, replayBudgetPrevalidated!: Bool = false)": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.location|function|public func location(): Option<JsonLocation>": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.path|function|public func path(): String": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.readBigInt|function|public func readBigInt(): BigInt": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.readBool|function|public func readBool(): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.readConfig|function|public func readConfig(): JsonReadOptions": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.readDecimal|function|public func readDecimal(): Decimal": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.readFloat64|function|public func readFloat64(): Float64": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.readInt64|function|public func readInt64(): Int64": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.readNameId|function|public func readNameId(candidates: Array<String>): Int64": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.readName|function|public func readName(): String": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.readNode|function|public func readNode(): JsonNode": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.readNode|function|public func readNode(maxNodes: Int64): JsonNode": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.readNull|function|public func readNull(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.readNumberLiteral|function|public func readNumberLiteral(): String": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.readReplayValue|function|public func readReplayValue(maxBytes: Int64): GeneratedReplayValueV1": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.readString|function|public func readString(): String": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.readUInt64|function|public func readUInt64(): UInt64": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.skipString|function|public func skipString(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.skipValueWithDepth|function|public func skipValueWithDepth(maxDepth: Int64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.skipValue|function|public func skipValue(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.startArray|function|public func startArray(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.startObject|function|public func startObject(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1.tryReadNull|function|public func tryReadNull(): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeReaderV1|class|public class BackendTapeReaderV1 <: JsonReader & GeneratedReadStateV1Owner": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeWriterV1.endArray|function|public func endArray(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeWriterV1.endObject|function|public func endObject(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeWriterV1.error|function|public func error(message: String, code: String): JsonException": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeWriterV1.finishTape|function|public func finishTape(): Array<Byte>": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeWriterV1.generatedWriteStateV1|function|public func generatedWriteStateV1(): GeneratedWriteStateV1": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeWriterV1.init|constructor|public init(config!: JsonWriteOptions = JsonWriteOptions.defaults)": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeWriterV1.path|function|public func path(): String": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeWriterV1.startArray|function|public func startArray(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeWriterV1.startObject|function|public func startObject(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeWriterV1.tryWriteCompactFloat64Array|function|public func tryWriteCompactFloat64Array(values: Array<Float64>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeWriterV1.tryWriteCompactInt64ArrayList|function|public func tryWriteCompactInt64ArrayList(values: ArrayList<Int64>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeWriterV1.tryWriteCompactInt64ArrayMap|function|public func tryWriteCompactInt64ArrayMap(values: HashMap<String, Array<Int64>>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeWriterV1.tryWriteCompactInt64Array|function|public func tryWriteCompactInt64Array(values: Array<Int64>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeWriterV1.tryWriteCompactInt64Map|function|public func tryWriteCompactInt64Map(values: HashMap<String, Int64>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeWriterV1.tryWriteCompactStringArrayList|function|public func tryWriteCompactStringArrayList(values: ArrayList<String>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeWriterV1.tryWriteCompactStringArray|function|public func tryWriteCompactStringArray(values: Array<String>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeWriterV1.tryWriteCompactStringMap|function|public func tryWriteCompactStringMap(values: HashMap<String, String>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeWriterV1.writeBool|function|public func writeBool(value: Bool): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeWriterV1.writeFloat64|function|public func writeFloat64(value: Float64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeWriterV1.writeInt64|function|public func writeInt64(value: Int64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeWriterV1.writeName|function|public func writeName(name: String): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeWriterV1.writeNull|function|public func writeNull(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeWriterV1.writeNumberLiteral|function|public func writeNumberLiteral(value: String): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeWriterV1.writeString|function|public func writeString(value: String): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeWriterV1.writeUInt64|function|public func writeUInt64(value: UInt64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.BackendTapeWriterV1|class|public class BackendTapeWriterV1 <: JsonWriter & GeneratedBulkWriterV1 & GeneratedWriteStateV1Owner": {
+      "category": "generated-spi"
+    },
+    "yjson.DirectBufferWriterTarget.buildBytes|function|public func buildBytes(): Array<Byte>": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.buildString|function|public func buildString(): String": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.bytesWritten|function|public func bytesWritten(): Int64": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.finish|function|public func finish(): Unit": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.init|constructor|public init(capacity!: Int64 = JSON_DIRECT_BYTES_INITIAL_CAPACITY)": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.reserveCapacity|function|public func reserveCapacity(additional: Int64): Unit": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.reset|function|public func reset(): Unit": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.tryWriteNativeInt64Array|function|public func tryWriteNativeInt64Array(values: ArrayList<Int64>): Bool": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeBoolText|function|public func writeBoolText(value: Bool): Unit": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeBytesRange|function|public func writeBytesRange(value: Array<Byte>, start: Int64, end: Int64): Unit": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeBytes|function|public func writeBytes(value: Array<Byte>): Unit": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeByte|function|public func writeByte(value: Byte): Unit": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeCompactFloat64Array|function|public func writeCompactFloat64Array(values: Array<Float64>): Unit": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeCompactInt64Array|function|public func writeCompactInt64Array(values: Array<Int64>): Unit": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeCompactInt64Map|function|public func writeCompactInt64Map(prefix: String, values: HashMap<String, Int64>): Unit": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeEscapedStringLiteralFromFirstEscape|function|public func writeEscapedStringLiteralFromFirstEscape(value: String, firstEscape: Int64, htmlSafe: Bool): Unit": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeFloat64Text|function|public func writeFloat64Text(value: Float64): Unit": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeInt64Text|function|public func writeInt64Text(value: Int64): Unit": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeNewlineAndIndent|function|public func writeNewlineAndIndent(newline: String, indent: String, depth: Int64): Unit": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeObjectEntryNameBoolNoEscapeFast|function|public func writeObjectEntryNameBoolNoEscapeFast( first: Bool, name: String, value: Bool ): Bool": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeObjectEntryNameBoolNoEscape|function|public func writeObjectEntryNameBoolNoEscape( first: Bool, name: Array<Byte>, value: Bool ): Bool": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeObjectEntryNameBoolNoEscape|function|public func writeObjectEntryNameBoolNoEscape( first: Bool, name: String, value: Bool ): Bool": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeObjectEntryNameFloat64NoEscapeFast|function|public func writeObjectEntryNameFloat64NoEscapeFast( first: Bool, name: String, value: Float64 ): Bool": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeObjectEntryNameFloat64NoEscape|function|public func writeObjectEntryNameFloat64NoEscape( first: Bool, name: Array<Byte>, value: Float64 ): Bool": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeObjectEntryNameFloat64NoEscape|function|public func writeObjectEntryNameFloat64NoEscape( first: Bool, name: String, value: Float64 ): Bool": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeObjectEntryNameInt64ArrayMapKnownAsciiKeys|function|public func writeObjectEntryNameInt64ArrayMapKnownAsciiKeys( first: Bool, name: Array<Byte>, values: HashMap<String, Array<Int64>> ): Bool": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeObjectEntryNameInt64ArrayMapKnownAsciiKeys|function|public func writeObjectEntryNameInt64ArrayMapKnownAsciiKeys( first: Bool, name: String, values: HashMap<String, Array<Int64>> ): Bool": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeObjectEntryNameInt64ArrayMapNoEscape|function|public func writeObjectEntryNameInt64ArrayMapNoEscape( first: Bool, name: String, values: HashMap<String, Array<Int64>> ): Bool": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeObjectEntryNameInt64ArrayNoEscape|function|public func writeObjectEntryNameInt64ArrayNoEscape( first: Bool, name: Array<Byte>, values: Array<Int64> ): Bool": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeObjectEntryNameInt64ArrayNoEscape|function|public func writeObjectEntryNameInt64ArrayNoEscape( first: Bool, name: String, values: Array<Int64> ): Bool": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeObjectEntryNameInt64MapKnownAsciiKeys|function|public func writeObjectEntryNameInt64MapKnownAsciiKeys( first: Bool, name: Array<Byte>, values: HashMap<String, Int64> ): Bool": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeObjectEntryNameInt64MapKnownAsciiKeys|function|public func writeObjectEntryNameInt64MapKnownAsciiKeys( first: Bool, name: String, values: HashMap<String, Int64> ): Bool": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeObjectEntryNameInt64MapNoEscape|function|public func writeObjectEntryNameInt64MapNoEscape( first: Bool, name: String, values: HashMap<String, Int64> ): Bool": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeObjectEntryNameInt64NoEscapeFast|function|public func writeObjectEntryNameInt64NoEscapeFast(first: Bool, name: String, value: Int64): Bool": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeObjectEntryNameInt64NoEscape|function|public func writeObjectEntryNameInt64NoEscape(first: Bool, name: Array<Byte>, value: Int64): Bool": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeObjectEntryNameInt64NoEscape|function|public func writeObjectEntryNameInt64NoEscape(first: Bool, name: String, value: Int64): Bool": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeObjectEntryNameStringEscaped|function|public func writeObjectEntryNameStringEscaped( first: Bool, name: Array<Byte>, value: String, firstEscape: Int64, htmlSafe: Bool ): Bool": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeObjectEntryNameStringEscaped|function|public func writeObjectEntryNameStringEscaped( first: Bool, name: String, value: String, firstEscape: Int64, htmlSafe: Bool ): Bool": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeObjectEntryNameStringNoEscapeFast|function|public func writeObjectEntryNameStringNoEscapeFast( first: Bool, name: String, value: String ): Bool": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeObjectEntryNameStringNoEscape|function|public func writeObjectEntryNameStringNoEscape( first: Bool, name: Array<Byte>, value: String ): Bool": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeObjectEntryNameStringNoEscape|function|public func writeObjectEntryNameStringNoEscape( first: Bool, name: String, value: String ): Bool": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeObjectEntryNameUInt64NoEscapeFast|function|public func writeObjectEntryNameUInt64NoEscapeFast( first: Bool, name: String, value: UInt64 ): Bool": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeObjectEntryNameUInt64NoEscape|function|public func writeObjectEntryNameUInt64NoEscape( first: Bool, name: Array<Byte>, value: UInt64 ): Bool": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeObjectEntryNameUInt64NoEscape|function|public func writeObjectEntryNameUInt64NoEscape( first: Bool, name: String, value: UInt64 ): Bool": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeStringLiteralNoEscapeName|function|public func writeStringLiteralNoEscapeName(value: Array<Byte>): Unit": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeStringLiteralNoEscapeName|function|public func writeStringLiteralNoEscapeName(value: String): Unit": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeStringLiteralNoEscape|function|public func writeStringLiteralNoEscape(value: String): Unit": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeTextRange|function|public func writeTextRange(value: String, start: Int64, end: Int64): Unit": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeTextStringArrayListNoEscape|function|public func writeTextStringArrayListNoEscape(prefix: String, values: ArrayList<String>, totalStringSize: Int64): Unit": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeTextStringLiteralNoEscape|function|public func writeTextStringLiteralNoEscape(prefix: String, value: String): Unit": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeText|function|public func writeText(value: String): Unit": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget.writeUInt64Text|function|public func writeUInt64Text(value: UInt64): Unit": {
+      "category": "first-party-internal"
+    },
+    "yjson.DirectBufferWriterTarget|class|public class DirectBufferWriterTarget <: JsonDirectWriterTarget": {
+      "category": "first-party-internal"
+    },
+    "yjson.GeneratedBulkWriterV1.tryWriteCompactFloat64Array|function|func tryWriteCompactFloat64Array(values: Array<Float64>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedBulkWriterV1.tryWriteCompactInt64ArrayList|function|func tryWriteCompactInt64ArrayList(values: ArrayList<Int64>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedBulkWriterV1.tryWriteCompactInt64ArrayMap|function|func tryWriteCompactInt64ArrayMap(values: HashMap<String, Array<Int64>>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedBulkWriterV1.tryWriteCompactInt64Array|function|func tryWriteCompactInt64Array(values: Array<Int64>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedBulkWriterV1.tryWriteCompactInt64Map|function|func tryWriteCompactInt64Map(values: HashMap<String, Int64>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedBulkWriterV1.tryWriteCompactStringArrayList|function|func tryWriteCompactStringArrayList(values: ArrayList<String>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedBulkWriterV1.tryWriteCompactStringArray|function|func tryWriteCompactStringArray(values: Array<String>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedBulkWriterV1.tryWriteCompactStringMap|function|func tryWriteCompactStringMap(values: HashMap<String, String>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedBulkWriterV1|interface|public interface GeneratedBulkWriterV1": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCodecProviderV1.generatedCodecV1|function|static func generatedCodecV1(_: GeneratedCodecTokenV1<T>): JsonCodec<T>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCodecProviderV1|interface|public interface GeneratedCodecProviderV1<T>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCodecTokenV1|class|public class GeneratedCodecTokenV1<T>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCodecV1.readFast|function|func readFast(reader: GeneratedSupportV1Reader): T": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCodecV1|interface|public interface GeneratedCodecV1<T> <: JsonCodec<T>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCompactArrayListElementCodecV1.writeCompactRawArrayList|function|func writeCompactRawArrayList(value: ArrayList<T>, writer: GeneratedSupportV1Writer): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCompactArrayListElementCodecV1|interface|public interface GeneratedCompactArrayListElementCodecV1<T>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCompactCodecProviderV1.generatedCompactRawV1|function|static func generatedCompactRawV1(value: T, writer: JsonDirectWriter): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCompactCodecProviderV1|interface|public interface GeneratedCompactCodecProviderV1<T>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCompactCursorWriteCodecV1.writeCompactRawWithCursor|function|func writeCompactRawWithCursor(value: T, writer: GeneratedSupportV1Writer, cursor: GeneratedSupportV1WriteCursor): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCompactCursorWriteCodecV1.writeCompactRawWithWriter|function|func writeCompactRawWithWriter(value: T, writer: JsonDirectWriter): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCompactCursorWriteCodecV1|interface|public interface GeneratedCompactCursorWriteCodecV1<T> <: GeneratedCompactWriteCodecV1<T> & GeneratedCursorWriteCodecV1<T> & GeneratedCodecV1<T> & GeneratedCursorReadCodecV1<T>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCompactWriteCodecV1.supportsCompactRaw|function|func supportsCompactRaw(): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCompactWriteCodecV1.writeCompactRaw|function|func writeCompactRaw(value: T, writer: GeneratedSupportV1Writer): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCompactWriteCodecV1|interface|public interface GeneratedCompactWriteCodecV1<T> <: GeneratedDirectWriteCodecV1<T>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCursorReadCodecV1.readFastWithCursor|function|func readFastWithCursor(reader: GeneratedSupportV1Reader, cursor: GeneratedSupportV1ReadCursor): T": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCursorReadCodecV1|interface|public interface GeneratedCursorReadCodecV1<T> <: JsonCodec<T>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCursorWriteCodecV1.supportsCompactCursorWrite|function|func supportsCompactCursorWrite(): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCursorWriteCodecV1.writeCompactWithCursor|function|func writeCompactWithCursor(value: T, writer: GeneratedSupportV1Writer, cursor: GeneratedSupportV1WriteCursor): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCursorWriteCodecV1|interface|public interface GeneratedCursorWriteCodecV1<T> <: JsonCodec<T>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedDirectFastReadCodecV1.readFastDirect|function|func readFastDirect(reader: JsonFastReader): T": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedDirectFastReadCodecV1|interface|public interface GeneratedDirectFastReadCodecV1<T> <: JsonCodec<T>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedDirectWriteCodecV1.writeDirect|function|func writeDirect(value: T, writer: GeneratedSupportV1Writer): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedDirectWriteCodecV1|interface|public interface GeneratedDirectWriteCodecV1<T> <: JsonCodec<T>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedObjectCodecProviderV1.generatedObjectCodecV1|function|static func generatedObjectCodecV1(_: GeneratedCodecTokenV1<T>): GeneratedObjectCodecV1<T>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedObjectCodecProviderV1|interface|public interface GeneratedObjectCodecProviderV1<T>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedObjectCodecV1.writeObjectFields|function|func writeObjectFields(value: T, writer: JsonWriter): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedObjectCodecV1|interface|public interface GeneratedObjectCodecV1<T> <: JsonCodec<T>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedReadStateV1.currentPath|function|public func currentPath(): String": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedReadStateV1.enterValue|function|public func enterValue(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedReadStateV1.leaveValue|function|public func leaveValue(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedReadStateV1.popPath|function|public func popPath(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedReadStateV1.pushField|function|public func pushField(name: String): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedReadStateV1.pushIndex|function|public func pushIndex(index: Int64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedReadStateV1.remainingDepth|function|public func remainingDepth(): Int64": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedReadStateV1|class|public class GeneratedReadStateV1": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedReplayValueV1.materialize|function|func materialize(): JsonNode": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedReplayValueV1.openObjectReaderExcluding|function|func openObjectReaderExcluding(name: String): JsonReader": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedReplayValueV1.rootStringField|function|func rootStringField(name: String): Option<String>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedReplayValueV1|interface|public interface GeneratedReplayValueV1 <: Resource": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.captureValue|function|public static func captureValue(reader: JsonReader, maxBytes: Int64): GeneratedReplayValueV1": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.enterGeneratedEntry|function|public static func enterGeneratedEntry(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.finishReader|function|public static func finishReader(reader: JsonReader): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.newFastReader|function|public static func newFastReader(bytes: Array<Byte>): GeneratedSupportV1Reader": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.newFastReader|function|public static func newFastReader(text: String): GeneratedSupportV1Reader": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.newSemanticReader|function|public static func newSemanticReader(bytes: Array<Byte>, config: JsonReadOptions): JsonReader": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.newSemanticReader|function|public static func newSemanticReader(text: String, config: JsonReadOptions): JsonReader": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.newWriter|function|public static func newWriter(): GeneratedSupportV1Writer": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.nodeValue|function|public static func nodeValue(value: Array<JsonNode>): JsonNode": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.nodeValue|function|public static func nodeValue(value: Bool): JsonNode": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.nodeValue|function|public static func nodeValue(value: Float64): JsonNode": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.nodeValue|function|public static func nodeValue(value: Int64): JsonNode": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.nodeValue|function|public static func nodeValue(value: JsonNode): JsonNode": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.nodeValue|function|public static func nodeValue(value: Rune): JsonNode": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.nodeValue|function|public static func nodeValue(value: String): JsonNode": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.nodeValue|function|public static func nodeValue<T>(value: T): JsonNode where T <: GeneratedCodecProviderV1<T>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.protocolVersion|function|public static func protocolVersion(): Int64": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.readCursor|function|public static func readCursor(reader: GeneratedSupportV1Reader): GeneratedSupportV1ReadCursor": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.readFastReader|function|public static func readFastReader(reader: GeneratedSupportV1Reader): JsonFastReader": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.readOptions|function|public static func readOptions(reader: JsonReader): JsonReadOptions": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.readState|function|public static func readState(reader: GeneratedSupportV1Reader): GeneratedReadStateV1": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.readState|function|public static func readState(reader: JsonReader): GeneratedReadStateV1": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.readWithCached|function|public static func readWithCached<T>(fastCodec: Option<GeneratedCodecV1<T>>, codec: JsonCodec<T>, reader: GeneratedSupportV1Reader): T": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.readWithCursorCached|function|public static func readWithCursorCached<T>(cursorCodec: Option<GeneratedCursorReadCodecV1<T>>, fastCodec: Option<GeneratedCodecV1<T>>, codec: JsonCodec<T>, reader: GeneratedSupportV1Reader, cursor: GeneratedSupportV1ReadCursor): T": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.readWith|function|public static func readWith<T>(codec: JsonCodec<T>, reader: GeneratedSupportV1Reader): T": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.requireProtocolVersion|function|public static func requireProtocolVersion(expected: Int64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.tryBeginCompactValue|function|public static func tryBeginCompactValue(writer: GeneratedSupportV1Writer): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.usesDefaultFastReadOptions|function|public static func usesDefaultFastReadOptions(options: JsonReadOptions): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.writeCompactEntryBool|function|public static func writeCompactEntryBool(writer: GeneratedSupportV1Writer, first: Bool, name: String, value: Bool): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.writeCompactEntryFloat64|function|public static func writeCompactEntryFloat64(writer: GeneratedSupportV1Writer, first: Bool, name: String, value: Float64): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.writeCompactEntryInt64|function|public static func writeCompactEntryInt64(writer: GeneratedSupportV1Writer, first: Bool, name: String, value: Int64): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.writeCompactEntryString|function|public static func writeCompactEntryString(writer: GeneratedSupportV1Writer, first: Bool, name: String, value: String): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.writeCompactEntryUInt64|function|public static func writeCompactEntryUInt64(writer: GeneratedSupportV1Writer, first: Bool, name: String, value: UInt64): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.writeCompactObjectBegin|function|public static func writeCompactObjectBegin(writer: GeneratedSupportV1Writer): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.writeCompactObjectEnd|function|public static func writeCompactObjectEnd(writer: GeneratedSupportV1Writer): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.writeCursor|function|public static func writeCursor(writer: GeneratedSupportV1Writer): GeneratedSupportV1WriteCursor": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.writeNested|function|public static func writeNested<T>(codec: JsonCodec<T>, value: T, writer: GeneratedSupportV1Writer): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.writeRawBool|function|public static func writeRawBool(cursor: GeneratedSupportV1WriteCursor, value: Bool): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.writeRawBool|function|public static func writeRawBool(writer: GeneratedSupportV1Writer, value: Bool): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.writeRawFloat64|function|public static func writeRawFloat64(cursor: GeneratedSupportV1WriteCursor, value: Float64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.writeRawFloat64|function|public static func writeRawFloat64(writer: GeneratedSupportV1Writer, value: Float64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.writeRawInt64|function|public static func writeRawInt64(cursor: GeneratedSupportV1WriteCursor, value: Int64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.writeRawInt64|function|public static func writeRawInt64(writer: GeneratedSupportV1Writer, value: Int64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.writeRawString|function|public static func writeRawString(cursor: GeneratedSupportV1WriteCursor, value: String): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.writeRawString|function|public static func writeRawString(writer: GeneratedSupportV1Writer, value: String): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.writeRawUInt64|function|public static func writeRawUInt64(cursor: GeneratedSupportV1WriteCursor, value: UInt64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.writeRawUInt64|function|public static func writeRawUInt64(writer: GeneratedSupportV1Writer, value: UInt64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.writeState|function|public static func writeState(writer: JsonWriter): GeneratedWriteStateV1": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.writeValue|function|public static func writeValue(value: JsonNode, writer: JsonWriter): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.writeValue|function|public static func writeValue<T>(value: T, writer: JsonWriter): Unit where T <: GeneratedCodecProviderV1<T>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.beforeRawArrayItemFast|function|public func beforeRawArrayItemFast(first: Bool): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.beforeRawArrayItem|function|public func beforeRawArrayItem(first: Bool): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.endRawArray|function|public func endRawArray(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.endRawObject|function|public func endRawObject(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.generatedReaderV1|function|public func generatedReaderV1(): JsonFastReader": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.hasRawArrayItemFast|function|public func hasRawArrayItemFast(first: Bool): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.hasRawArrayItem|function|public func hasRawArrayItem(first: Bool): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.hasRawObjectFieldFast|function|public func hasRawObjectFieldFast(first: Bool): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.hasRawObjectField|function|public func hasRawObjectField(first: Bool): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawBigInt|function|public func readRawBigInt(): BigInt": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawBoolFast|function|public func readRawBoolFast(): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawBool|function|public func readRawBool(): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawDecimal|function|public func readRawDecimal(): Decimal": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawFloat16|function|public func readRawFloat16(): Float16": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawFloat32|function|public func readRawFloat32(): Float32": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawFloat64|function|public func readRawFloat64(): Float64": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawInt16|function|public func readRawInt16(): Int16": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawInt32|function|public func readRawInt32(): Int32": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawInt64ArrayFast|function|public func readRawInt64ArrayFast(): Array<Int64>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawInt64ArrayMapFast|function|public func readRawInt64ArrayMapFast(): HashMap<String, Array<Int64>>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawInt64ArrayMap|function|public func readRawInt64ArrayMap(): HashMap<String, Array<Int64>>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawInt64Array|function|public func readRawInt64Array(): Array<Int64>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawInt64Fast|function|public func readRawInt64Fast(): Int64": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawInt64MapFast|function|public func readRawInt64MapFast(): HashMap<String, Int64>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawInt64Map|function|public func readRawInt64Map(): HashMap<String, Int64>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawInt64|function|public func readRawInt64(): Int64": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawInt8|function|public func readRawInt8(): Int8": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawNameFast|function|public func readRawNameFast(first: Bool): String": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawNameIdBytes|function|public func readRawNameIdBytes(first: Bool, candidates: Array<Array<Byte>>): Int64": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawName|function|public func readRawName(first: Bool): String": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawNumberLiteral|function|public func readRawNumberLiteral(): String": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawRfc3339DateTime|function|public func readRawRfc3339DateTime(): DateTime": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawRune|function|public func readRawRune(): Rune": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawStringArray|function|public func readRawStringArray(): Array<String>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawStringMap|function|public func readRawStringMap(): HashMap<String, String>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawString|function|public func readRawString(): String": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawUInt16|function|public func readRawUInt16(): UInt16": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawUInt32|function|public func readRawUInt32(): UInt32": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawUInt64|function|public func readRawUInt64(): UInt64": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.readRawUInt8|function|public func readRawUInt8(): UInt8": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.skipRawWithDepth|function|public func skipRawWithDepth(maxDepth: Int64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.skipValue|function|public func skipValue(maxDepth: Int64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.startRawArray|function|public func startRawArray(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.startRawObject|function|public func startRawObject(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.suggestRawArrayCapacity|function|public func suggestRawArrayCapacity(): Int64": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.suggestRawCollectionCapacity|function|public func suggestRawCollectionCapacity(): Int64": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.suggestRawObjectCapacity|function|public func suggestRawObjectCapacity(): Int64": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.tryReadRawCompactNameTokenBytes|function|public func tryReadRawCompactNameTokenBytes(first: Bool, nameBytes: Array<Byte>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor.tryReadRawNull|function|public func tryReadRawNull(): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1ReadCursor|struct|public struct GeneratedSupportV1ReadCursor": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.beforeRawArrayItemFast|function|func beforeRawArrayItemFast(first: Bool): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.beforeRawArrayItem|function|func beforeRawArrayItem(first: Bool): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.endRawArray|function|func endRawArray(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.endRawObject|function|func endRawObject(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.expectEnd|function|func expectEnd(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.hasRawArrayItemFast|function|func hasRawArrayItemFast(first: Bool): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.hasRawArrayItem|function|func hasRawArrayItem(first: Bool): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.hasRawObjectFieldFast|function|func hasRawObjectFieldFast(first: Bool): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.hasRawObjectField|function|func hasRawObjectField(first: Bool): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.readRawBool|function|func readRawBool(): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.readRawInt16|function|func readRawInt16(): Int16": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.readRawInt32|function|func readRawInt32(): Int32": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.readRawInt64|function|func readRawInt64(): Int64": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.readRawInt8|function|func readRawInt8(): Int8": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.readRawNameIdBytes|function|func readRawNameIdBytes(first: Bool, candidates: Array<Array<Byte>>): Int64": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.readRawName|function|func readRawName(first: Bool): String": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.readRawString|function|func readRawString(): String": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.readRawUInt16|function|func readRawUInt16(): UInt16": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.readRawUInt32|function|func readRawUInt32(): UInt32": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.readRawUInt64|function|func readRawUInt64(): UInt64": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.readRawUInt8|function|func readRawUInt8(): UInt8": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.skipRawWithDepth|function|func skipRawWithDepth(maxDepth: Int64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.startRawArray|function|func startRawArray(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.startRawObject|function|func startRawObject(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.suggestRawArrayCapacity|function|func suggestRawArrayCapacity(): Int64": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.suggestRawCollectionCapacity|function|func suggestRawCollectionCapacity(): Int64": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.suggestRawObjectCapacity|function|func suggestRawObjectCapacity(): Int64": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.tryReadRawCompactNameTokenBytes|function|func tryReadRawCompactNameTokenBytes(first: Bool, nameBytes: Array<Byte>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader.tryReadRawNull|function|func tryReadRawNull(): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Reader|interface|public interface GeneratedSupportV1Reader": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.reserveRawCollectionCapacity|function|public func reserveRawCollectionCapacity(count: Int64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawBeginArray|function|public func writeRawBeginArray(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawBeginObject|function|public func writeRawBeginObject(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawBigInt|function|public func writeRawBigInt(value: BigInt): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawBool|function|public func writeRawBool(value: Bool): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawByte|function|public func writeRawByte(value: Byte): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawDecimal|function|public func writeRawDecimal(value: Decimal): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawEndArray|function|public func writeRawEndArray(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawEndObject|function|public func writeRawEndObject(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawFloat16|function|public func writeRawFloat16(value: Float16): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawFloat32|function|public func writeRawFloat32(value: Float32): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawFloat64|function|public func writeRawFloat64(value: Float64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawInt16|function|public func writeRawInt16(value: Int16): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawInt32|function|public func writeRawInt32(value: Int32): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawInt64|function|public func writeRawInt64(value: Int64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawInt8|function|public func writeRawInt8(value: Int8): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawNull|function|public func writeRawNull(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawNumberLiteral|function|public func writeRawNumberLiteral(value: String): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawObjectEntryKnownNameBool|function|public func writeRawObjectEntryKnownNameBool(first: Bool, name: String, value: Bool): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawObjectEntryKnownNameFloat64Array|function|public func writeRawObjectEntryKnownNameFloat64Array( first: Bool, name: String, values: Array<Float64> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawObjectEntryKnownNameFloat64|function|public func writeRawObjectEntryKnownNameFloat64(first: Bool, name: String, value: Float64): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawObjectEntryKnownNameInt64ArrayMap|function|public func writeRawObjectEntryKnownNameInt64ArrayMap( first: Bool, name: String, values: HashMap<String, Array<Int64>> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawObjectEntryKnownNameInt64Array|function|public func writeRawObjectEntryKnownNameInt64Array( first: Bool, name: String, values: Array<Int64> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawObjectEntryKnownNameInt64Map|function|public func writeRawObjectEntryKnownNameInt64Map( first: Bool, name: String, values: HashMap<String, Int64> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawObjectEntryKnownNameInt64|function|public func writeRawObjectEntryKnownNameInt64(first: Bool, name: String, value: Int64): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawObjectEntryKnownNameStringArray|function|public func writeRawObjectEntryKnownNameStringArray( first: Bool, name: String, values: Array<String> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawObjectEntryKnownNameStringMap|function|public func writeRawObjectEntryKnownNameStringMap( first: Bool, name: String, values: HashMap<String, String> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawObjectEntryKnownNameString|function|public func writeRawObjectEntryKnownNameString(first: Bool, name: String, value: String): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawObjectEntryKnownNameUInt64|function|public func writeRawObjectEntryKnownNameUInt64(first: Bool, name: String, value: UInt64): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawObjectEntryKnownName|function|public func writeRawObjectEntryKnownName(first: Bool, name: String): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawObjectEntryNameBool|function|public func writeRawObjectEntryNameBool(first: Bool, name: String, value: Bool): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawObjectEntryNameFloat64|function|public func writeRawObjectEntryNameFloat64(first: Bool, name: String, value: Float64): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawObjectEntryNameInt64|function|public func writeRawObjectEntryNameInt64(first: Bool, name: String, value: Int64): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawObjectEntryNameString|function|public func writeRawObjectEntryNameString(first: Bool, name: String, value: String): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawObjectEntryNameUInt64|function|public func writeRawObjectEntryNameUInt64(first: Bool, name: String, value: UInt64): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawObjectEntryName|function|public func writeRawObjectEntryName(first: Bool, value: String): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawRfc3339DateTime|function|public func writeRawRfc3339DateTime(value: DateTime): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawRune|function|public func writeRawRune(value: Rune): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawString|function|public func writeRawString(value: String): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawUInt16|function|public func writeRawUInt16(value: UInt16): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawUInt32|function|public func writeRawUInt32(value: UInt32): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawUInt64|function|public func writeRawUInt64(value: UInt64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor.writeRawUInt8|function|public func writeRawUInt8(value: UInt8): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1WriteCursor|struct|public struct GeneratedSupportV1WriteCursor": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Writer.finishString|function|func finishString(): String": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Writer.generatedCursorV1|function|func generatedCursorV1(): GeneratedSupportV1WriteCursor": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Writer.tryBeginGeneratedCompactRawValue|function|func tryBeginGeneratedCompactRawValue(): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Writer.writeRawBeginArray|function|func writeRawBeginArray(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Writer.writeRawBeginObject|function|func writeRawBeginObject(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Writer.writeRawByte|function|func writeRawByte(value: Byte): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Writer.writeRawEndArray|function|func writeRawEndArray(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Writer.writeRawEndObject|function|func writeRawEndObject(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Writer.writeRawNull|function|func writeRawNull(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Writer.writeRawObjectEntryNameBool|function|func writeRawObjectEntryNameBool(first: Bool, name: String, value: Bool): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Writer.writeRawObjectEntryNameFloat64|function|func writeRawObjectEntryNameFloat64(first: Bool, name: String, value: Float64): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Writer.writeRawObjectEntryNameInt64|function|func writeRawObjectEntryNameInt64(first: Bool, name: String, value: Int64): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Writer.writeRawObjectEntryNameString|function|func writeRawObjectEntryNameString(first: Bool, name: String, value: String): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Writer.writeRawObjectEntryNameUInt64|function|func writeRawObjectEntryNameUInt64(first: Bool, name: String, value: UInt64): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Writer.writeRawObjectEntryName|function|func writeRawObjectEntryName(first: Bool, value: String): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1Writer|interface|public interface GeneratedSupportV1Writer <: JsonWriter & GeneratedBulkWriterV1 & GeneratedWriteStateV1Owner": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1|class|public class GeneratedSupportV1": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedWriteStateV1.currentPath|function|public func currentPath(): String": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedWriteStateV1.enterObject|function|public func enterObject<T>(value: T): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedWriteStateV1.enterValue|function|public func enterValue(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedWriteStateV1.leaveObject|function|public func leaveObject(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedWriteStateV1.leaveValue|function|public func leaveValue(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedWriteStateV1.popPath|function|public func popPath(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedWriteStateV1.pushField|function|public func pushField(name: String): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedWriteStateV1.pushIndex|function|public func pushIndex(index: Int64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedWriteStateV1.updateLastField|function|public func updateLastField(name: String): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedWriteStateV1.updateLastIndex|function|public func updateLastIndex(index: Int64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedWriteStateV1Owner.generatedWriteStateV1|function|func generatedWriteStateV1(): GeneratedWriteStateV1": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedWriteStateV1Owner|interface|public interface GeneratedWriteStateV1Owner": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedWriteStateV1|class|public class GeneratedWriteStateV1": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonAccelerationProviderV1.abiVersion|function|func abiVersion(): Int64": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonAccelerationProviderV1.activate|function|func activate(): Unit": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonAccelerationProviderV1.identity|function|func identity(): String": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonAccelerationProviderV1.protocolVersion|function|func protocolVersion(): Int64": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonAccelerationProviderV1|interface|public interface JsonAccelerationProviderV1": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonAlias.init|constructor|public const init(value: String)": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonAlias.value|variable|public let value: String": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonAlias|class|@Annotation public class JsonAlias": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonArray.add|function|public func add(value: JsonNode): JsonArray": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonArray.add|function|public func add<T>(value: T): JsonArray where T <: GeneratedCodecProviderV1<T>": {
+      "category": "application",
+      "profile": "core-macro"
+    },
+    "yjson.JsonArray.get|function|public func get(index: Int64): Option<JsonNode>": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonArray.init|constructor|public init()": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonArray.init|constructor|public init(items: Array<JsonNode>)": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonArray.init|constructor|public init(items: ArrayList<JsonNode>)": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonArray.insert|function|public func insert(index: Int64, value: JsonNode): JsonArray": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonArray.kind|function|public func kind(): JsonKind": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonArray.removeAt|function|public func removeAt(index: Int64): JsonNode": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonArray.set|function|public func set(index: Int64, value: JsonNode): JsonArray": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonArray.set|function|public func set<T>(index: Int64, value: T): JsonArray where T <: GeneratedCodecProviderV1<T>": {
+      "category": "application",
+      "profile": "core-macro"
+    },
+    "yjson.JsonArray.size|function|public func size(): Int64": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonArray.toPrettyString|function|public func toPrettyString(indent: String): String": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonArray.toString|function|public func toString(): String": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonArray|class|public class JsonArray <: JsonNode": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonCodec.read|function|func read(reader: JsonReader): T": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonCodec.write|function|func write(value: T, writer: JsonWriter): Unit": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonCodecs.arrayList|function|public static func arrayList<T>(inner: JsonCodec<T>): JsonCodec<ArrayList<T>>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonCodecs.array|function|public static func array<T>(inner: JsonCodec<T>): JsonCodec<Array<T>>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonCodecs.bigInt|property|public static prop bigInt: JsonCodec<BigInt>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonCodecs.bool|property|public static prop bool: JsonCodec<Bool>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonCodecs.decimal|property|public static prop decimal: JsonCodec<Decimal>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonCodecs.float16|property|public static prop float16: JsonCodec<Float16>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonCodecs.float32|property|public static prop float32: JsonCodec<Float32>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonCodecs.float64|property|public static prop float64: JsonCodec<Float64>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonCodecs.int16|property|public static prop int16: JsonCodec<Int16>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonCodecs.int32|property|public static prop int32: JsonCodec<Int32>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonCodecs.int64|property|public static prop int64: JsonCodec<Int64>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonCodecs.int8|property|public static prop int8: JsonCodec<Int8>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonCodecs.option|function|public static func option<T>(inner: JsonCodec<T>): JsonCodec<Option<T>>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonCodecs.rfc3339DateTime|property|public static prop rfc3339DateTime: JsonCodec<DateTime>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonCodecs.rune|property|public static prop rune: JsonCodec<Rune>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonCodecs.stringMap|function|public static func stringMap<T>(inner: JsonCodec<T>): JsonCodec<HashMap<String, T>>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonCodecs.string|property|public static prop string: JsonCodec<String>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonCodecs.uint16|property|public static prop uint16: JsonCodec<UInt16>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonCodecs.uint32|property|public static prop uint32: JsonCodec<UInt32>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonCodecs.uint64|property|public static prop uint64: JsonCodec<UInt64>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonCodecs.uint8|property|public static prop uint8: JsonCodec<UInt8>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonCodecs|class|public class JsonCodecs": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonCodec|interface|public interface JsonCodec<T>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonDirectWriter.bytes|function|public static func bytes(config!: JsonWriteOptions = JsonWriteOptions.compact): JsonDirectWriter": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.canReuseGeneratedCompactWriter|function|public func canReuseGeneratedCompactWriter(): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.endArray|function|public func endArray(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.endObject|function|public func endObject(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.error|function|public func error(message: String, code: String): JsonException": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.finishBytes|function|public func finishBytes(): Array<Byte>": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.finishGeneratedCompactString|function|public func finishGeneratedCompactString(): String": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.finishString|function|public func finishString(): String": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.finish|function|public func finish(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.generatedBufferV1|function|public func generatedBufferV1(): DirectBufferWriterTarget": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.generatedCursorV1|function|public func generatedCursorV1(): GeneratedSupportV1WriteCursor": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.generatedWriteStateV1|function|public func generatedWriteStateV1(): GeneratedWriteStateV1": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.init|constructor|public init(config: JsonWriteOptions)": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.init|constructor|public init(out: OutputStream, config!: JsonWriteOptions = JsonWriteOptions.compact)": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.init|constructor|public init(pretty!: Bool = false)": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.path|function|public func path(): String": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.resetForGeneratedReuse|function|public func resetForGeneratedReuse(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.startArray|function|public func startArray(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.startObject|function|public func startObject(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.tryBeginGeneratedCompactRawValue|function|public func tryBeginGeneratedCompactRawValue(): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.tryWriteCompactFloat64Array|function|public func tryWriteCompactFloat64Array(values: Array<Float64>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.tryWriteCompactInt64ArrayList|function|public func tryWriteCompactInt64ArrayList(values: ArrayList<Int64>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.tryWriteCompactInt64ArrayMap|function|public func tryWriteCompactInt64ArrayMap(values: HashMap<String, Array<Int64>>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.tryWriteCompactInt64Array|function|public func tryWriteCompactInt64Array(values: Array<Int64>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.tryWriteCompactInt64Map|function|public func tryWriteCompactInt64Map(values: HashMap<String, Int64>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.tryWriteCompactStringArrayList|function|public func tryWriteCompactStringArrayList(values: ArrayList<String>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.tryWriteCompactStringArray|function|public func tryWriteCompactStringArray(values: Array<String>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.tryWriteCompactStringMap|function|public func tryWriteCompactStringMap(values: HashMap<String, String>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeBool|function|public func writeBool(value: Bool): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeFloat64|function|public func writeFloat64(value: Float64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeInt64|function|public func writeInt64(value: Int64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeName|function|public func writeName(name: String): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeNull|function|public func writeNull(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeNumberLiteral|function|public func writeNumberLiteral(value: String): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawBeginArray|function|public func writeRawBeginArray(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawBeginObject|function|public func writeRawBeginObject(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawByte|function|public func writeRawByte(value: Byte): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawEndArray|function|public func writeRawEndArray(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawEndObject|function|public func writeRawEndObject(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawNull|function|public func writeRawNull(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownNameBoolBuffer|function|public func writeRawObjectEntryKnownNameBoolBuffer( first: Bool, name: String, value: Bool ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownNameBool|function|public func writeRawObjectEntryKnownNameBool( first: Bool, name: String, value: Bool ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownNameFloat64ArrayBuffer|function|public func writeRawObjectEntryKnownNameFloat64ArrayBuffer( first: Bool, name: Array<Byte>, values: Array<Float64> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownNameFloat64ArrayBuffer|function|public func writeRawObjectEntryKnownNameFloat64ArrayBuffer( first: Bool, name: String, values: Array<Float64> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownNameFloat64Array|function|public func writeRawObjectEntryKnownNameFloat64Array( first: Bool, name: String, values: Array<Float64> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownNameFloat64Buffer|function|public func writeRawObjectEntryKnownNameFloat64Buffer( first: Bool, name: String, value: Float64 ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownNameFloat64|function|public func writeRawObjectEntryKnownNameFloat64( first: Bool, name: String, value: Float64 ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownNameInt64ArrayBuffer|function|public func writeRawObjectEntryKnownNameInt64ArrayBuffer( first: Bool, name: String, values: Array<Int64> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownNameInt64ArrayMapBuffer|function|public func writeRawObjectEntryKnownNameInt64ArrayMapBuffer( first: Bool, name: String, values: HashMap<String, Array<Int64>> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownNameInt64ArrayMapKnownAsciiBuffer|function|public func writeRawObjectEntryKnownNameInt64ArrayMapKnownAsciiBuffer( first: Bool, name: String, values: HashMap<String, Array<Int64>> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownNameInt64ArrayMap|function|public func writeRawObjectEntryKnownNameInt64ArrayMap( first: Bool, name: String, values: HashMap<String, Array<Int64>> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownNameInt64Array|function|public func writeRawObjectEntryKnownNameInt64Array( first: Bool, name: String, values: Array<Int64> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownNameInt64Buffer|function|public func writeRawObjectEntryKnownNameInt64Buffer( first: Bool, name: String, value: Int64 ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownNameInt64MapBuffer|function|public func writeRawObjectEntryKnownNameInt64MapBuffer( first: Bool, name: String, values: HashMap<String, Int64> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownNameInt64MapKnownAsciiBuffer|function|public func writeRawObjectEntryKnownNameInt64MapKnownAsciiBuffer( first: Bool, name: String, values: HashMap<String, Int64> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownNameInt64Map|function|public func writeRawObjectEntryKnownNameInt64Map( first: Bool, name: String, values: HashMap<String, Int64> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownNameInt64|function|public func writeRawObjectEntryKnownNameInt64( first: Bool, name: String, value: Int64 ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownNameStringArray|function|public func writeRawObjectEntryKnownNameStringArray( first: Bool, name: String, values: Array<String> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownNameStringBuffer|function|public func writeRawObjectEntryKnownNameStringBuffer( first: Bool, name: Array<Byte>, value: String ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownNameStringBuffer|function|public func writeRawObjectEntryKnownNameStringBuffer( first: Bool, name: String, value: String ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownNameStringFast|function|public func writeRawObjectEntryKnownNameStringFast( first: Bool, name: String, value: String ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownNameStringMapBuffer|function|public func writeRawObjectEntryKnownNameStringMapBuffer( first: Bool, name: String, values: HashMap<String, String> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownNameStringMap|function|public func writeRawObjectEntryKnownNameStringMap( first: Bool, name: String, values: HashMap<String, String> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownNameString|function|public func writeRawObjectEntryKnownNameString( first: Bool, name: String, value: String ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownNameUInt64Buffer|function|public func writeRawObjectEntryKnownNameUInt64Buffer( first: Bool, name: String, value: UInt64 ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownNameUInt64|function|public func writeRawObjectEntryKnownNameUInt64( first: Bool, name: String, value: UInt64 ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownName|function|public func writeRawObjectEntryKnownName(first: Bool, name: Array<Byte>): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryKnownName|function|public func writeRawObjectEntryKnownName(first: Bool, name: String): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryNameBool|function|public func writeRawObjectEntryNameBool(first: Bool, name: String, value: Bool): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryNameFloat64|function|public func writeRawObjectEntryNameFloat64(first: Bool, name: String, value: Float64): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryNameInt64|function|public func writeRawObjectEntryNameInt64(first: Bool, name: String, value: Int64): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryNameString|function|public func writeRawObjectEntryNameString(first: Bool, name: String, value: String): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryNameUInt64|function|public func writeRawObjectEntryNameUInt64(first: Bool, name: String, value: UInt64): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawObjectEntryName|function|public func writeRawObjectEntryName(first: Bool, value: String): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeRawUInt64|function|public func writeRawUInt64(value: UInt64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeString|function|public func writeString(value: String): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter.writeUInt64|function|public func writeUInt64(value: UInt64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDirectWriter|class|public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV1Owner": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonDocument.materialize|function|func materialize(): JsonNode": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonDocument.materialize|function|func materialize(maxNodes: Int64): JsonNode": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonDocument.root|function|func root(): JsonValueView": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonDocument.toString|function|func toString(): String": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonDocument|interface|public interface JsonDocument": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonDuplicateKeyPolicy.LastWins|enumCase|LastWins": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonDuplicateKeyPolicy.Reject|enumCase|| Reject": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonDuplicateKeyPolicy|enum|public enum JsonDuplicateKeyPolicy": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonException.code|variable|public let code: String": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonException.getClassName|function|protected open override func getClassName(): String": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonException.init|constructor|public init( message: String, causedBy: Exception, code!: String = \"json_error\", path!: String = \"\", location!: Option<JsonLocation> = None<JsonLocation> )": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonException.init|constructor|public init( message: String, code!: String = \"json_error\", path!: String = \"\", location!: Option<JsonLocation> = None<JsonLocation> )": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonException.location|variable|public let location: Option<JsonLocation>": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonException.path|variable|public let path: String": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonException|class|public open class JsonException <: Exception": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonFastReader.beforeRawArrayItemFast|function|public func beforeRawArrayItemFast(first: Bool): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.beforeRawArrayItem|function|public func beforeRawArrayItem(first: Bool): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.endRawArray|function|public func endRawArray(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.endRawObject|function|public func endRawObject(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.expectEnd|function|public func expectEnd(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.generatedReadStateV1|function|public func generatedReadStateV1(): GeneratedReadStateV1": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.hasRawArrayItemFast|function|public func hasRawArrayItemFast(first: Bool): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.hasRawArrayItem|function|public func hasRawArrayItem(first: Bool): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.hasRawObjectFieldFast|function|public func hasRawObjectFieldFast(first: Bool): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.hasRawObjectField|function|public func hasRawObjectField(first: Bool): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.init|constructor|public init(bytes: Array<Byte>)": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.init|constructor|public init(text: String)": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.peekRawKind|function|public func peekRawKind(): JsonKind": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.readRawBigInt|function|public func readRawBigInt(): BigInt": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.readRawBoolFast|function|public func readRawBoolFast(): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.readRawBool|function|public func readRawBool(): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.readRawDecimal|function|public func readRawDecimal(): Decimal": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.readRawFloat64Fast|function|public func readRawFloat64Fast(): Float64": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.readRawInt16|function|public func readRawInt16(): Int16": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.readRawInt32|function|public func readRawInt32(): Int32": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.readRawInt64ArrayFast|function|public func readRawInt64ArrayFast(): Array<Int64>": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.readRawInt64ArrayMapFast|function|public func readRawInt64ArrayMapFast(): HashMap<String, Array<Int64>>": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.readRawInt64Fast|function|public func readRawInt64Fast(): Int64": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.readRawInt64MapFast|function|public func readRawInt64MapFast(): HashMap<String, Int64>": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.readRawInt64|function|public func readRawInt64(): Int64": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.readRawInt8|function|public func readRawInt8(): Int8": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.readRawNameFast|function|public func readRawNameFast(first: Bool): String": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.readRawNameIdBytes|function|public func readRawNameIdBytes(first: Bool, candidates: Array<Array<Byte>>): Int64": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.readRawName|function|public func readRawName(first: Bool): String": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.readRawNumberLiteral|function|public func readRawNumberLiteral(): String": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.readRawStringFast|function|public func readRawStringFast(): String": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.readRawString|function|public func readRawString(): String": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.readRawUInt16|function|public func readRawUInt16(): UInt16": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.readRawUInt32|function|public func readRawUInt32(): UInt32": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.readRawUInt64Fast|function|public func readRawUInt64Fast(): UInt64": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.readRawUInt64|function|public func readRawUInt64(): UInt64": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.readRawUInt8|function|public func readRawUInt8(): UInt8": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.skipRawString|function|public func skipRawString(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.skipRawWithDepth|function|public func skipRawWithDepth(maxDepth: Int64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.skipRaw|function|public func skipRaw(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.skipValue|function|public func skipValue(maxDepth: Int64): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.startRawArray|function|public func startRawArray(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.startRawObject|function|public func startRawObject(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.suggestRawArrayCapacity|function|public func suggestRawArrayCapacity(): Int64": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.suggestRawCollectionCapacity|function|public func suggestRawCollectionCapacity(): Int64": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.suggestRawObjectCapacity|function|public func suggestRawObjectCapacity(): Int64": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.tryReadRawCompactNameTokenBytes|function|public func tryReadRawCompactNameTokenBytes( first: Bool, expectedNameBytes: Array<Byte> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader.tryReadRawNull|function|public func tryReadRawNull(): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonFastReader|class|public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Owner": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonIgnore.init|constructor|public const init()": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonIgnore|class|@Annotation public class JsonIgnore": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonIncludeNull.init|constructor|public const init()": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonIncludeNull|class|@Annotation public class JsonIncludeNull": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonKind.Array|enumCase|| Array": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonKind.Boolean|enumCase|| Boolean": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonKind.Null|enumCase|Null": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonKind.Number|enumCase|| Number": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonKind.Object|enumCase|| Object": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonKind.String|enumCase|| String": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonKind|enum|@Derive[Equatable] public enum JsonKind": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonLocation.byteOffset|variable|public let byteOffset: Int64": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonLocation.column|variable|public let column: Int64": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonLocation.init|constructor|public init(byteOffset: Int64, line: Int64, column: Int64)": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonLocation.line|variable|public let line: Int64": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonLocation|struct|public struct JsonLocation": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonName.init|constructor|public const init(value: String)": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonName.value|variable|public let value: String": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonName|class|@Annotation public class JsonName": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNativeAccelerationPrimitivesV1|interface|public interface JsonNativeAccelerationPrimitivesV1 <: JsonNativeScannerBackend & JsonNativeNumericScannerBackend & JsonNativeNumericTapeBackend & JsonNativeFloatParserBackend & JsonNativeWriterBackend": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonNativeFloatParserBackend.parseFloat64|function|func parseFloat64(input: CPointer<UInt8>, len: Int64, start: Int64, tokenLength: Int64): Float64": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonNativeFloatParserBackend|interface|public interface JsonNativeFloatParserBackend": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonNativeNumericScannerBackend.parseInt64Array|function|func parseInt64Array(input: CPointer<UInt8>, len: Int64, start: Int64, values: CPointer<Int64>, valueCap: Int64, outEnd: CPointer<Int64>, outCount: CPointer<Int64>, outError: CPointer<Int64>): Int32": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonNativeNumericScannerBackend.scanNumericArrayChunk|function|func scanNumericArrayChunk(input: CPointer<UInt8>, len: Int64, start: Int64, flags: UInt32, tokens: CPointer<UInt64>, tokenCap: Int64, outNext: CPointer<Int64>, outCount: CPointer<Int64>, outDone: CPointer<Int64>, outError: CPointer<Int64>): Int32": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonNativeNumericScannerBackend|interface|public interface JsonNativeNumericScannerBackend": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonNativeNumericTapeBackend.scanNumericTape|function|func scanNumericTape(input: CPointer<UInt8>, len: Int64, start: Int64, pageBytes: Int64, flags: UInt32, tokens: CPointer<UInt64>, tokenCap: Int64, outNext: CPointer<Int64>, outCount: CPointer<Int64>, outError: CPointer<Int64>): Int32": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonNativeNumericTapeBackend|interface|public interface JsonNativeNumericTapeBackend": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonNativePrimitivesProviderV1.primitives|function|func primitives(): JsonNativeAccelerationPrimitivesV1": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonNativePrimitivesProviderV1|interface|public interface JsonNativePrimitivesProviderV1 <: JsonAccelerationProviderV1": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonNativeScannerBackend.decodeString|function|func decodeString(input: CPointer<UInt8>, len: Int64, start: Int64, flags: UInt32, output: CPointer<UInt8>, outputCap: Int64, outEnd: CPointer<Int64>, outWritten: CPointer<Int64>, outError: CPointer<Int64>): Int32": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonNativeScannerBackend.scanArrayElements|function|func scanArrayElements(input: CPointer<UInt8>, len: Int64, start: Int64, flags: UInt32, elements: CPointer<UInt64>, elementCap: Int64, outEnd: CPointer<Int64>, outError: CPointer<Int64>): Int32": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonNativeScannerBackend.scanObjectFields|function|func scanObjectFields(input: CPointer<UInt8>, len: Int64, start: Int64, flags: UInt32, fields: CPointer<UInt64>, fieldCap: Int64, outEnd: CPointer<Int64>, outError: CPointer<Int64>): Int32": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonNativeScannerBackend.scanString|function|func scanString(input: CPointer<UInt8>, len: Int64, start: Int64, flags: UInt32, outEnd: CPointer<Int64>, outError: CPointer<Int64>): Int32": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonNativeScannerBackend.simdCaps|function|func simdCaps(): UInt32": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonNativeScannerBackend.skipValue|function|func skipValue(input: CPointer<UInt8>, len: Int64, start: Int64, flags: UInt32, outEnd: CPointer<Int64>, outError: CPointer<Int64>): Int32": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonNativeScannerBackend|interface|public interface JsonNativeScannerBackend": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonNativeWriterBackend.escapeString|function|func escapeString(input: CPointer<UInt8>, len: Int64, htmlSafe: Bool, output: CPointer<UInt8>, outputCap: Int64, outWritten: CPointer<Int64>): Int32": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonNativeWriterBackend.formatFloat64Array|function|func formatFloat64Array(values: CPointer<Float64>, count: Int64, output: CPointer<UInt8>, outputCap: Int64, outputOffset: Int64, outWritten: CPointer<Int64>): Int32": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonNativeWriterBackend.formatFloat64|function|func formatFloat64(value: Float64, output: CPointer<UInt8>, outputCap: Int64, outputOffset: Int64): Int64": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonNativeWriterBackend.formatInt64Array|function|func formatInt64Array(values: CPointer<Int64>, count: Int64, output: CPointer<UInt8>, outputCap: Int64, outputOffset: Int64, outWritten: CPointer<Int64>): Int32": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonNativeWriterBackend|interface|public interface JsonNativeWriterBackend": {
+      "category": "first-party-internal"
+    },
+    "yjson.JsonNode.[]|function|public operator func [](index: Int64): JsonNode": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.[]|function|public operator func [](index: Int64, value!: Array<JsonNode>): Unit": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.[]|function|public operator func [](index: Int64, value!: Bool): Unit": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.[]|function|public operator func [](index: Int64, value!: Float64): Unit": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.[]|function|public operator func [](index: Int64, value!: Int64): Unit": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.[]|function|public operator func [](index: Int64, value!: JsonNode): Unit": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.[]|function|public operator func [](index: Int64, value!: Rune): Unit": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.[]|function|public operator func [](index: Int64, value!: String): Unit": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.[]|function|public operator func [](key: String): JsonNode": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.[]|function|public operator func [](key: String, value!: Array<JsonNode>): Unit": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.[]|function|public operator func [](key: String, value!: Bool): Unit": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.[]|function|public operator func [](key: String, value!: Float64): Unit": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.[]|function|public operator func [](key: String, value!: Int64): Unit": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.[]|function|public operator func [](key: String, value!: JsonNode): Unit": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.[]|function|public operator func [](key: String, value!: Rune): Unit": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.[]|function|public operator func [](key: String, value!: String): Unit": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.array|function|public static func array(): JsonArray": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.array|function|public static func array(items: Array<JsonNode>): JsonArray": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.asArray|function|public func asArray(): JsonArray": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.asBool|function|public func asBool(): Bool": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.asFloat64|function|public func asFloat64(): Float64": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.asInt64|function|public func asInt64(): Int64": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.asNumberText|function|public func asNumberText(): String": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.asObject|function|public func asObject(): JsonObject": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.asString|function|public func asString(): String": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.asUInt64|function|public func asUInt64(): UInt64": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.boolean|function|public static func boolean(value: Bool): JsonNode": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.deepCopy|function|public func deepCopy(): JsonNode": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.element|function|public func element(index: Int64): Option<JsonValueView>": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.equivalentTo|function|public func equivalentTo(other: JsonNode): Bool": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.float64|function|public static func float64(value: Float64): JsonNode": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.int64|function|public static func int64(value: Int64): JsonNode": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.isNull|property|public prop isNull: Bool": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.kind|function|public func kind(): JsonKind": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.materialize|function|public func materialize(): JsonNode": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.materialize|function|public func materialize(maxNodes: Int64): JsonNode": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.memberName|function|public func memberName(index: Int64): String": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.memberValue|function|public func memberValue(index: Int64): JsonValueView": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.member|function|public func member(name: String): Option<JsonValueView>": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.nullValue|property|public static prop nullValue: JsonNode": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.number|function|public static func number(text: String): JsonNode": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.object|function|public static func object(): JsonObject": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.parse|function|public static func parse(bytes: Array<Byte>, config!: JsonReadOptions = JsonReadOptions.defaults): JsonNode": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.parse|function|public static func parse(text: String, config!: JsonReadOptions = JsonReadOptions.defaults): JsonNode": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.size|function|public func size(): Int64": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.string|function|public static func string(value: String): JsonNode": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.toJson|function|public func toJson(options!: JsonWriteOptions = JsonWriteOptions.defaults): String": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.toPrettyString|function|public func toPrettyString(): String": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.toPrettyString|function|public func toPrettyString(indent: String): String": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.uint64|function|public static func uint64(value: UInt64): JsonNode": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode.writeJson|function|public func writeJson(output: OutputStream, options!: JsonWriteOptions = JsonWriteOptions.defaults): Unit": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonNode|class|public abstract class JsonNode <: ToString & JsonValueView": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonObject.contains|function|public func contains(key: String): Bool": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonObject.get|function|public func get(key: String): Option<JsonNode>": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonObject.init|constructor|public init()": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonObject.init|constructor|public init(fields: HashMap<String, JsonNode>)": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonObject.kind|function|public func kind(): JsonKind": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonObject.nameAt|function|public func nameAt(index: Int64): String": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonObject.put|function|public func put(key: String, value: JsonNode): JsonObject": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonObject.put|function|public func put<T>(key: String, value: T): JsonObject where T <: GeneratedCodecProviderV1<T>": {
+      "category": "application",
+      "profile": "core-macro"
+    },
+    "yjson.JsonObject.remove|function|public func remove(key: String): Option<JsonNode>": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonObject.size|function|public func size(): Int64": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonObject.toPrettyString|function|public func toPrettyString(indent: String): String": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonObject.toString|function|public func toString(): String": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonObject.valueAt|function|public func valueAt(index: Int64): JsonNode": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonObject|class|public class JsonObject <: JsonNode": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonPolymorphic.discriminator|variable|public let discriminator: String": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonPolymorphic.init|constructor|public const init(discriminator!: String = \"type\")": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonPolymorphic|class|@Annotation public class JsonPolymorphic": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonReadOptions.defaults|variable|public static let defaults: JsonReadOptions = JsonReadOptions()": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonReadOptions.duplicateKeyPolicy|variable|public let duplicateKeyPolicy: JsonDuplicateKeyPolicy": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonReadOptions.init|constructor|public init( unknownFieldPolicy!: JsonUnknownFieldPolicy = JsonUnknownFieldPolicy.Ignore, duplicateKeyPolicy!: JsonDuplicateKeyPolicy = JsonDuplicateKeyPolicy.Reject, maxInputBytes!: Int64 = 64 * 1024 * 1024, maxStringBytes!: Int64 = 16 * 1024 * 1024, maxBufferedValueBytes!: Int64 = 8 * 1024 * 1024, maxDepth!: Int64 = 256 )": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonReadOptions.maxBufferedValueBytes|variable|public let maxBufferedValueBytes: Int64": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonReadOptions.maxDepth|variable|public let maxDepth: Int64": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonReadOptions.maxInputBytes|variable|public let maxInputBytes: Int64": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonReadOptions.maxStringBytes|variable|public let maxStringBytes: Int64": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonReadOptions.rejectsDuplicateKeys|function|public func rejectsDuplicateKeys(): Bool": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonReadOptions.rejectsUnknownFields|function|public func rejectsUnknownFields(): Bool": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonReadOptions.unknownFieldPolicy|variable|public let unknownFieldPolicy: JsonUnknownFieldPolicy": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonReadOptions|class|public class JsonReadOptions": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonReader.endArray|function|func endArray(): Unit": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonReader.endObject|function|func endObject(): Unit": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonReader.error|function|func error(message: String, code: String): JsonException": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonReader.hasArrayItem|function|func hasArrayItem(): Bool": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonReader.hasObjectField|function|func hasObjectField(): Bool": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonReader.location|function|func location(): Option<JsonLocation>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonReader.path|function|func path(): String": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonReader.readBigInt|function|func readBigInt(): BigInt": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonReader.readBool|function|func readBool(): Bool": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonReader.readDecimal|function|func readDecimal(): Decimal": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonReader.readFloat64|function|func readFloat64(): Float64": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonReader.readInt64|function|func readInt64(): Int64": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonReader.readName|function|func readName(): String": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonReader.readNode|function|func readNode(): JsonNode": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonReader.readNull|function|func readNull(): Unit": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonReader.readNumberLiteral|function|func readNumberLiteral(): String": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonReader.readString|function|func readString(): String": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonReader.readUInt64|function|func readUInt64(): UInt64": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonReader.skipValue|function|func skipValue(): Unit": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonReader.startArray|function|func startArray(): Unit": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonReader.startObject|function|func startObject(): Unit": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonReader.tryReadNull|function|func tryReadNull(): Bool": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonReader|interface|public interface JsonReader": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonSubtypeMetadata.expression|variable|public let expression: String": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonSubtypeMetadata.init|constructor|public const init(expression: String)": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonSubtypeMetadata|class|@Annotation public class JsonSubtypeMetadata": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonUnknownFieldPolicy.Ignore|enumCase|Ignore": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonUnknownFieldPolicy.Reject|enumCase|| Reject": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonUnknownFieldPolicy|enum|public enum JsonUnknownFieldPolicy": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonUsingMetadata.expression|variable|public let expression: String": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonUsingMetadata.init|constructor|public const init(expression: String)": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonUsingMetadata|class|@Annotation public class JsonUsingMetadata": {
+      "category": "generated-spi"
+    },
+    "yjson.JsonValueView.asBool|function|func asBool(): Bool": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonValueView.asFloat64|function|func asFloat64(): Float64": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonValueView.asInt64|function|func asInt64(): Int64": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonValueView.asNumberText|function|func asNumberText(): String": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonValueView.asString|function|func asString(): String": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonValueView.asUInt64|function|func asUInt64(): UInt64": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonValueView.element|function|func element(index: Int64): Option<JsonValueView>": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonValueView.kind|function|func kind(): JsonKind": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonValueView.materialize|function|func materialize(): JsonNode": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonValueView.materialize|function|func materialize(maxNodes: Int64): JsonNode": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonValueView.memberName|function|func memberName(index: Int64): String": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonValueView.memberValue|function|func memberValue(index: Int64): JsonValueView": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonValueView.member|function|func member(name: String): Option<JsonValueView>": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonValueView.size|function|func size(): Int64": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonValueView|interface|public interface JsonValueView": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonWriteOptions.compact|variable|public static let compact: JsonWriteOptions = JsonWriteOptions()": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonWriteOptions.defaults|variable|public static let defaults: JsonWriteOptions = JsonWriteOptions()": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonWriteOptions.htmlSafePreset|variable|public static let htmlSafePreset: JsonWriteOptions = JsonWriteOptions(htmlSafe: true)": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonWriteOptions.htmlSafe|variable|public let htmlSafe: Bool": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonWriteOptions.indent|variable|public let indent: String": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonWriteOptions.init|constructor|public init( indent!: String = \"\", htmlSafe!: Bool = false, maxOutputBytes!: Int64 = 0, maxDepth!: Int64 = 256 )": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonWriteOptions.maxDepth|variable|public let maxDepth: Int64": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonWriteOptions.maxOutputBytes|variable|public let maxOutputBytes: Int64": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonWriteOptions.pretty|function|public static func pretty(indent!: String = \" \"): JsonWriteOptions": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonWriteOptions|class|public class JsonWriteOptions": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.JsonWriter.endArray|function|func endArray(): Unit": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonWriter.endObject|function|func endObject(): Unit": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonWriter.error|function|func error(message: String, code: String): JsonException": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonWriter.path|function|func path(): String": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonWriter.startArray|function|func startArray(): Unit": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonWriter.startObject|function|func startObject(): Unit": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonWriter.writeBool|function|func writeBool(value: Bool): Unit": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonWriter.writeFloat64|function|func writeFloat64(value: Float64): Unit": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonWriter.writeInt64|function|func writeInt64(value: Int64): Unit": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonWriter.writeName|function|func writeName(name: String): Unit": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonWriter.writeNull|function|func writeNull(): Unit": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonWriter.writeNumberLiteral|function|func writeNumberLiteral(value: String): Unit": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonWriter.writeString|function|func writeString(value: String): Unit": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonWriter.writeUInt64|function|func writeUInt64(value: UInt64): Unit": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.JsonWriter|interface|public interface JsonWriter": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.YJson.acquireGeneratedCompactStringWriter|function|public static func acquireGeneratedCompactStringWriter( options: JsonWriteOptions ): JsonDirectWriter": {
+      "category": "generated-spi"
+    },
+    "yjson.YJson.fromJson|function|public static func fromJson<T>(bytes: Array<Byte>, codec!: GeneratedCompactCursorWriteCodecV1<T>, options!: JsonReadOptions = JsonReadOptions.defaults): T": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.YJson.fromJson|function|public static func fromJson<T>(bytes: Array<Byte>, codec!: JsonCodec<T>, options!: JsonReadOptions = JsonReadOptions.defaults): T": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.YJson.fromJson|function|public static func fromJson<T>(bytes: Array<Byte>, options!: JsonReadOptions = JsonReadOptions.defaults): T where T <: GeneratedCodecProviderV1<T>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.YJson.fromJson|function|public static func fromJson<T>(input: InputStream, codec!: JsonCodec<T>, options!: JsonReadOptions = JsonReadOptions.defaults): T": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.YJson.fromJson|function|public static func fromJson<T>(input: InputStream, options!: JsonReadOptions = JsonReadOptions.defaults): T where T <: GeneratedCodecProviderV1<T>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.YJson.fromJson|function|public static func fromJson<T>(text: String, codec!: GeneratedCompactCursorWriteCodecV1<T>, options!: JsonReadOptions = JsonReadOptions.defaults): T": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.YJson.fromJson|function|public static func fromJson<T>(text: String, codec!: JsonCodec<T>, options!: JsonReadOptions = JsonReadOptions.defaults): T": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.YJson.fromJson|function|public static func fromJson<T>(text: String, options!: JsonReadOptions = JsonReadOptions.defaults): T where T <: GeneratedCodecProviderV1<T>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.YJson.parseDocument|function|public static func parseDocument(bytes: Array<Byte>, config!: JsonReadOptions = JsonReadOptions.defaults): JsonDocument": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.YJson.parseDocument|function|public static func parseDocument(text: String, config!: JsonReadOptions = JsonReadOptions.defaults): JsonDocument": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.YJson.releaseGeneratedCompactStringWriter|function|public static func releaseGeneratedCompactStringWriter( writer: JsonDirectWriter ): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.YJson.toJsonBytes|function|public static func toJsonBytes(value: JsonValueView, options!: JsonWriteOptions = JsonWriteOptions.defaults): Array<Byte>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.YJson.toJsonBytes|function|public static func toJsonBytes<T>(value: T, codec!: GeneratedCompactCursorWriteCodecV1<T>, options!: JsonWriteOptions = JsonWriteOptions.defaults): Array<Byte>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.YJson.toJsonBytes|function|public static func toJsonBytes<T>(value: T, codec!: JsonCodec<T>, options!: JsonWriteOptions = JsonWriteOptions.defaults): Array<Byte>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.YJson.toJsonBytes|function|public static func toJsonBytes<T>(value: T, options!: JsonWriteOptions = JsonWriteOptions.defaults): Array<Byte> where T <: GeneratedCodecProviderV1<T>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.YJson.toJson|function|public static func toJson(value: JsonValueView, options!: JsonWriteOptions = JsonWriteOptions.defaults): String": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.YJson.toJson|function|public static func toJson<T>(value: T, codec!: GeneratedCompactCursorWriteCodecV1<T>, options!: JsonWriteOptions = JsonWriteOptions.defaults): String where T <: GeneratedCompactCodecProviderV1<T>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.YJson.toJson|function|public static func toJson<T>(value: T, codec!: JsonCodec<T>, options!: JsonWriteOptions = JsonWriteOptions.defaults): String": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.YJson.toJson|function|public static func toJson<T>(value: T, options!: JsonWriteOptions = JsonWriteOptions.defaults): String where T <: GeneratedCodecProviderV1<T>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.YJson.writeJson|function|public static func writeJson(value: JsonValueView, output: OutputStream, options!: JsonWriteOptions = JsonWriteOptions.defaults): Unit": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.YJson.writeJson|function|public static func writeJson<T>(value: T, output: OutputStream, codec!: JsonCodec<T>, options!: JsonWriteOptions = JsonWriteOptions.defaults): Unit": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.YJson.writeJson|function|public static func writeJson<T>(value: T, output: OutputStream, options!: JsonWriteOptions = JsonWriteOptions.defaults): Unit where T <: GeneratedCodecProviderV1<T>": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.YJsonArrayList|typeAlias|public type YJsonArrayList<T> = ArrayList<T>": {
+      "category": "generated-spi"
+    },
+    "yjson.YJsonByteArrayInputStream.init|constructor|public init(bytes: Array<Byte>)": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.YJsonByteArrayInputStream.init|constructor|public init(text: String)": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.YJsonByteArrayInputStream.readRemainingBytes|function|public func readRemainingBytes(): Array<Byte>": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.YJsonByteArrayInputStream.read|function|public func read(buf: Array<Byte>): Int64": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.YJsonByteArrayInputStream|class|public class YJsonByteArrayInputStream <: InputStream": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.YJsonHashMap|typeAlias|public type YJsonHashMap<K, V> = HashMap<K, V>": {
+      "category": "generated-spi"
+    },
+    "yjson.YJsonMemoryOutputStream.flush|function|public func flush(): Unit": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.YJsonMemoryOutputStream.toByteArray|function|public func toByteArray(): Array<Byte>": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.YJsonMemoryOutputStream.toUtf8String|function|public func toUtf8String(): String": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.YJsonMemoryOutputStream.write|function|public func write(bytes: Array<Byte>): Unit": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.YJsonMemoryOutputStream|class|public class YJsonMemoryOutputStream <: OutputStream": {
+      "category": "application",
+      "profile": "core"
+    },
+    "yjson.YJson|class|public class YJson": {
+      "category": "application",
+      "profile": "core-codec"
+    },
+    "yjson.__yJsonReadFastArrayListBigInt|function|public func __yJsonReadFastArrayListBigInt( reader: GeneratedSupportV1Reader ): ArrayList<BigInt>": {
+      "category": "generated-spi"
+    },
+    "yjson.__yJsonReadFastArrayListDecimal|function|public func __yJsonReadFastArrayListDecimal( reader: GeneratedSupportV1Reader ): ArrayList<Decimal>": {
+      "category": "generated-spi"
+    },
+    "yjson.__yJsonReadFastHashMapStringBigInt|function|public func __yJsonReadFastHashMapStringBigInt( reader: GeneratedSupportV1Reader ): HashMap<String, BigInt>": {
+      "category": "generated-spi"
+    },
+    "yjson.__yJsonReadFastHashMapStringDecimal|function|public func __yJsonReadFastHashMapStringDecimal( reader: GeneratedSupportV1Reader ): HashMap<String, Decimal>": {
+      "category": "generated-spi"
+    },
+    "yjson.__yJsonReadFastInt64HashMap|function|public func __yJsonReadFastInt64HashMap(reader: GeneratedSupportV1Reader): HashMap<String, Int64>": {
+      "category": "generated-spi"
+    },
+    "yjson.__yJsonReadFastInt64Option|function|public func __yJsonReadFastInt64Option(reader: GeneratedSupportV1Reader): Option<Int64>": {
+      "category": "generated-spi"
+    },
+    "yjson.__yJsonReadFastStringArrayList|function|public func __yJsonReadFastStringArrayList(reader: GeneratedSupportV1Reader): ArrayList<String>": {
+      "category": "generated-spi"
+    },
+    "yjson.__yJsonReadFastStringOption|function|public func __yJsonReadFastStringOption(reader: GeneratedSupportV1Reader): Option<String>": {
+      "category": "generated-spi"
+    },
+    "yjson.__yJsonReadInt64HashMap|function|public func __yJsonReadInt64HashMap(reader: JsonReader): HashMap<String, Int64>": {
+      "category": "generated-spi"
+    },
+    "yjson.__yJsonReadInt64Option|function|public func __yJsonReadInt64Option(reader: JsonReader): Option<Int64>": {
+      "category": "generated-spi"
+    },
+    "yjson.__yJsonReadStringArrayList|function|public func __yJsonReadStringArrayList(reader: JsonReader): ArrayList<String>": {
+      "category": "generated-spi"
+    },
+    "yjson.__yJsonReadStringOption|function|public func __yJsonReadStringOption(reader: JsonReader): Option<String>": {
+      "category": "generated-spi"
+    },
+    "yjson.__yJsonWriteInt64HashMap|function|public func __yJsonWriteInt64HashMap( value: HashMap<String, Int64>, writer: JsonWriter ): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.__yJsonWriteInt64Option|function|public func __yJsonWriteInt64Option(value: Option<Int64>, writer: JsonWriter): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.__yJsonWriteStringArrayList|function|public func __yJsonWriteStringArrayList( value: ArrayList<String>, writer: JsonWriter ): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.__yJsonWriteStringOption|function|public func __yJsonWriteStringOption(value: Option<String>, writer: JsonWriter): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.generatedCodecV1Of|function|public func generatedCodecV1Of<T>(): JsonCodec<T> where T <: GeneratedCodecProviderV1<T>": {
+      "category": "generated-spi"
+    },
+    "yjson.generatedObjectCodecV1Of|function|public func generatedObjectCodecV1Of<T>(): GeneratedObjectCodecV1<T> where T <: GeneratedObjectCodecProviderV1<T>": {
+      "category": "generated-spi"
+    },
+    "yjson.initializeYJsonAccelerationV1|function|public func initializeYJsonAccelerationV1(provider: JsonAccelerationProviderV1): Unit": {
+      "category": "first-party-internal"
+    },
+    "yjson.jsonFastReadBigInt|function|public func jsonFastReadBigInt(reader: GeneratedSupportV1Reader): BigInt": {
+      "category": "generated-spi"
+    },
+    "yjson.jsonFastReadDecimal|function|public func jsonFastReadDecimal(reader: GeneratedSupportV1Reader): Decimal": {
+      "category": "generated-spi"
+    },
+    "yjson.jsonFastReadFloat16|function|public func jsonFastReadFloat16(reader: GeneratedSupportV1Reader): Float16": {
+      "category": "generated-spi"
+    },
+    "yjson.jsonFastReadFloat32|function|public func jsonFastReadFloat32(reader: GeneratedSupportV1Reader): Float32": {
+      "category": "generated-spi"
+    },
+    "yjson.jsonFastReadFloat64|function|public func jsonFastReadFloat64(reader: GeneratedSupportV1Reader): Float64": {
+      "category": "generated-spi"
+    },
+    "yjson.jsonTryBeginGeneratedCompactRawValue|function|public func jsonTryBeginGeneratedCompactRawValue(writer: GeneratedSupportV1Writer): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.jsonTryWriteCompactFloat64Array|function|public func jsonTryWriteCompactFloat64Array( writer: JsonWriter, values: Array<Float64> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.jsonTryWriteCompactInt64ArrayList|function|public func jsonTryWriteCompactInt64ArrayList( writer: JsonWriter, values: ArrayList<Int64> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.jsonTryWriteCompactInt64ArrayMap|function|public func jsonTryWriteCompactInt64ArrayMap( writer: JsonWriter, values: HashMap<String, Array<Int64>> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.jsonTryWriteCompactInt64Array|function|public func jsonTryWriteCompactInt64Array( writer: JsonWriter, values: Array<Int64> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.jsonTryWriteCompactInt64Map|function|public func jsonTryWriteCompactInt64Map( writer: JsonWriter, values: HashMap<String, Int64> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.jsonTryWriteCompactStringArrayList|function|public func jsonTryWriteCompactStringArrayList( writer: JsonWriter, values: ArrayList<String> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.jsonTryWriteCompactStringArray|function|public func jsonTryWriteCompactStringArray( writer: JsonWriter, values: Array<String> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.jsonTryWriteCompactStringMap|function|public func jsonTryWriteCompactStringMap( writer: JsonWriter, values: HashMap<String, String> ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.jsonWriteGeneratedCompactArrayBegin|function|public func jsonWriteGeneratedCompactArrayBegin(writer: GeneratedSupportV1Writer): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.jsonWriteGeneratedCompactArrayEnd|function|public func jsonWriteGeneratedCompactArrayEnd(writer: GeneratedSupportV1Writer): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.jsonWriteGeneratedCompactComma|function|public func jsonWriteGeneratedCompactComma(writer: GeneratedSupportV1Writer): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.jsonWriteGeneratedCompactObjectBegin|function|public func jsonWriteGeneratedCompactObjectBegin(writer: GeneratedSupportV1Writer): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.jsonWriteGeneratedCompactObjectEnd|function|public func jsonWriteGeneratedCompactObjectEnd(writer: GeneratedSupportV1Writer): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.jsonWriteGeneratedCompactObjectEntryBool|function|public func jsonWriteGeneratedCompactObjectEntryBool( writer: GeneratedSupportV1Writer, first: Bool, name: String, value: Bool ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.jsonWriteGeneratedCompactObjectEntryFloat64|function|public func jsonWriteGeneratedCompactObjectEntryFloat64( writer: GeneratedSupportV1Writer, first: Bool, name: String, value: Float64 ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.jsonWriteGeneratedCompactObjectEntryInt64|function|public func jsonWriteGeneratedCompactObjectEntryInt64( writer: GeneratedSupportV1Writer, first: Bool, name: String, value: Int64 ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.jsonWriteGeneratedCompactObjectEntryName|function|public func jsonWriteGeneratedCompactObjectEntryName( writer: GeneratedSupportV1Writer, first: Bool, name: String ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.jsonWriteGeneratedCompactObjectEntryString|function|public func jsonWriteGeneratedCompactObjectEntryString( writer: GeneratedSupportV1Writer, first: Bool, name: String, value: String ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.jsonWriteGeneratedCompactObjectEntryUInt64|function|public func jsonWriteGeneratedCompactObjectEntryUInt64( writer: GeneratedSupportV1Writer, first: Bool, name: String, value: UInt64 ): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.readJsonFastWith|function|public func readJsonFastWith<T>(codec: JsonCodec<T>, reader: GeneratedSupportV1Reader): T": {
+      "category": "generated-spi"
+    },
+    "yjson.writeJsonDirectWith|function|public func writeJsonDirectWith<T>( codec: JsonCodec<T>, value: T, writer: GeneratedSupportV1Writer ): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.yJsonGeneratedProtocolVersion|function|public func yJsonGeneratedProtocolVersion(): Int64": {
+      "category": "generated-spi"
+    },
+    "yjson_algorithms.JsonMergePatch.applyInPlace|function|public static func applyInPlace(target: JsonNode, patch: JsonNode, limits!: JsonPatchLimits = JsonPatchLimits.defaults): JsonNode": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonMergePatch.apply|function|public static func apply(target: JsonValueView, patch: JsonValueView, limits!: JsonPatchLimits = JsonPatchLimits.defaults): JsonNode": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonMergePatch|class|public class JsonMergePatch": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatch.applyInPlace|function|public func applyInPlace(target: JsonNode, limits!: JsonPatchLimits = JsonPatchLimits.defaults): JsonNode": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatch.apply|function|public func apply(target: JsonValueView, limits!: JsonPatchLimits = JsonPatchLimits.defaults): JsonNode": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatch.fromValue|function|public static func fromValue(value: JsonValueView): JsonPatch": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatch.init|constructor|public init(operations: Array<JsonPatchOperation>)": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatch.operations|function|public func operations(): Array<JsonPatchOperation>": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatch.parse|function|public static func parse(text: String, config!: JsonReadOptions = JsonReadOptions(duplicateKeyPolicy: JsonDuplicateKeyPolicy.Reject)): JsonPatch": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatchLimits.defaults|variable|public static let defaults = JsonPatchLimits()": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatchLimits.init|constructor|public init(maxOperations!: Int64 = 10000, maxPointerSegments!: Int64 = 256, maxCopiedNodes!: Int64 = 100000)": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatchLimits.maxCopiedNodes|variable|public let maxCopiedNodes: Int64": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatchLimits.maxOperations|variable|public let maxOperations: Int64": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatchLimits.maxPointerSegments|variable|public let maxPointerSegments: Int64": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatchLimits.unlimited|variable|public static let unlimited = JsonPatchLimits(maxOperations: 0, maxPointerSegments: 0, maxCopiedNodes: 0)": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatchLimits|class|public class JsonPatchLimits": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatchOperation.init|constructor|public init(kind: JsonPatchOperationKind, path: JsonPointer, source!: Option<JsonPointer> = None<JsonPointer>, value!: Option<JsonNode> = None<JsonNode>)": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatchOperation.kind|variable|public let kind: JsonPatchOperationKind": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatchOperation.path|variable|public let path: JsonPointer": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatchOperation.source|variable|public let source: Option<JsonPointer>": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatchOperation.value|variable|public let value: Option<JsonNode>": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatchOperationKind.Add|enumCase|| Add": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatchOperationKind.Copy|enumCase|| Copy": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatchOperationKind.Move|enumCase|| Move": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatchOperationKind.Remove|enumCase|| Remove": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatchOperationKind.Replace|enumCase|| Replace": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatchOperationKind.Test|enumCase|| Test": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatchOperationKind.toString|function|public func toString(): String": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatchOperationKind|enum|@Derive[Equatable] public enum JsonPatchOperationKind <: ToString": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatchOperation|class|public class JsonPatchOperation": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPatch|class|public class JsonPatch": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPath.collectValues|function|public func collectValues(document: JsonDocument, limits!: JsonPathLimits = JsonPathLimits.defaults): ArrayList<JsonValueView>": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPath.collectValues|function|public func collectValues(root: JsonValueView, limits!: JsonPathLimits = JsonPathLimits.defaults): ArrayList<JsonValueView>": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPath.collect|function|public func collect(document: JsonDocument, limits!: JsonPathLimits = JsonPathLimits.defaults): ArrayList<JsonPathMatch>": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPath.collect|function|public func collect(root: JsonValueView, limits!: JsonPathLimits = JsonPathLimits.defaults): ArrayList<JsonPathMatch>": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPath.expression|variable|public let expression: String": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPath.first|function|public func first(document: JsonDocument, limits!: JsonPathLimits = JsonPathLimits.defaults): Option<JsonPathMatch>": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPath.first|function|public func first(root: JsonValueView, limits!: JsonPathLimits = JsonPathLimits.defaults): Option<JsonPathMatch>": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPath.matches|function|public func matches(document: JsonDocument, limits!: JsonPathLimits = JsonPathLimits.defaults): JsonPathCursor": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPath.matches|function|public func matches(root: JsonValueView, limits!: JsonPathLimits = JsonPathLimits.defaults): JsonPathCursor": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPath.parse|function|public static func parse(expression: String): JsonPath": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPath.parse|function|public static func parse(expression: String, limits!: JsonPathLimits): JsonPath": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPathCursor.next|function|public func next(): Option<JsonPathMatch>": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPathCursor|class|public class JsonPathCursor <: Iterator<JsonPathMatch>": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPathLimits.defaults|variable|public static let defaults = JsonPathLimits()": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPathLimits.init|constructor|public init(maxVisitedNodes!: Int64 = 100000, maxFilterSteps!: Int64 = 100000, maxRegexSteps!: Int64 = 100000, maxMatches!: Int64 = 10000, maxDepth!: Int64 = 256, maxFilterExpressionBytes!: Int64 = 4096, maxFilterOperators!: Int64 = 256, maxFilterDepth!: Int64 = 64, maxFilterOperations!: Int64 = 200000)": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPathLimits.maxDepth|variable|public let maxDepth: Int64": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPathLimits.maxFilterDepth|variable|public let maxFilterDepth: Int64": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPathLimits.maxFilterExpressionBytes|variable|public let maxFilterExpressionBytes: Int64": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPathLimits.maxFilterOperations|variable|public let maxFilterOperations: Int64": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPathLimits.maxFilterOperators|variable|public let maxFilterOperators: Int64": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPathLimits.maxFilterSteps|variable|public let maxFilterSteps: Int64": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPathLimits.maxMatches|variable|public let maxMatches: Int64": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPathLimits.maxRegexSteps|variable|public let maxRegexSteps: Int64": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPathLimits.maxVisitedNodes|variable|public let maxVisitedNodes: Int64": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPathLimits.unlimited|variable|public static let unlimited = JsonPathLimits(maxVisitedNodes: 0, maxFilterSteps: 0, maxRegexSteps: 0, maxMatches: 0, maxDepth: 0, maxFilterExpressionBytes: 0, maxFilterOperators: 0, maxFilterDepth: 0, maxFilterOperations: 0)": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPathLimits|class|public class JsonPathLimits": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPathMatch.init|constructor|public init(value: JsonValueView, normalizedPath: String)": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPathMatch.normalizedPath|variable|public let normalizedPath: String": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPathMatch.value|variable|public let value: JsonValueView": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPathMatch|class|public class JsonPathMatch": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPath|class|public class JsonPath": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPointer.evaluate|function|public func evaluate(document: JsonDocument): JsonValueView": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPointer.evaluate|function|public func evaluate(root: JsonValueView): JsonValueView": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPointer.find|function|public func find(document: JsonDocument): Option<JsonValueView>": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPointer.find|function|public func find(root: JsonValueView): Option<JsonValueView>": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPointer.isRoot|function|public func isRoot(): Bool": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPointer.parseUriFragment|function|public static func parseUriFragment(fragment: String): JsonPointer": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPointer.parse|function|public static func parse(pointer: String): JsonPointer": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPointer.toString|function|public func toString(): String": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPointer.toUriFragment|function|public func toUriFragment(): String": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPointer.tokens|function|public func tokens(): Array<String>": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonPointer|class|public class JsonPointer <: ToString": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchema.config|variable|public let config: JsonSchemaConfig": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchema.document|property|public prop document: JsonNode": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchema.draft|variable|public let draft: String": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchema.fromValue|function|public static func fromValue(value: JsonValueView, config!: JsonSchemaConfig = JsonSchemaConfig.defaults): JsonSchema": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchema.init|constructor|public init(document: JsonValueView, draft!: String = \"https://json-schema.org/draft/2020-12/schema\", config!: JsonSchemaConfig = JsonSchemaConfig.defaults)": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchema.isValid|function|public func isValid(document: JsonDocument): Bool": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchema.isValid|function|public func isValid(instance: JsonValueView): Bool": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchema.parse|function|public static func parse(text: String, config!: JsonSchemaConfig = JsonSchemaConfig.defaults): JsonSchema": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchema.validate|function|public func validate(document: JsonDocument): JsonSchemaResult": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchema.validate|function|public func validate(instance: JsonValueView): JsonSchemaResult": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchema.validator|function|public func validator(): JsonSchemaValidator": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaConfig.defaults|variable|public static let defaults = JsonSchemaConfig( formats: JsonSchemaFormatRegistry.withCoreFormats().frozenCopy())": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaConfig.formatMode|variable|public let formatMode: JsonSchemaFormatMode": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaConfig.formats|variable|public let formats: JsonSchemaFormatRegistry": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaConfig.init|constructor|public init(resolver!: Option<UriResolver> = None<UriResolver>, formatMode!: JsonSchemaFormatMode = JsonSchemaFormatMode.Annotation, formats!: JsonSchemaFormatRegistry = JsonSchemaFormatRegistry.withCoreFormats(), limits!: JsonSchemaLimits = JsonSchemaLimits.defaults)": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaConfig.limits|variable|public let limits: JsonSchemaLimits": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaConfig.resolver|variable|public let resolver: Option<UriResolver>": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaConfig|class|public class JsonSchemaConfig": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaFormat.validate|function|func validate(value: String): Bool": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaFormatMode.Annotation|enumCase|| Annotation": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaFormatMode.Assertion|enumCase|| Assertion": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaFormatMode|enum|public enum JsonSchemaFormatMode": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaFormatProvider.installInto|function|func installInto(registry: JsonSchemaFormatRegistry): Unit": {
+      "category": "application",
+      "profile": "schema-formats"
+    },
+    "yjson_algorithms.JsonSchemaFormatProvider|interface|public interface JsonSchemaFormatProvider": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaFormatRegistry.install|function|public func install(provider: JsonSchemaFormatProvider): Unit": {
+      "category": "application",
+      "profile": "schema-formats"
+    },
+    "yjson_algorithms.JsonSchemaFormatRegistry.register|function|public func register(name: String, format: JsonSchemaFormat, replace!: Bool = false): Unit": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaFormatRegistry.resolve|function|public func resolve(name: String): Option<JsonSchemaFormat>": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaFormatRegistry.withCoreFormats|function|public static func withCoreFormats(): JsonSchemaFormatRegistry": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaFormatRegistry|class|public class JsonSchemaFormatRegistry": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaFormat|interface|public interface JsonSchemaFormat": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaLimits.defaults|variable|public static let defaults = JsonSchemaLimits()": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaLimits.init|constructor|public init(maxEvaluations!: Int64 = 100000, maxRefResolutions!: Int64 = 1000, maxRegexSteps!: Int64 = 100000, maxErrors!: Int64 = 100, maxDepth!: Int64 = 256)": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaLimits.maxDepth|variable|public let maxDepth: Int64": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaLimits.maxErrors|variable|public let maxErrors: Int64": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaLimits.maxEvaluations|variable|public let maxEvaluations: Int64": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaLimits.maxRefResolutions|variable|public let maxRefResolutions: Int64": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaLimits.maxRegexSteps|variable|public let maxRegexSteps: Int64": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaLimits.unlimited|variable|public static let unlimited = JsonSchemaLimits(maxEvaluations: 0, maxRefResolutions: 0, maxRegexSteps: 0, maxErrors: 0, maxDepth: 0)": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaLimits|class|public class JsonSchemaLimits": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaRegistry.register|function|public func register(uri: String, schema: JsonNode): Unit": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaRegistry.register|function|public func register(uri: String, schemaText: String): Unit": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaRegistry.resolve|function|public func resolve(uri: String): Option<JsonNode>": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaRegistry|class|public class JsonSchemaRegistry <: UriResolver": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaResult.[]|function|public operator func [](index: Int64): JsonSchemaViolation": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaResult.isEmpty|function|public func isEmpty(): Bool": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaResult.size|property|public prop size: Int64": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaResult.valid|property|public prop valid: Bool": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaResult.violations|function|public func violations(): Array<JsonSchemaViolation>": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaResult|class|public class JsonSchemaResult": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaValidator.init|constructor|public init(schema: JsonSchema)": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaValidator.isValid|function|public func isValid(document: JsonDocument): Bool": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaValidator.isValid|function|public func isValid(instance: JsonValueView): Bool": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaValidator.validate|function|public func validate(document: JsonDocument): JsonSchemaResult": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaValidator.validate|function|public func validate(instance: JsonValueView): JsonSchemaResult": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaValidator|class|public class JsonSchemaValidator": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaViolation.code|variable|public let code: String": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaViolation.init|constructor|public init(instancePath: String, schemaPath: String, message: String, code!: String = \"schema_validation\")": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaViolation.instancePath|variable|public let instancePath: String": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaViolation.message|variable|public let message: String": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaViolation.schemaPath|variable|public let schemaPath: String": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchemaViolation|class|public class JsonSchemaViolation": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.JsonSchema|class|public class JsonSchema": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.UriResolver.resolve|function|func resolve(uri: String): Option<JsonNode>": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_algorithms.UriResolver|interface|public interface UriResolver": {
+      "category": "application",
+      "profile": "algorithms"
+    },
+    "yjson_backends.BackendJsonDocument.close|function|func close(): Unit": {
+      "category": "application",
+      "profile": "backends-native"
+    },
+    "yjson_backends.BackendJsonDocument.isClosed|function|func isClosed(): Bool": {
+      "category": "application",
+      "profile": "backends-native"
+    },
+    "yjson_backends.BackendJsonDocument.materialize|function|func materialize(): JsonNode": {
+      "category": "application",
+      "profile": "backends-native"
+    },
+    "yjson_backends.BackendJsonDocument.materialize|function|func materialize(maxNodes: Int64): JsonNode": {
+      "category": "application",
+      "profile": "backends-native"
+    },
+    "yjson_backends.BackendJsonDocument.metadata|function|func metadata(): JsonBackendMetadata": {
+      "category": "application",
+      "profile": "backends-native"
+    },
+    "yjson_backends.BackendJsonDocument.root|function|func root(): JsonValueView": {
+      "category": "application",
+      "profile": "backends-native"
+    },
+    "yjson_backends.BackendJsonDocument|interface|public interface BackendJsonDocument <: Resource": {
+      "category": "application",
+      "profile": "backends"
+    },
+    "yjson_backends.JsonBackendMetadata.decodeBuffering|variable|public let decodeBuffering: JsonStreamBufferingMode": {
+      "category": "application",
+      "profile": "backends"
+    },
+    "yjson_backends.JsonBackendMetadata.encodeBuffering|variable|public let encodeBuffering: JsonStreamBufferingMode": {
+      "category": "application",
+      "profile": "backends"
+    },
+    "yjson_backends.JsonBackendMetadata.init|constructor|public init(name: String, version: String, native: Bool, decodeBuffering: JsonStreamBufferingMode, encodeBuffering: JsonStreamBufferingMode)": {
+      "category": "application",
+      "profile": "backends"
+    },
+    "yjson_backends.JsonBackendMetadata.name|variable|public let name: String": {
+      "category": "application",
+      "profile": "backends"
+    },
+    "yjson_backends.JsonBackendMetadata.native|variable|public let native: Bool": {
+      "category": "application",
+      "profile": "backends"
+    },
+    "yjson_backends.JsonBackendMetadata.version|variable|public let version: String": {
+      "category": "application",
+      "profile": "backends"
+    },
+    "yjson_backends.JsonBackendMetadata|class|public class JsonBackendMetadata": {
+      "category": "application",
+      "profile": "backends"
+    },
+    "yjson_backends.JsonStreamBufferingMode.Incremental|enumCase|| Incremental": {
+      "category": "application",
+      "profile": "backends"
+    },
+    "yjson_backends.JsonStreamBufferingMode.WholeDocument|enumCase|| WholeDocument": {
+      "category": "application",
+      "profile": "backends"
+    },
+    "yjson_backends.JsonStreamBufferingMode|enum|public enum JsonStreamBufferingMode": {
+      "category": "application",
+      "profile": "backends"
+    },
+    "yjson_macros.JsonCodec|macro|public macro JsonCodec(input: Tokens): Tokens": {
+      "category": "application",
+      "profile": "macros"
+    },
+    "yjson_macros.JsonSubtype|macro|public macro JsonSubtype(attrs: Tokens, input: Tokens): Tokens": {
+      "category": "application",
+      "profile": "macros"
+    },
+    "yjson_macros.JsonUsing|macro|public macro JsonUsing(attrs: Tokens, input: Tokens): Tokens": {
+      "category": "application",
+      "profile": "macros"
+    },
+    "yjson_macros.Json|macro|public macro Json(input: Tokens): Tokens": {
+      "category": "application",
+      "profile": "macros"
+    },
+    "yjson_native.NativeBackendFacade.fromJson|function|public func fromJson<T>(bytes: Array<Byte>, codec!: JsonCodec<T>, options!: JsonReadOptions = JsonReadOptions.defaults): T": {
+      "category": "application",
+      "profile": "native"
+    },
+    "yjson_native.NativeBackendFacade.fromJson|function|public func fromJson<T>(bytes: Array<Byte>, options!: JsonReadOptions = JsonReadOptions.defaults): T where T <: GeneratedCodecProviderV1<T>": {
+      "category": "application",
+      "profile": "native"
+    },
+    "yjson_native.NativeBackendFacade.fromJson|function|public func fromJson<T>(input: InputStream, codec!: JsonCodec<T>, options!: JsonReadOptions = JsonReadOptions.defaults): T": {
+      "category": "application",
+      "profile": "native"
+    },
+    "yjson_native.NativeBackendFacade.fromJson|function|public func fromJson<T>(input: InputStream, options!: JsonReadOptions = JsonReadOptions.defaults): T where T <: GeneratedCodecProviderV1<T>": {
+      "category": "application",
+      "profile": "native"
+    },
+    "yjson_native.NativeBackendFacade.fromJson|function|public func fromJson<T>(text: String, codec!: JsonCodec<T>, options!: JsonReadOptions = JsonReadOptions.defaults): T": {
+      "category": "application",
+      "profile": "native"
+    },
+    "yjson_native.NativeBackendFacade.fromJson|function|public func fromJson<T>(text: String, options!: JsonReadOptions = JsonReadOptions.defaults): T where T <: GeneratedCodecProviderV1<T>": {
+      "category": "application",
+      "profile": "native"
+    },
+    "yjson_native.NativeBackendFacade.metadata|function|public func metadata(): JsonBackendMetadata": {
+      "category": "application",
+      "profile": "native"
+    },
+    "yjson_native.NativeBackendFacade.parseDocument|function|public func parseDocument(bytes: Array<Byte>, options!: JsonReadOptions = JsonReadOptions.defaults): BackendJsonDocument": {
+      "category": "application",
+      "profile": "native"
+    },
+    "yjson_native.NativeBackendFacade.parseDocument|function|public func parseDocument(text: String, options!: JsonReadOptions = JsonReadOptions.defaults): BackendJsonDocument": {
+      "category": "application",
+      "profile": "native"
+    },
+    "yjson_native.NativeBackendFacade.toJsonBytes|function|public func toJsonBytes(value: JsonValueView, options!: JsonWriteOptions = JsonWriteOptions.defaults): Array<Byte>": {
+      "category": "application",
+      "profile": "native"
+    },
+    "yjson_native.NativeBackendFacade.toJsonBytes|function|public func toJsonBytes<T>(value: T, codec!: JsonCodec<T>, options!: JsonWriteOptions = JsonWriteOptions.defaults): Array<Byte>": {
+      "category": "application",
+      "profile": "native"
+    },
+    "yjson_native.NativeBackendFacade.toJsonBytes|function|public func toJsonBytes<T>(value: T, options!: JsonWriteOptions = JsonWriteOptions.defaults): Array<Byte> where T <: GeneratedCodecProviderV1<T>": {
+      "category": "application",
+      "profile": "native"
+    },
+    "yjson_native.NativeBackendFacade.toJson|function|public func toJson(value: JsonValueView, options!: JsonWriteOptions = JsonWriteOptions.defaults): String": {
+      "category": "application",
+      "profile": "native"
+    },
+    "yjson_native.NativeBackendFacade.toJson|function|public func toJson<T>(value: T, codec!: JsonCodec<T>, options!: JsonWriteOptions = JsonWriteOptions.defaults): String": {
+      "category": "application",
+      "profile": "native"
+    },
+    "yjson_native.NativeBackendFacade.toJson|function|public func toJson<T>(value: T, options!: JsonWriteOptions = JsonWriteOptions.defaults): String where T <: GeneratedCodecProviderV1<T>": {
+      "category": "application",
+      "profile": "native"
+    },
+    "yjson_native.NativeBackendFacade.writeJson|function|public func writeJson(value: JsonValueView, output: OutputStream, options!: JsonWriteOptions = JsonWriteOptions.defaults): Unit": {
+      "category": "application",
+      "profile": "native"
+    },
+    "yjson_native.NativeBackendFacade.writeJson|function|public func writeJson<T>(value: T, output: OutputStream, codec!: JsonCodec<T>, options!: JsonWriteOptions = JsonWriteOptions.defaults): Unit": {
+      "category": "application",
+      "profile": "native"
+    },
+    "yjson_native.NativeBackendFacade.writeJson|function|public func writeJson<T>(value: T, output: OutputStream, options!: JsonWriteOptions = JsonWriteOptions.defaults): Unit where T <: GeneratedCodecProviderV1<T>": {
+      "category": "application",
+      "profile": "native"
+    },
+    "yjson_native.NativeBackendFacade|class|public class NativeBackendFacade": {
+      "category": "application",
+      "profile": "native"
+    },
+    "yjson_native.NativeBackends.customNative|property|public static prop customNative: NativeBackendFacade": {
+      "category": "application",
+      "profile": "native"
+    },
+    "yjson_native.NativeBackends|class|public class NativeBackends": {
+      "category": "application",
+      "profile": "native"
+    },
+    "yjson_native_accel.YJsonNativeAccel.initialize|function|public static func initialize(): Unit": {
+      "category": "application",
+      "profile": "native-accel"
+    },
+    "yjson_native_accel.YJsonNativeAccel|class|public class YJsonNativeAccel": {
+      "category": "application",
+      "profile": "native-accel"
+    },
+    "yjson_native_primitives.initializeYJsonNativePrimitivesV1|function|public func initializeYJsonNativePrimitivesV1(): Unit": {
+      "category": "first-party-internal"
+    },
+    "yjson_schema_formats.StandardInternationalFormats.installInto|function|public func installInto(registry: JsonSchemaFormatRegistry): Unit": {
+      "category": "application",
+      "profile": "schema-formats"
+    },
+    "yjson_schema_formats.StandardInternationalFormats|class|public class StandardInternationalFormats <: JsonSchemaFormatProvider": {
+      "category": "application",
+      "profile": "schema-formats"
+    },
+    "yjson_yyjson.YyjsonBackendFacade.fromJson|function|public func fromJson<T>(bytes: Array<Byte>, codec!: JsonCodec<T>, options!: JsonReadOptions = JsonReadOptions.defaults): T": {
+      "category": "application",
+      "profile": "yyjson"
+    },
+    "yjson_yyjson.YyjsonBackendFacade.fromJson|function|public func fromJson<T>(bytes: Array<Byte>, options!: JsonReadOptions = JsonReadOptions.defaults): T where T <: GeneratedCodecProviderV1<T>": {
+      "category": "application",
+      "profile": "yyjson"
+    },
+    "yjson_yyjson.YyjsonBackendFacade.fromJson|function|public func fromJson<T>(input: InputStream, codec!: JsonCodec<T>, options!: JsonReadOptions = JsonReadOptions.defaults): T": {
+      "category": "application",
+      "profile": "yyjson"
+    },
+    "yjson_yyjson.YyjsonBackendFacade.fromJson|function|public func fromJson<T>(input: InputStream, options!: JsonReadOptions = JsonReadOptions.defaults): T where T <: GeneratedCodecProviderV1<T>": {
+      "category": "application",
+      "profile": "yyjson"
+    },
+    "yjson_yyjson.YyjsonBackendFacade.fromJson|function|public func fromJson<T>(text: String, codec!: JsonCodec<T>, options!: JsonReadOptions = JsonReadOptions.defaults): T": {
+      "category": "application",
+      "profile": "yyjson"
+    },
+    "yjson_yyjson.YyjsonBackendFacade.fromJson|function|public func fromJson<T>(text: String, options!: JsonReadOptions = JsonReadOptions.defaults): T where T <: GeneratedCodecProviderV1<T>": {
+      "category": "application",
+      "profile": "yyjson"
+    },
+    "yjson_yyjson.YyjsonBackendFacade.metadata|function|public func metadata(): JsonBackendMetadata": {
+      "category": "application",
+      "profile": "yyjson"
+    },
+    "yjson_yyjson.YyjsonBackendFacade.parseDocument|function|public func parseDocument(bytes: Array<Byte>, options!: JsonReadOptions = JsonReadOptions.defaults): BackendJsonDocument": {
+      "category": "application",
+      "profile": "yyjson"
+    },
+    "yjson_yyjson.YyjsonBackendFacade.parseDocument|function|public func parseDocument(text: String, options!: JsonReadOptions = JsonReadOptions.defaults): BackendJsonDocument": {
+      "category": "application",
+      "profile": "yyjson"
+    },
+    "yjson_yyjson.YyjsonBackendFacade.toJsonBytes|function|public func toJsonBytes(value: JsonValueView, options!: JsonWriteOptions = JsonWriteOptions.defaults): Array<Byte>": {
+      "category": "application",
+      "profile": "yyjson"
+    },
+    "yjson_yyjson.YyjsonBackendFacade.toJsonBytes|function|public func toJsonBytes<T>(value: T, codec!: JsonCodec<T>, options!: JsonWriteOptions = JsonWriteOptions.defaults): Array<Byte>": {
+      "category": "application",
+      "profile": "yyjson"
+    },
+    "yjson_yyjson.YyjsonBackendFacade.toJsonBytes|function|public func toJsonBytes<T>(value: T, options!: JsonWriteOptions = JsonWriteOptions.defaults): Array<Byte> where T <: GeneratedCodecProviderV1<T>": {
+      "category": "application",
+      "profile": "yyjson"
+    },
+    "yjson_yyjson.YyjsonBackendFacade.toJson|function|public func toJson(value: JsonValueView, options!: JsonWriteOptions = JsonWriteOptions.defaults): String": {
+      "category": "application",
+      "profile": "yyjson"
+    },
+    "yjson_yyjson.YyjsonBackendFacade.toJson|function|public func toJson<T>(value: T, codec!: JsonCodec<T>, options!: JsonWriteOptions = JsonWriteOptions.defaults): String": {
+      "category": "application",
+      "profile": "yyjson"
+    },
+    "yjson_yyjson.YyjsonBackendFacade.toJson|function|public func toJson<T>(value: T, options!: JsonWriteOptions = JsonWriteOptions.defaults): String where T <: GeneratedCodecProviderV1<T>": {
+      "category": "application",
+      "profile": "yyjson"
+    },
+    "yjson_yyjson.YyjsonBackendFacade.writeJson|function|public func writeJson(value: JsonValueView, output: OutputStream, options!: JsonWriteOptions = JsonWriteOptions.defaults): Unit": {
+      "category": "application",
+      "profile": "yyjson"
+    },
+    "yjson_yyjson.YyjsonBackendFacade.writeJson|function|public func writeJson<T>(value: T, output: OutputStream, codec!: JsonCodec<T>, options!: JsonWriteOptions = JsonWriteOptions.defaults): Unit": {
+      "category": "application",
+      "profile": "yyjson"
+    },
+    "yjson_yyjson.YyjsonBackendFacade.writeJson|function|public func writeJson<T>(value: T, output: OutputStream, options!: JsonWriteOptions = JsonWriteOptions.defaults): Unit where T <: GeneratedCodecProviderV1<T>": {
+      "category": "application",
+      "profile": "yyjson"
+    },
+    "yjson_yyjson.YyjsonBackendFacade|class|public class YyjsonBackendFacade": {
+      "category": "application",
+      "profile": "yyjson"
+    },
+    "yjson_yyjson.YyjsonBackends.yyjson|property|public static prop yyjson: YyjsonBackendFacade": {
+      "category": "application",
+      "profile": "yyjson"
+    },
+    "yjson_yyjson.YyjsonBackends|class|public class YyjsonBackends": {
+      "category": "application",
+      "profile": "yyjson"
+    }
   }
 }

@@ -17,7 +17,7 @@
 | 精确定位或多结果查询 | `JsonPointer` / `JsonPath` | 统一操作 `JsonValueView` |
 | 更新 JSON | `JsonPatch` / Merge Patch | 默认返回新树，也可选择原地修改 API |
 
-`@JsonValue({...})` 是 `@Json` 的显式别名。literal 中可以使用 `$()` 插入运行时值或动态
+literal 中可以使用 `$()` 插入运行时值或动态
 字符串 key；字段之间必须有逗号，允许尾随逗号。需要 JSON 文本时，对结果调用 `toJson()`。
 `yjson_macros` 源码位于独立仓库 [`lIlIIlIll/yjson_macros`](https://github.com/lIlIIlIll/yjson_macros)；
 应用需要同时声明 `yjson` 和 `yjson_macros` 两个依赖。
@@ -52,8 +52,10 @@ main(): Unit {
 ```
 
 literal 中的普通值在编译期校验，`$()` 用于插入运行时值，也可以用来生成动态字符串
-key。结果是可修改的 `JsonNode`；需要文本时调用 `toJson()`。`@JsonValue` 是
-`@Json` 的显式别名。
+key。结果是可修改的 `JsonNode`；需要文本时调用 `toJson()`。
+
+从旧版本升级到 `0.2.0` 时，将 `@JsonValue(...)` 改为 `@Json(...)`。旧宏不再导出，
+也不保留别名。同步所用的第一方包，在 STS `1.2.0` 下重新编译应用。
 
 ## 转换为已知类型
 
@@ -120,4 +122,3 @@ let yyjson = YyjsonBackends.yyjson
 - 数据模型和所有权：[AST 与只读 Document](ast-and-compact.md)
 - 流的读写和关闭：[Stream I/O](streams.md)
 - 输入限制和错误码：[配置与错误](configuration-and-errors.md)
-

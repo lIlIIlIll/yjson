@@ -7,34 +7,459 @@ import std.sync.AtomicOptionReference
 import std.time.*
 
 /**
- * Backend-neutral semantic reader consumed by typed JSON codecs.
+ * 供手写 codec 读取一个 JSON 值的语义接口。
  *
- * `JsonFastReader` remains a separate generated-code optimization contract;
- * implementations of this interface must preserve the normal configured
- * parsing, resource-limit, and error-location semantics.
+ * 通过 JsonCodec.read 获得 reader。容器必须成对开始与结束；字段名和数组分隔由 reader 管理。读取遵守调用的 JsonReadOptions，错误可带 JSON 路径和源码位置。reader 由 YJson 管理，codec 不应保存或关闭它。
  */
 public interface JsonReader {
+    /**
+     * 返回当前值的 JSON 路径。
+     *
+     * @return 根为 RFC 6901 JSON Pointer 的空串；嵌套值包含字段或数组索引。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer => writer.writeInt64(value)}, {reader =>
+     *     docRequire(reader.path() == "" )
+     *     reader.readInt64()
+     * })
+     * docRequire(YJson.fromJson("7", codec: codec) == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func path(): String
+    /**
+     * 返回当前位置的源码坐标。
+     *
+     * @return 有源码位置信息时返回坐标，否则为 None。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer => writer.writeInt64(value)}, {reader =>
+     *     docRequire(reader.location().isSome())
+     *     reader.readInt64()
+     * })
+     * docRequire(YJson.fromJson("7", codec: codec) == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func location(): Option<JsonLocation>
+    /**
+     * 构造带当前路径和位置的 JSON 错误；此方法不抛出错误，也不消费输入。
+     *
+     * @param message 具体错误原因。
+     * @param code 可供调用方判断的错误码。
+     * @return 带当前读取上下文的异常。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer => writer.writeInt64(value)}, {reader =>
+     *     let problem = reader.error("业务值不符", "business_value")
+     *     docRequire(problem.code == "business_value" && problem.path == "" )
+     *     reader.readInt64()
+     * })
+     * docRequire(YJson.fromJson("7", codec: codec) == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func error(message: String, code: String): JsonException
+    /**
+     * 消费对象的开始符号并进入对象。
+     *
+     * @throws JsonException 当前位置不是对象，或容器深度超限。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer => writer.writeInt64(value)}, {reader =>
+     *     reader.startObject()
+     *     reader.endObject()
+     *     7
+     * })
+     * docRequire(YJson.fromJson("{}", codec: codec) == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func startObject(): Unit
+    /**
+     * 消费对象的结束符号并离开对象。
+     *
+     * @throws JsonException 容器不匹配、字段值未读完或结束符号缺失。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer => writer.writeInt64(value)}, {reader =>
+     *     reader.startObject()
+     *     reader.endObject()
+     *     7
+     * })
+     * docRequire(YJson.fromJson("{}", codec: codec) == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func endObject(): Unit
+    /**
+     * 检查当前对象是否还有字段，不消费字段名称。
+     *
+     * @return 对象尚未到结束符号时为 true。
+     * @throws JsonException 当前不在对象中。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer => writer.writeInt64(value)}, {reader =>
+     *     reader.startObject()
+     *     docRequire(reader.hasObjectField())
+     *     docRequire(reader.readName() == "n")
+     *     let result = reader.readInt64()
+     *     docRequire(!reader.hasObjectField())
+     *     reader.endObject()
+     *     result
+     * })
+     * docRequire(YJson.fromJson("{\"n\":7}", codec: codec) == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func hasObjectField(): Bool
+    /**
+     * 消费当前对象的下一个字段名称和冒号。
+     *
+     * @return 反转义后的字段名称。
+     * @throws JsonException 字段语法无效或违反重复键策略。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer => writer.writeInt64(value)}, {reader =>
+     *     reader.startObject()
+     *     docRequire(reader.readName() == "n")
+     *     let result = reader.readInt64()
+     *     reader.endObject()
+     *     result
+     * })
+     * docRequire(YJson.fromJson("{\"n\":7}", codec: codec) == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func readName(): String
+    /**
+     * 消费数组的开始符号并进入数组。
+     *
+     * @throws JsonException 当前位置不是数组，或容器深度超限。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer => writer.writeInt64(value)}, {reader =>
+     *     reader.startArray()
+     *     reader.endArray()
+     *     7
+     * })
+     * docRequire(YJson.fromJson("[]", codec: codec) == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func startArray(): Unit
+    /**
+     * 消费数组的结束符号并离开数组。
+     *
+     * @throws JsonException 容器不匹配或结束符号缺失。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer => writer.writeInt64(value)}, {reader =>
+     *     reader.startArray()
+     *     reader.endArray()
+     *     7
+     * })
+     * docRequire(YJson.fromJson("[]", codec: codec) == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func endArray(): Unit
+    /**
+     * 检查当前数组是否还有元素，不消费下一个值。
+     *
+     * @return 数组尚未到结束符号时为 true。
+     * @throws JsonException 当前不在数组中。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer => writer.writeInt64(value)}, {reader =>
+     *     reader.startArray()
+     *     docRequire(reader.hasArrayItem())
+     *     let result = reader.readInt64()
+     *     docRequire(!reader.hasArrayItem())
+     *     reader.endArray()
+     *     result
+     * })
+     * docRequire(YJson.fromJson("[7]", codec: codec) == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func hasArrayItem(): Bool
+    /**
+     * 若下一个值为 null 则消费它；其他值保持可读。
+     *
+     * @return 已消费 null 时为 true，否则为 false。
+     * @throws JsonException null 的语法无效或资源限制被触发。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer => writer.writeInt64(value)}, {reader =>
+     *     docRequire(reader.tryReadNull())
+     *     7
+     * })
+     * docRequire(YJson.fromJson("null", codec: codec) == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func tryReadNull(): Bool
+    /**
+     * 消费一个 JSON null。
+     *
+     * @throws JsonException 下一个值不是 null。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer => writer.writeInt64(value)}, {reader =>
+     *     reader.readNull()
+     *     7
+     * })
+     * docRequire(YJson.fromJson("null", codec: codec) == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func readNull(): Unit
+    /**
+     * 消费一个 JSON 布尔值。
+     *
+     * @return 对应的 Bool 值。
+     * @throws JsonException 下一个值不是 JSON 布尔值。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer => writer.writeInt64(value)}, {reader =>
+     *     docRequire(reader.readBool())
+     *     7
+     * })
+     * docRequire(YJson.fromJson("true", codec: codec) == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func readBool(): Bool
+    /**
+     * 消费一个 JSON 字符串并反转义。
+     *
+     * @return 解码后的字符串。
+     * @throws JsonException 字符串、UTF-8 或转义无效，或字符串预算超限。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer => writer.writeInt64(value)}, {reader =>
+     *     docRequire(reader.readString() == "你好")
+     *     7
+     * })
+     * docRequire(YJson.fromJson("\"你好\"", codec: codec) == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func readString(): String
+    /**
+     * 消费一个 Int64 范围内的 JSON 整数。
+     *
+     * @return 有符号整数。
+     * @throws JsonException 不是整数或超出 Int64 范围。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer => writer.writeInt64(value)}, {reader =>
+     *     reader.readInt64()
+     * })
+     * docRequire(YJson.fromJson("7", codec: codec) == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func readInt64(): Int64
+    /**
+     * 消费一个 UInt64 范围内的非负 JSON 整数。
+     *
+     * @return 无符号整数。
+     * @throws JsonException 数字为负、不是整数或超出 UInt64 范围。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer => writer.writeInt64(value)}, {reader =>
+     *     docRequire(reader.readUInt64() == 7u64)
+     *     7
+     * })
+     * docRequire(YJson.fromJson("7", codec: codec) == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func readUInt64(): UInt64
+    /**
+     * 消费 JSON 数字并转换为 Float64。
+     *
+     * @return 转换后的浮点数。
+     * @throws JsonException 数字语法无效；数值转换异常可继续传播。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer => writer.writeInt64(value)}, {reader =>
+     *     docRequire(reader.readFloat64() == 7.0)
+     *     7
+     * })
+     * docRequire(YJson.fromJson("7.0", codec: codec) == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func readFloat64(): Float64
+    /**
+     * 消费 JSON 整数并解析为任意精度整数。
+     *
+     * @return 数字对应的 BigInt。
+     * @throws JsonException 输入不是有效数字；数值转换异常可继续传播。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer => writer.writeInt64(value)}, {reader =>
+     *     docRequire(reader.readBigInt() == BigInt.parse("7"))
+     *     7
+     * })
+     * docRequire(YJson.fromJson("7", codec: codec) == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func readBigInt(): BigInt
+    /**
+     * 消费 JSON 数字并解析为 Decimal。
+     *
+     * @return 数字对应的 Decimal。
+     * @throws JsonException 输入不是有效数字；数值转换异常可继续传播。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer => writer.writeInt64(value)}, {reader =>
+     *     docRequire(reader.readDecimal() == Decimal.parse("7.25"))
+     *     7
+     * })
+     * docRequire(YJson.fromJson("7.25", codec: codec) == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func readDecimal(): Decimal
+    /**
+     * 消费一个 JSON 数字并保留它的字面文本。
+     *
+     * @return 未转换成机器数值的数字文本。
+     * @throws JsonException 输入不符合 JSON 数字语法。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer => writer.writeInt64(value)}, {reader =>
+     *     docRequire(reader.readNumberLiteral() == "7e2")
+     *     7
+     * })
+     * docRequire(YJson.fromJson("7e2", codec: codec) == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func readNumberLiteral(): String
+    /**
+     * 消费并跳过一个完整 JSON 值，继续校验语法和读取预算。
+     *
+     * @throws JsonException 被跳过的值无效或超出资源限制。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer => writer.writeInt64(value)}, {reader =>
+     *     reader.skipValue()
+     *     7
+     * })
+     * docRequire(YJson.fromJson("{\"nested\":[1,null]}", codec: codec) == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func skipValue(): Unit
+    /**
+     * 消费一个 JSON 值并物化为可变节点树。
+     *
+     * @return 与输入值对应的 JsonNode。
+     * @throws JsonException 输入无效或超出读取预算。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer => writer.writeInt64(value)}, {reader =>
+     *     docRequire(reader.readNode().asInt64() == 7)
+     *     7
+     * })
+     * docRequire(YJson.fromJson("7", codec: codec) == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func readNode(): JsonNode
 }
 
@@ -57,22 +482,280 @@ public interface GeneratedReplayValueV1 <: Resource {
 }
 
 /**
- * Backend-neutral semantic writer consumed by typed JSON codecs.
+ * 供手写 codec 输出一个 JSON 值的语义接口。
+ *
+ * 通过 JsonCodec.write 获得 writer。对象中先写字段名再写值，容器必须成对开始与结束。调用遵守 JsonWriteOptions；非有限浮点数和非法数值字面量会失败。codec 不负责结束文档或关闭调用方的流。
  */
 public interface JsonWriter {
+    /**
+     * 返回当前输出值的 JSON 路径。
+     *
+     * @return 根为 RFC 6901 JSON Pointer 的空串；嵌套值包含字段或数组索引。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer =>
+     *     docRequire(writer.path() == "" )
+     *     writer.writeInt64(value)
+     * }, {reader => reader.readInt64()})
+     * docRequire(YJson.toJson(7, codec: codec) == "7")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func path(): String
+    /**
+     * 构造带当前输出路径的 JSON 错误；此方法本身不抛出错误。
+     *
+     * @param message 具体错误原因。
+     * @param code 可供调用方判断的错误码。
+     * @return 带当前路径的异常。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer =>
+     *     let problem = writer.error("业务值不符", "business_value")
+     *     docRequire(problem.code == "business_value" && problem.path == "" )
+     *     writer.writeInt64(value)
+     * }, {reader => reader.readInt64()})
+     * docRequire(YJson.toJson(7, codec: codec) == "7")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func error(message: String, code: String): JsonException
+    /**
+     * 开始一个 JSON 对象。
+     *
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer =>
+     *     writer.startObject()
+     *     writer.endObject()
+     * }, {reader => reader.readInt64()})
+     * docRequire(YJson.toJson(7, codec: codec) == "{}")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func startObject(): Unit
+    /**
+     * 结束当前 JSON 对象。
+     *
+     * @throws JsonException 输出状态不匹配、值无效或输出预算超限；流的 I/O 异常可传播。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer =>
+     *     writer.startObject()
+     *     writer.endObject()
+     * }, {reader => reader.readInt64()})
+     * docRequire(YJson.toJson(7, codec: codec) == "{}")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func endObject(): Unit
+    /**
+     * 开始一个 JSON 数组。
+     *
+     * @throws JsonException 输出状态不匹配、值无效或输出预算超限；流的 I/O 异常可传播。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer =>
+     *     writer.startArray()
+     *     writer.endArray()
+     * }, {reader => reader.readInt64()})
+     * docRequire(YJson.toJson(7, codec: codec) == "[]")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func startArray(): Unit
+    /**
+     * 结束当前 JSON 数组。
+     *
+     * @throws JsonException 输出状态不匹配、值无效或输出预算超限；流的 I/O 异常可传播。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer =>
+     *     writer.startArray()
+     *     writer.endArray()
+     * }, {reader => reader.readInt64()})
+     * docRequire(YJson.toJson(7, codec: codec) == "[]")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func endArray(): Unit
+    /**
+     * 向当前对象写入字段名称，并准备接收一个字段值。
+     *
+     * @param name 未转义的字段名称，由 writer 负责转义。
+     * @throws JsonException 输出状态不匹配、值无效或输出预算超限；流的 I/O 异常可传播。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer =>
+     *     writer.startObject()
+     *     writer.writeName("n")
+     *     writer.writeInt64(value)
+     *     writer.endObject()
+     * }, {reader => reader.readInt64()})
+     * docRequire(YJson.toJson(7, codec: codec) == "{\"n\":7}")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func writeName(name: String): Unit
+    /**
+     * 写入 JSON null。
+     *
+     * @throws JsonException 输出状态不匹配、值无效或输出预算超限；流的 I/O 异常可传播。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer =>
+     *     writer.writeNull()
+     * }, {reader => reader.readInt64()})
+     * docRequire(YJson.toJson(7, codec: codec) == "null")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func writeNull(): Unit
+    /**
+     * 写入 JSON 布尔值。
+     *
+     * @param value 待输出的布尔值。
+     * @throws JsonException 输出状态不匹配、值无效或输出预算超限；流的 I/O 异常可传播。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer =>
+     *     writer.writeBool(true)
+     * }, {reader => reader.readInt64()})
+     * docRequire(YJson.toJson(7, codec: codec) == "true")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func writeBool(value: Bool): Unit
+    /**
+     * 写入有符号整数的 JSON 数字表示。
+     *
+     * @param value 待输出的 Int64。
+     * @throws JsonException 输出状态不匹配、值无效或输出预算超限；流的 I/O 异常可传播。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer =>
+     *     writer.writeInt64(value)
+     * }, {reader => reader.readInt64()})
+     * docRequire(YJson.toJson(7, codec: codec) == "7")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func writeInt64(value: Int64): Unit
+    /**
+     * 写入无符号整数的 JSON 数字表示。
+     *
+     * @param value 待输出的 UInt64。
+     * @throws JsonException 输出状态不匹配、值无效或输出预算超限；流的 I/O 异常可传播。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer =>
+     *     writer.writeUInt64(7u64)
+     * }, {reader => reader.readInt64()})
+     * docRequire(YJson.toJson(7, codec: codec) == "7")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func writeUInt64(value: UInt64): Unit
+    /**
+     * 写入有限浮点数的 JSON 数字表示。
+     *
+     * @param value 待输出的有限 Float64；NaN 和无穷大会失败。
+     * @throws JsonException 输出状态不匹配、值无效或输出预算超限；流的 I/O 异常可传播。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer =>
+     *     writer.writeFloat64(7.25)
+     * }, {reader => reader.readInt64()})
+     * docRequire(YJson.fromJson(YJson.toJson(7, codec: codec), codec: JsonCodecs.float64) == 7.25)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func writeFloat64(value: Float64): Unit
+    /**
+     * 校验并原样写入一个 JSON 数字字面量。
+     *
+     * @param value 满足 JSON 数字语法的文本；不接受引号或前后空白。
+     * @throws JsonException 输出状态不匹配、值无效或输出预算超限；流的 I/O 异常可传播。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer =>
+     *     writer.writeNumberLiteral("7e2")
+     * }, {reader => reader.readInt64()})
+     * docRequire(YJson.toJson(7, codec: codec) == "7e2")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func writeNumberLiteral(value: String): Unit
+    /**
+     * 转义并写入一个 JSON 字符串。
+     *
+     * @param value 未转义的字符串内容。
+     * @throws JsonException 输出状态不匹配、值无效或输出预算超限；流的 I/O 异常可传播。
+     *
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer =>
+     *     writer.writeString("你好")
+     * }, {reader => reader.readInt64()})
+     * docRequire(YJson.toJson(7, codec: codec) == "\"你好\"")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
+     */
     func writeString(value: String): Unit
 }
 
@@ -183,28 +866,48 @@ public func jsonTryWriteCompactInt64ArrayMap(
 }
 
 /**
- * Defines how one value of T is written to and read from JSON.
+ * 定义 T 与一个 JSON 值之间的双向转换。
  *
- * Implement write and read for the same wire representation. A codec processes one value using the supplied reader or writer; it does not own the stream or finish the enclosing document. YJson performs end-of-document validation and output finalization.
+ * write 和 read 必须采用相同的表示。实现只处理分配给它的一个值，不关闭流，不结束整个文档。YJson 负责验证输入末尾并完成输出。示例使用 core-codec profile 的 DocCallbackCodec，将回调接入真实 YJson reader/writer。
  */
 public interface JsonCodec<T> {
     /**
-     * Writes one value using this codec's JSON representation.
+     * 写入一个值，保持调用方拥有文档和流的生命周期。
      *
-     * Do not finish or close the enclosing writer; YJson or the caller owns that lifecycle.
+     * @param value 待编码的应用值。
+     * @param writer 在当前值位置开始输出的 writer。
+     * @throws JsonException JSON 表示不匹配；应用 codec 与 I/O 异常可传播。
      *
-     * @param value Value to encode.
-     * @param writer Writer positioned where this codec must emit one JSON value.
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer => writer.writeInt64(value)}, {reader => reader.readInt64()})
+     * docRequire(YJson.toJson(7, codec: codec) == "7")
+     * docRequire(YJson.fromJson("7", codec: codec) == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     func write(value: T, writer: JsonWriter): Unit
 
     /**
-     * Reads one JSON value using this codec's representation.
+     * 读取分配给此 codec 的一个值，不消费其后的另一个值。
      *
-     * Consume the value assigned to this codec. Enclosing-document end validation belongs to YJson or the caller.
+     * @param reader 位于下一个 JSON 值的 reader。
+     * @return 解码后的应用值。
+     * @throws JsonException JSON 表示不匹配；应用 codec 与 I/O 异常可传播。
      *
-     * @param reader Reader positioned at the next JSON value.
-     * @return Decoded value.
+     * @example 真实消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = DocCallbackCodec<Int64>({value, writer => writer.writeInt64(value)}, {reader => reader.readInt64()})
+     * docRequire(YJson.toJson(7, codec: codec) == "7")
+     * docRequire(YJson.fromJson("7", codec: codec) == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     func read(reader: JsonReader): T
 }
@@ -226,10 +929,8 @@ public interface GeneratedCodecProviderV1<T> {
 }
 
 /**
- * Static dispatch seam for generated compact codecs. The explicit codec
- * argument remains part of the public overload for source compatibility, but
- * generated model types can route the hot path through their own static
- * provider without an erased codec-interface call on every value.
+ * 生成 compact codec 的静态分派接口。显式 codec 参数表达当前能力，
+ * 生成的模型类型可通过自身的静态 provider 写入，减少逐值接口分派。
  */
 public interface GeneratedCompactCodecProviderV1<T> {
     static func generatedCompactRawV1(value: T, writer: JsonDirectWriter): Unit
@@ -2589,9 +3290,9 @@ private func releaseGeneratedCompactWriter(writer: JsonDirectWriter): Unit {
 }
 
 /**
- * Entry points for typed JSON conversion, value-view output, and managed documents.
+ * JSON 编解码、只读视图输出和托管文档的应用入口。
  *
- * Overloads without codec: use the codec generated for T. Explicit codec: overloads also support hand-written codecs. Each read consumes one complete JSON document and rejects trailing non-whitespace data. Streams remain caller-owned. Stream output is not transactional: a failure may leave a written prefix. JSON failures use JsonException; I/O and custom-codec exceptions may propagate unchanged. Initialize optional native acceleration before the first ordinary YJson operation.
+ * 无 codec 参数的重载采用 T 的生成 codec；显式 codec 重载也接受手写 codec。每次读取消费一个完整文档，输入输出流由调用方管理。可选原生加速须在进程第一次普通 YJson 操作前初始化。示例的 core-codec profile 提供完整模型和导入。
  */
 public class YJson {
     /**
@@ -2622,14 +3323,28 @@ public class YJson {
     }
 
     /**
-     * Parses a complete JSON document into GC-managed immutable storage.
+     * 将一个完整 JSON 文档解析为由 GC 管理的只读文档。
      *
-     * This is the managed document API, not an explicitly closeable native backend. Use materialize when a mutable copy is needed.
+     * 借用不可变字符串的 UTF-8 存储，并由文档保留字符串所有者。需要可变节点时调用 materialize；文档无需显式关闭。
      *
-     * @param text One complete JSON document as a string.
-     * @param config Parsing policies and positive resource limits for this document.
-     * @return Managed document whose root is a read-only view.
-     * @throws JsonException The input is invalid JSON or exceeds a configured resource limit.
+     * @param text 一个完整的 JSON 文本。
+     * @param config 解析策略与正数资源限制；默认 JsonReadOptions.defaults。
+     * @return 具有只读根视图的托管文档。
+     * @throws JsonException 输入不是有效 JSON，或超过解析资源限制。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let text = "7"
+     * let bytes = unsafe { text.rawData().clone() }
+     * docRequire(YJson.parseDocument(text).root().asInt64() == 7)
+     * let owned = YJson.parseDocument(bytes)
+     * bytes[0] = b'9'
+     * docRequire(owned.root().asInt64() == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static func parseDocument(text: String,
         config!: JsonReadOptions = JsonReadOptions.defaults): JsonDocument {
@@ -2638,14 +3353,28 @@ public class YJson {
     }
 
     /**
-     * Parses a complete JSON document into GC-managed immutable storage.
+     * 将一个完整 JSON 文档解析为由 GC 管理的只读文档。
      *
-     * This is the managed document API, not an explicitly closeable native backend. Use materialize when a mutable copy is needed.
+     * 复制输入字节后解析，调用方随后修改原数组不影响返回文档。需要可变节点时调用 materialize；文档无需显式关闭。
      *
-     * @param bytes One complete JSON document encoded as UTF-8 bytes.
-     * @param config Parsing policies and positive resource limits for this document.
-     * @return Managed document whose root is a read-only view.
-     * @throws JsonException The input is invalid JSON or exceeds a configured resource limit.
+     * @param bytes 一个完整文档的 UTF-8 字节。
+     * @param config 解析策略与正数资源限制；默认 JsonReadOptions.defaults。
+     * @return 具有只读根视图的托管文档。
+     * @throws JsonException 输入不是有效 JSON，或超过解析资源限制。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let text = "7"
+     * let bytes = unsafe { text.rawData().clone() }
+     * docRequire(YJson.parseDocument(text).root().asInt64() == 7)
+     * let owned = YJson.parseDocument(bytes)
+     * bytes[0] = b'9'
+     * docRequire(owned.root().asInt64() == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static func parseDocument(bytes: Array<Byte>,
         config!: JsonReadOptions = JsonReadOptions.defaults): JsonDocument {
@@ -2654,14 +3383,24 @@ public class YJson {
     }
 
     /**
-     * Encodes a value as a JSON string.
+     * 将一个值编码为 JSON 文本。
      *
-     * Reads the supplied view without materializing a mutable tree first.
+     * 直接读取视图，无需先物化可变树。
      *
-     * @param value Value to encode.
-     * @param options Formatting and output limits; defaults to JsonWriteOptions.defaults.
-     * @return Serialized JSON text.
-     * @throws JsonException The value or output violates the JSON writer contract or its resource limits.
+     * @param value 待编码的只读视图。
+     * @param options 格式与输出预算；默认 JsonWriteOptions.defaults。
+     * @return 序列化后的 JSON 文本。
+     * @throws JsonException 输入不是有效 JSON，或超过解析资源限制。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let value: JsonValueView = JsonNode.int64(7)
+     * docRequire(YJson.toJson(value) == "7")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static func toJson(value: JsonValueView,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): String {
@@ -2672,14 +3411,24 @@ public class YJson {
     }
 
     /**
-     * Encodes a value as UTF-8 JSON bytes.
+     * 将一个值编码为 UTF-8 JSON 字节。
      *
-     * Reads the supplied view without materializing a mutable tree first.
+     * 直接读取视图，无需先物化可变树。
      *
-     * @param value Value to encode.
-     * @param options Formatting and output limits; defaults to JsonWriteOptions.defaults.
-     * @return Serialized JSON bytes.
-     * @throws JsonException The value or output violates the JSON writer contract or its resource limits.
+     * @param value 待编码的只读视图。
+     * @param options 格式与输出预算；默认 JsonWriteOptions.defaults。
+     * @return 序列化后的 UTF-8 字节。
+     * @throws JsonException JSON 语法、值或资源限制无效；自定义 codec 与 I/O 异常可传播。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let value: JsonValueView = JsonNode.int64(7)
+     * docRequire(String.fromUtf8(YJson.toJsonBytes(value)) == "7")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static func toJsonBytes(value: JsonValueView,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): Array<Byte> {
@@ -2690,14 +3439,26 @@ public class YJson {
     }
 
     /**
-     * Writes a JSON value to a caller-owned output stream.
+     * 向调用方的输出流写入一个 JSON 值。
      *
-     * Reads the supplied view without materializing a mutable tree first. The stream is not closed. Failure can leave a written prefix; no rollback is performed.
+     * 直接读取视图，无需先物化可变树。流归调用方所有，函数不关闭它；失败时可能已写入部分内容，不回滚输出。
      *
-     * @param value Value to encode.
-     * @param output Caller-owned output stream. This operation does not close it.
-     * @param options Formatting and output limits; defaults to JsonWriteOptions.defaults.
-     * @throws JsonException The value or output violates the JSON writer contract or its resource limits.
+     * @param value 待编码的只读视图。
+     * @param output 调用方拥有的输出流。
+     * @param options 格式与输出预算；默认 JsonWriteOptions.defaults。
+     * @throws JsonException JSON 语法、值或资源限制无效；自定义 codec 与 I/O 异常可传播。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let value: JsonValueView = JsonNode.int64(7)
+     * let output = YJsonMemoryOutputStream()
+     * YJson.writeJson(value, output)
+     * docRequire(output.toUtf8String() == "7")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static func writeJson(value: JsonValueView, output: OutputStream,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): Unit {
@@ -2711,14 +3472,28 @@ public class YJson {
     }
 
     /**
-     * Encodes a value as a JSON string.
+     * 将一个值编码为 JSON 文本。
      *
-     * Uses the codec generated for T.
+     * 采用 T 的生成 codec。
      *
-     * @param value Value to encode.
-     * @param options Formatting and output limits; defaults to JsonWriteOptions.defaults.
-     * @return Serialized JSON text.
-     * @throws JsonException The value or output violates the JSON writer contract or its resource limits.
+     * @param value 待编码的应用值。
+     * @param options 格式与输出预算；默认 JsonWriteOptions.defaults。
+     * @return 序列化后的 JSON 文本。
+     * @throws JsonException JSON 语法、值或资源限制无效；自定义 codec 与 I/O 异常可传播。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let value = DocCodecPoint(7)
+     * let semantic: JsonCodec<DocCodecPoint> = DocCodecPointJson
+     * let expected = "{\"x\":7}"
+     * docRequire(YJson.toJson<DocCodecPoint>(value) == expected)
+     * docRequire(YJson.toJson<DocCodecPoint>(value, codec: DocCodecPointJson) == expected)
+     * docRequire(YJson.toJson<DocCodecPoint>(value, codec: semantic) == expected)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static func toJson<T>(value: T,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): String where T <: GeneratedCodecProviderV1<T> {
@@ -2726,15 +3501,29 @@ public class YJson {
     }
 
     /**
-     * Encodes a value as a JSON string.
+     * 将一个值编码为 JSON 文本。
      *
-     * Uses the supplied codec.
+     * 紧凑输出路径调用 T 的静态生成 provider；格式或预算要求语义写入时使用传入 codec。codec 必须与 T 的生成 provider 配套，不可用它替换此重载的紧凑表示。
      *
-     * @param value Value to encode.
-     * @param codec Codec defining the JSON representation of the value.
-     * @param options Formatting and output limits; defaults to JsonWriteOptions.defaults.
-     * @return Serialized JSON text.
-     * @throws JsonException The value or output violates the JSON writer contract or its resource limits.
+     * @param value 待编码的应用值。
+     * @param codec 定义值的 JSON 表示的 codec。
+     * @param options 格式与输出预算；默认 JsonWriteOptions.defaults。
+     * @return 序列化后的 JSON 文本。
+     * @throws JsonException JSON 语法、值或资源限制无效；自定义 codec 与 I/O 异常可传播。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let value = DocCodecPoint(7)
+     * let semantic: JsonCodec<DocCodecPoint> = DocCodecPointJson
+     * let expected = "{\"x\":7}"
+     * docRequire(YJson.toJson<DocCodecPoint>(value) == expected)
+     * docRequire(YJson.toJson<DocCodecPoint>(value, codec: DocCodecPointJson) == expected)
+     * docRequire(YJson.toJson<DocCodecPoint>(value, codec: semantic) == expected)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static func toJson<T>(value: T,
         codec!: GeneratedCompactCursorWriteCodecV1<T>,
@@ -2744,15 +3533,29 @@ public class YJson {
     }
 
     /**
-     * Encodes a value as a JSON string.
+     * 将一个值编码为 JSON 文本。
      *
-     * Uses the supplied codec.
+     * 采用传入的 codec。
      *
-     * @param value Value to encode.
-     * @param codec Codec defining the JSON representation of the value.
-     * @param options Formatting and output limits; defaults to JsonWriteOptions.defaults.
-     * @return Serialized JSON text.
-     * @throws JsonException The value or output violates the JSON writer contract or its resource limits.
+     * @param value 待编码的应用值。
+     * @param codec 定义值的 JSON 表示的 codec。
+     * @param options 格式与输出预算；默认 JsonWriteOptions.defaults。
+     * @return 序列化后的 JSON 文本。
+     * @throws JsonException JSON 语法、值或资源限制无效；自定义 codec 与 I/O 异常可传播。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let value = DocCodecPoint(7)
+     * let semantic: JsonCodec<DocCodecPoint> = DocCodecPointJson
+     * let expected = "{\"x\":7}"
+     * docRequire(YJson.toJson<DocCodecPoint>(value) == expected)
+     * docRequire(YJson.toJson<DocCodecPoint>(value, codec: DocCodecPointJson) == expected)
+     * docRequire(YJson.toJson<DocCodecPoint>(value, codec: semantic) == expected)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static func toJson<T>(value: T, codec!: JsonCodec<T>,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): String {
@@ -2760,14 +3563,28 @@ public class YJson {
     }
 
     /**
-     * Encodes a value as UTF-8 JSON bytes.
+     * 将一个值编码为 UTF-8 JSON 字节。
      *
-     * Uses the codec generated for T.
+     * 采用 T 的生成 codec。
      *
-     * @param value Value to encode.
-     * @param options Formatting and output limits; defaults to JsonWriteOptions.defaults.
-     * @return Serialized JSON bytes.
-     * @throws JsonException The value or output violates the JSON writer contract or its resource limits.
+     * @param value 待编码的应用值。
+     * @param options 格式与输出预算；默认 JsonWriteOptions.defaults。
+     * @return 序列化后的 UTF-8 字节。
+     * @throws JsonException JSON 语法、值或资源限制无效；自定义 codec 与 I/O 异常可传播。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let value = DocCodecPoint(7)
+     * let semantic: JsonCodec<DocCodecPoint> = DocCodecPointJson
+     * let expected = "{\"x\":7}"
+     * docRequire(String.fromUtf8(YJson.toJsonBytes<DocCodecPoint>(value)) == expected)
+     * docRequire(String.fromUtf8(YJson.toJsonBytes<DocCodecPoint>(value, codec: DocCodecPointJson)) == expected)
+     * docRequire(String.fromUtf8(YJson.toJsonBytes<DocCodecPoint>(value, codec: semantic)) == expected)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static func toJsonBytes<T>(value: T,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): Array<Byte> where T <: GeneratedCodecProviderV1<T> {
@@ -2775,15 +3592,29 @@ public class YJson {
     }
 
     /**
-     * Encodes a value as UTF-8 JSON bytes.
+     * 将一个值编码为 UTF-8 JSON 字节。
      *
-     * Uses the supplied codec.
+     * 采用传入的 codec。
      *
-     * @param value Value to encode.
-     * @param codec Codec defining the JSON representation of the value.
-     * @param options Formatting and output limits; defaults to JsonWriteOptions.defaults.
-     * @return Serialized JSON bytes.
-     * @throws JsonException The value or output violates the JSON writer contract or its resource limits.
+     * @param value 待编码的应用值。
+     * @param codec 定义值的 JSON 表示的 codec。
+     * @param options 格式与输出预算；默认 JsonWriteOptions.defaults。
+     * @return 序列化后的 UTF-8 字节。
+     * @throws JsonException JSON 语法、值或资源限制无效；自定义 codec 与 I/O 异常可传播。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let value = DocCodecPoint(7)
+     * let semantic: JsonCodec<DocCodecPoint> = DocCodecPointJson
+     * let expected = "{\"x\":7}"
+     * docRequire(String.fromUtf8(YJson.toJsonBytes<DocCodecPoint>(value)) == expected)
+     * docRequire(String.fromUtf8(YJson.toJsonBytes<DocCodecPoint>(value, codec: DocCodecPointJson)) == expected)
+     * docRequire(String.fromUtf8(YJson.toJsonBytes<DocCodecPoint>(value, codec: semantic)) == expected)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static func toJsonBytes<T>(value: T,
         codec!: GeneratedCompactCursorWriteCodecV1<T>,
@@ -2792,15 +3623,29 @@ public class YJson {
     }
 
     /**
-     * Encodes a value as UTF-8 JSON bytes.
+     * 将一个值编码为 UTF-8 JSON 字节。
      *
-     * Uses the supplied codec.
+     * 采用传入的 codec。
      *
-     * @param value Value to encode.
-     * @param codec Codec defining the JSON representation of the value.
-     * @param options Formatting and output limits; defaults to JsonWriteOptions.defaults.
-     * @return Serialized JSON bytes.
-     * @throws JsonException The value or output violates the JSON writer contract or its resource limits.
+     * @param value 待编码的应用值。
+     * @param codec 定义值的 JSON 表示的 codec。
+     * @param options 格式与输出预算；默认 JsonWriteOptions.defaults。
+     * @return 序列化后的 UTF-8 字节。
+     * @throws JsonException JSON 语法、值或资源限制无效；自定义 codec 与 I/O 异常可传播。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let value = DocCodecPoint(7)
+     * let semantic: JsonCodec<DocCodecPoint> = DocCodecPointJson
+     * let expected = "{\"x\":7}"
+     * docRequire(String.fromUtf8(YJson.toJsonBytes<DocCodecPoint>(value)) == expected)
+     * docRequire(String.fromUtf8(YJson.toJsonBytes<DocCodecPoint>(value, codec: DocCodecPointJson)) == expected)
+     * docRequire(String.fromUtf8(YJson.toJsonBytes<DocCodecPoint>(value, codec: semantic)) == expected)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static func toJsonBytes<T>(value: T, codec!: JsonCodec<T>,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): Array<Byte> {
@@ -2808,14 +3653,30 @@ public class YJson {
     }
 
     /**
-     * Writes a JSON value to a caller-owned output stream.
+     * 向调用方的输出流写入一个 JSON 值。
      *
-     * Uses the codec generated for T. The stream is not closed. Failure can leave a written prefix; no rollback is performed.
+     * 采用 T 的生成 codec。流归调用方所有，函数不关闭它；失败时可能已写入部分内容，不回滚输出。
      *
-     * @param value Value to encode.
-     * @param output Caller-owned output stream. This operation does not close it.
-     * @param options Formatting and output limits; defaults to JsonWriteOptions.defaults.
-     * @throws JsonException The value or output violates the JSON writer contract or its resource limits.
+     * @param value 待编码的应用值。
+     * @param output 调用方拥有的输出流。
+     * @param options 格式与输出预算；默认 JsonWriteOptions.defaults。
+     * @throws JsonException JSON 语法、值或资源限制无效；自定义 codec 与 I/O 异常可传播。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let value = DocCodecPoint(7)
+     * let generated = YJsonMemoryOutputStream()
+     * YJson.writeJson<DocCodecPoint>(value, generated)
+     * docRequire(generated.toUtf8String() == "{\"x\":7}")
+     * let explicitCodec = YJsonMemoryOutputStream()
+     * let semantic: JsonCodec<DocCodecPoint> = DocCodecPointJson
+     * YJson.writeJson<DocCodecPoint>(value, explicitCodec, codec: semantic)
+     * docRequire(explicitCodec.toUtf8String() == "{\"x\":7}")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static func writeJson<T>(value: T, output: OutputStream,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): Unit where T <: GeneratedCodecProviderV1<T> {
@@ -2823,15 +3684,31 @@ public class YJson {
     }
 
     /**
-     * Writes a JSON value to a caller-owned output stream.
+     * 向调用方的输出流写入一个 JSON 值。
      *
-     * Uses the supplied codec. The stream is not closed. Failure can leave a written prefix; no rollback is performed.
+     * 采用传入的 codec。流归调用方所有，函数不关闭它；失败时可能已写入部分内容，不回滚输出。
      *
-     * @param value Value to encode.
-     * @param output Caller-owned output stream. This operation does not close it.
-     * @param codec Codec defining the JSON representation of the value.
-     * @param options Formatting and output limits; defaults to JsonWriteOptions.defaults.
-     * @throws JsonException The value or output violates the JSON writer contract or its resource limits.
+     * @param value 待编码的应用值。
+     * @param output 调用方拥有的输出流。
+     * @param codec 定义值的 JSON 表示的 codec。
+     * @param options 格式与输出预算；默认 JsonWriteOptions.defaults。
+     * @throws JsonException JSON 语法、值或资源限制无效；自定义 codec 与 I/O 异常可传播。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let value = DocCodecPoint(7)
+     * let generated = YJsonMemoryOutputStream()
+     * YJson.writeJson<DocCodecPoint>(value, generated)
+     * docRequire(generated.toUtf8String() == "{\"x\":7}")
+     * let explicitCodec = YJsonMemoryOutputStream()
+     * let semantic: JsonCodec<DocCodecPoint> = DocCodecPointJson
+     * YJson.writeJson<DocCodecPoint>(value, explicitCodec, codec: semantic)
+     * docRequire(explicitCodec.toUtf8String() == "{\"x\":7}")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static func writeJson<T>(value: T, output: OutputStream, codec!: JsonCodec<T>,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): Unit {
@@ -2839,14 +3716,33 @@ public class YJson {
     }
 
     /**
-     * Decodes exactly one complete JSON document into T.
+     * 将一个完整 JSON 文档解码为 T，并拒绝尾随的非空白数据。
      *
-     * Uses the codec generated for T. Trailing non-whitespace data is rejected; this is not a multi-document stream reader.
+     * 采用 T 的生成 codec。
      *
-     * @param text One complete JSON document as a string.
-     * @param options Parsing and decoding policies; defaults to JsonReadOptions.defaults.
-     * @return Decoded value.
-     * @throws JsonException JSON syntax, decoded value, or resource limits are invalid.
+     * @param text 一个完整的 JSON 文本。
+     * @param options 读取策略与资源限制；默认 JsonReadOptions.defaults。
+     * @return 解码后的应用值。
+     * @throws JsonException JSON 语法、值或资源限制无效；自定义 codec 与 I/O 异常可传播。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let text = "{\"x\":7}"
+     * let bytes = unsafe { text.rawData().clone() }
+     * let semantic: JsonCodec<DocCodecPoint> = DocCodecPointJson
+     * docRequire(YJson.fromJson<DocCodecPoint>(text).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(text, codec: DocCodecPointJson).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(text, codec: semantic).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(bytes).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(bytes, codec: DocCodecPointJson).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(bytes, codec: semantic).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(YJsonByteArrayInputStream(text)).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(YJsonByteArrayInputStream(text), codec: semantic).x == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static func fromJson<T>(text: String,
         options!: JsonReadOptions = JsonReadOptions.defaults): T where T <: GeneratedCodecProviderV1<T> {
@@ -2854,15 +3750,34 @@ public class YJson {
     }
 
     /**
-     * Decodes exactly one complete JSON document into T.
+     * 将一个完整 JSON 文档解码为 T，并拒绝尾随的非空白数据。
      *
-     * Uses the supplied codec. Trailing non-whitespace data is rejected; this is not a multi-document stream reader.
+     * 采用传入的 codec。
      *
-     * @param text One complete JSON document as a string.
-     * @param codec Codec defining the JSON representation of the value.
-     * @param options Parsing and decoding policies; defaults to JsonReadOptions.defaults.
-     * @return Decoded value.
-     * @throws JsonException JSON syntax, decoded value, or resource limits are invalid.
+     * @param text 一个完整的 JSON 文本。
+     * @param codec 定义 T 的 JSON 表示，必须消费一个值的 codec。
+     * @param options 读取策略与资源限制；默认 JsonReadOptions.defaults。
+     * @return 解码后的应用值。
+     * @throws JsonException JSON 语法、值或资源限制无效；自定义 codec 与 I/O 异常可传播。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let text = "{\"x\":7}"
+     * let bytes = unsafe { text.rawData().clone() }
+     * let semantic: JsonCodec<DocCodecPoint> = DocCodecPointJson
+     * docRequire(YJson.fromJson<DocCodecPoint>(text).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(text, codec: DocCodecPointJson).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(text, codec: semantic).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(bytes).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(bytes, codec: DocCodecPointJson).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(bytes, codec: semantic).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(YJsonByteArrayInputStream(text)).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(YJsonByteArrayInputStream(text), codec: semantic).x == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static func fromJson<T>(text: String,
         codec!: GeneratedCompactCursorWriteCodecV1<T>,
@@ -2871,15 +3786,34 @@ public class YJson {
     }
 
     /**
-     * Decodes exactly one complete JSON document into T.
+     * 将一个完整 JSON 文档解码为 T，并拒绝尾随的非空白数据。
      *
-     * Uses the supplied codec. Trailing non-whitespace data is rejected; this is not a multi-document stream reader.
+     * 采用传入的 codec。
      *
-     * @param text One complete JSON document as a string.
-     * @param codec Codec defining the JSON representation of the value.
-     * @param options Parsing and decoding policies; defaults to JsonReadOptions.defaults.
-     * @return Decoded value.
-     * @throws JsonException JSON syntax, decoded value, or resource limits are invalid.
+     * @param text 一个完整的 JSON 文本。
+     * @param codec 定义 T 的 JSON 表示，必须消费一个值的 codec。
+     * @param options 读取策略与资源限制；默认 JsonReadOptions.defaults。
+     * @return 解码后的应用值。
+     * @throws JsonException JSON 语法、值或资源限制无效；自定义 codec 与 I/O 异常可传播。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let text = "{\"x\":7}"
+     * let bytes = unsafe { text.rawData().clone() }
+     * let semantic: JsonCodec<DocCodecPoint> = DocCodecPointJson
+     * docRequire(YJson.fromJson<DocCodecPoint>(text).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(text, codec: DocCodecPointJson).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(text, codec: semantic).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(bytes).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(bytes, codec: DocCodecPointJson).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(bytes, codec: semantic).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(YJsonByteArrayInputStream(text)).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(YJsonByteArrayInputStream(text), codec: semantic).x == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static func fromJson<T>(text: String, codec!: JsonCodec<T>,
         options!: JsonReadOptions = JsonReadOptions.defaults): T {
@@ -2887,14 +3821,33 @@ public class YJson {
     }
 
     /**
-     * Decodes exactly one complete JSON document into T.
+     * 将一个完整 JSON 文档解码为 T，并拒绝尾随的非空白数据。
      *
-     * Uses the codec generated for T. Trailing non-whitespace data is rejected; this is not a multi-document stream reader.
+     * 采用 T 的生成 codec。
      *
-     * @param bytes One complete JSON document encoded as UTF-8 bytes.
-     * @param options Parsing and decoding policies; defaults to JsonReadOptions.defaults.
-     * @return Decoded value.
-     * @throws JsonException JSON syntax, decoded value, or resource limits are invalid.
+     * @param bytes UTF-8 编码的完整文档。
+     * @param options 读取策略与资源限制；默认 JsonReadOptions.defaults。
+     * @return 解码后的应用值。
+     * @throws JsonException JSON 语法、值或资源限制无效；自定义 codec 与 I/O 异常可传播。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let text = "{\"x\":7}"
+     * let bytes = unsafe { text.rawData().clone() }
+     * let semantic: JsonCodec<DocCodecPoint> = DocCodecPointJson
+     * docRequire(YJson.fromJson<DocCodecPoint>(text).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(text, codec: DocCodecPointJson).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(text, codec: semantic).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(bytes).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(bytes, codec: DocCodecPointJson).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(bytes, codec: semantic).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(YJsonByteArrayInputStream(text)).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(YJsonByteArrayInputStream(text), codec: semantic).x == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static func fromJson<T>(bytes: Array<Byte>,
         options!: JsonReadOptions = JsonReadOptions.defaults): T where T <: GeneratedCodecProviderV1<T> {
@@ -2902,15 +3855,34 @@ public class YJson {
     }
 
     /**
-     * Decodes exactly one complete JSON document into T.
+     * 将一个完整 JSON 文档解码为 T，并拒绝尾随的非空白数据。
      *
-     * Uses the supplied codec. Trailing non-whitespace data is rejected; this is not a multi-document stream reader.
+     * 采用传入的 codec。
      *
-     * @param bytes One complete JSON document encoded as UTF-8 bytes.
-     * @param codec Codec defining the JSON representation of the value.
-     * @param options Parsing and decoding policies; defaults to JsonReadOptions.defaults.
-     * @return Decoded value.
-     * @throws JsonException JSON syntax, decoded value, or resource limits are invalid.
+     * @param bytes UTF-8 编码的完整文档。
+     * @param codec 定义 T 的 JSON 表示，必须消费一个值的 codec。
+     * @param options 读取策略与资源限制；默认 JsonReadOptions.defaults。
+     * @return 解码后的应用值。
+     * @throws JsonException JSON 语法、值或资源限制无效；自定义 codec 与 I/O 异常可传播。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let text = "{\"x\":7}"
+     * let bytes = unsafe { text.rawData().clone() }
+     * let semantic: JsonCodec<DocCodecPoint> = DocCodecPointJson
+     * docRequire(YJson.fromJson<DocCodecPoint>(text).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(text, codec: DocCodecPointJson).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(text, codec: semantic).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(bytes).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(bytes, codec: DocCodecPointJson).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(bytes, codec: semantic).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(YJsonByteArrayInputStream(text)).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(YJsonByteArrayInputStream(text), codec: semantic).x == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static func fromJson<T>(bytes: Array<Byte>,
         codec!: GeneratedCompactCursorWriteCodecV1<T>,
@@ -2919,15 +3891,34 @@ public class YJson {
     }
 
     /**
-     * Decodes exactly one complete JSON document into T.
+     * 将一个完整 JSON 文档解码为 T，并拒绝尾随的非空白数据。
      *
-     * Uses the supplied codec. Trailing non-whitespace data is rejected; this is not a multi-document stream reader.
+     * 采用传入的 codec。
      *
-     * @param bytes One complete JSON document encoded as UTF-8 bytes.
-     * @param codec Codec defining the JSON representation of the value.
-     * @param options Parsing and decoding policies; defaults to JsonReadOptions.defaults.
-     * @return Decoded value.
-     * @throws JsonException JSON syntax, decoded value, or resource limits are invalid.
+     * @param bytes UTF-8 编码的完整文档。
+     * @param codec 定义 T 的 JSON 表示，必须消费一个值的 codec。
+     * @param options 读取策略与资源限制；默认 JsonReadOptions.defaults。
+     * @return 解码后的应用值。
+     * @throws JsonException JSON 语法、值或资源限制无效；自定义 codec 与 I/O 异常可传播。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let text = "{\"x\":7}"
+     * let bytes = unsafe { text.rawData().clone() }
+     * let semantic: JsonCodec<DocCodecPoint> = DocCodecPointJson
+     * docRequire(YJson.fromJson<DocCodecPoint>(text).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(text, codec: DocCodecPointJson).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(text, codec: semantic).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(bytes).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(bytes, codec: DocCodecPointJson).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(bytes, codec: semantic).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(YJsonByteArrayInputStream(text)).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(YJsonByteArrayInputStream(text), codec: semantic).x == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static func fromJson<T>(bytes: Array<Byte>, codec!: JsonCodec<T>,
         options!: JsonReadOptions = JsonReadOptions.defaults): T {
@@ -2935,14 +3926,33 @@ public class YJson {
     }
 
     /**
-     * Decodes exactly one complete JSON document into T.
+     * 将一个完整 JSON 文档解码为 T，并拒绝尾随的非空白数据。
      *
-     * Uses the codec generated for T. Trailing non-whitespace data is rejected; this is not a multi-document stream reader. The stream is not closed, and underlying I/O errors can propagate.
+     * 采用 T 的生成 codec。输入流归调用方所有，函数不关闭它，底层 I/O 异常可传播。
      *
-     * @param input Caller-owned input stream. This operation does not close it.
-     * @param options Parsing and decoding policies; defaults to JsonReadOptions.defaults.
-     * @return Decoded value.
-     * @throws JsonException JSON syntax, decoded value, or resource limits are invalid.
+     * @param input 调用方拥有的输入流。
+     * @param options 读取策略与资源限制；默认 JsonReadOptions.defaults。
+     * @return 解码后的应用值。
+     * @throws JsonException JSON 语法、值或资源限制无效；自定义 codec 与 I/O 异常可传播。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let text = "{\"x\":7}"
+     * let bytes = unsafe { text.rawData().clone() }
+     * let semantic: JsonCodec<DocCodecPoint> = DocCodecPointJson
+     * docRequire(YJson.fromJson<DocCodecPoint>(text).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(text, codec: DocCodecPointJson).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(text, codec: semantic).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(bytes).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(bytes, codec: DocCodecPointJson).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(bytes, codec: semantic).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(YJsonByteArrayInputStream(text)).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(YJsonByteArrayInputStream(text), codec: semantic).x == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static func fromJson<T>(input: InputStream,
         options!: JsonReadOptions = JsonReadOptions.defaults): T where T <: GeneratedCodecProviderV1<T> {
@@ -2950,15 +3960,34 @@ public class YJson {
     }
 
     /**
-     * Decodes exactly one complete JSON document into T.
+     * 将一个完整 JSON 文档解码为 T，并拒绝尾随的非空白数据。
      *
-     * Uses the supplied codec. Trailing non-whitespace data is rejected; this is not a multi-document stream reader. The stream is not closed, and underlying I/O errors can propagate.
+     * 采用传入的 codec。输入流归调用方所有，函数不关闭它，底层 I/O 异常可传播。
      *
-     * @param input Caller-owned input stream. This operation does not close it.
-     * @param codec Codec defining the JSON representation of the value.
-     * @param options Parsing and decoding policies; defaults to JsonReadOptions.defaults.
-     * @return Decoded value.
-     * @throws JsonException JSON syntax, decoded value, or resource limits are invalid.
+     * @param input 调用方拥有的输入流。
+     * @param codec 定义 T 的 JSON 表示，必须消费一个值的 codec。
+     * @param options 读取策略与资源限制；默认 JsonReadOptions.defaults。
+     * @return 解码后的应用值。
+     * @throws JsonException JSON 语法、值或资源限制无效；自定义 codec 与 I/O 异常可传播。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let text = "{\"x\":7}"
+     * let bytes = unsafe { text.rawData().clone() }
+     * let semantic: JsonCodec<DocCodecPoint> = DocCodecPointJson
+     * docRequire(YJson.fromJson<DocCodecPoint>(text).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(text, codec: DocCodecPointJson).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(text, codec: semantic).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(bytes).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(bytes, codec: DocCodecPointJson).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(bytes, codec: semantic).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(YJsonByteArrayInputStream(text)).x == 7)
+     * docRequire(YJson.fromJson<DocCodecPoint>(YJsonByteArrayInputStream(text), codec: semantic).x == 7)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static func fromJson<T>(input: InputStream, codec!: JsonCodec<T>,
         options!: JsonReadOptions = JsonReadOptions.defaults): T {
@@ -3152,85 +4181,357 @@ public class YJson {
 }
 
 /**
- * Built-in codecs and container-codec factories for explicit codec: overloads.
+ * 内置值 codec 与容器 codec 工厂。
  *
- * Compose container codecs from an element codec and pass the result to YJson. JSON object keys remain strings; stringMap does not introduce an arbitrary-key conversion format.
+ * 将 codec 传入 YJson 的显式 codec 重载。可组合 Option、数组、列表和字符串键映射；不会把任意类型的对象键自动转换成字符串。
  */
 public class JsonCodecs {
     /**
-     * Codec for JSON booleans.
+     * JSON 布尔值的 codec。
+     *
+     * 解码拒绝不符合此表示的输入。
+     *
+     * @return 可传给 YJson 显式 codec 重载的 codec。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = JsonCodecs.bool
+     * let value = YJson.fromJson("true", codec: codec)
+     * docRequire(YJson.toJson(value, codec: codec) == "true")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static prop bool: JsonCodec<Bool> { get() { BoolJson } }
     /**
-     * Codec for Int64 JSON numbers.
+     * 以 JSON 数字表示 Int64 的 codec。
+     *
+     * 整数解码校验目标类型的取值范围。
+     *
+     * @return 可传给 YJson 显式 codec 重载的 codec。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = JsonCodecs.int64
+     * let value = YJson.fromJson("7", codec: codec)
+     * docRequire(YJson.toJson(value, codec: codec) == "7")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static prop int64: JsonCodec<Int64> { get() { Int64Json } }
     /**
-     * Codec for Int32 JSON numbers.
+     * 以 JSON 数字表示 Int32 的 codec。
+     *
+     * 整数解码校验目标类型的取值范围。
+     *
+     * @return 可传给 YJson 显式 codec 重载的 codec。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = JsonCodecs.int32
+     * let value = YJson.fromJson("7", codec: codec)
+     * docRequire(YJson.toJson(value, codec: codec) == "7")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static prop int32: JsonCodec<Int32> { get() { Int32Json } }
     /**
-     * Codec for Int16 JSON numbers.
+     * 以 JSON 数字表示 Int16 的 codec。
+     *
+     * 整数解码校验目标类型的取值范围。
+     *
+     * @return 可传给 YJson 显式 codec 重载的 codec。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = JsonCodecs.int16
+     * let value = YJson.fromJson("7", codec: codec)
+     * docRequire(YJson.toJson(value, codec: codec) == "7")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static prop int16: JsonCodec<Int16> { get() { Int16Json } }
     /**
-     * Codec for Int8 JSON numbers.
+     * 以 JSON 数字表示 Int8 的 codec。
+     *
+     * 整数解码校验目标类型的取值范围。
+     *
+     * @return 可传给 YJson 显式 codec 重载的 codec。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = JsonCodecs.int8
+     * let value = YJson.fromJson("7", codec: codec)
+     * docRequire(YJson.toJson(value, codec: codec) == "7")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static prop int8: JsonCodec<Int8> { get() { Int8Json } }
     /**
-     * Codec for UInt64 JSON numbers.
+     * 以 JSON 数字表示 UInt64 的 codec。
+     *
+     * 整数解码校验目标类型的取值范围。
+     *
+     * @return 可传给 YJson 显式 codec 重载的 codec。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = JsonCodecs.uint64
+     * let value = YJson.fromJson("7", codec: codec)
+     * docRequire(YJson.toJson(value, codec: codec) == "7")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static prop uint64: JsonCodec<UInt64> { get() { UInt64Json } }
     /**
-     * Codec for UInt32 JSON numbers.
+     * 以 JSON 数字表示 UInt32 的 codec。
+     *
+     * 整数解码校验目标类型的取值范围。
+     *
+     * @return 可传给 YJson 显式 codec 重载的 codec。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = JsonCodecs.uint32
+     * let value = YJson.fromJson("7", codec: codec)
+     * docRequire(YJson.toJson(value, codec: codec) == "7")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static prop uint32: JsonCodec<UInt32> { get() { UInt32Json } }
     /**
-     * Codec for UInt16 JSON numbers.
+     * 以 JSON 数字表示 UInt16 的 codec。
+     *
+     * 整数解码校验目标类型的取值范围。
+     *
+     * @return 可传给 YJson 显式 codec 重载的 codec。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = JsonCodecs.uint16
+     * let value = YJson.fromJson("7", codec: codec)
+     * docRequire(YJson.toJson(value, codec: codec) == "7")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static prop uint16: JsonCodec<UInt16> { get() { UInt16Json } }
     /**
-     * Codec for UInt8 JSON numbers.
+     * 以 JSON 数字表示 UInt8 的 codec。
+     *
+     * 整数解码校验目标类型的取值范围。
+     *
+     * @return 可传给 YJson 显式 codec 重载的 codec。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = JsonCodecs.uint8
+     * let value = YJson.fromJson("7", codec: codec)
+     * docRequire(YJson.toJson(value, codec: codec) == "7")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static prop uint8: JsonCodec<UInt8> { get() { UInt8Json } }
     /**
-     * Codec for Float64 JSON numbers.
+     * 以 JSON 数字表示 Float64 的 codec。
+     *
+     * 浮点编码拒绝 NaN 与无穷大；解码按目标浮点精度转换。
+     *
+     * @return 可传给 YJson 显式 codec 重载的 codec。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = JsonCodecs.float64
+     * let value = YJson.fromJson("7.25", codec: codec)
+     * docRequire(value == Float64(7.25))
+     * docRequire(YJson.fromJson(YJson.toJson(value, codec: codec), codec: codec) == value)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static prop float64: JsonCodec<Float64> { get() { Float64Json } }
     /**
-     * Codec for Float32 JSON numbers.
+     * 以 JSON 数字表示 Float32 的 codec。
+     *
+     * 浮点编码拒绝 NaN 与无穷大；解码按目标浮点精度转换。
+     *
+     * @return 可传给 YJson 显式 codec 重载的 codec。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = JsonCodecs.float32
+     * let value = YJson.fromJson("7.25", codec: codec)
+     * docRequire(value == Float32(7.25))
+     * docRequire(YJson.fromJson(YJson.toJson(value, codec: codec), codec: codec) == value)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static prop float32: JsonCodec<Float32> { get() { Float32Json } }
     /**
-     * Codec for Float16 JSON numbers.
+     * 以 JSON 数字表示 Float16 的 codec。
+     *
+     * 浮点编码拒绝 NaN 与无穷大；解码按目标浮点精度转换。
+     *
+     * @return 可传给 YJson 显式 codec 重载的 codec。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = JsonCodecs.float16
+     * let value = YJson.fromJson("7.25", codec: codec)
+     * docRequire(value == Float16(7.25))
+     * docRequire(YJson.fromJson(YJson.toJson(value, codec: codec), codec: codec) == value)
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static prop float16: JsonCodec<Float16> { get() { Float16Json } }
     /**
-     * Codec for JSON strings.
+     * JSON 字符串的 codec。
+     *
+     * 解码拒绝不符合此表示的输入。
+     *
+     * @return 可传给 YJson 显式 codec 重载的 codec。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = JsonCodecs.string
+     * let value = YJson.fromJson("\"你好\"", codec: codec)
+     * docRequire(YJson.toJson(value, codec: codec) == "\"你好\"")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static prop string: JsonCodec<String> { get() { StringJson } }
     /**
-     * Codec for Rune using a JSON string.
+     * 恰好一个 Unicode 标量值的字符串 codec。
+     *
+     * 解码拒绝不符合此表示的输入。
+     *
+     * @return 可传给 YJson 显式 codec 重载的 codec。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = JsonCodecs.rune
+     * let value = YJson.fromJson("\"中\"", codec: codec)
+     * docRequire(YJson.toJson(value, codec: codec) == "\"中\"")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static prop rune: JsonCodec<Rune> { get() { RuneJson } }
     /**
-     * Codec for BigInt JSON numbers.
+     * 以 JSON 整数表示 BigInt 的 codec。
+     *
+     * 解码拒绝不符合此表示的输入。
+     *
+     * @return 可传给 YJson 显式 codec 重载的 codec。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = JsonCodecs.bigInt
+     * let value = YJson.fromJson("123456789012345678901234567890", codec: codec)
+     * docRequire(YJson.toJson(value, codec: codec) == "123456789012345678901234567890")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static prop bigInt: JsonCodec<BigInt> { get() { BigIntJson } }
     /**
-     * Codec for Decimal JSON numbers.
+     * 以 JSON 数字表示 Decimal 的 codec。
+     *
+     * 解码拒绝不符合此表示的输入。
+     *
+     * @return 可传给 YJson 显式 codec 重载的 codec。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = JsonCodecs.decimal
+     * let value = YJson.fromJson("7.25", codec: codec)
+     * docRequire(YJson.toJson(value, codec: codec) == "7.25")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static prop decimal: JsonCodec<Decimal> { get() { DecimalJson } }
     /**
-     * Codec for DateTime using an RFC 3339 JSON string.
+     * 以 RFC 3339 字符串表示 DateTime 的 codec。
+     *
+     * 解码拒绝不符合此表示的输入。
+     *
+     * @return 可传给 YJson 显式 codec 重载的 codec。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = JsonCodecs.rfc3339DateTime
+     * let value = YJson.fromJson("\"2024-01-02T03:04:05+08:00\"", codec: codec)
+     * docRequire(YJson.toJson(value, codec: codec) == "\"2024-01-02T03:04:05+08:00\"")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static prop rfc3339DateTime: JsonCodec<DateTime> { get() { DateTimeJson } }
 
     /**
-     * Creates a codec for an optional value; None is represented as JSON null.
+     * 为可选值组合 codec；None 对应 JSON null。
      *
-     * @param inner Codec for each contained value.
-     * @return Composed codec using inner for contained values.
+     * 容器保留 inner 的值表示和错误行为；对象键仍为字符串。
+     *
+     * @param inner 用于包含值的 codec。
+     * @return 组合后的 Option codec。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = JsonCodecs.option(JsonCodecs.int64)
+     * docRequire(YJson.fromJson("null", codec: codec).isNone())
+     * docRequire(YJson.fromJson("7", codec: codec).getOrThrow() == 7)
+     * docRequire(YJson.toJson(Some(7), codec: codec) == "7")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static func option<T>(inner: JsonCodec<T>): JsonCodec<Option<T>> {
         match (inner) {
@@ -3241,10 +4542,24 @@ public class JsonCodecs {
     }
 
     /**
-     * Creates a codec for an Array represented as a JSON array.
+     * 为 Array 组合 JSON 数组 codec。
      *
-     * @param inner Codec for each contained value.
-     * @return Composed codec using inner for contained values.
+     * 容器保留 inner 的值表示和错误行为；对象键仍为字符串。
+     *
+     * @param inner 用于每个数组元素的 codec。
+     * @return 组合后的 Array codec。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = JsonCodecs.array(JsonCodecs.int64)
+     * let value = YJson.fromJson("[1,2]", codec: codec)
+     * docRequire(value.size == 2 && value[1] == 2)
+     * docRequire(YJson.toJson(value, codec: codec) == "[1,2]")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static func array<T>(inner: JsonCodec<T>): JsonCodec<Array<T>> {
         match (inner) {
@@ -3255,10 +4570,24 @@ public class JsonCodecs {
     }
 
     /**
-     * Creates a codec for an ArrayList represented as a JSON array.
+     * 为 ArrayList 组合 JSON 数组 codec。
      *
-     * @param inner Codec for each contained value.
-     * @return Composed codec using inner for contained values.
+     * 容器保留 inner 的值表示和错误行为；对象键仍为字符串。
+     *
+     * @param inner 用于每个列表元素的 codec。
+     * @return 组合后的 ArrayList codec。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = JsonCodecs.arrayList(JsonCodecs.int64)
+     * let value = YJson.fromJson("[1,2]", codec: codec)
+     * docRequire(value.size == 2 && value[1] == 2)
+     * docRequire(YJson.toJson(value, codec: codec) == "[1,2]")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static func arrayList<T>(inner: JsonCodec<T>): JsonCodec<ArrayList<T>> {
         match (inner) {
@@ -3271,10 +4600,24 @@ public class JsonCodecs {
     }
 
     /**
-     * Creates a codec for a string-keyed HashMap represented as a JSON object.
+     * 为字符串键 HashMap 组合 JSON 对象 codec。
      *
-     * @param inner Codec for each contained value.
-     * @return Composed codec using inner for contained values.
+     * 容器保留 inner 的值表示和错误行为；对象键仍为字符串。
+     *
+     * @param inner 用于每个对象成员值的 codec。
+     * @return 组合后的 HashMap codec。
+     *
+     * @example 独立消费方（core-codec） {run}
+     * ```cangjie
+     * let codec = JsonCodecs.stringMap(JsonCodecs.int64)
+     * let value = YJson.fromJson("{\"n\":7}", codec: codec)
+     * docRequire(value["n"] == 7)
+     * docRequire(YJson.toJson(value, codec: codec) == "{\"n\":7}")
+     * println("ok")
+     * ```
+     * ```output
+     * ok
+     * ```
      */
     public static func stringMap<T>(inner: JsonCodec<T>): JsonCodec<HashMap<String, T>> {
         match (inner) {

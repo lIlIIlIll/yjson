@@ -4,9 +4,13 @@
 from __future__ import annotations
 
 import pathlib
+import hashlib
+import json
 import sys
 import tempfile
+import tomllib
 import unittest
+from unittest.mock import patch
 
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
@@ -15,11 +19,13 @@ from check_api_inventory import (
     C_ABI_DELTA,
     CANGJIE_DELTA,
     CANGJIE_REVIEW_RATIONALES,
+    _classify_cangjie_delta_record,
     _record_digest,
     check_c_abi_delta,
     check_cangjie_delta,
     check_declarations,
     check_release_manifest_fields,
+    write_cangjie_delta_artifact,
 )
 
 
@@ -190,8 +196,9 @@ class CangjieDeltaTest(unittest.TestCase):
             "cangjie_delta_artifact": str(CANGJIE_DELTA.relative_to(CANGJIE_DELTA.parents[1]))
         }
         self.delta = {
-            "schema_version": 2,
+            "schema_version": 3,
             "domain": "cangjie",
+            "target_version": "0.2.0",
             "baseline_commit": "a" * 40,
             "baseline_records": 2,
             "baseline_sha256": _record_digest({self.common, self.removed}),
@@ -216,10 +223,148 @@ class CangjieDeltaTest(unittest.TestCase):
         check_cangjie_delta(
             self.inventory, self.delta, snapshot=self.snapshot,
             release_status=release_status,
+            root=self.snapshot.parent,
         )
 
     def test_accepts_complete_pending_delta_during_migration(self) -> None:
         self.check()
+
+    def test_rejects_review_for_another_target_version(self) -> None:
+        self.delta["target_version"] = "0.1.0"
+        with self.assertRaisesRegex(SystemExit, "target_version"):
+            self.check()
+
+    def test_rejects_old_release_review_status(self) -> None:
+        self.delta["review_groups"][0]["review_status"] = "reviewed-for-0.1.0"
+        with self.assertRaisesRegex(SystemExit, "group status"):
+            self.check()
+
+    def test_only_exact_json_value_alias_uses_literal_removal_classification(self) -> None:
+        alias = ("yjson_macros|packages/yjson_macros/src/json_literal.cj|<top-level>|"
+                 "public macro JsonValue(input: Tokens): Tokens")
+        self.assertEqual(_classify_cangjie_delta_record(alias), "literal-alias-removal")
+        for name in ("Json", "JsonCodec", "JsonUsing", "JsonSubtype", "JsonValueExtra"):
+            with self.subTest(name=name):
+                self.assertNotEqual(_classify_cangjie_delta_record(
+                    alias.replace("macro JsonValue(", f"macro {name}(")), "literal-alias-removal")
+
+    def test_generator_does_not_review_known_classifications(self) -> None:
+        removed = "yjson|src/lib_json_value.cj|<top-level>|public class Removed"
+        self.snapshot.write_text(self.common + "\n", encoding="utf-8")
+        destination = pathlib.Path(self.temp.name) / "delta.toml"
+        with patch("check_api_inventory.SNAPSHOT", self.snapshot), patch(
+                "check_api_inventory.subprocess.check_output",
+                return_value=self.common + "\n" + removed + "\n"):
+            write_cangjie_delta_artifact("a" * 40, destination)
+        generated = tomllib.loads(destination.read_text(encoding="utf-8"))
+        self.assertEqual(generated["target_version"], "0.2.0")
+        self.assertEqual(generated["review_status"], "pending-migration-review")
+        self.assertEqual(generated["review_groups"][0]["classification"],
+                         "application-api-maturity-reset")
+        self.assertEqual(generated["review_groups"][0]["review_status"],
+                         "pending-migration-review")
+
+    def alias_delta(self, *, direction: str = "removed") -> None:
+        alias = ("yjson_macros|packages/yjson_macros/src/json_literal.cj|<top-level>|"
+                 "public macro JsonValue(input: Tokens): Tokens")
+        self.snapshot.write_text(self.common + ("\n" + alias if direction == "added" else "") +
+                                 "\n", encoding="utf-8")
+        baseline = {self.common, alias} if direction == "removed" else {self.common}
+        self.delta.update({
+            "baseline_records": len(baseline),
+            "baseline_sha256": _record_digest(baseline),
+            "added_records": int(direction == "added"),
+            "added_sha256": _record_digest({alias} if direction == "added" else set()),
+            "removed_records": int(direction == "removed"),
+            "removed_sha256": _record_digest({alias} if direction == "removed" else set()),
+            "review_groups": [{
+                "classification": "literal-alias-removal",
+                "rationale": CANGJIE_REVIEW_RATIONALES["literal-alias-removal"],
+                "review_status": "reviewed-for-0.2.0",
+                "removed": [alias] if direction == "removed" else [],
+                "added": [alias] if direction == "added" else [],
+            }],
+        })
+
+    def test_accepts_reviewed_alias_removal_with_global_release_still_pending(self) -> None:
+        self.alias_delta()
+        self.check()
+        self.assertEqual(self.delta["review_status"], "pending-migration-review")
+
+    def test_alias_removal_classification_cannot_approve_an_addition(self) -> None:
+        self.alias_delta(direction="added")
+        with self.assertRaisesRegex(SystemExit, "only remove the exact @JsonValue"):
+            self.check()
+
+    def test_alias_removal_classification_cannot_cover_another_macro(self) -> None:
+        self.alias_delta()
+        self.delta["review_groups"][0]["removed"][0] = (
+            self.delta["review_groups"][0]["removed"][0].replace("macro JsonValue(", "macro Json("))
+        with self.assertRaisesRegex(SystemExit, "classification does not match"):
+            self.check()
+
+    def test_generator_requires_a_full_baseline_sha(self) -> None:
+        with self.assertRaisesRegex(SystemExit, "full lowercase SHA"), patch(
+                "check_api_inventory.subprocess.check_output") as command:
+            write_cangjie_delta_artifact("0f2071a", pathlib.Path(self.temp.name) / "delta.toml")
+        command.assert_not_called()
+
+    def enum_inventory_delta(self) -> None:
+        case = "yjson|src/sample.cj|Choice|| First"
+        self.snapshot.write_text(self.common + "\n" + case + "\n", encoding="utf-8")
+        root = self.snapshot.parent
+        collector = root / "scripts/generate_public_api_snapshot.py"
+        collector.parent.mkdir()
+        collector.write_text("fixture collector\n", encoding="utf-8")
+        self.enum_evidence_path = root / "release/0.2.0/enum-case-inventory.json"
+        self.enum_evidence_path.parent.mkdir(parents=True)
+        evidence = {
+            "schema": "yjson.enum-case-inventory/1", "baseline_commit": "a" * 40,
+            "baseline_snapshot_sha256": "b" * 64,
+            "collector": {"source": "scripts/generate_public_api_snapshot.py",
+                          "sha256": hashlib.sha256(collector.read_bytes()).hexdigest()},
+            "sources": [{"package": "yjson", "source": "src/sample.cj", "sha256": "c" * 64}],
+            "case_records": 1, "cases_sha256": _record_digest({case}), "cases": [case],
+        }
+        self.enum_evidence_path.write_text(json.dumps(evidence), encoding="utf-8")
+        self.delta.update({
+            "baseline_snapshot_sha256": "b" * 64,
+            "baseline_records": 1, "baseline_sha256": _record_digest({self.common}),
+            "added_records": 1, "added_sha256": _record_digest({case}),
+            "removed_records": 0, "removed_sha256": _record_digest(set()),
+            "inventory_correction_artifact": "release/0.2.0/enum-case-inventory.json",
+            "inventory_correction_sha256": hashlib.sha256(self.enum_evidence_path.read_bytes()).hexdigest(),
+            "review_groups": [{
+                "classification": "existing-enum-case-inventory",
+                "rationale": CANGJIE_REVIEW_RATIONALES["existing-enum-case-inventory"],
+                "review_status": "pending-migration-review", "removed": [], "added": [case],
+            }],
+        })
+
+    def test_accepts_inventory_correction_proven_in_baseline_source(self) -> None:
+        self.enum_inventory_delta()
+        self.check()
+
+    def test_inventory_correction_cannot_absorb_a_new_case(self) -> None:
+        self.enum_inventory_delta()
+        added = "yjson|src/sample.cj|Choice|| NewCase"
+        self.delta["review_groups"][0]["added"] = [added]
+        self.delta["added_sha256"] = _record_digest({added})
+        self.snapshot.write_text(self.common + "\n" + added + "\n", encoding="utf-8")
+        with self.assertRaisesRegex(SystemExit, "cases proven in baseline source"):
+            self.check()
+
+    def test_inventory_correction_rejects_collector_drift(self) -> None:
+        self.enum_inventory_delta()
+        (self.snapshot.parent / "scripts/generate_public_api_snapshot.py").write_text("changed\n")
+        with self.assertRaisesRegex(SystemExit, "collector identity drifted"):
+            self.check()
+
+    def test_inventory_correction_rejects_evidence_tampering(self) -> None:
+        self.enum_inventory_delta()
+        self.enum_evidence_path.write_text("{}\n")
+        with self.assertRaisesRegex(SystemExit, "evidence digest mismatch"):
+            self.check()
 
     def test_release_ready_rejects_pending_migration_review(self) -> None:
         with self.assertRaisesRegex(SystemExit, "requires explicit approval"):
@@ -242,7 +387,7 @@ class CangjieDeltaTest(unittest.TestCase):
             "review_groups": [{
                 "classification": "application-api-maturity-reset",
                 "rationale": CANGJIE_REVIEW_RATIONALES["application-api-maturity-reset"],
-                "review_status": "reviewed-for-0.1.0",
+                "review_status": "reviewed-for-0.2.0",
                 "removed": [removed],
                 "added": [added],
             }],
@@ -258,7 +403,7 @@ class CangjieDeltaTest(unittest.TestCase):
 
     def test_rejects_approval_with_unclassified_declarations(self) -> None:
         self.delta["review_status"] = "approved-for-release"
-        self.delta["review_groups"][0]["review_status"] = "reviewed-for-0.1.0"
+        self.delta["review_groups"][0]["review_status"] = "reviewed-for-0.2.0"
         with self.assertRaisesRegex(SystemExit, "cannot contain unclassified"):
             self.check(release_status="release-ready")
 

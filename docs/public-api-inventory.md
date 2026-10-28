@@ -1,11 +1,13 @@
-# yjson 0.1 公开 API 清单
+# yjson 0.2 公开 API 清单
 
-本页说明 `0.1.x` 的发布边界。完整声明列表位于
+本页说明 `0.2.0` 候选的接口职责与升级要求。完整声明列表位于
 [`release/public-api-snapshot.txt`](../release/public-api-snapshot.txt)，经过评审的破坏性
 变更与新增 API 位于
 [`release/public-api-inventory.toml`](../release/public-api-inventory.toml)。相对于冻结基线的完整
 Cangjie 声明差异及逐项分类位于
-[`release/public-cangjie-delta-bfd29.toml`](../release/public-cangjie-delta-bfd29.toml)。
+[`release/public-cangjie-delta-0.2.0.toml`](../release/public-cangjie-delta-0.2.0.toml)。
+当前差异基线为 `0f2071a0ad59ad43a369abe51abaceaf873f0c63` 的已发布声明快照。
+较早的 [`bfd29 差异记录`](../release/public-cangjie-delta-bfd29.toml)保持原样，仅供查询当时的评审事实。
 
 运行：
 
@@ -13,8 +15,9 @@ Cangjie 声明差异及逐项分类位于
 python3 scripts/check_api_inventory.py
 ```
 
-命令检查九个包的版本、发布依赖图、API 清单、快照生成器回归测试和当前快照。存在未评审
-差异时，命令返回非零状态。
+命令检查九个包的版本、发布依赖图、API 清单、快照生成器回归测试和当前快照。漏项、错配或
+证据漂移会返回非零状态。`migration` 阶段允许完整记录的待评审组；发布图为 `release-ready`
+时，全部组和全局发布批准都必须完成。
 
 ## 普通应用入口
 
@@ -37,7 +40,7 @@ JsonNode.parse(text)
 ## 快照收集范围
 
 生成器收集顶层 public declaration、外部可见 public 类型的成员、interface 的隐式 public
-成员和 enum case。private 或默认 internal 类型中的 public 成员不会进入快照。多行类型头被
+成员和每个 enum case，首项、同行与分行写法使用相同记录。private 或默认 internal 类型中的 public 成员不会进入快照。多行类型头被
 规范化成单条声明。C ABI 快照另含 `native/*.h` 导出的 `YJ_*` prototype。
 
 快照检查会拒绝未评审的差异，但仍需要人工评审兼容性。公开声明变化时，先运行：
@@ -46,17 +49,33 @@ JsonNode.parse(text)
 python3 scripts/generate_public_api_snapshot.py --write
 ```
 
-随后逐条审查 diff，并同步 inventory。不要手工编辑快照。
+随后从固定的完整基线提交生成候选差异：
+
+```terminal
+python3 scripts/check_api_inventory.py --write-cangjie-delta 0f2071a0ad59ad43a369abe51abaceaf873f0c63
+```
+
+逐条审查 diff，并同步 inventory。不要手工编辑快照。生成器只分类，不批准变更；所有新生成的组
+都从 `pending-migration-review` 开始。
 
 差异文件把每条 removed/added declaration 放入且只放入一个 review group。每组记录分类、
 理由和 review status；全局 `approved-for-release` 只有在没有漏项、重复项、未分类声明或 pending
-group 时才有效。`release-ready` graph 会再次执行这项检查。
+group 时才有效。组的 `reviewed-for-0.2.0` 状态必须与差异文件的 `target_version` 和发布图版本一致，
+旧版本的评审不能替代当前候选评审。`release-ready` graph 会再次执行这项检查。
+
+旧采集器漏掉的 enum case 记录单列为 `existing-enum-case-inventory`，不计为新增 API。
+[`基线采集证据`](../release/0.2.0/enum-case-inventory.json)记录相同采集器处理精确基线源码的结果、
+源码摘要和采集器摘要。检查器只允许将基线集合中确实存在的 case 纳入该组；真正新增的 case
+必须另行评审。本轮唯一破坏性声明删除为已确认的 `@JsonValue` 别名，整个发布仍未获批准。
 
 ## 生成代码协议
 
 `yjson` 与独立仓库 [`yjson_macros`](https://github.com/lIlIIlIll/yjson_macros) 是同一个
 lockstep release。macro 输出面向 `generated_support.v1` 并嵌入 protocol version 1；不匹配时
 明确失败。
+
+V1 只描述当前候选的生产契约。升级时同步第一方依赖，重新展开宏并编译消费方，不能据此
+混用不同版本的宏、运行时或预编译产物。
 
 普通 generated codec bridge 是
 `GeneratedCodecProviderV1<T>.generatedCodecV1(_: GeneratedCodecTokenV1<T>): JsonCodec<T>`。
@@ -83,33 +102,20 @@ bridge 声明因跨 package 展开而必须 public，但不是普通应用入口
 Schema resource URI 只通过注入的 `UriResolver` 在构造阶段解析。成功构造后，compiled schema
 不再保留 resolver。
 
-## 兼容性结论
+## 0.x 兼容政策
 
-`0.1.0` 调低版本号，重新进入实验阶段并允许破坏性变更，不提供旧 API 别名、弃用接口兼容层或
-聚合包。后续 `0.1.y` patch 应保持已记录的应用 API 兼容；需要 breaking change 时
-提升到新的 `0.x.0` minor，并提供 machine API diff。
+整个 `0.x` 阶段的 patch 和 minor 都不保证跨版本源码、API、ABI、生成代码或旧 SDK 兼容。
+`0.2.0` 统一使用 STS `1.2.0`。升级时同步所用的第一方包，重新生成并编译消费方。
 
-### 二进制兼容性
+破坏性变更仍须逐项说明影响、提供迁移方法，并取得用户明确确认。当前候选已确认删除
+`@JsonValue`，调用迁到 `@Json`，不保留宏别名。`JsonAlias` 字段读取别名、当前生成协议、
+ABI 错配检查、预算和资源生命周期语义保留。
 
-Cangjie 声明快照（`release/public-api-snapshot.txt` 与 delta TOML）只证明源码级 API 表面
-未漂移，**不等于二进制兼容证明**。源码兼容不能覆盖编译产物层面的变化：cjc 对同一声明
-可能生成不同符号名、方法表布局或内联行为；跨编译器版本或 patch 的预编译 consumer
-可能在链接期或运行期失败，即使声明 diff 为空。
+声明快照与 API 差异评审继续检查当前接口；独立消费方验证当前包配对和实际行为。
+未来候选不再要求以冻结的旧消费方二进制完成跨版本链接矩阵，也不据此承诺可替换旧动态库。
 
-因此，0.1 系列的二进制兼容性以实测为准。发布前必须使用已冻结的旧应用或测试程序产物
-（由上一个版本的 SDK 和九个包构建），验证其与新版九个包的链接和调用。矩阵至少覆盖：
-
-- 普通 `YJson` 调用（encode/decode、parseDocument）；
-- generated codec（`@JsonCodec` 展开的调用方）与 generated-support v1 入口；
-- algorithms（Pointer/Patch/Path/Schema）与 schema-formats 动态库链接；
-- Native/yyjson backend 的显式 resource 生命周期调用；
-- 跨 package 依赖图中每个 `output-type = "dynamic"` 包的链接。
-
-**0.1.0 状态：NOT PROVIDED。** 首个 release 没有更旧的 consumer artifact 可测，0.1.0 的
-binary compatibility 声明不提供；后续 0.1.y 的矩阵证据应写入 `release/<version>/evidence.md`。
-在矩阵通过之前，任何"二进制兼容"或"补丁版本可安全替换"的表述都不得出现在文档或 release
-notes 中。
-
-历史 1.x/2.0 tag 和 release evidence 保持不可变，只用于审计与基线，不代表当前
-`0.1.x` API。九包顺序与 stability 分类来自
-[`release/release-graph.toml`](../release/release-graph.toml)。
+`0.1.1` 在 STS `1.1.3`、Linux x86_64 下的有限兼容 PASS 保留在
+[`release/0.1.1/binary-compatibility.json`](../release/0.1.1/binary-compatibility.json)。
+它只证明记录的产物组合，不外推到 `0.2.0`、其他 SDK 或其他应用。
+历史 tag、发布证据和性能报告保持不可变。九包顺序与接口分类来自
+[`release/release-graph.toml`](../release/release-graph.toml)，成熟度标签不提供兼容保证。

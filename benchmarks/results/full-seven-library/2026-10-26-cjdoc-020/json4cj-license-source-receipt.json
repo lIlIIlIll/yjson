@@ -1,0 +1,1230 @@
+{
+  "status": "PUBLIC_SAME_CODE_AND_README_LICENSE_DECLARATION_VERIFIED",
+  "publicCommit": "a185e9ac0df95ee2a9715941b13f21f2a2a4f674",
+  "publicTree": "585465ae5d92d65310dded727d40397d1998654f",
+  "trackedFiles": 219,
+  "licenseNoticeNamedFiles": [],
+  "exactPublicFileMatches": 194,
+  "measuredFileCount": 197,
+  "differentFiles": [
+    "json4cj-annotations/cjpm.toml",
+    "json4cj-core/cjpm.toml",
+    "json4cj-databind/cjpm.toml"
+  ],
+  "allDifferencesAreThreePackageManifests": true,
+  "fileBinding": {
+    "docs/jackson-bench/JacksonBenchE2E.java": {
+      "same": true,
+      "publicGitBlob": "39251510cdc68c5ac97ce79124e2c50d7cc5c7e9",
+      "publicSha256": "4e7c1efde4cded4ba7e368106bfc206be120e1da5275b7e3dc52e58aa52fc8be",
+      "measuredSha256": "4e7c1efde4cded4ba7e368106bfc206be120e1da5275b7e3dc52e58aa52fc8be"
+    },
+    "docs/jackson-bench/JacksonBench.java": {
+      "same": true,
+      "publicGitBlob": "4a0ac75f625b6d244efcf7408fa8b58739803275",
+      "publicSha256": "653a94e0a0fb3719e03609071d69b1dd4f802633f38f6f2f34997c1e191c6ea4",
+      "measuredSha256": "653a94e0a0fb3719e03609071d69b1dd4f802633f38f6f2f34997c1e191c6ea4"
+    },
+    "docs/T9-e2e-bench-v2/data/LargeBean.java": {
+      "same": true,
+      "publicGitBlob": "4be891544e295fdfcb71d904a265043bf58c0bc2",
+      "publicSha256": "6cb3732fce0b8b0bb5dfcecbc382cb59fe4bbbacfa7398046faa099e39160997",
+      "measuredSha256": "6cb3732fce0b8b0bb5dfcecbc382cb59fe4bbbacfa7398046faa099e39160997"
+    },
+    "docs/T9-e2e-bench-v2/data/PerfLargeItem.java": {
+      "same": true,
+      "publicGitBlob": "5a180424d9abd9a33a628430bc115acba022faf6",
+      "publicSha256": "460b03349c0c9171c6ee2f633a79a909ee07cfda06d1b6981243b7118b7a5004",
+      "measuredSha256": "460b03349c0c9171c6ee2f633a79a909ee07cfda06d1b6981243b7118b7a5004"
+    },
+    "docs/T9-e2e-bench-v2/data/LargeBean.cj": {
+      "same": true,
+      "publicGitBlob": "8a78f611f90b8044f1a2360a8eb848436e1dcb1b",
+      "publicSha256": "d491c44e0fe5da4cf1cc3885a586a2426b981c4f0008432334cf4e929f5eccbe",
+      "measuredSha256": "d491c44e0fe5da4cf1cc3885a586a2426b981c4f0008432334cf4e929f5eccbe"
+    },
+    "docs/T9-e2e-bench-v2/data/BigString.java": {
+      "same": true,
+      "publicGitBlob": "dfd76bf1da6bc3ca18cb17dae7c65865bbf415e3",
+      "publicSha256": "1e426337b7fd9bb69374aa821f2bb193493368ab6a6a1492adefb97d8559d09a",
+      "measuredSha256": "1e426337b7fd9bb69374aa821f2bb193493368ab6a6a1492adefb97d8559d09a"
+    },
+    "docs/T9-e2e-bench-v2/data/PerfLargeItem.cj": {
+      "same": true,
+      "publicGitBlob": "ed3403773fd903ad6fddd5ab9a42acc819b88a2c",
+      "publicSha256": "1e17b5c24bbbd312e6db03104f6d72315bdbcd5e2d57a967843573ad4264864f",
+      "measuredSha256": "1e17b5c24bbbd312e6db03104f6d72315bdbcd5e2d57a967843573ad4264864f"
+    },
+    "docs/T9-e2e-bench-v2/data/BigString.cj": {
+      "same": true,
+      "publicGitBlob": "d59186c790fc061af51288d2e2e4a47a6019e0bc",
+      "publicSha256": "05875a4ead340361976c0ab58af4be3d3e3a20b72d87efd8b89d525faa5ca2ef",
+      "measuredSha256": "05875a4ead340361976c0ab58af4be3d3e3a20b72d87efd8b89d525faa5ca2ef"
+    },
+    "json4cj-databind/cjpm.toml": {
+      "same": false,
+      "publicGitBlob": "0650e6c0c5b35f3fe05ba23751a0eb04536464dc",
+      "publicSha256": "35bda9cc7843f26282ea900496cb65d08f5b0e9b01c081b22ba8ce351c858ba3",
+      "measuredSha256": "3fc5d14046064681205917fd0afdab213c87d1d6f6777c1e5efdec1c5f8d03f1"
+    },
+    "json4cj-databind/src/package.cj": {
+      "same": true,
+      "publicGitBlob": "20a2670e89e2e7eeb3ffeea5d169eb13d82a68a6",
+      "publicSha256": "67e4e6e49db116729198e7811ff74bfc4971b150c5774a71a16a73f710ec669f",
+      "measuredSha256": "67e4e6e49db116729198e7811ff74bfc4971b150c5774a71a16a73f710ec669f"
+    },
+    "json4cj-databind/src/module/SimpleModule.cj": {
+      "same": true,
+      "publicGitBlob": "44a64187088d05cf0af91b775544f7f9f5243778",
+      "publicSha256": "6569e2356dbb88f117f5c276f26813fa8866879f9cd8c73a2f192388a3a10ebc",
+      "measuredSha256": "6569e2356dbb88f117f5c276f26813fa8866879f9cd8c73a2f192388a3a10ebc"
+    },
+    "json4cj-databind/src/module/ModuleRegistry.cj": {
+      "same": true,
+      "publicGitBlob": "cbeace4843e218ccf517c4b97d4fb4691763f6ca",
+      "publicSha256": "20f71790ab06af0a8a58721b85a8bd3906493733beca73379b5d64f0356c1018",
+      "measuredSha256": "20f71790ab06af0a8a58721b85a8bd3906493733beca73379b5d64f0356c1018"
+    },
+    "json4cj-databind/src/deser/ContextualDecoder.cj": {
+      "same": true,
+      "publicGitBlob": "d5a5afbf56f27969af045ef05d51ad9460d97e77",
+      "publicSha256": "3ca6c9066aa617eb645c18c110106b11677cafc952bd0a4cd177d02c9f0a0d97",
+      "measuredSha256": "3ca6c9066aa617eb645c18c110106b11677cafc952bd0a4cd177d02c9f0a0d97"
+    },
+    "json4cj-databind/src/deser/Decoder.cj": {
+      "same": true,
+      "publicGitBlob": "d7fda17427bed0cd0a69c9fc7d0ce03bacd2e27d",
+      "publicSha256": "e98ef9ecb85f3e4899a26fb83595a5074c4e6451038301bc5f6eaf5c8003e00f",
+      "measuredSha256": "e98ef9ecb85f3e4899a26fb83595a5074c4e6451038301bc5f6eaf5c8003e00f"
+    },
+    "json4cj-databind/src/deser/StdDecoders.cj": {
+      "same": true,
+      "publicGitBlob": "8186438dfde5b48b9aa0d92e3220178867650658",
+      "publicSha256": "e3228172724b79f5657e57e6ef3566dff57c6a63f8eb76b5f072fa4f9e34d2d3",
+      "measuredSha256": "e3228172724b79f5657e57e6ef3566dff57c6a63f8eb76b5f072fa4f9e34d2d3"
+    },
+    "json4cj-databind/src/deser/BeanDecoder.cj": {
+      "same": true,
+      "publicGitBlob": "723cb6fdea3cd5b5c61599762f40a5d18dc2b9a7",
+      "publicSha256": "27c0c8ddbc93a583780923c6806c27c5466a900cab822805c29f334baf2b763d",
+      "measuredSha256": "27c0c8ddbc93a583780923c6806c27c5466a900cab822805c29f334baf2b763d"
+    },
+    "json4cj-databind/src/deser/DecoderFactory.cj": {
+      "same": true,
+      "publicGitBlob": "9043ca1f7e656d82920c3a38508482489241316b",
+      "publicSha256": "bb70b2de55f92461910c50671fe8643b5ce8068fc06e0a042ceeb5ca60e88253",
+      "measuredSha256": "bb70b2de55f92461910c50671fe8643b5ce8068fc06e0a042ceeb5ca60e88253"
+    },
+    "json4cj-databind/src/node/NodePatch.cj": {
+      "same": true,
+      "publicGitBlob": "c12ededc3a88814f5ac26eacb22a28dc1d0158e9",
+      "publicSha256": "fa437fdb4a66b8531b3fe1f1aa3ed4d4d7d531521dca11a1bc6157c64a21078a",
+      "measuredSha256": "fa437fdb4a66b8531b3fe1f1aa3ed4d4d7d531521dca11a1bc6157c64a21078a"
+    },
+    "json4cj-databind/src/node/NodeCursor.cj": {
+      "same": true,
+      "publicGitBlob": "43734c3f3ee72bcfba6553671bb9844701f287a7",
+      "publicSha256": "6e482219ec74df5e0aa895e9b4cd09b3d1233b5476fb60e6c6aa3d75b68ed2c6",
+      "measuredSha256": "6e482219ec74df5e0aa895e9b4cd09b3d1233b5476fb60e6c6aa3d75b68ed2c6"
+    },
+    "json4cj-databind/src/node/NodeFactory.cj": {
+      "same": true,
+      "publicGitBlob": "14dd47f4ea13da9ab3603fdea4d70504200ebc24",
+      "publicSha256": "7577d1f0b0a3388cfc04489721f8b21a5e9696ab92709f9333861a6a057100af",
+      "measuredSha256": "7577d1f0b0a3388cfc04489721f8b21a5e9696ab92709f9333861a6a057100af"
+    },
+    "json4cj-databind/src/node/JsonNode.cj": {
+      "same": true,
+      "publicGitBlob": "f21e9c31a8bfb256b92bffc2cd3a26e1d78aed78",
+      "publicSha256": "f9a2ce5237c48fd663a4322861a30bf5ffea1181032330f08bac6371fc49343c",
+      "measuredSha256": "f9a2ce5237c48fd663a4322861a30bf5ffea1181032330f08bac6371fc49343c"
+    },
+    "json4cj-databind/src/exc/CodecException.cj": {
+      "same": true,
+      "publicGitBlob": "cc9c2ef54f076f43faa5f8ec328d789f996e3eae",
+      "publicSha256": "2dfcf1a66b00bcaf06c0d14f94f190d03a175b64ce5ed0fc1b340a1ab88f50d2",
+      "measuredSha256": "2dfcf1a66b00bcaf06c0d14f94f190d03a175b64ce5ed0fc1b340a1ab88f50d2"
+    },
+    "json4cj-databind/src/naming/PascalCase.cj": {
+      "same": true,
+      "publicGitBlob": "7d7dd785dec2083266e74fc9166ac2436cb7eb51",
+      "publicSha256": "fef20197d7b89191e340f2fc114f316f2366a7881a9505d442780e088072a127",
+      "measuredSha256": "fef20197d7b89191e340f2fc114f316f2366a7881a9505d442780e088072a127"
+    },
+    "json4cj-databind/src/naming/CamelCase.cj": {
+      "same": true,
+      "publicGitBlob": "1f74f3d8ff5ab21d14a493b7c37a51cb9a6c4587",
+      "publicSha256": "f561dd7f5faeb1ce0a41c049bd4c7f01de5498e7500869b688345ac4cb6ee8a5",
+      "measuredSha256": "f561dd7f5faeb1ce0a41c049bd4c7f01de5498e7500869b688345ac4cb6ee8a5"
+    },
+    "json4cj-databind/src/naming/SnakeCase.cj": {
+      "same": true,
+      "publicGitBlob": "935473aca7e00d7e9f37b79642abf1e41b66ca02",
+      "publicSha256": "4389b8f0a030f685dfea084f4b1e00453a787949d9fc6f3c488aa48881adc3ed",
+      "measuredSha256": "4389b8f0a030f685dfea084f4b1e00453a787949d9fc6f3c488aa48881adc3ed"
+    },
+    "json4cj-databind/src/naming/KebabCase.cj": {
+      "same": true,
+      "publicGitBlob": "6a2a2d03089ca2cf59e75462cf6255e933dd106f",
+      "publicSha256": "e10ebc3287db46473f8713a8fed80593c3bd782e55b553f54994302d04662f0e",
+      "measuredSha256": "e10ebc3287db46473f8713a8fed80593c3bd782e55b553f54994302d04662f0e"
+    },
+    "json4cj-databind/src/naming/NamingStrategy.cj": {
+      "same": true,
+      "publicGitBlob": "a8c78703214e7cb614fafb751ee688f551134150",
+      "publicSha256": "e268f3eddb292aa3d9e5c37aaeb0ff326f051a0994dd60c8670274fc64ee41b1",
+      "measuredSha256": "e268f3eddb292aa3d9e5c37aaeb0ff326f051a0994dd60c8670274fc64ee41b1"
+    },
+    "json4cj-databind/src/ser/StdEncoders.cj": {
+      "same": true,
+      "publicGitBlob": "aeff5cdd400dcf7d73df3fb80e63ace0cf1088af",
+      "publicSha256": "4a9e23d29552de6b165f13befc34a297a4be0cfd2b35b807095179632f5857e2",
+      "measuredSha256": "4a9e23d29552de6b165f13befc34a297a4be0cfd2b35b807095179632f5857e2"
+    },
+    "json4cj-databind/src/ser/Encoder.cj": {
+      "same": true,
+      "publicGitBlob": "d58afd30f606886af28c314ff838f93baba89541",
+      "publicSha256": "7bec7b84445089694c396fc838b5df9044c5a28269e719315079640fa5cd3d52",
+      "measuredSha256": "7bec7b84445089694c396fc838b5df9044c5a28269e719315079640fa5cd3d52"
+    },
+    "json4cj-databind/src/ser/BeanEncoder.cj": {
+      "same": true,
+      "publicGitBlob": "c652a639949c3a5f0bef979ea4bb4b265113127e",
+      "publicSha256": "2c08ef52291bcd8eb29fd70add47031db2396a8ada03b9860594c19f0442a027",
+      "measuredSha256": "2c08ef52291bcd8eb29fd70add47031db2396a8ada03b9860594c19f0442a027"
+    },
+    "json4cj-databind/src/ser/EncoderFactory.cj": {
+      "same": true,
+      "publicGitBlob": "1ab405a6e8690efda8b3d3ada51631d129582a9d",
+      "publicSha256": "fd0ca7802583a6d74fe099f061f9cc8d148d5330d47b4c5a98013835adbba7ca",
+      "measuredSha256": "fd0ca7802583a6d74fe099f061f9cc8d148d5330d47b4c5a98013835adbba7ca"
+    },
+    "json4cj-databind/src/ser/ContextualEncoder.cj": {
+      "same": true,
+      "publicGitBlob": "33c22f81eff08684f7f8b2eec544a1c76ab97169",
+      "publicSha256": "e0a8e4cf84f82699ab96b9e809c12ef2845376389daa3e0882fc558c13e51602",
+      "measuredSha256": "e0a8e4cf84f82699ab96b9e809c12ef2845376389daa3e0882fc558c13e51602"
+    },
+    "json4cj-databind/src/view/CodecView.cj": {
+      "same": true,
+      "publicGitBlob": "e1d352a968254b77d21ab4eeb806bf62a3367e6e",
+      "publicSha256": "f7aa38f52379b6db2b6463da475cce1257431e27773e7ccd19486267ed4ccdba",
+      "measuredSha256": "f7aa38f52379b6db2b6463da475cce1257431e27773e7ccd19486267ed4ccdba"
+    },
+    "json4cj-databind/src/types/TypeSpec.cj": {
+      "same": true,
+      "publicGitBlob": "89bd08e5ca3f5f56eee89d572e00ce80a7030b76",
+      "publicSha256": "fd3217ee71127407bb039ca47bbf0a50cfa412e6bd0eb1f0341631c5d19d220b",
+      "measuredSha256": "fd3217ee71127407bb039ca47bbf0a50cfa412e6bd0eb1f0341631c5d19d220b"
+    },
+    "json4cj-databind/src/types/TypeFactory.cj": {
+      "same": true,
+      "publicGitBlob": "16fcb3fae6d7e8f6cbe44f8d6e7b730366eeb811",
+      "publicSha256": "c9e3105e58e604f2ccfab7ebe62cbd824609f59156cf4babda9246b4c2a13b48",
+      "measuredSha256": "c9e3105e58e604f2ccfab7ebe62cbd824609f59156cf4babda9246b4c2a13b48"
+    },
+    "json4cj-databind/src/types/TypeReference.cj": {
+      "same": true,
+      "publicGitBlob": "aa7cabcf53ec992ddc82b451ec441ae9ea513d84",
+      "publicSha256": "0d7294d402e2f467fee201e98c64991909564103ab3d9e50afc19fdbaff9b276",
+      "measuredSha256": "0d7294d402e2f467fee201e98c64991909564103ab3d9e50afc19fdbaff9b276"
+    },
+    "json4cj-databind/src/test/package.cj": {
+      "same": true,
+      "publicGitBlob": "8e7b1f0bcd7846e7e7660559147537dc389c32f6",
+      "publicSha256": "c0baf225d0da712de2445ad608b3381b4e4248ef99f3b7b40763269ec7f83055",
+      "measuredSha256": "c0baf225d0da712de2445ad608b3381b4e4248ef99f3b7b40763269ec7f83055"
+    },
+    "json4cj-databind/src/test/module/ModuleRegistry_test.cj": {
+      "same": true,
+      "publicGitBlob": "0c50673e9b74a2e456ed7378108f88edd81a181f",
+      "publicSha256": "e6de4057e7b5d25c8582f73b7f1e64704c6f8118b65285a21baacf20f875e926",
+      "measuredSha256": "e6de4057e7b5d25c8582f73b7f1e64704c6f8118b65285a21baacf20f875e926"
+    },
+    "json4cj-databind/src/test/node/NodeModel_test.cj": {
+      "same": true,
+      "publicGitBlob": "9270113ffd80b53413af5ebd79fb8c87c2dee2e9",
+      "publicSha256": "bf7dc2051dc154710cdc1feac6d3b81d6b6a6ccaf83da7863634f5a1032325df",
+      "measuredSha256": "bf7dc2051dc154710cdc1feac6d3b81d6b6a6ccaf83da7863634f5a1032325df"
+    },
+    "json4cj-databind/src/test/exc/CodecException_test.cj": {
+      "same": true,
+      "publicGitBlob": "61d046da39f22bd917d6ab20d44eac3df7c8467b",
+      "publicSha256": "755ce1b742ee8176f9cdb61706b1c5dd6a6e8f2bcff5ebe62d3629c23be4031c",
+      "measuredSha256": "755ce1b742ee8176f9cdb61706b1c5dd6a6e8f2bcff5ebe62d3629c23be4031c"
+    },
+    "json4cj-databind/src/test/naming/NamingStrategy_test.cj": {
+      "same": true,
+      "publicGitBlob": "81069dd287dc1b45ff3207cdb4abd8ea8fc35cb5",
+      "publicSha256": "e98569c01499b4006538274030e5eb1c6cc7bce2b19d3c60314c9d3b5205955a",
+      "measuredSha256": "e98569c01499b4006538274030e5eb1c6cc7bce2b19d3c60314c9d3b5205955a"
+    },
+    "json4cj-databind/src/test/view/CodecView_test.cj": {
+      "same": true,
+      "publicGitBlob": "9a88378a4b6755d13d42ba53e8a8b2ab9a984edf",
+      "publicSha256": "2d37124abb0f674ff3f87e2496f15e4a15c4a924c2effa409d0904e72292d70a",
+      "measuredSha256": "2d37124abb0f674ff3f87e2496f15e4a15c4a924c2effa409d0904e72292d70a"
+    },
+    "json4cj-databind/src/test/macros_test/T9BenchStreamTree_test.cj": {
+      "same": true,
+      "publicGitBlob": "77e291861d40c3e2ca0fb7304cc1b43e69263e90",
+      "publicSha256": "7bc1eb43fb93db21045c447f5207066a4faacdf18aa62dd586bdd9078d29a767",
+      "measuredSha256": "7bc1eb43fb93db21045c447f5207066a4faacdf18aa62dd586bdd9078d29a767"
+    },
+    "json4cj-databind/src/test/macros_test/T1BasicTypes_test.cj": {
+      "same": true,
+      "publicGitBlob": "5e72ec8ea537a23e2b0b1b41294ad4dc9dcd2d9f",
+      "publicSha256": "a37e9c98a77438258dc7f82aa1cc0cbbc269e0e7555f1650b3c6d6c8aaa4e8e9",
+      "measuredSha256": "a37e9c98a77438258dc7f82aa1cc0cbbc269e0e7555f1650b3c6d6c8aaa4e8e9"
+    },
+    "json4cj-databind/src/test/macros_test/YamlContentModels_test.cj": {
+      "same": true,
+      "publicGitBlob": "13d786e45ac47e82686b6d9e320c78660522d4ca",
+      "publicSha256": "a8b1cb0e22501af268569153c31659ecd86e0b203d7115eda6fcdf1c618ae549",
+      "measuredSha256": "a8b1cb0e22501af268569153c31659ecd86e0b203d7115eda6fcdf1c618ae549"
+    },
+    "json4cj-databind/src/test/macros_test/YMultiConstruct_test.cj": {
+      "same": true,
+      "publicGitBlob": "c24a3f906e8b03b912607c6e54f3afadd5cf75a6",
+      "publicSha256": "fc69c0e5ef0489733776b2dc5df2211bee5a141c1df4c0832c49c89001afad15",
+      "measuredSha256": "fc69c0e5ef0489733776b2dc5df2211bee5a141c1df4c0832c49c89001afad15"
+    },
+    "json4cj-databind/src/test/macros_test/YOptionContainer_test.cj": {
+      "same": true,
+      "publicGitBlob": "7baaeb97628e66bc3ffb415e90941ebaf33b3bd5",
+      "publicSha256": "dd8e823d407a77ba693e3e95a50bc314fc5d0d74c8bf7b8dbb1da3ab8c0443f9",
+      "measuredSha256": "dd8e823d407a77ba693e3e95a50bc314fc5d0d74c8bf7b8dbb1da3ab8c0443f9"
+    },
+    "json4cj-databind/src/test/macros_test/T8RoundTrip_test.cj": {
+      "same": true,
+      "publicGitBlob": "575647a5b43f9dfab6b8ec49e176c413bea4258c",
+      "publicSha256": "0e8e21f83e4468ed9c2e2640f7d8636287c9ca3f422ca58ecb73b5e4bf651bbb",
+      "measuredSha256": "0e8e21f83e4468ed9c2e2640f7d8636287c9ca3f422ca58ecb73b5e4bf651bbb"
+    },
+    "json4cj-databind/src/test/macros_test/T9BenchE2E_test.cj": {
+      "same": true,
+      "publicGitBlob": "c442ea24243fbca921e5505c80b81eafe988872b",
+      "publicSha256": "da19e165ff9cb7e55f0d4657f5526100e4da4a3d857c94806e3106dbb700844a",
+      "measuredSha256": "da19e165ff9cb7e55f0d4657f5526100e4da4a3d857c94806e3106dbb700844a"
+    },
+    "json4cj-databind/src/test/macros_test/YByteArray_test.cj": {
+      "same": true,
+      "publicGitBlob": "28f11a99a7a83702b3eb0954c8e36ded0dc4cf9c",
+      "publicSha256": "f54c1d409460c3490f740acba5c69b4c9e7c2d27ab68b880502d0f9a011ecce0",
+      "measuredSha256": "f54c1d409460c3490f740acba5c69b4c9e7c2d27ab68b880502d0f9a011ecce0"
+    },
+    "json4cj-databind/src/test/macros_test/T9BenchMemory_test.cj": {
+      "same": true,
+      "publicGitBlob": "2bf0b59c8c0aa9e816b4608c4a3b1cd18243880d",
+      "publicSha256": "712f6533b8b3ec4e2bf65b239b50435df2cd167e3e6e85025e043a7dda50ba36",
+      "measuredSha256": "712f6533b8b3ec4e2bf65b239b50435df2cd167e3e6e85025e043a7dda50ba36"
+    },
+    "json4cj-databind/src/test/macros_test/T5AnnotationFeatures_test.cj": {
+      "same": true,
+      "publicGitBlob": "bc8606620c16dbecfa43b09f218a0ed2cc0f8766",
+      "publicSha256": "5d09abdd05d2c53d7a96b6adf20d227ce7e14009554f5ee0ff20909bf81e748f",
+      "measuredSha256": "5d09abdd05d2c53d7a96b6adf20d227ce7e14009554f5ee0ff20909bf81e748f"
+    },
+    "json4cj-databind/src/test/macros_test/YJsonProperty_test.cj": {
+      "same": true,
+      "publicGitBlob": "b86b5ec4447d65987695abcd98ba71caacd8a66f",
+      "publicSha256": "9c19aa81345a6c4f9916eb74a49d55f03a3370647efd4bac48d7713eef2d4c73",
+      "measuredSha256": "9c19aa81345a6c4f9916eb74a49d55f03a3370647efd4bac48d7713eef2d4c73"
+    },
+    "json4cj-databind/src/test/macros_test/T9BenchConcurrency_test.cj": {
+      "same": true,
+      "publicGitBlob": "4608d7a8204ae4417accc7defc2f3e3bdcef798e",
+      "publicSha256": "1b52d5b9c714ca76064680f269fe255373e89ecedaa7d2930e91e3d7610ce9a9",
+      "measuredSha256": "1b52d5b9c714ca76064680f269fe255373e89ecedaa7d2930e91e3d7610ce9a9"
+    },
+    "json4cj-databind/src/test/macros_test/T7AdvancedScene_test.cj": {
+      "same": true,
+      "publicGitBlob": "239cdeb35ce9730c24d54c5c9a4a73999a09cade",
+      "publicSha256": "7cbc89851f745131a4417fa9c729232fa32831f4407ef85b1799b485b0d3b981",
+      "measuredSha256": "7cbc89851f745131a4417fa9c729232fa32831f4407ef85b1799b485b0d3b981"
+    },
+    "json4cj-databind/src/test/macros_test/YNestedOptionField_test.cj": {
+      "same": true,
+      "publicGitBlob": "f7bf551daf745d43d54dc281339f58e9e32e6505",
+      "publicSha256": "07d198b54f1f5623b7d257cf53fe4f15a3686451e17d41fc4ba4e87a87f99eab",
+      "measuredSha256": "07d198b54f1f5623b7d257cf53fe4f15a3686451e17d41fc4ba4e87a87f99eab"
+    },
+    "json4cj-databind/src/test/macros_test/CodableSmoke_test.cj": {
+      "same": true,
+      "publicGitBlob": "a68a33aba5cea55b8d57836928a23b21a491d4f7",
+      "publicSha256": "d71ceb1a615075db18c0188fab87b223c9214ac2c319bdd1b77b32f13c45ad1d",
+      "measuredSha256": "d71ceb1a615075db18c0188fab87b223c9214ac2c319bdd1b77b32f13c45ad1d"
+    },
+    "json4cj-databind/src/test/macros_test/YNone_test.cj": {
+      "same": true,
+      "publicGitBlob": "eb49f5d8d834e91bfd157042116a48449fa0dbcc",
+      "publicSha256": "4246d25437844d4efdb9c986203be1d4160b2b65f3d12538e2d7fbcdcce95185",
+      "measuredSha256": "4246d25437844d4efdb9c986203be1d4160b2b65f3d12538e2d7fbcdcce95185"
+    },
+    "json4cj-databind/src/test/macros_test/YMmlCmdReturn_test.cj": {
+      "same": true,
+      "publicGitBlob": "29ac5a2e786e6cc6ff8c5411d163da85bf81996b",
+      "publicSha256": "1671b7546b465c40be331b7b60d09b5234172fdbe25247a42326a3b7e9b3d553",
+      "measuredSha256": "1671b7546b465c40be331b7b60d09b5234172fdbe25247a42326a3b7e9b3d553"
+    },
+    "json4cj-databind/src/test/macros_test/T4CollectionTypes_test.cj": {
+      "same": true,
+      "publicGitBlob": "6055e94269d7e81c9f3d049015e8023b102d7801",
+      "publicSha256": "fa2a57247c73ad81bef070dfbbba39a78837268e251b8d9f7543ad15d4c12068",
+      "measuredSha256": "fa2a57247c73ad81bef070dfbbba39a78837268e251b8d9f7543ad15d4c12068"
+    },
+    "json4cj-databind/src/test/macros_test/YOptionCollection_test.cj": {
+      "same": true,
+      "publicGitBlob": "18526e739709ed0f5c2e73c56e7b8bc90d9f0381",
+      "publicSha256": "2aaa8677f8b806fbfe7384ff5c95b61cbfa3b18e3422eeea1eff185726f7e885",
+      "measuredSha256": "2aaa8677f8b806fbfe7384ff5c95b61cbfa3b18e3422eeea1eff185726f7e885"
+    },
+    "json4cj-databind/src/test/macros_test/T6BoundaryException_test.cj": {
+      "same": true,
+      "publicGitBlob": "79a2280be91f39ccafd35739aa279c3034f55488",
+      "publicSha256": "e76dad86a6b65c97c84870bab401fe4880191a683063a84a13136fa37e02b37d",
+      "measuredSha256": "e76dad86a6b65c97c84870bab401fe4880191a683063a84a13136fa37e02b37d"
+    },
+    "json4cj-databind/src/test/macros_test/YOptionField_test.cj": {
+      "same": true,
+      "publicGitBlob": "d0d83a719e960320369ec88969731fe7453151d4",
+      "publicSha256": "b2d19f5082b85e06f5ecc19d8833e5c8d8c116b48e9ff3c0824b1b14255eb737",
+      "measuredSha256": "b2d19f5082b85e06f5ecc19d8833e5c8d8c116b48e9ff3c0824b1b14255eb737"
+    },
+    "json4cj-databind/src/test/macros_test/YQueryCondition_test.cj": {
+      "same": true,
+      "publicGitBlob": "ca63b21bb49f86fa62e1a9f9e9fb14402a6e5a0a",
+      "publicSha256": "6201ad3237f2ae2e97794bc8d1d28ddfc61e0fc353c774926bccf3edbe2f1b4b",
+      "measuredSha256": "6201ad3237f2ae2e97794bc8d1d28ddfc61e0fc353c774926bccf3edbe2f1b4b"
+    },
+    "json4cj-databind/src/test/macros_test/CodableVariantWrapper_test.cj": {
+      "same": true,
+      "publicGitBlob": "330aa9c1f3452668c6181e235da05ce13ffedc42",
+      "publicSha256": "fe9fb3b984251b61697e8177d3cd44720ad149ebe6ff3a97ca5e9cd3283f5689",
+      "measuredSha256": "fe9fb3b984251b61697e8177d3cd44720ad149ebe6ff3a97ca5e9cd3283f5689"
+    },
+    "json4cj-databind/src/test/macros_test/T2CustomTypes_test.cj": {
+      "same": true,
+      "publicGitBlob": "afaf2aba7dcc036b3bffcb0374b97149d8bb22a3",
+      "publicSha256": "a0eadd902da3b900b6268206c09353a350572548b1ae78910f20ddc4e80abf08",
+      "measuredSha256": "a0eadd902da3b900b6268206c09353a350572548b1ae78910f20ddc4e80abf08"
+    },
+    "json4cj-databind/src/test/macros_test/CodableEnumSmoke_test.cj": {
+      "same": true,
+      "publicGitBlob": "776bdee239cb596085a771db3a04860d4a0ec575",
+      "publicSha256": "62dc39a67142573226d88b9438584f96986cf96d6d5a53d72b3cf2daf9b0053e",
+      "measuredSha256": "62dc39a67142573226d88b9438584f96986cf96d6d5a53d72b3cf2daf9b0053e"
+    },
+    "json4cj-databind/src/test/macros_test/T9BenchThroughput_test.cj": {
+      "same": true,
+      "publicGitBlob": "00359eaefb8bbb094e367d8894295aedfa2f39ee",
+      "publicSha256": "ab3450a48493d271f7333666ca3caed0da837d36ae6be07424a257261f29e016",
+      "measuredSha256": "ab3450a48493d271f7333666ca3caed0da837d36ae6be07424a257261f29e016"
+    },
+    "json4cj-databind/src/test/macros_test/T9ArrayDiag_test.cj": {
+      "same": true,
+      "publicGitBlob": "1bb6432e30a6dca7bae5d3b6d15ac5e30590e6f3",
+      "publicSha256": "6ddf095dd481740565971a73701fcb8ecbe50b7ad005c38cd7ab837b3f6dae14",
+      "measuredSha256": "6ddf095dd481740565971a73701fcb8ecbe50b7ad005c38cd7ab837b3f6dae14"
+    },
+    "json4cj-databind/src/test/macros_test/T9BenchLargeList_test.cj": {
+      "same": true,
+      "publicGitBlob": "8355345f2407ef6e0ab4ec131b1aa8077384b646",
+      "publicSha256": "1acfd32ae7ac4ad3c7c08a21fd1a4245d3535e98b0e1ed2b62d441a3a73384f9",
+      "measuredSha256": "1acfd32ae7ac4ad3c7c08a21fd1a4245d3535e98b0e1ed2b62d441a3a73384f9"
+    },
+    "json4cj-databind/src/test/macros_test/T3UserTypes_test.cj": {
+      "same": true,
+      "publicGitBlob": "5df2882f281f2abfc54f1a2a6d14c79516330f35",
+      "publicSha256": "12c360f9c8d420f79e1d58cddc3af4f6a0aee812ca414c56bf49604e4448a0f4",
+      "measuredSha256": "12c360f9c8d420f79e1d58cddc3af4f6a0aee812ca414c56bf49604e4448a0f4"
+    },
+    "json4cj-databind/src/test/macros_test/T10AllTypes_test.cj": {
+      "same": true,
+      "publicGitBlob": "8ec06654740b396d3aeca4f34f7a8e8096f4ba33",
+      "publicSha256": "0d01fc48f4a524cc2cefea21f456ba1e7a61caf11499a5ea96c1d8c0aa7ca772",
+      "measuredSha256": "0d01fc48f4a524cc2cefea21f456ba1e7a61caf11499a5ea96c1d8c0aa7ca772"
+    },
+    "json4cj-databind/src/test/macros_test/T9SmokeBench_test.cj": {
+      "same": true,
+      "publicGitBlob": "816d81d52b54862b86a584e59e712ac093f5eca3",
+      "publicSha256": "300af4a192a704eba2edf40d78662348bdeb54d71b2292dd5de9588f35a59f83",
+      "measuredSha256": "300af4a192a704eba2edf40d78662348bdeb54d71b2292dd5de9588f35a59f83"
+    },
+    "json4cj-databind/src/test/macros_test/T9ReflectVerify_test.cj": {
+      "same": true,
+      "publicGitBlob": "45d5bc4bae56f63cbd4480c70132610525d01fbe",
+      "publicSha256": "f7f2add0314c9469e4cdd275dbbd6ae4bbc7be176ecd8174cf701f8873d32aa5",
+      "measuredSha256": "f7f2add0314c9469e4cdd275dbbd6ae4bbc7be176ecd8174cf701f8873d32aa5"
+    },
+    "json4cj-databind/src/test/macros_test/CodableVariantSmoke_test.cj": {
+      "same": true,
+      "publicGitBlob": "53f313d5c1863a7c1c64ba0eb3fb68c4e9f9dd0f",
+      "publicSha256": "c30a101e28fd5de847a71d3ac71892b9eca8095fe7dfca7d8e0ee0d62c2c8ec1",
+      "measuredSha256": "c30a101e28fd5de847a71d3ac71892b9eca8095fe7dfca7d8e0ee0d62c2c8ec1"
+    },
+    "json4cj-databind/src/test/macros_test/YList_test.cj": {
+      "same": true,
+      "publicGitBlob": "ea54c71f7568bb1b6beaa11a14b0a3b6d250e357",
+      "publicSha256": "113264ef5d0ffbf537b383ec6700232eae1ac1c620dbb9cfcd5ba967f106e22a",
+      "measuredSha256": "113264ef5d0ffbf537b383ec6700232eae1ac1c620dbb9cfcd5ba967f106e22a"
+    },
+    "json4cj-databind/src/test/macros_test/T10AllTypes_models_test.cj": {
+      "same": true,
+      "publicGitBlob": "323aa06eec3733f67d89f5a372fcf0d36ec85276",
+      "publicSha256": "cee10dabdc80d20a2ec21cb697a52d65782a7e285703a0d939d4d7bb30048b41",
+      "measuredSha256": "cee10dabdc80d20a2ec21cb697a52d65782a7e285703a0d939d4d7bb30048b41"
+    },
+    "json4cj-databind/src/test/macros_test/YPageNode_test.cj": {
+      "same": true,
+      "publicGitBlob": "8c79ceb4b2a57a97500da3dd728e4549f97189b9",
+      "publicSha256": "babe9e54e65c78589d5f62b6dfd92b92d61fd74c2f27d089f29b9819dcf91028",
+      "measuredSha256": "babe9e54e65c78589d5f62b6dfd92b92d61fd74c2f27d089f29b9819dcf91028"
+    },
+    "json4cj-databind/src/test/macros_test/CodableStructSmoke_test.cj": {
+      "same": true,
+      "publicGitBlob": "02c11156041d38ef0fa4b5f430789e4e3fc9cf7d",
+      "publicSha256": "1e597a28c7909f6ab53dd3bf74564b47cb34df02f9e770a55d202123a3373708",
+      "measuredSha256": "1e597a28c7909f6ab53dd3bf74564b47cb34df02f9e770a55d202123a3373708"
+    },
+    "json4cj-databind/src/test/macros_test/T9DumpBenchData_test.cj": {
+      "same": true,
+      "publicGitBlob": "cc2200a9230fb194ec5b9d7127f4af239dec73e5",
+      "publicSha256": "a0d70c6c6c8ef5e99bdd1d50f7cb7a5c063273e315201a607d5ab165d641d2fd",
+      "measuredSha256": "a0d70c6c6c8ef5e99bdd1d50f7cb7a5c063273e315201a607d5ab165d641d2fd"
+    },
+    "json4cj-databind/src/test/macros_test/YFeatureContainer_test.cj": {
+      "same": true,
+      "publicGitBlob": "1997489a1cbb013e647bfc3425498b72b6a83f65",
+      "publicSha256": "5a097b6c13aa2f6c42d902b8417b3b80ccd60299e319ffa6ba0025a00d2350d8",
+      "measuredSha256": "5a097b6c13aa2f6c42d902b8417b3b80ccd60299e319ffa6ba0025a00d2350d8"
+    },
+    "json4cj-databind/src/test/macros_test/YInheritance_test.cj": {
+      "same": true,
+      "publicGitBlob": "3577f6d76e49d8d1efcffcc6f1f793c0cfe107bb",
+      "publicSha256": "c3364039cdbb126889d77d5aadeadccf0ce8911c2904f2367e9836c0c69e01c9",
+      "measuredSha256": "c3364039cdbb126889d77d5aadeadccf0ce8911c2904f2367e9836c0c69e01c9"
+    },
+    "json4cj-databind/src/test/macros_test/YMmlResult_test.cj": {
+      "same": true,
+      "publicGitBlob": "dc8a4dd7634140ebf05b4f3c8aa74a1aaee27291",
+      "publicSha256": "925c59718d1501798a282307058eae46c58adb87bdbb297122a863a05857f61e",
+      "measuredSha256": "925c59718d1501798a282307058eae46c58adb87bdbb297122a863a05857f61e"
+    },
+    "json4cj-databind/src/test/macros_test/T9BenchAnnotation_test.cj": {
+      "same": true,
+      "publicGitBlob": "9bacafd219d254746451eb4ec85ec7e65de893cc",
+      "publicSha256": "5d9a9fd6870ad8b762415ec455e2094b5eaca58b2b31d8d3e450f5ebeb90648b",
+      "measuredSha256": "5d9a9fd6870ad8b762415ec455e2094b5eaca58b2b31d8d3e450f5ebeb90648b"
+    },
+    "json4cj-databind/src/test/types/TypeSpec_test.cj": {
+      "same": true,
+      "publicGitBlob": "6e0118ac0894621c1832e7d085730fdca1743b28",
+      "publicSha256": "ffdd8d7c51af335f58f0dec99ed259be44ad6f23415716dfdfbf49b3e48e390e",
+      "measuredSha256": "ffdd8d7c51af335f58f0dec99ed259be44ad6f23415716dfdfbf49b3e48e390e"
+    },
+    "json4cj-databind/src/test/filter/SimpleFilter_test.cj": {
+      "same": true,
+      "publicGitBlob": "f3b649140c5b3244c1d561615dd0f59aaecb840c",
+      "publicSha256": "a3e4ea6f75442931b76566088837c4724331b630764df7a7aa59e2a1977dd232",
+      "measuredSha256": "a3e4ea6f75442931b76566088837c4724331b630764df7a7aa59e2a1977dd232"
+    },
+    "json4cj-databind/src/test/bind/JsonCodec_test.cj": {
+      "same": true,
+      "publicGitBlob": "aed6bab7b9727f752b67c1a15047b758a4b7119f",
+      "publicSha256": "cecd7a5842823553f89b2dc94fcceb4d97ec758b6e5d349dca66e32333aefddc",
+      "measuredSha256": "cecd7a5842823553f89b2dc94fcceb4d97ec758b6e5d349dca66e32333aefddc"
+    },
+    "json4cj-databind/src/test/bind/CodecConfig_test.cj": {
+      "same": true,
+      "publicGitBlob": "99daee8a25b8a0273f72c085abda6de196f5ba47",
+      "publicSha256": "6dd2b07667f252680c34c9826bd5626b247d8ba17b2015107a101bf31e917056",
+      "measuredSha256": "6dd2b07667f252680c34c9826bd5626b247d8ba17b2015107a101bf31e917056"
+    },
+    "json4cj-databind/src/filter/CodecFilter.cj": {
+      "same": true,
+      "publicGitBlob": "b79847cf234e83952f156cec578768e08e21f7a4",
+      "publicSha256": "852041dc8d939fce4a0c94a64ce86f357922e2181ebbb698f6b8aa4c451b20bf",
+      "measuredSha256": "852041dc8d939fce4a0c94a64ce86f357922e2181ebbb698f6b8aa4c451b20bf"
+    },
+    "json4cj-databind/src/filter/SimpleFilter.cj": {
+      "same": true,
+      "publicGitBlob": "42485a4a499ffca889125dca35a0947a05dcf5a8",
+      "publicSha256": "eaa2c5dec9c1112a1d16b2cbcdb6496e3c3a3fb33ae3c0ded632c4f4d14e1455",
+      "measuredSha256": "eaa2c5dec9c1112a1d16b2cbcdb6496e3c3a3fb33ae3c0ded632c4f4d14e1455"
+    },
+    "json4cj-databind/src/bind/JsonCodec.cj": {
+      "same": true,
+      "publicGitBlob": "82f10b37142fc75965771d7d76d3ee920e3924f1",
+      "publicSha256": "5c88a15ee79c1dc2e485a24631a662db4173cc46e7d626e30a9eaf366c84c5c9",
+      "measuredSha256": "5c88a15ee79c1dc2e485a24631a662db4173cc46e7d626e30a9eaf366c84c5c9"
+    },
+    "json4cj-databind/src/bind/CodecReader.cj": {
+      "same": true,
+      "publicGitBlob": "0bf551f380b4879f58af4f68ab0fbaa20025f30f",
+      "publicSha256": "1c48610dd164c2dad715e9b66081d2a145f028b18bdead7d559629ea37c7e61a",
+      "measuredSha256": "1c48610dd164c2dad715e9b66081d2a145f028b18bdead7d559629ea37c7e61a"
+    },
+    "json4cj-databind/src/bind/CodecRegistry.cj": {
+      "same": true,
+      "publicGitBlob": "589e83b9c50d06fd37f423293f44486c171ba947",
+      "publicSha256": "7be19144736a2e229b627f50de8283d275622264b7d81f6b429711a4b41e3d27",
+      "measuredSha256": "7be19144736a2e229b627f50de8283d275622264b7d81f6b429711a4b41e3d27"
+    },
+    "json4cj-databind/src/bind/CodecModule.cj": {
+      "same": true,
+      "publicGitBlob": "6ee61a99d12cb90a4b844a434d07d270f94e2483",
+      "publicSha256": "e6156a66bfecd64f44aa0266d63827ac13366a1aaa689903bf4e9ac7e46db646",
+      "measuredSha256": "e6156a66bfecd64f44aa0266d63827ac13366a1aaa689903bf4e9ac7e46db646"
+    },
+    "json4cj-databind/src/bind/CodecConfig.cj": {
+      "same": true,
+      "publicGitBlob": "e45faf148e891c77f451d742a42147133af84b7c",
+      "publicSha256": "7843cb718e1144e8a62a40e1f22ad2669e4beb013a7bd1387acb0fb0b534da15",
+      "measuredSha256": "7843cb718e1144e8a62a40e1f22ad2669e4beb013a7bd1387acb0fb0b534da15"
+    },
+    "json4cj-databind/src/bind/CodecWriter.cj": {
+      "same": true,
+      "publicGitBlob": "9fda1de768fbce64ac5275585f2c5f4e8b7ca2b3",
+      "publicSha256": "ccf2659da29323340f2822b85a12cc754938ce477bb5b29ab2a51a06bea29ad3",
+      "measuredSha256": "ccf2659da29323340f2822b85a12cc754938ce477bb5b29ab2a51a06bea29ad3"
+    },
+    "json4cj-annotations/cjpm.toml": {
+      "same": false,
+      "publicGitBlob": "9f59aeda018f88b9f935721202d545629b7b4370",
+      "publicSha256": "42c5f9632906155641b125309b274f5907252441c8f256727bc1f7747cb0681f",
+      "measuredSha256": "670a6d206cd558a0792769b0b97338987e4ef0959c1e5f7e661cd6e27734aa25"
+    },
+    "json4cj-annotations/src/package.cj": {
+      "same": true,
+      "publicGitBlob": "a21fde7475808d2b57f9a08095176d1add8cf2ab",
+      "publicSha256": "2b4828902b18f4b540128902e967f756e552e2f2f6269948949b8197dd3aa81b",
+      "measuredSha256": "2b4828902b18f4b540128902e967f756e552e2f2f6269948949b8197dd3aa81b"
+    },
+    "json4cj-annotations/src/macros/VariantEmitter.cj": {
+      "same": true,
+      "publicGitBlob": "71832406497dd74a2c9c98efb8a77bf1768c5f8f",
+      "publicSha256": "baad0f30906279c2b75d75f31c09b79c4e4c851020b0235b28f8fc2355f51183",
+      "measuredSha256": "baad0f30906279c2b75d75f31c09b79c4e4c851020b0235b28f8fc2355f51183"
+    },
+    "json4cj-annotations/src/macros/HandleStruct.cj": {
+      "same": true,
+      "publicGitBlob": "ff6a6d4599ef332af6c021ddd20907ed9284f9c1",
+      "publicSha256": "0de761f93a9b3c9122b51923e3f275aea124ac7930f465047bbead970adebdac",
+      "measuredSha256": "0de761f93a9b3c9122b51923e3f275aea124ac7930f465047bbead970adebdac"
+    },
+    "json4cj-annotations/src/macros/Diagnostic.cj": {
+      "same": true,
+      "publicGitBlob": "16808003188763f92767bda15a0072f5d72be01e",
+      "publicSha256": "4203b097738242222c9341c3199bd2f5424b0b1a884feffc286e950a32ef17af",
+      "measuredSha256": "4203b097738242222c9341c3199bd2f5424b0b1a884feffc286e950a32ef17af"
+    },
+    "json4cj-annotations/src/macros/HandleClass.cj": {
+      "same": true,
+      "publicGitBlob": "fdb803d2af60942087bd15c528c1be857ba6180d",
+      "publicSha256": "271714a68ec69d281f443d8c9b7ea09d87dfe135188caa005035f3309bd7be94",
+      "measuredSha256": "271714a68ec69d281f443d8c9b7ea09d87dfe135188caa005035f3309bd7be94"
+    },
+    "json4cj-annotations/src/macros/CodableMacro.cj": {
+      "same": true,
+      "publicGitBlob": "aa68a8d08e2be7689c969b660ef73b6cb8755825",
+      "publicSha256": "b7c096fb64609bf5fd442b44fc6c9b99d4d8ffe8668bb222b79f8f05decfedf9",
+      "measuredSha256": "b7c096fb64609bf5fd442b44fc6c9b99d4d8ffe8668bb222b79f8f05decfedf9"
+    },
+    "json4cj-annotations/src/macros/MacroInfo.cj": {
+      "same": true,
+      "publicGitBlob": "206963aa90682bc4a893601962d2bb37a803e09a",
+      "publicSha256": "68a1b775be838a4092dc3ac6041ace3df7c18d1024a11cc55aaf8b018d4f26b7",
+      "measuredSha256": "68a1b775be838a4092dc3ac6041ace3df7c18d1024a11cc55aaf8b018d4f26b7"
+    },
+    "json4cj-annotations/src/macros/HandleEnum.cj": {
+      "same": true,
+      "publicGitBlob": "f74f5e4b606e33b412fa2d9f8a0fa02a19afcb88",
+      "publicSha256": "4a3d73a02055d46325a98e8fba3610c2ddfcb1473d0cba3d5cf1db84defc4d30",
+      "measuredSha256": "4a3d73a02055d46325a98e8fba3610c2ddfcb1473d0cba3d5cf1db84defc4d30"
+    },
+    "json4cj-annotations/src/macros/utils.cj": {
+      "same": true,
+      "publicGitBlob": "49815674c182087a0e420452ee38946910f39bc2",
+      "publicSha256": "d97c85c6021d1dfef1d14670c63d71f536ba55eae695d4a8847c097600a2d110",
+      "measuredSha256": "d97c85c6021d1dfef1d14670c63d71f536ba55eae695d4a8847c097600a2d110"
+    },
+    "json4cj-annotations/src/enums/NullHandling.cj": {
+      "same": true,
+      "publicGitBlob": "a567b31200857184f96384c871afef4d15c9aa5a",
+      "publicSha256": "3eab199ce408d30db9ae4285c04574c0804e491a3115142217be7af5ef303d88",
+      "measuredSha256": "3eab199ce408d30db9ae4285c04574c0804e491a3115142217be7af5ef303d88"
+    },
+    "json4cj-annotations/src/enums/NumberFormat.cj": {
+      "same": true,
+      "publicGitBlob": "eccf2b1e74454fff841663513b87d445987ef21e",
+      "publicSha256": "06427b751a4233f7c8716b3a82ae3126106d593545a34bc5ca7a99d6bcb0c7a8",
+      "measuredSha256": "06427b751a4233f7c8716b3a82ae3126106d593545a34bc5ca7a99d6bcb0c7a8"
+    },
+    "json4cj-annotations/src/enums/EnumNaming.cj": {
+      "same": true,
+      "publicGitBlob": "74a4053becdd0fc983d5c69c43b20450f67c9a04",
+      "publicSha256": "692faaaacc3114db3db09b3e486ee2fb477f5625f543e8ec428298b7eab91b6a",
+      "measuredSha256": "692faaaacc3114db3db09b3e486ee2fb477f5625f543e8ec428298b7eab91b6a"
+    },
+    "json4cj-annotations/src/enums/VariantUse.cj": {
+      "same": true,
+      "publicGitBlob": "541cb871f29d42e77c22acfc38a475843f8a68db",
+      "publicSha256": "801504bc42adbfa193e047d0e58d1b5550ffa2e1903147b1a21cd2c915a4cc75",
+      "measuredSha256": "801504bc42adbfa193e047d0e58d1b5550ffa2e1903147b1a21cd2c915a4cc75"
+    },
+    "json4cj-annotations/src/enums/AccessMode.cj": {
+      "same": true,
+      "publicGitBlob": "c62a9ee0df3e4c53910f7e8a4acc437e173150a6",
+      "publicSha256": "6702f33ff47d3fc6ab7b74fbc1c74ae31deeb6413e1c9383060287daa4a08ab0",
+      "measuredSha256": "6702f33ff47d3fc6ab7b74fbc1c74ae31deeb6413e1c9383060287daa4a08ab0"
+    },
+    "json4cj-annotations/src/enums/VariantAs.cj": {
+      "same": true,
+      "publicGitBlob": "437ed7b307298b3c794877458ec09c2d65242b48",
+      "publicSha256": "1ba9e9b0e7904447294fc559bd2a608d29d3d1275f53eef55bde668067ecc823",
+      "measuredSha256": "1ba9e9b0e7904447294fc559bd2a608d29d3d1275f53eef55bde668067ecc823"
+    },
+    "json4cj-annotations/src/enums/PolicyMode.cj": {
+      "same": true,
+      "publicGitBlob": "ccfd01a201f25b03d28aba1afecdeca63a96e0ea",
+      "publicSha256": "126adab2bc2dae401b67d28984f16bdfedece6cbb7e1f7420ced74740104c66a",
+      "measuredSha256": "126adab2bc2dae401b67d28984f16bdfedece6cbb7e1f7420ced74740104c66a"
+    },
+    "json4cj-annotations/src/anno/CodableRaw.cj": {
+      "same": true,
+      "publicGitBlob": "c4af52ea9727d8b5048109b7aefc1bffa039b617",
+      "publicSha256": "df338e0ba33bcbf4c0f3d1e63fa7abcdf585804f28544096bb8b03638dc224ae",
+      "measuredSha256": "df338e0ba33bcbf4c0f3d1e63fa7abcdf585804f28544096bb8b03638dc224ae"
+    },
+    "json4cj-annotations/src/anno/CodableAlias.cj": {
+      "same": true,
+      "publicGitBlob": "4dfb2e9bb15e103b58240edab3e7b6fed33338cc",
+      "publicSha256": "6be79903ac6b5b818648435863616a66d7c9f0f3432daed061c5699947f0373d",
+      "measuredSha256": "6be79903ac6b5b818648435863616a66d7c9f0f3432daed061c5699947f0373d"
+    },
+    "json4cj-annotations/src/anno/CodableFormat.cj": {
+      "same": true,
+      "publicGitBlob": "1cc058f8b3a791e894af3cf1689932e2f1089dad",
+      "publicSha256": "393a48fad426c04da1a2ad3345669f700b648421de645f7b8828ec1c9e1aabb4",
+      "measuredSha256": "393a48fad426c04da1a2ad3345669f700b648421de645f7b8828ec1c9e1aabb4"
+    },
+    "json4cj-annotations/src/anno/CodableMeta.cj": {
+      "same": true,
+      "publicGitBlob": "c1e46dc89f8925cc370896bbd029efce32e16d1e",
+      "publicSha256": "3b0bac802b39964f7fa0f7a29cde352e7dcb5ebb35cc3511a1500d474aaf8eb2",
+      "measuredSha256": "3b0bac802b39964f7fa0f7a29cde352e7dcb5ebb35cc3511a1500d474aaf8eb2"
+    },
+    "json4cj-annotations/src/anno/CodableUnwrap.cj": {
+      "same": true,
+      "publicGitBlob": "31f882ddb740936205dba36e5a2bc26e0e788d63",
+      "publicSha256": "5b5b0a2b462f1d6662ea1ffc7c47af07b56188fe3c3e68803ec46e07835d0c38",
+      "measuredSha256": "5b5b0a2b462f1d6662ea1ffc7c47af07b56188fe3c3e68803ec46e07835d0c38"
+    },
+    "json4cj-annotations/src/anno/CodableRef.cj": {
+      "same": true,
+      "publicGitBlob": "00917d9a8b47bfc4795c2d72d6732b167ea16998",
+      "publicSha256": "d710707001feb06edf530e3dad3dbe61cef0991139bf46359adcbda1b309f097",
+      "measuredSha256": "d710707001feb06edf530e3dad3dbe61cef0991139bf46359adcbda1b309f097"
+    },
+    "json4cj-annotations/src/anno/CodableRoot.cj": {
+      "same": true,
+      "publicGitBlob": "397413b95905437d4b9d3c452f8f2d37e39ab34f",
+      "publicSha256": "f70b64ec8eb744d45bc1532ba88286cc6dfe7345549e7216efa7a741b2e0a1bc",
+      "measuredSha256": "f70b64ec8eb744d45bc1532ba88286cc6dfe7345549e7216efa7a741b2e0a1bc"
+    },
+    "json4cj-annotations/src/anno/CodableKey.cj": {
+      "same": true,
+      "publicGitBlob": "502e511c88dc6aa89d4e2c053d9ddcf3f1b5a064",
+      "publicSha256": "53b567ab517de3cab6adf72ef31bb0fa4250d9c3aafaf80ce8421965203d44d7",
+      "measuredSha256": "53b567ab517de3cab6adf72ef31bb0fa4250d9c3aafaf80ce8421965203d44d7"
+    },
+    "json4cj-annotations/src/anno/CodableSkipType.cj": {
+      "same": true,
+      "publicGitBlob": "cc5688a80238c372db6951b1c5f096bdfa868ded",
+      "publicSha256": "6248f8c90ccb30ed02365634b3bc333dad5f47dba86cbdd07c1c7e9aae0c3b22",
+      "measuredSha256": "6248f8c90ccb30ed02365634b3bc333dad5f47dba86cbdd07c1c7e9aae0c3b22"
+    },
+    "json4cj-annotations/src/anno/Codable.cj": {
+      "same": true,
+      "publicGitBlob": "3e937b36b8309a740db08e12093811afe669cab4",
+      "publicSha256": "68222f850eb474d6fed8619c548b2bcc8e5e388a933becd268147737f2d40da2",
+      "measuredSha256": "68222f850eb474d6fed8619c548b2bcc8e5e388a933becd268147737f2d40da2"
+    },
+    "json4cj-annotations/src/anno/CodableFilter.cj": {
+      "same": true,
+      "publicGitBlob": "b3c91ce648f9fa2273c885ab28aaa6194e854069",
+      "publicSha256": "6ecddecd3e05f9b4032880fb1d4e0e3cc129068ab9c2e19909919ad21f1ea765",
+      "measuredSha256": "6ecddecd3e05f9b4032880fb1d4e0e3cc129068ab9c2e19909919ad21f1ea765"
+    },
+    "json4cj-annotations/src/anno/CodableSkip.cj": {
+      "same": true,
+      "publicGitBlob": "9bb33ab77026f363f60a4a3bfb34fdb707bb75f9",
+      "publicSha256": "1b47edf75a367a08ab8a3dbd371c9ecc54790a7195a2bb0c79d130399a168d40",
+      "measuredSha256": "1b47edf75a367a08ab8a3dbd371c9ecc54790a7195a2bb0c79d130399a168d40"
+    },
+    "json4cj-annotations/src/anno/CodableOrder.cj": {
+      "same": true,
+      "publicGitBlob": "3db03958a9dcb859ad315c0aeea4a417ee83e167",
+      "publicSha256": "b6823f8ab09ae47d989eacbe42da6b683eab5aef07a1cedc22d06e18fa7403c5",
+      "measuredSha256": "b6823f8ab09ae47d989eacbe42da6b683eab5aef07a1cedc22d06e18fa7403c5"
+    },
+    "json4cj-annotations/src/anno/CodableEnum.cj": {
+      "same": true,
+      "publicGitBlob": "33e18afb66dc552deb15119c825479261dc09d40",
+      "publicSha256": "abb47fc02c7de21228fe7a34aa0641be8fbd10aad217fba6efbe0fd3369639d2",
+      "measuredSha256": "abb47fc02c7de21228fe7a34aa0641be8fbd10aad217fba6efbe0fd3369639d2"
+    },
+    "json4cj-annotations/src/anno/CodableView.cj": {
+      "same": true,
+      "publicGitBlob": "ec029a079018d07e5dc39592378cd990b4eb88a6",
+      "publicSha256": "9c912a02896abd199b48bd8e1edbbc96d2f33795947cd03b1ef12f3dbdc4c142",
+      "measuredSha256": "9c912a02896abd199b48bd8e1edbbc96d2f33795947cd03b1ef12f3dbdc4c142"
+    },
+    "json4cj-annotations/src/anno/CodableAnyKey.cj": {
+      "same": true,
+      "publicGitBlob": "3fbd83f134014bf7a992754389be8912bee09675",
+      "publicSha256": "78aaa9cc180669021bd7d39258e0cc745ad070269cae5c8857bb9d2b330005e7",
+      "measuredSha256": "78aaa9cc180669021bd7d39258e0cc745ad070269cae5c8857bb9d2b330005e7"
+    },
+    "json4cj-annotations/src/anno/CodablePolicy.cj": {
+      "same": true,
+      "publicGitBlob": "6ab6ed02be8c6d035a9ef4ce1105e4977ebff070",
+      "publicSha256": "2abe4afee79b0918037c92e219b5512254706f437837ed49ce38c23bc0eacf12",
+      "measuredSha256": "2abe4afee79b0918037c92e219b5512254706f437837ed49ce38c23bc0eacf12"
+    },
+    "json4cj-annotations/src/anno/CodableVariant.cj": {
+      "same": true,
+      "publicGitBlob": "d5e11074e9d4631e4100ff5f9983b12cd5f67161",
+      "publicSha256": "ab315a4d8f1bdf92cd24028c48a5cc321c14d1f9c23106ecc6a24027927426f5",
+      "measuredSha256": "ab315a4d8f1bdf92cd24028c48a5cc321c14d1f9c23106ecc6a24027927426f5"
+    },
+    "json4cj-annotations/src/anno/CodableMerge.cj": {
+      "same": true,
+      "publicGitBlob": "711663b4c6f0eddf76fc28d34c088d9e83df9dc4",
+      "publicSha256": "38098e2bab5a729eb548076150e005b0f2ef21d842eaea71122027dece5befaf",
+      "measuredSha256": "38098e2bab5a729eb548076150e005b0f2ef21d842eaea71122027dece5befaf"
+    },
+    "json4cj-annotations/src/anno/CodableInject.cj": {
+      "same": true,
+      "publicGitBlob": "941e64110165f2a1f8bc3bc359988e42e62ec59b",
+      "publicSha256": "34c19099735dd84640662760f3e591607c675036bd44b7d4cdd4680784f5dc81",
+      "measuredSha256": "34c19099735dd84640662760f3e591607c675036bd44b7d4cdd4680784f5dc81"
+    },
+    "json4cj-annotations/src/anno/CodableDefault.cj": {
+      "same": true,
+      "publicGitBlob": "f8ea27a7e7932315d50a42e30d90032680746320",
+      "publicSha256": "650c2ae70b22eafde3e199bf36d87e793dbb4822b6c21a5a605dc632d8d64bbe",
+      "measuredSha256": "650c2ae70b22eafde3e199bf36d87e793dbb4822b6c21a5a605dc632d8d64bbe"
+    },
+    "json4cj-annotations/src/anno/CodableAnyValue.cj": {
+      "same": true,
+      "publicGitBlob": "a29040c8363f5df0155831f2afc9e96aee69f600",
+      "publicSha256": "3f2b8516c078502ea507fe34bee251f2706298fa7da7fb419b5797e2a102d1f6",
+      "measuredSha256": "3f2b8516c078502ea507fe34bee251f2706298fa7da7fb419b5797e2a102d1f6"
+    },
+    "json4cj-annotations/src/anno/CodableCreator.cj": {
+      "same": true,
+      "publicGitBlob": "457231e976cd2ecff3a928c86689d75c9923bc2e",
+      "publicSha256": "f98086a5cc9fdd3181b3edd5a79a30913483bfe4bb5e316cf4e9b619ae940dba",
+      "measuredSha256": "f98086a5cc9fdd3181b3edd5a79a30913483bfe4bb5e316cf4e9b619ae940dba"
+    },
+    "json4cj-annotations/src/test/package.cj": {
+      "same": true,
+      "publicGitBlob": "9919894ac73085d94606d5bae804099e6ab92bdd",
+      "publicSha256": "d992707f42256337ab4b7c8fa70bd0e7276b8e5c4893025bc726c89a5ce4b69a",
+      "measuredSha256": "d992707f42256337ab4b7c8fa70bd0e7276b8e5c4893025bc726c89a5ce4b69a"
+    },
+    "json4cj-annotations/src/test/enums/Enums_test.cj": {
+      "same": true,
+      "publicGitBlob": "f53a4e9790ee6fed9b675c7a5fdb48605f6cde81",
+      "publicSha256": "9249b810ecf2f2dd4a90a237af36711c199e7619b57dac90da89d6a11c20b6bb",
+      "measuredSha256": "9249b810ecf2f2dd4a90a237af36711c199e7619b57dac90da89d6a11c20b6bb"
+    },
+    "json4cj-core/cjpm.toml": {
+      "same": false,
+      "publicGitBlob": "d77843625e9dae0828fa186140fa978580ddfd2f",
+      "publicSha256": "20fa1366aa4f4b00aca93b79d33b04a297bbd07b6e99676f36120e632d15623e",
+      "measuredSha256": "51e8c487d3d9e85d4322994fa3ae4e978a31128e275c5a2f465e652ea071e034"
+    },
+    "json4cj-core/src/package.cj": {
+      "same": true,
+      "publicGitBlob": "86038e64336794ed686d0e822d20add246c8cf17",
+      "publicSha256": "c4e98e6549e1820822ac49bcdf786fce217072f79f9a27face5097db088d4f6b",
+      "measuredSha256": "c4e98e6549e1820822ac49bcdf786fce217072f79f9a27face5097db088d4f6b"
+    },
+    "json4cj-core/src/ext/JsonKindExtend_test.cj": {
+      "same": true,
+      "publicGitBlob": "c978bcf44cc719e981cacec41116851b2252633b",
+      "publicSha256": "25153fffa997d3a6e55dfd8d5d4ff6abfa7222a2b3124c23d20c33b5db7c85e4",
+      "measuredSha256": "25153fffa997d3a6e55dfd8d5d4ff6abfa7222a2b3124c23d20c33b5db7c85e4"
+    },
+    "json4cj-core/src/ext/JsonValueExtend.cj": {
+      "same": true,
+      "publicGitBlob": "89f365d21bacd90af8b8fe7cdb5a11bc72d1dcfa",
+      "publicSha256": "cca6701fcd0bc93826f6610a452fda1efa06084e57ca3e0e0b0172e127f45e36",
+      "measuredSha256": "cca6701fcd0bc93826f6610a452fda1efa06084e57ca3e0e0b0172e127f45e36"
+    },
+    "json4cj-core/src/ext/BasicTypeAdapter.cj": {
+      "same": true,
+      "publicGitBlob": "a801be87bdf0048cc24cb5b58538e6316023d370",
+      "publicSha256": "57fc65909be34cc22180565dd7b6b20ef2d55a5885360ee37c3199b1fee040fb",
+      "measuredSha256": "57fc65909be34cc22180565dd7b6b20ef2d55a5885360ee37c3199b1fee040fb"
+    },
+    "json4cj-core/src/ext/IJsonAdapter.cj": {
+      "same": true,
+      "publicGitBlob": "3a28d9539129c36aff616ea9d9563266a23aafad",
+      "publicSha256": "acde5b49007d2d668a4abf4468491e2864d2395bcb5362bc9ef0f7d31eadf209",
+      "measuredSha256": "acde5b49007d2d668a4abf4468491e2864d2395bcb5362bc9ef0f7d31eadf209"
+    },
+    "json4cj-core/src/ext/JsonKindExtend.cj": {
+      "same": true,
+      "publicGitBlob": "aea88d8911f5222cf146d9c070e3974cd7b14dfa",
+      "publicSha256": "cfa362821523573e4b2885fca8ae4e8480797c7eb80f99cab8cc7cc390c9315b",
+      "measuredSha256": "cfa362821523573e4b2885fca8ae4e8480797c7eb80f99cab8cc7cc390c9315b"
+    },
+    "json4cj-core/src/ext/JsonObjectHelper.cj": {
+      "same": true,
+      "publicGitBlob": "6f0897048913af730087fc2b5cacc5e6ef979d5d",
+      "publicSha256": "12edf2dd0597d16b2e7c297fff172f32224f1466bfdc22a08c71ec70f7799b2c",
+      "measuredSha256": "12edf2dd0597d16b2e7c297fff172f32224f1466bfdc22a08c71ec70f7799b2c"
+    },
+    "json4cj-core/src/ext/JsonValueExtend_test.cj": {
+      "same": true,
+      "publicGitBlob": "1115695dde5f31e841859afe1645728639ff4658",
+      "publicSha256": "ec2c7a590629c39b67803fe247aaf4e12333b8cd489d84d9b26e1be113af493c",
+      "measuredSha256": "ec2c7a590629c39b67803fe247aaf4e12333b8cd489d84d9b26e1be113af493c"
+    },
+    "json4cj-core/src/stream/JsonReader.cj": {
+      "same": true,
+      "publicGitBlob": "33ea622880336c268cd85ba471f0ecdad011d5b1",
+      "publicSha256": "46d7be60641e26038c83122cbac70384fd5f5628a4c6032cbdb977be64c73a7a",
+      "measuredSha256": "46d7be60641e26038c83122cbac70384fd5f5628a4c6032cbdb977be64c73a7a"
+    },
+    "json4cj-core/src/stream/JsonStreamFactory.cj": {
+      "same": true,
+      "publicGitBlob": "c1f53f3d0720042c8e5b8fac69fae45d845d6a0d",
+      "publicSha256": "07a5afccdd6a61a9bc2b57e18dcebe9105ab9fe3b07540254d87f07886318424",
+      "measuredSha256": "07a5afccdd6a61a9bc2b57e18dcebe9105ab9fe3b07540254d87f07886318424"
+    },
+    "json4cj-core/src/stream/PrettyPrinter.cj": {
+      "same": true,
+      "publicGitBlob": "aa0f8c0149d082578e586dd991a50390ac00447a",
+      "publicSha256": "05c77e8ccf53b88821066a22c2db7547c6417d053675adff4731fcf59115728a",
+      "measuredSha256": "05c77e8ccf53b88821066a22c2db7547c6417d053675adff4731fcf59115728a"
+    },
+    "json4cj-core/src/stream/JsonWriter.cj": {
+      "same": true,
+      "publicGitBlob": "e771e5e4b7d72430ebb5190abb44406998601819",
+      "publicSha256": "4176d6494e3a906f58b22110d6ca36255b8afa101c837eb4b0b6a9f2ee6fcd83",
+      "measuredSha256": "4176d6494e3a906f58b22110d6ca36255b8afa101c837eb4b0b6a9f2ee6fcd83"
+    },
+    "json4cj-core/src/stream/JsonStreamContext.cj": {
+      "same": true,
+      "publicGitBlob": "3c813b18a474f65d25a71815392892f815aa2100",
+      "publicSha256": "f04cc2070710095ef97b07f92473c32b7ef7ce44d00f2ad23142649f602eaff4",
+      "measuredSha256": "f04cc2070710095ef97b07f92473c32b7ef7ce44d00f2ad23142649f602eaff4"
+    },
+    "json4cj-core/src/stream/JsonToken.cj": {
+      "same": true,
+      "publicGitBlob": "d43a9c125f17555a6f59771386067578b50310ad",
+      "publicSha256": "61b1373f43e065cb8d14b9e457054be04d2acee52cc8ff7f637acd437689ac11",
+      "measuredSha256": "61b1373f43e065cb8d14b9e457054be04d2acee52cc8ff7f637acd437689ac11"
+    },
+    "json4cj-core/src/exc/JsonOverflowException.cj": {
+      "same": true,
+      "publicGitBlob": "dcafb26f080b55d3f63c170de92e1e858aaf5922",
+      "publicSha256": "b770bb2af1585d848e17e9b8340f69c4be9adcc9f532dc550a2969aa58a2ddf6",
+      "measuredSha256": "b770bb2af1585d848e17e9b8340f69c4be9adcc9f532dc550a2969aa58a2ddf6"
+    },
+    "json4cj-core/src/exc/JsonTypeException.cj": {
+      "same": true,
+      "publicGitBlob": "e66bfc4c3aaf8786e6bdf5edd6fcac08f409d67d",
+      "publicSha256": "cea55952246bc96b3f5ec33f043223dba3ca516e0aef2a28727abf0d5670556e",
+      "measuredSha256": "cea55952246bc96b3f5ec33f043223dba3ca516e0aef2a28727abf0d5670556e"
+    },
+    "json4cj-core/src/exc/JsonReadException.cj": {
+      "same": true,
+      "publicGitBlob": "99c6e3397c84d2ee34c99d3e1b07aa06626fe7b8",
+      "publicSha256": "c2ba8477a2947ad8596102bd4c887388af5eaababe4351fe3259dbbd88ff6285",
+      "measuredSha256": "c2ba8477a2947ad8596102bd4c887388af5eaababe4351fe3259dbbd88ff6285"
+    },
+    "json4cj-core/src/exc/JsonMissingField.cj": {
+      "same": true,
+      "publicGitBlob": "97c8743608abd9b4aad9b724178030aeafcfdeef",
+      "publicSha256": "92598f6e4e1956b73bb91eb9351ad20ed9fbe9fa2c437a052b6581c00e997230",
+      "measuredSha256": "92598f6e4e1956b73bb91eb9351ad20ed9fbe9fa2c437a052b6581c00e997230"
+    },
+    "json4cj-core/src/exc/JsonWriteException.cj": {
+      "same": true,
+      "publicGitBlob": "9a97fe8fa9df936c7ff2cd120443888d7fdb8317",
+      "publicSha256": "66a5d10c0a4e65d15f4bc5b6289aaa3d23b2cdbff2d6a8c49e4f7a9e07c682d6",
+      "measuredSha256": "66a5d10c0a4e65d15f4bc5b6289aaa3d23b2cdbff2d6a8c49e4f7a9e07c682d6"
+    },
+    "json4cj-core/src/exc/JsonException.cj": {
+      "same": true,
+      "publicGitBlob": "cedd6a22d767b74879d12d65e7f995a305a1acdc",
+      "publicSha256": "fb41ea2836f0350177452157812ea468e235b1e3ca26e6a9e2684ebb5fd1bc5f",
+      "measuredSha256": "fb41ea2836f0350177452157812ea468e235b1e3ca26e6a9e2684ebb5fd1bc5f"
+    },
+    "json4cj-core/src/tree/JsonTreeBuilder.cj": {
+      "same": true,
+      "publicGitBlob": "78e0c4c8ccb351cf123d75b9ae859b2fcb2bcbf8",
+      "publicSha256": "203a8e704baa13f4439a1672d7abb4f4ca64f33b4d0686e31bc94a42a9a8d6e9",
+      "measuredSha256": "203a8e704baa13f4439a1672d7abb4f4ca64f33b4d0686e31bc94a42a9a8d6e9"
+    },
+    "json4cj-core/src/tree/JsonTreeWalker.cj": {
+      "same": true,
+      "publicGitBlob": "c346d57f97d74a005813afb2f55950e9ae7c3b51",
+      "publicSha256": "46e45cd9b1f77b47bce0d345b6b6fb2661bcc8b7b0117e9c092ac090984f03d4",
+      "measuredSha256": "46e45cd9b1f77b47bce0d345b6b6fb2661bcc8b7b0117e9c092ac090984f03d4"
+    },
+    "json4cj-core/src/tree/JsonTree.cj": {
+      "same": true,
+      "publicGitBlob": "363fa03e6320710c7ed6869271b6ca47cbccae9c",
+      "publicSha256": "1e229725de21ea04d20fef93814ef53df5f8e222b6cfd33b8edcdb23802ebfe2",
+      "measuredSha256": "1e229725de21ea04d20fef93814ef53df5f8e222b6cfd33b8edcdb23802ebfe2"
+    },
+    "json4cj-core/src/tree/JsonTreeKind.cj": {
+      "same": true,
+      "publicGitBlob": "476f030f3a2a1d9afad2cb95d70a82730b0ec574",
+      "publicSha256": "afc4805d4114dd1cd9511ac82c16403e48035fcd8dc8f6cd2076683cb0d1a097",
+      "measuredSha256": "afc4805d4114dd1cd9511ac82c16403e48035fcd8dc8f6cd2076683cb0d1a097"
+    },
+    "json4cj-core/src/util/Base64.cj": {
+      "same": true,
+      "publicGitBlob": "fa589bd4e7fa6b96ceb97ed07c7967cba5bc1335",
+      "publicSha256": "8d2e98ded5e617af79a4a49aa1593b553c886bea83610130e168bf6e7cd82bb0",
+      "measuredSha256": "8d2e98ded5e617af79a4a49aa1593b553c886bea83610130e168bf6e7cd82bb0"
+    },
+    "json4cj-core/src/util/JsonPointer.cj": {
+      "same": true,
+      "publicGitBlob": "fc300ad3f60b1b02f39434481785eba497da0261",
+      "publicSha256": "df4d76d7e4b2db345090f38965930379628cab855c813c29ef91076675ae52e3",
+      "measuredSha256": "df4d76d7e4b2db345090f38965930379628cab855c813c29ef91076675ae52e3"
+    },
+    "json4cj-core/src/util/CharEscapes.cj": {
+      "same": true,
+      "publicGitBlob": "2c00889cc1f8860357462f0d94c98f0c7db5b568",
+      "publicSha256": "fa0f7d2a3f3890273907d3920575f46fcd09aed849416c4851b763894df42da5",
+      "measuredSha256": "fa0f7d2a3f3890273907d3920575f46fcd09aed849416c4851b763894df42da5"
+    },
+    "json4cj-core/src/cfg/RefContext.cj": {
+      "same": true,
+      "publicGitBlob": "955693e79b18ed2aca988e51e63688c91226e4a8",
+      "publicSha256": "b692ee2dd6645ae62c2afb722f2cf8b64ccbb708d46cb1913cab042f63d6806d",
+      "measuredSha256": "b692ee2dd6645ae62c2afb722f2cf8b64ccbb708d46cb1913cab042f63d6806d"
+    },
+    "json4cj-core/src/cfg/ReadFeature.cj": {
+      "same": true,
+      "publicGitBlob": "9ec90f5a964b01fdd54917a95f9a5f52a399fcd9",
+      "publicSha256": "07105ac3b6515efd52a921a3012c171403bc139f2da24687aced609fbf440a5f",
+      "measuredSha256": "07105ac3b6515efd52a921a3012c171403bc139f2da24687aced609fbf440a5f"
+    },
+    "json4cj-core/src/cfg/CodecConfig.cj": {
+      "same": true,
+      "publicGitBlob": "c3c959323489173bf49926ddbd5c8f57076d2e74",
+      "publicSha256": "b6f465425ea603a7ce2e1a81599e9cdab8ac511f04cfd05dd3565de068eae8e3",
+      "measuredSha256": "b6f465425ea603a7ce2e1a81599e9cdab8ac511f04cfd05dd3565de068eae8e3"
+    },
+    "json4cj-core/src/cfg/ViewContext.cj": {
+      "same": true,
+      "publicGitBlob": "c4a788fd5fd65e1eb1e3495ebe9ea5ae1ba854d9",
+      "publicSha256": "85b16d2ba22f11d0d24022000d4fa70ae23c45f04f68938434f6b3027676bedb",
+      "measuredSha256": "85b16d2ba22f11d0d24022000d4fa70ae23c45f04f68938434f6b3027676bedb"
+    },
+    "json4cj-core/src/cfg/WriteFeature.cj": {
+      "same": true,
+      "publicGitBlob": "8b8ac9086a426281999eb95386fb908f614d84d9",
+      "publicSha256": "07540d1536a94b936f5acaf5898c2d9ef5967eaafbe974d8a8498da4ac9de131",
+      "measuredSha256": "07540d1536a94b936f5acaf5898c2d9ef5967eaafbe974d8a8498da4ac9de131"
+    },
+    "json4cj-core/src/cfg/InjectContext.cj": {
+      "same": true,
+      "publicGitBlob": "4fe0906937e4c5eacd1b71a9d30360d3a21b1b36",
+      "publicSha256": "4108b471e671cb7d511c9c3cf90a31d0a4fb8f1de56c9f6eaaa0176fb1f9146b",
+      "measuredSha256": "4108b471e671cb7d511c9c3cf90a31d0a4fb8f1de56c9f6eaaa0176fb1f9146b"
+    },
+    "json4cj-core/src/cfg/FilterContext.cj": {
+      "same": true,
+      "publicGitBlob": "d81072ee0a7f6a62678931d11d663ed080f422ea",
+      "publicSha256": "e32567c863aef227b90a866e6ae321a60402fbb0ad02d1a1592dd5cf81f54f0a",
+      "measuredSha256": "e32567c863aef227b90a866e6ae321a60402fbb0ad02d1a1592dd5cf81f54f0a"
+    },
+    "json4cj-core/src/test/package.cj": {
+      "same": true,
+      "publicGitBlob": "38bb2c8c0973da9bbe2db033ab6cae8c25ed917e",
+      "publicSha256": "d75b9a9f21f2025dba37c6a4ebc46926c3365d5933fa00f375d87903d3e415c5",
+      "measuredSha256": "d75b9a9f21f2025dba37c6a4ebc46926c3365d5933fa00f375d87903d3e415c5"
+    },
+    "json4cj-core/src/test/ext/IJsonAdapter_test.cj": {
+      "same": true,
+      "publicGitBlob": "f3b972d90e91e47a7bf023974c8a26b38f6d4569",
+      "publicSha256": "22f207a9d57a197cffbf055dc4716bf17d1a5472aa7be00125b0296f581f961c",
+      "measuredSha256": "22f207a9d57a197cffbf055dc4716bf17d1a5472aa7be00125b0296f581f961c"
+    },
+    "json4cj-core/src/test/stream/JsonToken_test.cj": {
+      "same": true,
+      "publicGitBlob": "9e09d6ac1b9855b835f640f6c49eaa00e5a4ac06",
+      "publicSha256": "b663b8c043b08129de724ded8f0b042f5a6de13b0b9976852e316c63744eba79",
+      "measuredSha256": "b663b8c043b08129de724ded8f0b042f5a6de13b0b9976852e316c63744eba79"
+    },
+    "json4cj-core/src/test/stream/JsonStreamContext_test.cj": {
+      "same": true,
+      "publicGitBlob": "db8d97d5f8334c3d72275129f8371fead49d1dc5",
+      "publicSha256": "89abe07205d8c33955987f58a539e75dccbf4e0159a7bff6218dab2296056c6d",
+      "measuredSha256": "89abe07205d8c33955987f58a539e75dccbf4e0159a7bff6218dab2296056c6d"
+    },
+    "json4cj-core/src/test/stream/JsonReader_test.cj": {
+      "same": true,
+      "publicGitBlob": "a50a1cacf8c72f48c39ef00e3e56c2cc641ef005",
+      "publicSha256": "d7a996cae2bf5dc681de964ffc011ae8a88269daee33221aee3f9d7655b99d6d",
+      "measuredSha256": "d7a996cae2bf5dc681de964ffc011ae8a88269daee33221aee3f9d7655b99d6d"
+    },
+    "json4cj-core/src/test/stream/JsonWriter_test.cj": {
+      "same": true,
+      "publicGitBlob": "81e2ef54212ca888c0d8381892c75f2a9d83a4fd",
+      "publicSha256": "f4b958a3deca171cd4893c1e40e9fbdf1e27c45520c130681ec6f651cb95d2cd",
+      "measuredSha256": "f4b958a3deca171cd4893c1e40e9fbdf1e27c45520c130681ec6f651cb95d2cd"
+    },
+    "json4cj-core/src/test/stream/JsonStreamFactory_test.cj": {
+      "same": true,
+      "publicGitBlob": "2a712791fc020fb3317aec2126f464a4d7da3a1a",
+      "publicSha256": "8be4f713aced60b42153a745e77007a468124396e7173b1fea602c5b18016a95",
+      "measuredSha256": "8be4f713aced60b42153a745e77007a468124396e7173b1fea602c5b18016a95"
+    },
+    "json4cj-core/src/test/exc/JsonException_test.cj": {
+      "same": true,
+      "publicGitBlob": "3f0199bcc2d6c08ea663667c0797936c0186d512",
+      "publicSha256": "a81e8b7e6e7b8e5890b2f03e96833cefa664c0b2d29f37323f9526462c546bc1",
+      "measuredSha256": "a81e8b7e6e7b8e5890b2f03e96833cefa664c0b2d29f37323f9526462c546bc1"
+    },
+    "json4cj-core/src/test/tree/JsonTree_test.cj": {
+      "same": true,
+      "publicGitBlob": "df4df96a0c81d57d44235d1ecf9853abfc9d41ef",
+      "publicSha256": "92011576fcd0e4d8ae95a09a7ae609936fec1c6cba9c4e1bf1e716ff3d525102",
+      "measuredSha256": "92011576fcd0e4d8ae95a09a7ae609936fec1c6cba9c4e1bf1e716ff3d525102"
+    },
+    "json4cj-core/src/test/util/JsonPointer_test.cj": {
+      "same": true,
+      "publicGitBlob": "320b9a2d939c4f86174f0fb0a33b5798e3f07612",
+      "publicSha256": "447fbe13dced66b8749051353a3a91c63c64a2dd55cd1e27c0ae71fe202b278e",
+      "measuredSha256": "447fbe13dced66b8749051353a3a91c63c64a2dd55cd1e27c0ae71fe202b278e"
+    },
+    "json4cj-core/src/test/cfg/ViewContext_test.cj": {
+      "same": true,
+      "publicGitBlob": "91190bbd85bfef987cbc1bd60e153305508f595c",
+      "publicSha256": "d47c896f3b20016e0d22d5a02cccc5ab65da67d4307c8f71dd329bd4c43d4486",
+      "measuredSha256": "d47c896f3b20016e0d22d5a02cccc5ab65da67d4307c8f71dd329bd4c43d4486"
+    },
+    "json4cj-core/src/test/cfg/InjectContext_test.cj": {
+      "same": true,
+      "publicGitBlob": "947e55a8ff2056e1aaae2a465f827ce335fa1e0d",
+      "publicSha256": "242969eef2568b4cf8a6e9bd68e1d4190daf48dde1ad9d3b7a61f75ea0d42719",
+      "measuredSha256": "242969eef2568b4cf8a6e9bd68e1d4190daf48dde1ad9d3b7a61f75ea0d42719"
+    },
+    "json4cj-core/src/test/cfg/RefContext_test.cj": {
+      "same": true,
+      "publicGitBlob": "70eaa6a408416832d1861ea6f1c2515de88ef2b0",
+      "publicSha256": "9cb449c9d4bb62cf03883bef66ff896cf6b656caaa3c8c80126b92090f56c7d0",
+      "measuredSha256": "9cb449c9d4bb62cf03883bef66ff896cf6b656caaa3c8c80126b92090f56c7d0"
+    },
+    "json4cj-core/src/test/cfg/FilterContext_test.cj": {
+      "same": true,
+      "publicGitBlob": "d0613a17b66bc7c57d69a21b4e4ccc71c992c744",
+      "publicSha256": "e61d5f5df6b4f64dc367f9c1130bab0cd13a90cee5e1e5d7e55602776050af67",
+      "measuredSha256": "e61d5f5df6b4f64dc367f9c1130bab0cd13a90cee5e1e5d7e55602776050af67"
+    },
+    "json4cj-core/src/test/cfg/PrettyPrinter_test.cj": {
+      "same": true,
+      "publicGitBlob": "65e7957fee2d7f5d55c4f08a2bb0f2b8aa7abee4",
+      "publicSha256": "c49085b0fdd226de45aadf08fe16c3c3633556ab5f0bfeec7ff349233737e235",
+      "measuredSha256": "c49085b0fdd226de45aadf08fe16c3c3633556ab5f0bfeec7ff349233737e235"
+    },
+    "json4cj-core/src/test/codec/BuiltinDecoders_test.cj": {
+      "same": true,
+      "publicGitBlob": "e53caebd2dbfbb904abc4f3cb88c12d74ed156d9",
+      "publicSha256": "703ccf90b37e06775ea098cb820f21f2c57843c6e7c80ccebfac0332e5e3e506",
+      "measuredSha256": "703ccf90b37e06775ea098cb820f21f2c57843c6e7c80ccebfac0332e5e3e506"
+    },
+    "json4cj-core/src/test/codec/VariantRegistry_test.cj": {
+      "same": true,
+      "publicGitBlob": "c9fde17d9e0899f040d7bf87507ea6ac6a440401",
+      "publicSha256": "7fc62dd6abcb4b59310e2bac9bf0bf625a031e6d2a31b500b714692864834c2d",
+      "measuredSha256": "7fc62dd6abcb4b59310e2bac9bf0bf625a031e6d2a31b500b714692864834c2d"
+    },
+    "json4cj-core/src/codec/VariantRegistry.cj": {
+      "same": true,
+      "publicGitBlob": "bc67df6f123337042aa6c5c493fa554b39c79f86",
+      "publicSha256": "553c8f345ceae7e2f93fef6f7c8eb419db8c147f7a0371e15d0d31e06821d7f7",
+      "measuredSha256": "553c8f345ceae7e2f93fef6f7c8eb419db8c147f7a0371e15d0d31e06821d7f7"
+    },
+    "json4cj-core/src/codec/BuiltinDecoders.cj": {
+      "same": true,
+      "publicGitBlob": "6775f9f97c4796a1a86d4df78d23f0fd6a3e5bc7",
+      "publicSha256": "400a6386a3b6ac24ae14ca31e5af127651b6661d31a2130932648378aac92860",
+      "measuredSha256": "400a6386a3b6ac24ae14ca31e5af127651b6661d31a2130932648378aac92860"
+    },
+    "json4cj-core/src/codec/BuiltinEncoders.cj": {
+      "same": true,
+      "publicGitBlob": "b9db835b60149eb53773363e9ec7f4ecf706a1e6",
+      "publicSha256": "1b9640cac4d7ca58bc175dc98b5fc57eff0990f9ba0db267a569b86757897337",
+      "measuredSha256": "1b9640cac4d7ca58bc175dc98b5fc57eff0990f9ba0db267a569b86757897337"
+    },
+    "json4cj-core/src/codec/Decoder.cj": {
+      "same": true,
+      "publicGitBlob": "a5ffd1847c6eafca00ffa55b27845b36388dd0b2",
+      "publicSha256": "8762b95330e432b00392653ce6710e437921ff605325ee7cfc42efce8d931b40",
+      "measuredSha256": "8762b95330e432b00392653ce6710e437921ff605325ee7cfc42efce8d931b40"
+    },
+    "json4cj-core/src/codec/Encoder.cj": {
+      "same": true,
+      "publicGitBlob": "ddf697d9f416c19bded2c420085c9c8ae854bdd5",
+      "publicSha256": "1af4fcba0a040931c823ca01d03e7b5e27e77c26688b23b9577e2e110bd809c8",
+      "measuredSha256": "1af4fcba0a040931c823ca01d03e7b5e27e77c26688b23b9577e2e110bd809c8"
+    },
+    "json4cj-core/src/codec/BasicTypeCodec.cj": {
+      "same": true,
+      "publicGitBlob": "e96eea237a6e6500b32d7a377d0118c11ba159fa",
+      "publicSha256": "2d2095acf8c84e9aa8ea78a522212a097e077f50e8876a958c30b3977e074b7e",
+      "measuredSha256": "2d2095acf8c84e9aa8ea78a522212a097e077f50e8876a958c30b3977e074b7e"
+    },
+    "json4cj-core/src/codec/JsonStreamCodec.cj": {
+      "same": true,
+      "publicGitBlob": "8c0d23070f576443be6fec57b63567079f1df166",
+      "publicSha256": "54bac45857c3829073c3393d3e9c3a9002d5d7cfa5fb7173c3e840fef507143c",
+      "measuredSha256": "54bac45857c3829073c3393d3e9c3a9002d5d7cfa5fb7173c3e840fef507143c"
+    }
+  },
+  "readme": {
+    "path": "README.md",
+    "sha256": "c03caed9790acea77b39777d241622f94794ec443d0dddca887529e73bc31c0d",
+    "sizeBytes": 17365,
+    "gitBlob": "2f7c6c32f79b7b2bfea2bbe5a71e252d9a525d9e",
+    "licenseDeclarationLine": 705
+  },
+  "publicApiVerifiedRepositories": [
+    "https://gitcode.com/L_lipo/json4cj",
+    "https://gitcode.com/mufengzi/json4cj"
+  ],
+  "publicSourceUrls": [
+    "https://gitcode.com/L_lipo/json4cj/blob/a185e9ac0df95ee2a9715941b13f21f2a2a4f674/README.md",
+    "https://gitcode.com/mufengzi/json4cj/blob/a185e9ac0df95ee2a9715941b13f21f2a2a4f674/README.md"
+  ],
+  "publicRepositoriesLicenseMetadata": "MIT",
+  "licenseFullTextOrCopyrightNoticeFound": false,
+  "actualLicenseStatement": "README line 705 heading License; line 707 MIT; no independent full LICENSE/NOTICE in that 219-file tree",
+  "originalPeerSourceArchiveSha256": "70d35e1cc8c5de4e028c4510e99c845f335c39cb9fda7529ecb8df1f64b30c28",
+  "measuredJson4cjSourceDigest": "cfe474e19fd040b82c037ce34695c713564b19f2600ede8da8ee65189725f4ce",
+  "sourceOnlyBeforeCurrentO2Digest": "e7ae4a06f149a311b98c5889b119201f5ab39f71f87e93aaf6a633f794103bae",
+  "declarationExcerptSha256": "daf005969aac8cb4283b3777361f0244f4cce898b9a983a60b7f0d9e96f559bf",
+  "manifestPatchSha256": "23a49b9eeb9e758360f000081b4d4626a422450f468953de056461580034a32d",
+  "measurementOrPublicPayloadChanged": false,
+  "publicApiRawVerification": {
+    "cliPrintAddsSingleLf": true,
+    "stdoutSizeBytes": 17366,
+    "exactGitBlobRawSizeBytes": 17365,
+    "repositoriesVerified": 2,
+    "rawBytesChanged": false
+  }
+}
