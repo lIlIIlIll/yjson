@@ -179,14 +179,28 @@ class DocExampleTest(unittest.TestCase):
             contract = base / 'contract.json'
             contract.write_text(json.dumps({'declarations': {key: {'category': 'application', 'profile': 'core'}}}))
             projects = []
+            warm_projects = set()
             def build(project, example):
                 projects.append(project)
+                output = project / 'target/release/bin'
+                for name in ('main', 'main.exe', 'yjson_doc_example.cjo'):
+                    self.assertFalse((output / name).exists())
+                dependency = project / 'target/release/yjson/libyjson.a'
+                runtime = output / 'runtime.dll'
+                if project in warm_projects:
+                    self.assertEqual(dependency.read_bytes(), b'fixture dependency')
+                    self.assertEqual(runtime.read_bytes(), b'fixture runtime')
                 body = (project / 'src/main.cj').read_text()
                 if example['mode'] == 'must-fail':
                     line = body[:body.index('let bad')].count('\n') + 1
                     return subprocess.CompletedProcess([], 1, '', f'{project}/src/main.cj:{line}: error: mismatched types'), None
                 binary = project / 'target/release/bin/main'
                 binary.parent.mkdir(parents=True, exist_ok=True); binary.write_bytes(b'fixture executable')
+                (output / 'main.exe').write_bytes(b'fixture Windows executable')
+                (output / 'yjson_doc_example.cjo').write_bytes(b'fixture consumer metadata')
+                dependency.parent.mkdir(parents=True, exist_ok=True)
+                dependency.write_bytes(b'fixture dependency'); runtime.write_bytes(b'fixture runtime')
+                warm_projects.add(project)
                 marker = body.split('println("', 1)[1].split('_BEGIN', 1)[0]
                 return subprocess.CompletedProcess([], 0, '', ''), subprocess.CompletedProcess(
                     [str(binary)], 0, marker + '_BEGIN\n' + example['expected'] + '\n' + marker + '_END\n', '')

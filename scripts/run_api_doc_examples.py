@@ -357,6 +357,9 @@ def _run_examples(site: pathlib.Path, *, contract_path: pathlib.Path | None,
                 write_if_changed(project / 'src/main.cj', source)
                 started = time.monotonic()
                 try:
+                    # Reuse dependencies, but require fresh outputs for this consumer.
+                    for filename in ('main', 'main.exe', 'yjson_doc_example.cjo'):
+                        (project / 'target/release/bin' / filename).unlink(missing_ok=True)
                     build, result = build_and_run(project, example)
                     record.update(buildCommand=list(BUILD_COMMAND), buildExitCode=build.returncode,
                                   buildStdout=sanitize(build.stdout, path_replacements), buildStderr=sanitize(build.stderr, path_replacements),
