@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Independent examples for the executable-documentation trust boundary."""
 import subprocess
+import sys
 import unittest
 import pathlib
 import tempfile
@@ -161,6 +162,34 @@ class DocExampleTest(unittest.TestCase):
             with patch('run_api_doc_examples.subprocess.run', return_value=build) as invoked:
                 self.assertEqual(build_and_run(pathlib.Path(directory), {'mode': 'run'}), (build, None))
                 self.assertEqual(invoked.call_count, 1)
+
+    def test_utf8_child_output_is_preserved_under_a_legacy_windows_text_encoding(self):
+        actual_run = subprocess.run
+        marker = 'YJSON_DOC_UNICODE'
+        with tempfile.TemporaryDirectory() as directory:
+            project = pathlib.Path(directory)
+            binary = project / 'target/release/bin/main'
+            binary.parent.mkdir(parents=True)
+            binary.write_bytes(b'process boundary fixture')
+            def child(command, **kwargs):
+                payload = ('你好' if command[0] == 'cjpm' else marker + '_BEGIN\n你好\n' + marker + '_END\n').encode('utf-8')
+                return actual_run([sys.executable, '-c',
+                    'import os; os.write(1, ' + repr(payload) + '); os.write(2, ' + repr('你好'.encode('utf-8')) + ')'], **kwargs)
+            with patch('subprocess._text_encoding', return_value='cp1252'), patch(
+                    'run_api_doc_examples.subprocess.run', side_effect=child):
+                build, result = build_and_run(project, {'mode': 'run'})
+            self.assertEqual((build.stdout, build.stderr), ('你好', '你好'))
+            self.assertEqual(result.stderr, '你好')
+            self.assertTrue(check_run_result(result, {'expected': '你好'}, marker)[0])
+
+    def test_invalid_utf8_child_output_is_rejected_instead_of_replaced(self):
+        actual_run = subprocess.run
+        def child(command, **kwargs):
+            return actual_run([sys.executable, '-c', 'import os; os.write(1, b"\\xff")'], **kwargs)
+        with tempfile.TemporaryDirectory() as directory, patch('subprocess._text_encoding', return_value='cp1252'), patch(
+                'run_api_doc_examples.subprocess.run', side_effect=child):
+            with self.assertRaises(UnicodeDecodeError):
+                build_and_run(pathlib.Path(directory), {'mode': 'must-pass'})
 
     @unittest.skipIf(os.name == 'nt', 'POSIX resource boundary')
     def test_darwin_preserves_inherited_stack_for_finite_and_infinite_hard_limits(self):

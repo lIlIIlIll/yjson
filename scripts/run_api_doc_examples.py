@@ -204,7 +204,7 @@ def build_and_run(project: pathlib.Path, example: dict) -> tuple[subprocess.Comp
     # Same real cjpm build/executable boundary as run_cjpm_executable.sh, with
     # separated build output and portable Windows executable/library discovery.
     build = subprocess.run(['cjpm', 'build', '--verbose'], cwd=project,
-                           capture_output=True, text=True, check=False, timeout=300)
+                           capture_output=True, text=True, encoding='utf-8', errors='strict', check=False, timeout=300)
     if build.returncode or UNHANDLED.search(build.stdout + build.stderr) or example['mode'] in ('must-fail', 'must-pass'):
         return build, None
     candidates = (project / 'target/release/bin/main', project / 'target/release/bin/main.exe')
@@ -218,7 +218,7 @@ def build_and_run(project: pathlib.Path, example: dict) -> tuple[subprocess.Comp
         for variable in ('PATH',) if sys.platform == 'win32' else ('LD_LIBRARY_PATH', 'DYLD_LIBRARY_PATH'):
             environment[variable] = os.pathsep.join(directories + ([environment[variable]] if environment.get(variable) else []))
     run = subprocess.run([str(binary)], cwd=project, env=environment, capture_output=True,
-                         text=True, check=False, timeout=60)
+                         text=True, encoding='utf-8', errors='strict', check=False, timeout=60)
     return build, run
 
 
