@@ -857,6 +857,26 @@
   `2974c83005b57e9d99cb6d34b4b8d796fd61c2dbe70046cd0ea146175b9aad39`。
   这是本地正式包验收，尚不表示托管下载或线上 Pages 已验证。
 
+## 主仓 PR 与外部 codec 契约
+
+- [主仓 PR #12](https://github.com/lIlIIlIll/yjson/pull/12) 已建立为 Draft，首次 HEAD 为
+  `292967ceed73aabac1794a17210c2aee5892cc4c`，首次托管运行 `40660261262`。
+  `Generated code change risk` 首先失败；本地相同 base/HEAD 也退出 1。
+  `lib_json_direct_codec.cj` 的变化只有源码注释，但现有保守路径规则仍要求新增外部
+  `_test.cj` 的行为断言。原有消费方通过，不能替代这项 diff 要求；保留原失败，不放宽规则。
+- `api_documentation_contract_test.cj` 新增手写 `JsonCodec` 的公开 reader/writer 契约测试：
+  字符串、UTF-8 字节和流读取一致；写出使用独立字面量 oracle；null 保留，字面及转义
+  Unicode 都按解码后的 UTF-8 字节数执行读取预算，超限保留错误码和位置信息。
+  STS `1.2.0`、O2 依赖下，完整 `macro-consumer` 的 40 项、实际可执行消费方及暂存宏
+  消费方全部通过。此处使用明确标记 `clean_enforced=false` 的回归副本，不冒充干净候选。
+  日志 SHA-256 为 `5e7153d63887a139607b3c34370a8e5f548eec444d432c5f7112582678f90233`。
+  新测试提交的完整生成代码风险门禁通过：改变文件 196 个，其中风险文件 1 个。
+- 这项补测不改变产品、文档生成或测量输入；三项输入摘要分别仍为
+  `eb31d8ab82a5ed9149fc1fbf2955f7b9f6796acf4af1ab612fb03a1d6f446e99`、
+  `044ed6bd7325fb659a56920575990f66938e5933ff6652b44a030dc817294c32` 和
+  `230ccd61c2dd5bc85de33db9f2f27745c0f95e6fe7512bf8a1427a7b35cc2904`。
+  既有最终本地 333 条示例、离线包和严格性能结果按输入字节等价复用，托管最新 HEAD 仍须通过。
+
 ## 当前续接
 
 完整任务未完成。经用户确认，Windows llc 崩溃和 Linux 运行时崩溃暂按偶发工具链故障
