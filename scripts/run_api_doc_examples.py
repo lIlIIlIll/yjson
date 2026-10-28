@@ -25,6 +25,7 @@ from generate_api_docs import sdk_identity, source_identity, freeze_sources, ver
 FENCE_OPEN = re.compile(r'^ {0,3}(`{3,}|~{3,})([^\n]*)$')
 UNHANDLED = re.compile(r'(?im)^\s*(?:An exception has occurred:|Unhandled(?: exception| error)|Fatal error:)')
 SAFE_FLAGS = frozenset(('-O0', '-O1', '-O2', '--int-overflow', 'wrapping', 'throwing'))
+BUILD_COMMAND = ('cjpm', 'build', '--incremental', '--verbose')
 
 
 def extract_example(tag: dict) -> dict:
@@ -201,9 +202,10 @@ def dependency_artifacts(project: pathlib.Path) -> dict:
 
 
 def build_and_run(project: pathlib.Path, example: dict) -> tuple[subprocess.CompletedProcess, subprocess.CompletedProcess | None]:
-    # Same real cjpm build/executable boundary as run_cjpm_executable.sh, with
-    # separated build output and portable Windows executable/library discovery.
-    build = subprocess.run(['cjpm', 'build', '--verbose'], cwd=project,
+    # Use the real cjpm/executable boundary from run_cjpm_executable.sh.
+    # Each run starts with empty profile targets. Reuse only their unchanged
+    # frozen dependencies; every consumer body still goes through cjpm.
+    build = subprocess.run(list(BUILD_COMMAND), cwd=project,
                            capture_output=True, text=True, encoding='utf-8', errors='strict', check=False, timeout=300)
     if build.returncode or UNHANDLED.search(build.stdout + build.stderr) or example['mode'] in ('must-fail', 'must-pass'):
         return build, None
@@ -318,8 +320,6 @@ def _run_examples(site: pathlib.Path, *, contract_path: pathlib.Path | None,
             if name not in profiles:
                 profiles[name] = load_profile(name, frozen)
             profile, prelude = profiles[name]
-            project = work / name
-            (project / 'src').mkdir(parents=True, exist_ok=True)
             profile_sha = sha256_file(frozen / 'tests/doc_examples' / name / 'profile.json')
             prelude_sha = hashlib.sha256(prelude.encode()).hexdigest()
             for index, tag in enumerate(example_tags(declaration)):
@@ -332,6 +332,10 @@ def _run_examples(site: pathlib.Path, *, contract_path: pathlib.Path | None,
                 compile_option = profile.get('compileOption', '-O2')
                 override = profile.get('overrideCompileOption', os.environ.get('YJSON_CI_DEPENDENCY_OVERRIDE') or '-O2')
                 portable = consumer_manifest(profile, example, override_compile_option=override)
+                project = work / name / hashlib.sha256(portable.encode()).hexdigest()
+                if example['mode'] == 'must-fail':
+                    project = project / identifier
+                (project / 'src').mkdir(parents=True, exist_ok=True)
                 (exports / (identifier + '.toml')).write_text(portable, encoding='utf-8', newline='\n')
                 record = {'declaration': key, 'exampleIndex': index, 'profile': name,
                           'codeSha256': example['sha256'], 'consumerSha256': hashlib.sha256(source.encode()).hexdigest(),
@@ -354,7 +358,7 @@ def _run_examples(site: pathlib.Path, *, contract_path: pathlib.Path | None,
                 started = time.monotonic()
                 try:
                     build, result = build_and_run(project, example)
-                    record.update(buildCommand=['cjpm', 'build', '--verbose'], buildExitCode=build.returncode,
+                    record.update(buildCommand=list(BUILD_COMMAND), buildExitCode=build.returncode,
                                   buildStdout=sanitize(build.stdout, path_replacements), buildStderr=sanitize(build.stderr, path_replacements),
                                   dependencyArtifacts=dependency_artifacts(project))
                     if result is not None:
@@ -363,7 +367,7 @@ def _run_examples(site: pathlib.Path, *, contract_path: pathlib.Path | None,
                                       exitCode=result.returncode, stdout=sanitize(result.stdout, path_replacements),
                                       stderr=sanitize(result.stderr, path_replacements))
                     else:
-                        record.update(command=['cjpm', 'build', '--verbose'], exitCode=build.returncode,
+                        record.update(command=list(BUILD_COMMAND), exitCode=build.returncode,
                                       stdout='', stderr='')
                     if example['mode'] == 'must-fail':
                         first_line = source[:source.index(example['code'])].count('\n') + 1

@@ -156,6 +156,52 @@ class DocExampleTest(unittest.TestCase):
                 self.assertEqual(invoked.call_args_list[1].args[0], [str(binary)])
                 self.assertIn(str(library.parent), invoked.call_args_list[1].kwargs['env']['PATH'])
 
+    def test_failed_examples_and_changed_manifests_cannot_pollute_a_warm_consumer(self):
+        with tempfile.TemporaryDirectory() as directory:
+            base = pathlib.Path(directory); root = base / 'root'; site = base / 'site'
+            root.mkdir(); site.mkdir()
+            profile = {'schemaVersion': 1, 'dependencies': ['yjson'], 'imports': ['yjson.*'],
+                       'platforms': ['linux'], 'compileOption': '-O2', 'overrideCompileOption': '-O2'}
+            files = {'release/release-graph.toml': (pathlib.Path(__file__).resolve().parents[1] / 'release/release-graph.toml').read_bytes(),
+                     'tests/doc_examples/core/profile.json': json.dumps(profile).encode()}
+            for name, data in files.items():
+                path = root / name; path.parent.mkdir(parents=True, exist_ok=True); path.write_bytes(data)
+            identity = {'sha256': 'fixture-source', 'files': {name: hashlib.sha256(data).hexdigest() for name, data in files.items()}}
+            examples = [self.tag(output='7'), self.tag('{must-fail}', 'let bad: Int64 = "wrong"'),
+                        self.tag('{run flags="--int-overflow throwing"}', 'println(9)', '9'),
+                        self.tag(code='println(11)', output='11')]
+            declaration = {'id': 'entry', 'ownerId': None, 'visibility': 'public', 'kind': 'function',
+                'qualifiedName': 'yjson.example', 'headerSpelling': 'public func example(): Unit',
+                'documentation': {'tags': [{'name': 'example', **example} for example in examples]}}
+            key = 'yjson.example|function|public func example(): Unit'
+            (site / 'docs.json').write_text(json.dumps({'declarations': [declaration]}))
+            (site / 'api-docs.json').write_text(json.dumps({'qualificationStatus': 'development-only', 'source': identity}))
+            contract = base / 'contract.json'
+            contract.write_text(json.dumps({'declarations': {key: {'category': 'application', 'profile': 'core'}}}))
+            projects = []
+            def build(project, example):
+                projects.append(project)
+                body = (project / 'src/main.cj').read_text()
+                if example['mode'] == 'must-fail':
+                    line = body[:body.index('let bad')].count('\n') + 1
+                    return subprocess.CompletedProcess([], 1, '', f'{project}/src/main.cj:{line}: error: mismatched types'), None
+                binary = project / 'target/release/bin/main'
+                binary.parent.mkdir(parents=True, exist_ok=True); binary.write_bytes(b'fixture executable')
+                marker = body.split('println("', 1)[1].split('_BEGIN', 1)[0]
+                return subprocess.CompletedProcess([], 0, '', ''), subprocess.CompletedProcess(
+                    [str(binary)], 0, marker + '_BEGIN\n' + example['expected'] + '\n' + marker + '_END\n', '')
+            sdk = {'version': '1.2.0', 'cjcVersion': 'compiler', 'cjpmVersion': 'manager', 'binarySha256': {'cjc': 'fixture'}}
+            with patch('run_api_doc_examples.source_identity', return_value=identity), patch(
+                    'run_api_doc_examples.sdk_identity', return_value=sdk), patch(
+                    'run_api_doc_examples.set_consumer_stack', return_value={}), patch(
+                    'run_api_doc_examples.sys.platform', 'linux'), patch(
+                    'run_api_doc_examples.build_and_run', side_effect=build):
+                report = run_examples(site, root=root, contract_path=contract)
+            self.assertEqual((report['failures'], report['executedBindings']), (0, 4))
+            self.assertEqual(projects[0], projects[3])
+            self.assertEqual(len(set(projects)), 3)
+            self.assertNotEqual(projects[1], projects[2])
+
     def test_zero_exit_build_exception_does_not_execute_a_stale_binary(self):
         with tempfile.TemporaryDirectory() as directory:
             build = subprocess.CompletedProcess([], 0, 'An exception has occurred:\nerror', '')
