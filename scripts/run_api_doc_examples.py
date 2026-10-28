@@ -181,18 +181,17 @@ def set_consumer_stack() -> dict:
         return {'mode': 'platform-default'}
     import resource
     soft, hard = resource.getrlimit(resource.RLIMIT_STACK)
-    required = 131072 * 1024
-    target = required
-    if hard != resource.RLIM_INFINITY and hard < required:
-        if sys.platform != 'darwin':
-            raise ValueError('consumer compiler requires a 131072 KiB stack limit')
-        target = hard
-    if soft != resource.RLIM_INFINITY and soft < target:
-        resource.setrlimit(resource.RLIMIT_STACK, (target, hard))
     if sys.platform == 'darwin':
         os.environ.setdefault('cjStackSize', '8MB')
+        return {'mode': 'platform-default', 'softBytes': soft, 'hardBytes': hard,
+                'runtimeThreadStack': os.environ['cjStackSize']}
+    required = 131072 * 1024
+    if hard != resource.RLIM_INFINITY and hard < required:
+        raise ValueError('consumer compiler requires a 131072 KiB stack limit')
+    if soft != resource.RLIM_INFINITY and soft < required:
+        resource.setrlimit(resource.RLIMIT_STACK, (required, hard))
     return {'softBytes': resource.getrlimit(resource.RLIMIT_STACK)[0], 'hardBytes': hard,
-            'targetBytes': target, 'runtimeThreadStack': os.environ.get('cjStackSize', 'default')}
+            'targetBytes': required, 'runtimeThreadStack': os.environ.get('cjStackSize', 'default')}
 
 
 def dependency_artifacts(project: pathlib.Path) -> dict:
@@ -225,6 +224,36 @@ def build_and_run(project: pathlib.Path, example: dict) -> tuple[subprocess.Comp
 
 def run_examples(site: pathlib.Path, *, contract_path: pathlib.Path | None = None,
                  root: pathlib.Path = ROOT, only_profiles: set[str] | None = None) -> dict:
+    report = {'schemaVersion': 'yjson.api-doc-examples/1', 'platform': 'windows' if sys.platform == 'win32' else sys.platform,
+              'examples': [], 'failures': 0, 'executedBindings': 0, 'notApplicableBindings': 0,
+              'status': 'running', 'stage': 'input',
+              'partialProfileSelection': sorted(only_profiles) if only_profiles else None}
+    mapping = {'schemaVersion': 'yjson.api-doc-example-mapping/1', 'platform': report['platform'],
+               'status': 'running', 'groups': {}}
+    try:
+        save_json_atomic(site / 'example-execution.json', report)
+        save_json_atomic(site / 'example-mapping.json', mapping)
+        return _run_examples(site, contract_path=contract_path, root=root, only_profiles=only_profiles, report=report)
+    except Exception as error:
+        report.update(status='failed', failureStage=report['stage'], failures=max(1, report['failures']),
+                      executedBindings=sum(record.get('status') in ('passed', 'failed') for record in report['examples']),
+                      notApplicableBindings=sum(record.get('status') == 'not-applicable' for record in report['examples']),
+                      error=sanitize(str(error), {str(site): '<site>', str(root): '<repo>',
+                                                 tempfile.gettempdir(): '<temporary>'}))
+        save_json_atomic(site / 'example-execution.json', report)
+        mapping['status'] = 'failed'
+        save_json_atomic(site / 'example-mapping.json', mapping)
+        raise
+
+
+def save_json_atomic(path: pathlib.Path, document: dict) -> None:
+    pending = path.with_name('.' + path.name + '.pending')
+    pending.write_text(json.dumps(document, ensure_ascii=False, indent=2) + '\n', encoding='utf-8', newline='\n')
+    os.replace(pending, path)
+
+
+def _run_examples(site: pathlib.Path, *, contract_path: pathlib.Path | None,
+                  root: pathlib.Path, only_profiles: set[str] | None, report: dict) -> dict:
     document = json.loads((site / 'docs.json').read_text(encoding='utf-8'))
     manifest = json.loads((site / 'api-docs.json').read_text(encoding='utf-8'))
     if manifest.get('docIrSha256') is not None and sha256_file(site / 'docs.json') != manifest['docIrSha256']:
@@ -241,25 +270,22 @@ def run_examples(site: pathlib.Path, *, contract_path: pathlib.Path | None = Non
     known_profiles = {entry['profile'] for entry in entries.values() if entry.get('category') == 'application'}
     if only_profiles is not None and (not only_profiles or only_profiles - known_profiles):
         raise ValueError('selected example profile is absent from the declaration contract')
+    report.update(qualificationStatus=manifest.get('qualificationStatus', 'development-only'),
+                  docIrSha256=doc_ir_digest(document), sourceSha256=manifest['source']['sha256'],
+                  contractSha256=contract_sha, stage='sdk')
     installed = sdk_identity()
     sdk = {'cjcVersion': installed['version'], 'cjcOutput': installed['cjcVersion'],
            'cjpmOutput': installed['cjpmVersion'], 'cjcSha256': installed['binarySha256']['cjc'],
            'installation': installed}
-    platform = 'windows' if sys.platform == 'win32' else sys.platform
-    stack = set_consumer_stack()
+    report.update(sdk=sdk, stage='stack')
+    report['stack'] = set_consumer_stack()
+    platform = report['platform']
     exports = site / 'examples'
     exports.mkdir(exist_ok=True)
-    records: list[dict] = []
-    report = {'schemaVersion': 'yjson.api-doc-examples/1', 'qualificationStatus': manifest.get('qualificationStatus', 'development-only'),
-              'docIrSha256': doc_ir_digest(document), 'sourceSha256': manifest['source']['sha256'],
-              'sdk': sdk, 'platform': platform, 'stack': stack, 'examples': records,
-              'contractSha256': contract_sha,
-              'failures': 0, 'status': 'running', 'partialProfileSelection': sorted(only_profiles) if only_profiles else None}
-    report_path = site / 'example-execution.json'
+    records = report['examples']
     def save_report() -> None:
-        pending = site / '.example-execution.json.pending'
-        pending.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-        os.replace(pending, report_path)
+        save_json_atomic(site / 'example-execution.json', report)
+    report['stage'] = 'sources'
     save_report()
     with tempfile.TemporaryDirectory(prefix='yjson-doc-examples-') as temporary:
         work = pathlib.Path(temporary)
@@ -280,6 +306,7 @@ def run_examples(site: pathlib.Path, *, contract_path: pathlib.Path | None = Non
         modules = {p.name: (frozen / p.development_manifest).parent for p in graph.packages}
         path_replacements = {str(work): '<examples>', str(root): '<repo>', str(frozen): '<sources>'}
         profiles: dict[str, tuple[dict, str]] = {}
+        report['stage'] = 'examples'
         for declaration in visible_declarations(document):
             key = declaration_key(declaration)
             entry = entries.get(key)
@@ -373,7 +400,7 @@ def run_examples(site: pathlib.Path, *, contract_path: pathlib.Path | None = Non
     report['expectedBindings'] = expected
     report['executedBindings'] = sum(record['status'] != 'not-applicable' for record in records)
     report['notApplicableBindings'] = sum(record['status'] == 'not-applicable' for record in records)
-    report['status'] = 'complete'
+    report.update(status='complete', stage='complete')
     save_report()
     links = ''.join('<li><code>' + html.escape(record['declaration']) + '</code> '
                     + '<a href="' + pathlib.Path(record['source']).name + '">完整消费方源码</a> '
@@ -387,8 +414,8 @@ def run_examples(site: pathlib.Path, *, contract_path: pathlib.Path | None = Non
         group_id = hashlib.sha256((record['profile'] + ':' + record['codeSha256']).encode()).hexdigest()
         group = groups.setdefault(group_id, {'profile': record['profile'], 'codeSha256': record['codeSha256'], 'bindings': []})
         group['bindings'].append({'declaration': record['declaration'], 'exampleIndex': record['exampleIndex'], 'status': record['status']})
-    (site / 'example-mapping.json').write_text(json.dumps({'schemaVersion': 'yjson.api-doc-example-mapping/1',
-        'docIrSha256': report['docIrSha256'], 'groups': groups}, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    save_json_atomic(site / 'example-mapping.json', {'schemaVersion': 'yjson.api-doc-example-mapping/1',
+        'docIrSha256': report['docIrSha256'], 'groups': groups})
     return report
 
 

@@ -109,8 +109,14 @@ class DocExampleTest(unittest.TestCase):
                 key = 'yjson.example|function|public func example(): Unit'
                 (site / 'docs.json').write_text(json.dumps({'declarations': [declaration]}))
                 (site / 'api-docs.json').write_text(json.dumps({'qualificationStatus': 'development-only', 'source': identity}))
+                (site / 'example-execution.json').write_text(json.dumps({'platform': 'windows', 'status': 'complete', 'examples': [{'status': 'passed'}]}))
+                (site / 'example-mapping.json').write_text(json.dumps({'groups': {'old': {'bindings': [{'status': 'passed'}]}}}))
                 contract = base / 'contract.json'; contract.write_text(json.dumps({'declarations': {key: {'category': 'application', 'profile': 'core'}}}))
                 def build(project, example):
+                    running = json.loads((site / 'example-execution.json').read_text())
+                    self.assertEqual((running['platform'], running['status']), ('linux', 'running'))
+                    self.assertNotIn({'status': 'passed'}, running['examples'])
+                    self.assertEqual(json.loads((site / 'example-mapping.json').read_text())['groups'], {})
                     actual = tomllib.loads((project / 'cjpm.toml').read_text())
                     self.assertEqual(actual['package']['override-compile-option'], expected)
                     binary = project / 'target/release/bin/main'; binary.parent.mkdir(parents=True); binary.write_bytes(b'unit-test executable')
@@ -130,6 +136,9 @@ class DocExampleTest(unittest.TestCase):
                 self.assertEqual(renderer.call_args.kwargs['override_compile_option'], expected)
                 self.assertEqual(report['examples'][0]['overrideCompileOption'], expected)
                 self.assertEqual(report['failures'], 0)
+                self.assertEqual((report['status'], report['executedBindings']), ('complete', 1))
+                mapping = json.loads((site / 'example-mapping.json').read_text())
+                self.assertEqual([binding['status'] for group in mapping['groups'].values() for binding in group['bindings']], ['passed'])
                 exported = (site / report['examples'][0]['manifest']).read_bytes()
                 self.assertNotIn(b'\r\n', exported)
 
@@ -154,15 +163,25 @@ class DocExampleTest(unittest.TestCase):
                 self.assertEqual(invoked.call_count, 1)
 
     @unittest.skipIf(os.name == 'nt', 'POSIX resource boundary')
-    def test_darwin_records_its_real_finite_stack_limit(self):
-        maximum = 64 * 1024 * 1024
-        with patch('run_api_doc_examples.sys.platform', 'darwin'), patch.dict(os.environ, {}, clear=True), patch(
-                'resource.getrlimit', side_effect=[(8 * 1024 * 1024, maximum), (maximum, maximum)]), patch(
-                'resource.setrlimit') as set_limit:
-            report = set_consumer_stack()
-            self.assertEqual(set_limit.call_args.args[1], (maximum, maximum))
-            self.assertEqual(report['softBytes'], maximum)
-            self.assertEqual(report['runtimeThreadStack'], '8MB')
+    def test_darwin_preserves_inherited_stack_for_finite_and_infinite_hard_limits(self):
+        import resource
+        for maximum in (64 * 1024 * 1024, resource.RLIM_INFINITY):
+            with self.subTest(hard=maximum), patch('run_api_doc_examples.sys.platform', 'darwin'), patch.dict(
+                    os.environ, {}, clear=True), patch('resource.getrlimit', return_value=(8 * 1024 * 1024, maximum)), patch(
+                    'resource.setrlimit') as set_limit:
+                report = set_consumer_stack()
+                set_limit.assert_not_called()
+                self.assertEqual(report['softBytes'], 8 * 1024 * 1024)
+                self.assertEqual(report['hardBytes'], maximum)
+                self.assertEqual(report['mode'], 'platform-default')
+                self.assertEqual(report['runtimeThreadStack'], '8MB')
+
+    @unittest.skipIf(os.name == 'nt', 'POSIX resource boundary')
+    def test_darwin_retains_an_explicit_runtime_thread_stack(self):
+        with patch('run_api_doc_examples.sys.platform', 'darwin'), patch.dict(os.environ, {'cjStackSize': '16MB'}), patch(
+                'resource.getrlimit', return_value=(8 * 1024 * 1024, -1)), patch('resource.setrlimit') as set_limit:
+            self.assertEqual(set_consumer_stack()['runtimeThreadStack'], '16MB')
+            set_limit.assert_not_called()
 
     @unittest.skipIf(os.name == 'nt', 'POSIX resource boundary')
     def test_linux_does_not_claim_a_stack_limit_above_the_actual_hard_limit(self):
@@ -170,6 +189,82 @@ class DocExampleTest(unittest.TestCase):
                 'resource.getrlimit', return_value=(8 * 1024 * 1024, 64 * 1024 * 1024)):
             with self.assertRaisesRegex(ValueError, '131072 KiB'):
                 set_consumer_stack()
+
+    @unittest.skipIf(os.name == 'nt', 'POSIX resource boundary')
+    def test_linux_stack_setting_failure_remains_fatal(self):
+        import resource
+        for error in (ValueError('current limit exceeds maximum limit'), OSError('stack setting denied')):
+            with self.subTest(error=type(error).__name__), patch('run_api_doc_examples.sys.platform', 'linux'), patch(
+                    'resource.getrlimit', return_value=(8 * 1024 * 1024, resource.RLIM_INFINITY)), patch(
+                    'resource.setrlimit', side_effect=error) as set_limit:
+                with self.assertRaises(type(error)):
+                    set_consumer_stack()
+                set_limit.assert_called_once_with(resource.RLIMIT_STACK, (131072 * 1024, resource.RLIM_INFINITY))
+
+    @unittest.skipIf(os.name == 'nt', 'POSIX resource boundary')
+    def test_linux_still_raises_and_records_the_required_stack(self):
+        import resource
+        required = 131072 * 1024
+        with patch('run_api_doc_examples.sys.platform', 'linux'), patch(
+                'resource.getrlimit', side_effect=[(8 * 1024 * 1024, resource.RLIM_INFINITY), (required, resource.RLIM_INFINITY)]), patch(
+                'resource.setrlimit') as set_limit:
+            report = set_consumer_stack()
+            set_limit.assert_called_once_with(resource.RLIMIT_STACK, (required, resource.RLIM_INFINITY))
+            self.assertEqual((report['softBytes'], report['targetBytes']), (required, required))
+
+    def test_windows_keeps_its_default_stack_policy(self):
+        with patch('run_api_doc_examples.sys.platform', 'win32'):
+            self.assertEqual(set_consumer_stack(), {'mode': 'platform-default'})
+
+    def test_preparation_failure_replaces_other_platform_success_before_any_build(self):
+        for stage in ('input', 'sdk', 'stack', 'sources'):
+            with self.subTest(stage=stage), tempfile.TemporaryDirectory() as directory:
+                site = pathlib.Path(directory)
+                (site / 'docs.json').write_text('{}')
+                manifest = {'qualificationStatus': 'development-only', 'source': {'sha256': 'fixture-source'}}
+                if stage == 'input': manifest['docIrSha256'] = 'different-document'
+                (site / 'api-docs.json').write_text(json.dumps(manifest))
+                contract = site / 'contract.json'; contract.write_text('{"declarations": {}}')
+                (site / 'example-execution.json').write_text(json.dumps({'platform': 'linux', 'status': 'complete',
+                    'executedBindings': 333, 'failures': 0, 'examples': [{'status': 'passed'}]}))
+                (site / 'example-mapping.json').write_text(json.dumps({'groups': {'old-linux': {'bindings': [{'status': 'passed'}]}}}))
+                def prepare(*args):
+                    running = json.loads((site / 'example-execution.json').read_text())
+                    self.assertEqual((running['platform'], running['status'], running['executedBindings']), ('darwin', 'running', 0))
+                    self.assertEqual(json.loads((site / 'example-mapping.json').read_text())['groups'], {})
+                    raise ValueError('preparation rejected ' + str(site / 'input') + ' ' + str(pathlib.Path.home() / 'private'))
+                installed = {'version': '1.2.0', 'cjcVersion': 'compiler', 'cjpmVersion': 'manager', 'binarySha256': {'cjc': 'fixture'}}
+                with patch('run_api_doc_examples.sys.platform', 'darwin'), patch(
+                        'run_api_doc_examples.sdk_identity', side_effect=prepare if stage == 'sdk' else None, return_value=installed), patch(
+                        'run_api_doc_examples.set_consumer_stack', side_effect=prepare if stage == 'stack' else None, return_value={}), patch(
+                        'run_api_doc_examples.source_identity', side_effect=prepare if stage == 'sources' else None), patch(
+                        'run_api_doc_examples.build_and_run') as build:
+                    with self.assertRaises(ValueError):
+                        run_examples(site, root=site, contract_path=contract)
+                build.assert_not_called()
+                failed = json.loads((site / 'example-execution.json').read_text())
+                self.assertEqual((failed['platform'], failed['status'], failed['executedBindings']), ('darwin', 'failed', 0))
+                self.assertEqual(failed['failureStage'], stage)
+                self.assertEqual(failed['examples'], [])
+                self.assertGreater(failed['failures'], 0)
+                self.assertNotIn(str(site), failed['error'])
+                self.assertNotIn(str(pathlib.Path.home()), failed['error'])
+                mapping = json.loads((site / 'example-mapping.json').read_text())
+                self.assertEqual((mapping['platform'], mapping['status'], mapping['groups']), ('darwin', 'failed', {}))
+
+    def test_missing_input_also_invalidates_previous_success(self):
+        with tempfile.TemporaryDirectory() as directory:
+            site = pathlib.Path(directory)
+            (site / 'example-execution.json').write_text('{"platform":"linux","status":"complete"}')
+            (site / 'example-mapping.json').write_text('{"groups":{"old":{"bindings":[{"status":"passed"}]}}}')
+            with patch('run_api_doc_examples.sys.platform', 'win32'), patch('run_api_doc_examples.build_and_run') as build:
+                with self.assertRaises(FileNotFoundError):
+                    run_examples(site)
+            build.assert_not_called()
+            failed = json.loads((site / 'example-execution.json').read_text())
+            self.assertEqual((failed['platform'], failed['status'], failed['executedBindings']), ('windows', 'failed', 0))
+            self.assertEqual(failed['failureStage'], 'input')
+            self.assertEqual(json.loads((site / 'example-mapping.json').read_text())['groups'], {})
 
     def test_unknown_profile_cannot_pass_by_running_zero_examples(self):
         with tempfile.TemporaryDirectory() as directory:
