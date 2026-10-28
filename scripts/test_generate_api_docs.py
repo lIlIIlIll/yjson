@@ -3,6 +3,7 @@
 from copy import deepcopy
 import json
 import pathlib
+import shutil
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -16,6 +17,292 @@ from release_temp_tree import manifest_paths, release_identity, write_provenance
 import subprocess
 from types import SimpleNamespace
 from generate_api_docs import validate_module_dependencies
+
+
+class RepositoryLinksTest(unittest.TestCase):
+    MAIN = 'https://github.com/example/library'
+    MACRO = 'https://github.com/example/macros'
+
+    def setUp(self):
+        from api_doc_repository_links import repository_link_catalog, rewrite_repository_links, validate_html_file_links, _git_files
+        self.make_catalog = repository_link_catalog; self.rewrite = rewrite_repository_links; self.check_html = validate_html_file_links
+        self.read_git_files = _git_files
+        self.temporary = tempfile.TemporaryDirectory(); self.addCleanup(self.temporary.cleanup)
+        self.root = pathlib.Path(self.temporary.name)
+        self.sources = ('README.md', 'docs/guide.md', 'docs/peer.md')
+        self.repositories = {'.': (self.MAIN, '1' * 40), 'packages/yjson_macros': (self.MACRO, '2' * 40)}
+        for name in (*self.sources, 'RELEASE_NOTES.md', 'docs/maintainers/testing.md',
+                     'docs/performance/report.md', 'packages/yjson_macros/LICENSE', 'with (space).md'):
+            path = self.root / name; path.parent.mkdir(parents=True, exist_ok=True); path.write_text('original bytes\n')
+        (self.root / '.git').mkdir()
+        self.trees = {'.': {path.relative_to(self.root).as_posix(): ('100644', 'blob', 'a' * 40)
+                           for path in self.root.rglob('*') if path.is_file()},
+                      'packages/yjson_macros': {'LICENSE': ('100644', 'blob', 'b' * 40)}}
+        mocked = patch('api_doc_repository_links._git_files', side_effect=lambda root, revision:
+            self.trees['.' if root == self.root else root.relative_to(self.root).as_posix()])
+        mocked.start(); self.addCleanup(mocked.stop)
+        self.collect = lambda root, sources: {entry.target for entry in self.make_catalog(root, sources, self.repositories)}
+
+    def catalog(self, repositories=None):
+        return self.make_catalog(self.root, self.sources, self.repositories if repositories is None else repositories)
+
+    def render(self, text, source='docs/guide.md'):
+        (self.root / source).write_text(text, encoding='utf-8')
+        return self.rewrite(self.root, source, self.sources, self.catalog())
+
+    def test_repository_targets_use_fixed_main_and_macro_revisions_and_keep_suffixes(self):
+        text = ('[release](../RELEASE_NOTES.md?raw=1#升级) '
+                '[maintainer](maintainers/testing.md) [performance](performance/report.md) '
+                '[macro](../packages/yjson_macros/LICENSE#notice) '
+                '[space](<../with%20%28space%29.md#part> "title")\n')
+        actual = self.render(text)
+        self.assertEqual(actual, ('[release](' + self.MAIN + '/blob/' + '1' * 40 + '/RELEASE_NOTES.md?raw=1#升级) '
+            '[maintainer](' + self.MAIN + '/blob/' + '1' * 40 + '/docs/maintainers/testing.md) '
+            '[performance](' + self.MAIN + '/blob/' + '1' * 40 + '/docs/performance/report.md) '
+            '[macro](' + self.MACRO + '/blob/' + '2' * 40 + '/LICENSE#notice) '
+            '[space](<' + self.MAIN + '/blob/' + '1' * 40 + '/with%20%28space%29.md#part> "title")\n'))
+        self.assertEqual(self.collect(self.root, self.sources), {'RELEASE_NOTES.md', 'docs/maintainers/testing.md',
+            'docs/performance/report.md', 'packages/yjson_macros/LICENSE', 'with (space).md'})
+
+    def test_registered_pages_api_anchors_and_external_urls_remain_byte_identical(self):
+        text = ('[peer](peer.md#中文) [root](../README.md) [local](#anchor) '
+                '[API](symbol:yjson.YJson.toJson) [API2](api:yjson.YJson) '
+                '[web](https://example.test/file?q=1#part) [mail](mailto:docs@example.test)\n')
+        self.assertEqual(self.render(text), text)
+        self.assertEqual(self.collect(self.root, self.sources), set())
+
+    def test_code_fences_inline_code_and_raw_html_are_untouched(self):
+        text = ('`[inline](missing.md)` ``[long](missing.md) ` text``\n'
+                '```markdown\n[code](missing.md)\n````\n'
+                '~~~\n[tilde](missing.md)\n~~~\n'
+                '<a href="missing.md">raw HTML</a>\n'
+                '[`release`](../RELEASE_NOTES.md)\n')
+        self.assertEqual(self.render(text), text.replace('](../RELEASE_NOTES.md)',
+            '](' + self.MAIN + '/blob/' + '1' * 40 + '/RELEASE_NOTES.md)'))
+        self.assertEqual(self.collect(self.root, self.sources), {'RELEASE_NOTES.md'})
+
+    def test_reference_destinations_and_balanced_parentheses_share_the_same_resolution(self):
+        text = ('[release][notes]\n[notes]: ../RELEASE_NOTES.md?plain=1#section "title"\n'
+                '[space](../with%20(space).md)\n')
+        actual = self.render(text)
+        self.assertIn('[notes]: ' + self.MAIN + '/blob/' + '1' * 40 + '/RELEASE_NOTES.md?plain=1#section "title"', actual)
+        self.assertIn('/with%20%28space%29.md)', actual)
+        self.assertEqual(self.collect(self.root, self.sources), {'RELEASE_NOTES.md', 'with (space).md'})
+
+    def test_quoted_list_fences_escaped_links_and_crlf_keep_original_text(self):
+        text = ('> ```markdown\r\n> [quoted](missing.md)\r\n> ```\r\n'
+                '- ~~~\r\n  [list](missing.md)\r\n  ~~~\r\n'
+                '\\[escaped](missing.md)\r\n[release](../RELEASE_NOTES.md)\r\n')
+        self.assertEqual(self.render(text), text.replace('](../RELEASE_NOTES.md)',
+            '](' + self.MAIN + '/blob/' + '1' * 40 + '/RELEASE_NOTES.md)'))
+        self.assertEqual(self.collect(self.root, self.sources), {'RELEASE_NOTES.md'})
+
+    def test_indented_and_pre_code_remains_literal_and_links_after_code_are_resolved(self):
+        for newline in ('\n', '\r\n'):
+            for literal in ('    [literal](../RELEASE_NOTES.md)', '\t[literal](../RELEASE_NOTES.md)',
+                            '<pre class="example">\n[literal](../RELEASE_NOTES.md)\n</pre>',
+                            '<PRE>\n[literal](../RELEASE_NOTES.md)\n</PRE>'):
+                with self.subTest(newline=repr(newline), literal=literal):
+                    text = (literal + '\n\n[after](maintainers/testing.md)\n').replace('\n', newline)
+                    expected = text.replace('](maintainers/testing.md)',
+                        '](' + self.MAIN + '/blob/' + '1' * 40 + '/docs/maintainers/testing.md)')
+                    self.assertEqual(self.render(text), expected)
+                    self.assertEqual(self.collect(self.root, self.sources), {'docs/maintainers/testing.md'})
+
+    def test_quote_and_list_indentation_distinguishes_literal_code_from_normal_links(self):
+        for newline in ('\n', '\r\n'):
+            text = ('- parent\n'
+                    '    - [nested](maintainers/testing.md)\n'
+                    '    [continuation](performance/report.md)\n\n'
+                    '  [loose](maintainers/testing.md)\n\n'
+                    '      [literal-list](../RELEASE_NOTES.md)\n\n'
+                    '  [after-list-code](performance/report.md)\n\n'
+                    '>     [literal-quote](../RELEASE_NOTES.md)\n>\n'
+                    '> [quote](maintainers/testing.md)\n>\n'
+                    '> - item\n>\n'
+                    '>       [literal-quote-list](../RELEASE_NOTES.md)\n>\n'
+                    '>   [quote-list](performance/report.md)\n\n'
+                    '[after](maintainers/testing.md)\n').replace('\n', newline)
+            expected = text
+            for target in ('maintainers/testing.md', 'performance/report.md'):
+                expected = expected.replace('](' + target + ')', '](' + self.MAIN + '/blob/' + '1' * 40 + '/docs/' + target + ')')
+            with self.subTest(newline=repr(newline)):
+                self.assertEqual(self.render(text), expected)
+                self.assertEqual(self.collect(self.root, self.sources), {'docs/maintainers/testing.md', 'docs/performance/report.md'})
+
+    def test_code_paths_need_not_exist_and_indentation_cannot_interrupt_a_paragraph(self):
+        text = ('    [literal](missing.md)\n\n'
+                '<pre>\n[raw-literal](missing.md)\n</pre>\n'
+                '[paragraph](maintainers/testing.md)\n    [continuation](../RELEASE_NOTES.md)\n')
+        expected = text.replace('](maintainers/testing.md)', '](' + self.MAIN + '/blob/' + '1' * 40 + '/docs/maintainers/testing.md)')
+        expected = expected.replace('](../RELEASE_NOTES.md)', '](' + self.MAIN + '/blob/' + '1' * 40 + '/RELEASE_NOTES.md)')
+        self.assertEqual(self.render(text), expected)
+
+    def test_list_padding_tabs_and_paragraph_boundaries_keep_prose_links(self):
+        for prefix in ('-    ', '-\t', '1.   '):
+            text = prefix + '[normal](../RELEASE_NOTES.md)\n'
+            self.assertEqual(self.render(text), text.replace('](../RELEASE_NOTES.md)',
+                '](' + self.MAIN + '/blob/' + '1' * 40 + '/RELEASE_NOTES.md)'))
+        text = '-     [literal](../RELEASE_NOTES.md)\n\n[after](maintainers/testing.md)\n'
+        self.assertEqual(self.render(text), text.replace('](maintainers/testing.md)',
+            '](' + self.MAIN + '/blob/' + '1' * 40 + '/docs/maintainers/testing.md)'))
+        for beginning in ('=', 'paragraph\n+'):
+            text = beginning + '\n    [normal](../RELEASE_NOTES.md)\n'
+            self.assertEqual(self.render(text), text.replace('](../RELEASE_NOTES.md)',
+                '](' + self.MAIN + '/blob/' + '1' * 40 + '/RELEASE_NOTES.md)'))
+
+    def test_repository_bindings_reject_mutable_revisions_and_unsafe_prefixes(self):
+        (self.root / 'docs/guide.md').write_text('[release](../RELEASE_NOTES.md)')
+        for mapping in ({'.': (self.MAIN, 'main')}, {'../escape': (self.MAIN, '1' * 40)},
+                        {r'packages\macros': (self.MACRO, '2' * 40)}):
+            with self.subTest(mapping=mapping), self.assertRaises(ValueError):
+                self.catalog(mapping)
+
+    def test_illegal_or_missing_repository_paths_fail_during_collection_and_rewrite(self):
+        for target in ('../../outside.md', '..%2f..%2foutside.md', '/absolute.md', r'..\outside.md',
+                       r'C:\private\file.md', '../missing.md', '../bad%00.md'):
+            with self.subTest(target=target):
+                (self.root / 'docs/guide.md').write_text('[bad](' + target + ')')
+                with self.assertRaises(ValueError): self.collect(self.root, self.sources)
+                with self.assertRaises(ValueError): self.rewrite(self.root, 'docs/guide.md', self.sources, ())
+
+    def test_symlink_file_and_ancestor_cannot_supply_repository_links(self):
+        for mode in ('file', 'ancestor'):
+            with self.subTest(mode=mode):
+                target = self.root / ('linked.md' if mode == 'file' else 'linked')
+                target.symlink_to(self.root / ('RELEASE_NOTES.md' if mode == 'file' else 'docs'), target_is_directory=mode != 'file')
+                (self.root / 'docs/guide.md').write_text('[bad](../' + ('linked.md' if mode == 'file' else 'linked/peer.md') + ')')
+                with self.assertRaises(ValueError): self.collect(self.root, self.sources)
+                with self.assertRaises(ValueError): self.rewrite(self.root, 'docs/guide.md', self.sources, ())
+
+    def test_frozen_rewrite_needs_only_bound_source_and_metadata_never_target_bodies(self):
+        (self.root / 'docs/guide.md').write_text('[release](../RELEASE_NOTES.md)')
+        catalog = self.catalog()
+        frozen = self.root / 'frozen'; (frozen / 'docs').mkdir(parents=True)
+        (frozen / 'docs/guide.md').write_bytes((self.root / 'docs/guide.md').read_bytes())
+        self.assertEqual(self.rewrite(frozen, 'docs/guide.md', self.sources, catalog),
+            '[release](' + self.MAIN + '/blob/' + '1' * 40 + '/RELEASE_NOTES.md)')
+        (frozen / 'docs/guide.md').write_text('[changed](../elsewhere.md)')
+        with self.assertRaises(ValueError): self.rewrite(frozen, 'docs/guide.md', self.sources, catalog)
+
+    def test_target_body_changes_do_not_change_immutable_metadata_but_tree_type_must_match(self):
+        (self.root / 'docs/guide.md').write_text('[release](../RELEASE_NOTES.md)')
+        original = self.catalog()
+        (self.root / 'RELEASE_NOTES.md').write_text('updated editorial record, not producer input')
+        self.assertEqual(self.catalog(), original)
+        for committed in (None, ('120000', 'blob', 'a' * 40), ('160000', 'commit', 'a' * 40)):
+            with self.subTest(committed=committed):
+                if committed is None: self.trees['.'].pop('RELEASE_NOTES.md', None)
+                else: self.trees['.']['RELEASE_NOTES.md'] = committed
+                with self.assertRaisesRegex(ValueError, 'fixed revision'): self.catalog()
+
+    def test_source_only_catalog_requires_verified_manifest_membership(self):
+        with self.assertRaisesRegex(ValueError, 'fixed trees'):
+            self.make_catalog(self.root, self.sources, self.repositories, candidate_files=frozenset())
+        (self.root / '.git').rmdir()
+        (self.root / 'docs/guide.md').write_text('[release](../RELEASE_NOTES.md)')
+        with self.assertRaisesRegex(ValueError, 'provenance'): self.catalog()
+        with self.assertRaisesRegex(ValueError, 'candidate manifest'):
+            self.make_catalog(self.root, self.sources, self.repositories, candidate_files=frozenset())
+        actual = self.make_catalog(self.root, self.sources, self.repositories,
+            candidate_files=frozenset({'RELEASE_NOTES.md'}))
+        self.assertEqual(actual[0].target, 'RELEASE_NOTES.md')
+        self.assertIsNone(actual[0].blob_oid)
+
+    def test_real_git_tree_decoder_keeps_modes_and_paths(self):
+        output = b'100644 blob ' + b'a' * 40 + b'\twith space.md\0' + b'120000 blob ' + b'b' * 40 + b'\tlinked.md\0'
+        with patch('api_doc_repository_links.subprocess.run', return_value=subprocess.CompletedProcess([], 0, output, b'')):
+            decoded = self.read_git_files(self.root, '1' * 40)
+        self.assertEqual(decoded, {'with space.md': ('100644', 'blob', 'a' * 40),
+                                   'linked.md': ('120000', 'blob', 'b' * 40)})
+
+    def test_html_checker_checks_all_relative_href_src_within_site_but_not_anchors_or_external_urls(self):
+        site = self.root / 'site'; (site / 'html/guides').mkdir(parents=True)
+        (site / 'html/style.css').write_text('body {}')
+        (site / 'html/image.svg').write_text('<svg/>')
+        (site / 'html/guides/page.html').write_text('<a href="../index.html?x=1#not-an-anchor-check">index</a>')
+        (site / 'html/index.html').write_text('<a href="guides/page.html">page</a><a href="#unknown">anchor</a>'
+            '<link href="style.css" rel="stylesheet"><img src="image.svg"><a href="https://example.test/missing">web</a>')
+        self.assertEqual(self.check_html(site)['htmlPages'], 2)
+        # Custom product entry points are outside the producer-owned html scan.
+        (site / 'index.html').write_text('<a href="examples/index.html">pending</a>')
+        self.check_html(site)
+        for reference in ('<a href="RELEASE_NOTES.md">bad</a>', '<img src="missing.svg">',
+                          '<a href="../../outside.md">escape</a>'):
+            with self.subTest(reference=reference):
+                (site / 'html/index.html').write_text(reference)
+                with self.assertRaises(ValueError): self.check_html(site)
+        (site / 'html/linked').symlink_to(self.root, target_is_directory=True)
+        (site / 'html/index.html').write_text('<a href="linked/README.md">bad</a>')
+        with self.assertRaises(ValueError): self.check_html(site)
+
+
+class RepositoryLinksIntegrationTest(unittest.TestCase):
+    def test_actual_workspace_rewrites_release_maintainer_and_performance_before_production(self):
+        original = (ROOT / 'README.md').read_bytes()
+        identity = source_identity()
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = pathlib.Path(directory) / 'workspace'; create_workspace(workspace, revisions=identity)
+            text = (workspace / 'README.md').read_text()
+            for target in ('RELEASE_NOTES.md', 'docs/maintainers/testing.md', 'docs/performance/README.md'):
+                self.assertIn('https://github.com/lIlIIlIll/yjson/blob/' + identity['revision'] + '/' + target, text)
+            self.assertIn('](docs/custom-codecs.md)', text)
+        self.assertEqual((ROOT / 'README.md').read_bytes(), original)
+
+    def test_real_link_catalog_avoids_supplementary_bodies_and_preserves_consumer_closure(self):
+        required = {'CHANGELOG.md', 'CONTRIBUTING.md', 'LICENSE', 'RELEASE_NOTES.md', 'SECURITY.md', 'THIRD_PARTY_NOTICES.md',
+            'docs/implementation/cjdoc-020.md', 'docs/migration/0.1-to-0.2.md',
+            'docs/maintainers/api-documentation.md', 'docs/maintainers/native-internals.md',
+            'docs/maintainers/releasing.md', 'docs/maintainers/repository-layout.md', 'docs/maintainers/testing.md',
+            'docs/performance/README.md', 'docs/performance/methodology.md',
+            'docs/performance/results/2026-10-26-cjdoc-020-pure.md', 'docs/performance/results/2026-10-26-cjdoc-020-seven-library.md',
+            'packages/examples/README.md', 'release/0.1.1/binary-compatibility.json', 'release/0.1.1/evidence.md',
+            'release/0.2.0/enum-case-inventory.json', 'release/cjdoc-policy.toml', 'release/cjdoc-tool.toml',
+            'release/public-api-inventory.toml', 'release/public-api-snapshot.txt',
+            'release/public-cangjie-delta-0.2.0.toml', 'release/public-cangjie-delta-bfd29.toml', 'release/release-graph.toml'}
+        self.assertLessEqual(required, {p.as_posix() for p in manifest_paths(ROOT / 'release/release-files.txt')})
+        existing = {'LICENSE', 'THIRD_PARTY_NOTICES.md', 'release/cjdoc-policy.toml', 'release/cjdoc-tool.toml',
+                    'release/public-api-inventory.toml', 'release/public-api-snapshot.txt', 'release/release-graph.toml'}
+        original_read = pathlib.Path.read_bytes
+        def producer_bytes(path):
+            self.assertNotIn(path, {ROOT / target for target in required - existing})
+            return original_read(path)
+        with patch.object(pathlib.Path, 'read_bytes', producer_bytes):
+            identity = source_identity()
+        self.assertEqual({entry['target'] for entry in identity['repositoryLinks']}, required)
+        self.assertTrue((required - existing).isdisjoint(identity['files']))
+        self.assertEqual(len(identity['files']), 145)
+        self.assertIn('scripts/api_doc_repository_links.py', identity['files'])
+        with tempfile.TemporaryDirectory() as directory:
+            frozen = pathlib.Path(directory) / 'sources'; freeze_sources(ROOT, frozen, identity)
+            with patch('generate_api_docs.source_revisions', side_effect=AssertionError('must use frozen revisions')):
+                create_workspace(pathlib.Path(directory) / 'workspace', root=frozen, revisions=identity)
+            for relative in required - existing:
+                self.assertFalse((frozen / relative).exists())
+            verify_frozen_sources(frozen, identity)
+
+    def test_source_only_identity_derives_links_only_after_real_provenance_validation(self):
+        # A deterministic unit fixture, not a formally clean production candidate.
+        paths = manifest_paths(ROOT / 'release/release-files.txt')
+        with tempfile.TemporaryDirectory() as directory:
+            candidate = pathlib.Path(directory) / 'candidate'; candidate.mkdir()
+            for relative in paths:
+                target = candidate / relative; target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(ROOT / relative, target)
+            provenance = release_identity(candidate, paths, False)
+            provenance.update(clean_enforced=True, commit='1' * 40, tree='2' * 40)
+            write_provenance(candidate, provenance)
+            identity = source_identity(candidate)
+            self.assertEqual(identity['revision'], '1' * 40)
+            self.assertEqual(len(identity['files']), 145)
+            self.assertTrue(all(entry['blob_oid'] is None for entry in identity['repositoryLinks']))
+            self.assertIn('https://github.com/lIlIIlIll/yjson/blob/' + '1' * 40 + '/RELEASE_NOTES.md',
+                          {entry['url'] for entry in identity['repositoryLinks']})
+            frozen = pathlib.Path(directory) / 'frozen'; freeze_sources(candidate, frozen, identity)
+            create_workspace(pathlib.Path(directory) / 'workspace', root=frozen, revisions=identity)
+            (candidate / 'RELEASE_NOTES.md').write_text('tampered candidate payload')
+            with self.assertRaisesRegex(ApiDocsError, 'unverified source-only candidate'):
+                source_identity(candidate)
 
 
 class ApiDocsValidationTest(unittest.TestCase):
@@ -88,8 +375,7 @@ class ApiDocsValidationTest(unittest.TestCase):
             self.validate(document)
 
     def test_real_downloadable_source_closure_keeps_licenses(self):
-        with patch('generate_api_docs.source_revisions', return_value={'revision': '1' * 40, 'macroRevision': '2' * 40}):
-            identity = source_identity()
+        identity = source_identity()
         licenses = ('LICENSE', 'native/vendor/yyjson/LICENSE', 'packages/yjson_macros/LICENSE')
         with tempfile.TemporaryDirectory() as directory:
             destination = pathlib.Path(directory) / 'sources'

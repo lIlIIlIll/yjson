@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
+from dataclasses import asdict
 import hashlib
 import html
 import json
@@ -23,6 +24,8 @@ from check_cjdoc_qualification import validate_qualification
 from release_graph import ROOT, load_release_graph
 from validate_cangjie_sts import check_installed
 from api_doc_source_guide import SourceRepository, render_source_guide
+from api_doc_repository_links import (RepositoryLink, markdown_sources, repository_link_catalog,
+                                      rewrite_repository_links, validate_html_file_links)
 
 DEFAULT_CONFIG = ROOT / 'release/cjdoc-tool.toml'
 DEFAULT_POLICY = ROOT / 'release/cjdoc-policy.toml'
@@ -94,6 +97,18 @@ def sdk_identity() -> dict:
 def source_identity(root: pathlib.Path = ROOT) -> dict:
     """Hash actual inputs, including dirty contents, without exposing local paths."""
     graph = load_release_graph(root / 'release/release-graph.toml')
+    revisions = source_revisions(root)
+    sources = markdown_sources(root)
+    policy = tomllib.loads((root / 'release/cjdoc-policy.toml').read_text(encoding='utf-8'))
+    macro_prefix = next(package.development_manifest.parent.as_posix()
+                        for package in graph.packages if package.name == 'yjson_macros')
+    candidate_files = None
+    if 'candidateProvenanceSha256' in revisions:
+        from release_temp_tree import manifest_paths
+        candidate_files = frozenset(path.as_posix() for path in manifest_paths(root / 'release/release-files.txt'))
+    catalog = repository_link_catalog(root, sources,
+        {'.': (policy['repository_url'], revisions['revision']),
+         macro_prefix: (policy['macro_repository_url'], revisions['macroRevision'])}, candidate_files=candidate_files)
     paths = {root / 'release/release-graph.toml', root / 'release/api-documentation-required.json',
              root / 'release/cjdoc-policy.toml', root / 'release/cjdoc-tool.toml',
              root / 'release/public-api-inventory.toml', root / 'release/public-api-snapshot.txt'}
@@ -113,17 +128,16 @@ def source_identity(root: pathlib.Path = ROOT) -> dict:
                      and not {'target', 'build-script-cache', '.git'}.intersection(path.relative_to(root).parts))
     paths.update((root / 'tests/doc_examples').rglob('*.json'))
     paths.update((root / 'tests/doc_examples').rglob('*.cj'))
-    paths.update((root / 'docs').glob('*.md'))
-    paths.add(root / 'README.md')
+    paths.update(root / relative for relative in sources)
     paths.update(root / 'scripts' / name for name in (
         'generate_api_docs.py', 'check_api_documentation.py', 'run_api_doc_examples.py',
-        'release_graph.py', 'run_cjpm_executable.sh', 'api_doc_source_guide.py',
+        'release_graph.py', 'run_cjpm_executable.sh', 'api_doc_source_guide.py', 'api_doc_repository_links.py',
         'build_native_scanner.py', 'release_registry_rehearsal.py', 'release_temp_tree.py',
         'stage_source_tree.py', 'check_cjdoc_qualification.py', 'validate_cangjie_sts.py'))
     files = {p.relative_to(root).as_posix(): sha256_file(p) for p in sorted(paths) if p.is_file()}
     digest = hashlib.sha256(json.dumps(files, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
-    revisions = source_revisions(root)
-    return {**revisions, 'sha256': digest, 'files': files}
+    return {**revisions, 'sha256': digest, 'files': files,
+            'repositoryLinks': [asdict(entry) for entry in catalog]}
 
 
 def pinned_macro_revision(root: pathlib.Path) -> str:
@@ -203,7 +217,8 @@ def run_generator(command: list[str], environment: dict, log: pathlib.Path) -> N
                            + (result.stdout + result.stderr)[-12000:])
 
 
-def create_workspace(destination: pathlib.Path, *, root: pathlib.Path = ROOT) -> dict[str, str]:
+def create_workspace(destination: pathlib.Path, *, root: pathlib.Path = ROOT,
+                     revisions: dict | None = None) -> dict[str, str]:
     """Copy source only, preserving repository paths; never rewrite product manifests."""
     graph = load_release_graph(root / 'release/release-graph.toml')
     destination.mkdir()
@@ -231,13 +246,19 @@ def create_workspace(destination: pathlib.Path, *, root: pathlib.Path = ROOT) ->
     with root_manifest.open('a', encoding='utf-8') as stream:
         stream.write('\n[workspace]\nmembers = ' + json.dumps(
             [locations[p.name] for p in graph.packages if p.name != 'yjson']) + '\n')
-    # Every active guide is registered once. Relative links retain their source paths.
-    shutil.copyfile(root / 'README.md', destination / 'README.md')
+    # Resolve only supplementary repository links, before either producer runs.
+    # Registered pages and API links retain cjdoc's normal bindings.
+    revisions = source_identity(root) if revisions is None else revisions
+    catalog = tuple(RepositoryLink(**entry) for entry in revisions['repositoryLinks'])
+    sources = markdown_sources(root)
+    (destination / 'README.md').write_bytes(rewrite_repository_links(
+        root, 'README.md', sources, catalog).encode('utf-8'))
     (destination / 'docs').mkdir()
     pages = sorted((root / 'docs').glob('*.md'))
     configuration = '[docs]\nindex = "README.md"\n'
     for page in pages:
-        shutil.copyfile(page, destination / 'docs' / page.name)
+        (destination / 'docs' / page.name).write_bytes(rewrite_repository_links(
+            root, 'docs/' + page.name, sources, catalog).encode('utf-8'))
         configuration += (f'\n[[docs.pages]]\nsource = "docs/{page.name}"\n'
                           f'route = "concepts/guides/{page.stem}"\nid = {json.dumps(page.stem)}\n'
                           'kind = "guide"\n')
@@ -521,7 +542,9 @@ def validate_agent_reading(binary: pathlib.Path, site: pathlib.Path, environment
         'ulimit -s 131072\n'
         'cjdoc query --snapshot html/agent/manifest.json --request offline-search-request.json\n'
         'cjdoc mcp --snapshot html/agent/manifest.json\n'
-        '浏览器入口：html/index.html；完整消费方：examples/index.html。\n', encoding='utf-8')
+        '浏览器入口：html/index.html；完整消费方：examples/index.html。\n'
+        '未注册为站点页面的仓库补充材料使用固定提交的联网链接，不属于离线页面；'
+        'API、已注册指南、源码与示例可离线使用。\n', encoding='utf-8')
     return {**{key: report[key] for key in ('queryStatus', 'stdioMcpStatus', 'snapshotSha256', 'binarySha256',
                                           'packFilesSha256', 'resources', 'sourceGuidePages')},
             'report': 'agent-reading-check.json', 'receiptSha256': sha256_file(site / 'agent-reading-check.json')}
@@ -549,7 +572,7 @@ def generate(*, cjdoc_binary: pathlib.Path, output: pathlib.Path,
         frozen = work / 'consumer-sources'
         freeze_sources(ROOT, frozen, before)
         workspace = work / 'workspace'
-        create_workspace(workspace, root=frozen)
+        create_workspace(workspace, root=frozen, revisions=before)
         standard_configuration = work / 'standard-cjdoc.toml'
         shutil.copyfile(workspace / 'cjdoc.toml', standard_configuration)
         environment = os.environ.copy()
@@ -610,6 +633,7 @@ def generate(*, cjdoc_binary: pathlib.Path, output: pathlib.Path,
         for path in required:
             if not (site / path).is_file() or (site / path).is_symlink():
                 raise ApiDocsError('cjdoc did not produce required artifact: ' + path)
+        file_links = validate_html_file_links(site)
         agent_reading = validate_agent_reading(binary, site, environment, guide_pages)
         interface_inventory = write_maintainer_inventory(site)
         # Add our own entry and downloads without modifying any cjdoc-owned projection.
@@ -639,7 +663,7 @@ def generate(*, cjdoc_binary: pathlib.Path, output: pathlib.Path,
                         'buildWrapperSha256': config['build_wrapper_sha256']}},
                     'packages': [{'name': p.name, 'role': p.role, 'stability': p.stability} for p in graph.packages],
                     'maintainerInterfaces': interface_inventory, 'sourceGuide': source_guide,
-                    'standardQuality': quality_evidence,
+                    'standardQuality': quality_evidence, 'htmlFileLinks': file_links,
                     'applicationBindings': application_bindings,
                     'sourceUrlPolicy': 'Doc IR16 machine source URL unavailable; exact repository links are an ordinary source guide',
                     'agentReading': agent_reading, 'consumerSources': 'consumer-sources',

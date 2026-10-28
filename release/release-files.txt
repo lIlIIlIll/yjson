@@ -160,6 +160,7 @@ scripts/prepare_cjdoc.py
 scripts/test_prepare_cjdoc.py
 scripts/api_doc_source_guide.py
 scripts/test_api_doc_source_guide.py
+scripts/api_doc_repository_links.py
 scripts/generate_api_docs.py
 scripts/test_generate_api_docs.py
 scripts/check_api_documentation.py
