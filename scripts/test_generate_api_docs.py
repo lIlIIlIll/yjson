@@ -17,6 +17,58 @@ from release_temp_tree import manifest_paths, release_identity, write_provenance
 import subprocess
 from types import SimpleNamespace
 from generate_api_docs import validate_module_dependencies
+from generate_api_docs import validate_homepage
+
+
+class HomepageRenderingTest(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.site = pathlib.Path(self.temporary.name)
+        (self.site / 'html').mkdir()
+
+    def write_home(self, article, *, heading='<h1>yjson</h1>', extra=''):
+        (self.site / 'html/index.html').write_text(
+            extra + '<main>' + heading + '<article>' + article + '</article></main>', encoding='utf-8')
+
+    def test_native_prose_and_documented_code_are_readable(self):
+        self.write_home('<p><strong>面向仓颉的类型安全 JSON 库</strong></p>'
+                        '<p>默认使用纯仓颉实现。</p>'
+                        '<pre><code data-language="cangjie">let value = 7</code></pre>'
+                        '<pre><code>expected output</code></pre>')
+        validate_homepage(self.site)
+
+    def test_escaped_readme_presentation_cannot_pass_as_code(self):
+        for raw in ('&lt;!-- BEAUTIFIED --&gt;', '&lt;h1 align="center"&gt;yjson&lt;/h1&gt;',
+                    '\n&lt;p align="center"&gt;介绍&lt;/p&gt;', '&lt;img src="badge.svg" /&gt;'):
+            with self.subTest(raw=raw):
+                self.write_home('<p>yjson 是仓颉 JSON 库。</p><pre><code>' + raw + '</code></pre>')
+                with self.assertRaisesRegex(ApiDocsError, 'raw HTML presentation'):
+                    validate_homepage(self.site)
+
+    def test_intentionally_labelled_html_examples_remain_code(self):
+        for attributes in ('data-language="html"', 'class="language-html"'):
+            with self.subTest(attributes=attributes):
+                self.write_home('<p>HTML 示例。</p><pre><code ' + attributes
+                                + '>&lt;p&gt;example&lt;/p&gt;</code></pre>')
+                validate_homepage(self.site)
+
+    def test_article_prose_cannot_be_replaced_with_code(self):
+        self.write_home('<pre><code data-language="text">介绍</code></pre>')
+        with self.assertRaisesRegex(ApiDocsError, 'readable article prose'):
+            validate_homepage(self.site)
+
+    def test_home_has_one_project_heading(self):
+        for heading in ('', '<h1>other</h1>', '<h1>yjson</h1><h1>yjson</h1>'):
+            with self.subTest(heading=heading):
+                self.write_home('<p>介绍。</p>', heading=heading)
+                with self.assertRaisesRegex(ApiDocsError, 'one yjson heading'):
+                    validate_homepage(self.site)
+
+    def test_navigation_and_comments_are_outside_the_article_contract(self):
+        self.write_home('<!-- author comment --><p>介绍。</p>',
+                        extra='<aside><pre><code>&lt;p&gt;</code></pre><p>导航</p></aside>')
+        validate_homepage(self.site)
 
 
 class RepositoryLinksTest(unittest.TestCase):

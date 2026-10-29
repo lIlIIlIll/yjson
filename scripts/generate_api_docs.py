@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 from dataclasses import asdict
+from html.parser import HTMLParser
 import hashlib
 import html
 import json
@@ -35,6 +36,74 @@ DOC_IR_SCHEMA = 'cjdoc.doc-ir/16'
 
 class ApiDocsError(ValueError):
     pass
+
+
+class _HomepageContent(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__()
+        self.in_main = False
+        self.in_article = False
+        self.heading = self.paragraph = self.code = None
+        self.code_has_language = False
+        self.headings: list[str] = []
+        self.paragraphs: list[str] = []
+        self.unlabelled_code: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag == 'main':
+            self.in_main = True
+        if not self.in_main:
+            return
+        if tag == 'h1':
+            self.heading = []
+        elif tag == 'article':
+            self.in_article = True
+        elif tag == 'p' and self.in_article and self.code is None:
+            self.paragraph = []
+        elif tag == 'pre' and self.in_article:
+            self.code = []
+            self.code_has_language = False
+        elif tag == 'code' and self.code is not None:
+            attributes = dict(attrs)
+            self.code_has_language = bool(attributes.get('data-language')) or any(
+                value.startswith('language-') for value in (attributes.get('class') or '').split())
+
+    def handle_data(self, data: str) -> None:
+        if not self.in_main:
+            return
+        if self.heading is not None:
+            self.heading.append(data)
+        if self.code is not None:
+            self.code.append(data)
+        elif self.paragraph is not None:
+            self.paragraph.append(data)
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == 'h1' and self.heading is not None:
+            self.headings.append(' '.join(''.join(self.heading).split()))
+            self.heading = None
+        elif tag == 'p' and self.paragraph is not None:
+            self.paragraphs.append(' '.join(''.join(self.paragraph).split()))
+            self.paragraph = None
+        elif tag == 'pre' and self.code is not None:
+            if not self.code_has_language:
+                self.unlabelled_code.append(''.join(self.code))
+            self.code = None
+        elif tag == 'article':
+            self.in_article = False
+        elif tag == 'main':
+            self.in_main = False
+
+
+def validate_homepage(site: pathlib.Path) -> None:
+    """Reject a generated home page that displays README presentation as code."""
+    content = _HomepageContent()
+    content.feed(regular_input_path(site, 'html/index.html').read_text(encoding='utf-8'))
+    if content.headings != ['yjson'] or not any(content.paragraphs):
+        raise ApiDocsError('home page must have one yjson heading and readable article prose')
+    presentation = re.compile(r'^\s*(?:<!--|</?(?:h[1-6]|p|div|a|img|strong|em|br)(?:\s|/?>))', re.I)
+    if any(presentation.match(code) for code in content.unlabelled_code):
+        raise ApiDocsError('home page renders raw HTML presentation as a code block')
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -633,6 +702,7 @@ def generate(*, cjdoc_binary: pathlib.Path, output: pathlib.Path,
         for path in required:
             if not (site / path).is_file() or (site / path).is_symlink():
                 raise ApiDocsError('cjdoc did not produce required artifact: ' + path)
+        validate_homepage(site)
         file_links = validate_html_file_links(site)
         agent_reading = validate_agent_reading(binary, site, environment, guide_pages)
         interface_inventory = write_maintainer_inventory(site)
