@@ -1,0 +1,31 @@
+{
+  "status": "PASS_ALL_ARCHIVE_AND_MEMBER_HASHES",
+  "archives": {
+    "pure-release-020.tar.gz": {
+      "bytes": 262839,
+      "root": "pure-release-020",
+      "sha256": "36ab90c69f96157bef5743916ff9b020029550d5f2c30639d140877000f8a2ec"
+    },
+    "seven-library-020-batch1.tar.gz": {
+      "bytes": 1113877,
+      "root": "seven-library-020-batch1",
+      "sha256": "2a335821d005a20a23e598012b342c48eb8fe2b882e861a0b7dc67da5db046fc"
+    },
+    "seven-library-020-batch2.tar.gz": {
+      "bytes": 1115361,
+      "root": "seven-library-020-batch2",
+      "sha256": "c73e455b2f80ac3442fdedb925f13664df81664db75c98787db07cdcc75b6fec"
+    },
+    "seven-library-020-build-audits.tar.gz": {
+      "bytes": 821637,
+      "root": "seven-library-020-build-audits",
+      "sha256": "7fc2003792b80b05c1dd459b0fcf1ef38f28bc091aee37365207090ad89abc2a"
+    },
+    "seven-library-020-harness.tar.gz": {
+      "bytes": 826039,
+      "root": "seven-library-020-harness",
+      "sha256": "61741e0b61ddb1e3d0e59ca6bb82b1480db254744c868e617af94ae1130d799a"
+    }
+  },
+  "noUploadedData": true
+}

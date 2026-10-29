@@ -1,0 +1,6 @@
+........................................
+----------------------------------------------------------------------
+Ran 40 tests in 109.082s
+
+OK
+seven-library evidence passed: strict freshness, checksums, manifests, identities, and summaries

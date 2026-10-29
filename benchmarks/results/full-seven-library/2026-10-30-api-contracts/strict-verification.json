@@ -1,0 +1,18 @@
+{
+  "cleanCheckout": true,
+  "command": [
+    "bash",
+    "scripts/ci_job.sh",
+    "perf-evidence-drift",
+    "strict"
+  ],
+  "exitCode": 0,
+  "indexCalibration": "GitButler teardown --checkout-to docs/all-visible-api-contracts in an isolated copy",
+  "laterSourceChanges": "Documentation status and release documentation inclusion only; product, effective harness and candidate dependency identity unchanged.",
+  "logSha256": "9083b593bdb08f38ca4a8ed6e0a295d56cd3ba194d66e86c9f8a8d7f8701048d",
+  "macroCommit": "d819745310f8cc6aa416e1298f706ea5138b7d16",
+  "measuredCommit": "ac4f8b987910a473ada7d77f10ce6cd3c12d2248",
+  "nativeGitWrites": 0,
+  "regressionsPassed": 40,
+  "verifiedCommit": "d8859ee29ef0569233cc394d59122123bb3f796a"
+}

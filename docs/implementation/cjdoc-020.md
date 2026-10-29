@@ -1136,8 +1136,8 @@ Doc IR v16 只有项目级 repository，不能为独立宏仓表达第二组 rep
 | 原生职责分组 | 应用 API、生成代码 SPI、第一方内部接口分别展示，应用入口在前；声明、身份与签名完整保留 | 部分实现 | 工作源码的 1035 条 HTML 与 Agent 分组、九包和两个混合职责所有者检查通过；全部 3870 条采集声明的 ID、原始签名、可见性、名称与所有者保持不变。工具最终门禁与交付待完成 |
 | 分类准确性 | 分类与宏展开、公开签名及跨包调用一致 | 部分实现 | `DirectBufferWriterTarget` 类型、reserveCapacity 及四个标量 NoEscapeFast 成员改为生成代码 SPI；其余成员保留实际职责。实际生成确认应用 459、SPI 500、内部 76；最终冻结输入待验收 |
 | 公开面审查 | 说明截图类型为何公开，并列出已核实的收窄候选及未知边界 | 部分实现 | 七个类型存在跨包或生成代码依赖；五个成员为源码分析候选，尚未收窄或编译验证，不宣称已证明最小公开面 |
-| 性能与产品保护 | 源码注释以外的执行代码、签名和优化条件不变；新输入通过现有 strict 门禁 | 部分实现 | 注释反向还原与 API 清单通过，签名和可见性不变；性能摘要绑定原始源码字节，须冻结宏指针后重测，不能改写旧证据 |
-| 交付 | 最新工具资格、九包生成、三平台示例、离线包和实际 Pages 展示通过 | 部分实现 | 工作源码九包集成探针通过，仍非最终资格。当前工具配置对应已发布的 cjdoc 0.7.6；0.7.7、最终示例与线上交付待验收 |
+| 性能与产品保护 | 源码注释以外的执行代码、签名和优化条件不变；新输入通过现有 strict 门禁 | 验收通过 | 注释反向还原与 API 清单通过，签名和可见性不变；冻结源码的 Server 构建及真实 O2 参数审计通过，24 项、11 轮 Pure 正式门禁通过；七库两批 1540 单元、完整来源摘要及独立重放通过；干净检出 d7d93e5 的完整 strict 及 40 项回归通过 |
+| 交付 | 最新工具资格、九包生成、三平台示例、离线包和实际 Pages 展示通过 | 部分实现 | 合并工具源码的发布前评估通过：九包、1035 项声明、333 个实际执行的应用示例及离线包通过。生产配置仍对应已发布的 cjdoc 0.7.6；0.7.7 发布、最终冻结输入、三平台示例与 Pages 待验收 |
 
 职责元数据应来自真实源码注释，复用现有机器分类清单作为本仓库的分类权威，并校验二者
 一致。工具保持通用，不根据 yjson 类型名前缀猜分类。HTML、Markdown、搜索、Doc IR 与
@@ -1186,6 +1186,157 @@ PR 更新到 `04ce974e94fc15df3be72ebaeffe1ac0587f9ecb`，tree 为
 该 PR 首次 Windows 构建在 LLVM 指令选择阶段发生 `llc.exe` 访问异常，O2 未变。
 本地通过不代替这个平台的证据；当前 PR 保持草稿，固定源码的独立取证正在准备。
 官方当前 HEAD 审查与其余托管门禁、工具发布及源码资格尚未完成。
+
+`04ce974` 的托管 Linux 验收已通过；Windows 在 provider fixture 重编译 yjson 时发生
+`llc.exe` 访问异常，macOS 的普通验收已通过，但随后取消示例构建退出 1，尚无足够日志
+判断原因。两者不记为平台资格通过。独立 Windows 诊断的前两轮均在原始 blob 校验拒绝
+LF 到 CRLF 的检出转换，实际产品目标调用数为零。修正诊断及依赖检出策略后，分别运行
+固定源码的 Windows 捕获和 macOS 单次示例构建；不修改正式门禁、SDK 或产品优化参数。
+
+后续独立诊断中，macOS 的一次取消示例构建退出 0，源码、SDK、依赖与归档输入前后
+一致，真实 STS 调用记录保持工具既定 O2 参数。Windows 的一次根构建也退出 0，但完整
+身份、IR 与编译日志被隐私检查扣留，不能把控制器正常返回推断出的信息写成直接可审阅
+的证据。这个根构建结果也不证明当前 Windows provider 失败已经复现或解决。
+
+最新 Windows provider 独立诊断在固定 `04ce974` 源码下，先执行一次根 CLI 构建，
+再执行一次原 provider 命令，两者退出 0，输出包含 `provider plugin ok`。995 个源码文件、
+SDK、依赖及归档前后检查通过，实际工具构建保持 O2 与既定 no-inline 参数。没有 IR、
+后端跟踪或额外目标重试，也不将这一旧源码诊断计为当前 HEAD 的正式平台资格。
+
+Reader 门禁另有已复现的版本登记错误：预登记的 after 版本仍为 `0.7.5`，实际为
+`0.7.7`。完整两份 Doc IR 仅该版本字段不同，两个语言的 248 项浏览器测量独立校验
+无失败。源码中的两文件修复及版本一致性回归已准备，旧配置回归失败，修复后 19 项
+测试全部通过，包含真实生成器资源边界检查。使用修正的源码配置另建登记，离线完整
+比较通过；下载的原始失败产物未改写。这些结果不替代新 HEAD 的托管检查。经明确确认后，两文件已并入原提交并安全推送到
+`fd0e5b22dd620b0958c54ad80d982f472fce32f3`，随后按授权请求一次官方审查。
+该次官方审查指出成员分组反复扫描的 P2 问题。修复改为按分组、类别先分配成员，
+补充 512 个独立分组及类别、来源、所有者、重载顺序的回归；693 项原生测试与产品构建
+通过，独立复核未发现新增阻塞项。旧、新工具重放同一份九包 Doc IR 的 4428 个文件
+逐字节相同；basic 与 self 的完整 Doc IR 也分别相同。self 因新增源码声明产生的
+预期摘要按实际输出同步，时间、RSS 阈值及参考测量未变。首次本地测试的错误分类预期、
+默认堆耗尽及旧工具在较小堆下的重放失败均保留；最终单测使用现有正式 CI 的
+512 MiB 堆、串行参数和工具仓规定的 O1 例外，九包重放使用既有真实仓库配置的 2 GiB 堆。
+
+经明确授权后，四文件修复已并入原提交并安全推送到
+`06e22146381b47c1650cd3385311325ae876b520`。
+[当前提交官方审查](https://github.com/lIlIIlIll/cjdoc/pull/168#issuecomment-6503999208)
+已完成，无新增或未解决发现；对应旧线程在修复与回归验证后关闭。
+[三平台 CI](https://github.com/lIlIIlIll/cjdoc/actions/runs/40984692607)、
+[Reader](https://github.com/lIlIIlIll/cjdoc/actions/runs/40984692700) 和
+[站点验收](https://github.com/lIlIIlIll/cjdoc/actions/runs/40984692646) 均通过。
+官方审查状态还核对绑定到当前 base/head 的测试合并提交
+`01426f3c374dc4d1a07aec4dcc5f2b3020d2a685`。
+站点发布步骤按 PR 策略跳过，不写成已部署；工具尚未合并或发布。
+
+额外的精确提交冷构建已生成匹配的产品、worker 及身份清单。首次前置检查中的
+自生成 Python 字节码和构建自有 worker 目录已分别查明并清理。随后本地命令误用
+`CJ_HEAP_SIZE`，仓颉实际读取的是 `cjHeapSize`，因此该轮 self 预热的 GC SIGSEGV
+不作为正式 512 MiB 配置失败的证据。同源二进制的对照中另一次越界异常、一次 GC
+SIGSEGV 及其 core 也按该环境错误保留，不用于宣称编译器根因或修复。一次 GDB
+诊断因 parser 子进程较多而超时，没有取得 core。已纠正为仓库既有的
+`cjHeapSize=512MB` 后，精确提交 `06e2214` 的完整原有硬上限通过，收据中的
+`sourceCommit` 为完整当前 SHA，`trustedCommit` 为真，二进制摘要为
+`4fd5dddd77b228b2410a2b23cb9373d0bbb8e2f9fd579fcf45b3a0f219f9327c`。
+basic 与 self 的 Doc IR 摘要分别与原有预期一致；这项硬上限不作为 A/B 性能提升结论。
+源码、二进制、SDK、优化参数和预算未改。PR 在全部当前检查与官方审查通过后转为
+待审阅，随后由用户合并到 `8cc8f71a296b1c6321e575b56fadbd0c379e242a`，tree 为
+`8bc115f09ed8823cdbe8dd66fdd940bf29b35af8`，与最终 PR HEAD 同树。
+
+合并源码的公开归档 SHA-256 为
+`21a6e03a80ff5fcef259c1a80f55401f81e01c0fe33c9390c9409a0cf1f6cc75`，
+995 个文件与精确 Git blob、可执行权限逐项一致。在两个不存在的缓存目录中，分别按现有
+`prepare_cjdoc.py` 执行独立源码构建及其校验，均通过 STS 1.2.0、static stdx、
+O2 与既定 no-inline 策略。两份二进制摘要为
+`a3e7875eba73cc02e65b3b3df00d968e6a4ae48e29a2b14758ccb12c74789808` 和
+`482a128e9e70de09b69cc5424948a8eb80bd69a97c8f33ef3d6e7a574468e8c7`，
+不作为可重现构建证明。两份工具使用既有 2 GiB 配置重放冻结九包 Doc IR，分别与原已验
+4428 个文件逐字节相同；这不替代最终主仓源码生成或应用示例执行。首次重放因本地
+语言参数误写为 `zh` 而在 CLI 解析阶段拒绝；改用支持的 `zh-CN`，原拒绝日志保留。
+
+合并后的 [main CI 首次运行](https://github.com/lIlIIlIll/cjdoc/actions/runs/40994003657/attempts/1)
+中 Linux 验收通过。Windows 在首次根构建编译依赖 markdown 时发生 llc 访问异常，
+未进入原生测试；macOS 的 680 项原生测试、Python 与 CLI 验收通过，随后 provider
+重编译同一依赖时 llc 退出 139，均保留 O2。
+[main Reader](https://github.com/lIlIIlIll/cjdoc/actions/runs/40994003637) 通过。
+[main 站点](https://github.com/lIlIIlIll/cjdoc/actions/runs/40994003642) 的生成、源码重现、
+两片浏览器与阅读检查通过；汇合步骤因复用的 main CI 未全绿而拒绝发布，未更新线上站点。
+按已有诊断授权，另以控制提交 `1d4c55bbf87fbbaf23aab335423a19ab4ed6da77`
+固定上述合并源码，执行各一次日志诊断；四个诊断文件的 91 项回归与隐私检查通过。
+[Windows 根构建](https://github.com/lIlIIlIll/cjdoc/actions/runs/40999405645) 一次调用退出 0；
+[macOS provider](https://github.com/lIlIIlIll/cjdoc/actions/runs/40999408837) 的一次根构建
+前置调用及一次原 provider 命令均退出 0，输出包含 `provider plugin ok`。两份完整收据
+均通过隐私检查，995 个源码文件、SDK、三份 Git 依赖与控制器前后相同，实际 STS 调用
+保留工具既定 O2/no-inline 参数。没有新增 IR 或后端调用；完整收据 SHA-256 分别为
+`41ccfda902717b32cec80a5ea4f1fa74166059df9e5ffece20dd0f76232764bb` 和
+`c2c6bd7159170992034411878061fa6ed07694c225768db69ea9828e31167bfb`。
+诊断使用独立临时路径和原始 Git blob 的 LF 归档，不作为原 CI 路径、Windows CRLF 或
+完整平台验收的重现证明，也不确定 LLVM 崩溃根因。
+
+用户随后授权一次完整重跑，并要求只有全部门禁通过才继续 Pages、tag 和原 Release
+发布。[main CI attempt 2](https://github.com/lIlIIlIll/cjdoc/actions/runs/40994003657/attempts/2)
+的 Windows 与 macOS 全部通过。Linux 的 693 项原生测试、Python、CLI、provider、
+HTML 与 smoke 通过；随后性能 Doc IR 身份检查在自文档生成时收到 SIGSEGV，未到摘要
+比较。运行时日志记录 `gc-pool-t1` 的 `BaseObject::GetSize` 访问地址 `0x8`。
+CI required 仍失败，没有因此触发新 Pages、创建 tag 或发布资产。
+
+独立本地诊断保留 CI 原二进制，SHA-256 为
+`9c218e606d916a7411e70d7dc70a50ff7eeb704aa72a6fc45a284f01ae8ae386`；
+995 个归档源码文件及权限与合并 Git blob 一致，SDK/stdx 指纹与 CI 收据相同。
+在原 512 MB 堆、128 MiB 栈、单任务及禁用缓存条件下，原二进制普通运行退出 0，
+调试运行的 inferior 正常退出；既有本地二进制的一次对照也退出 0。
+三份自文档 Doc IR 均为既定摘要
+`ca0a5256c44b54827a9f390b02b1a980f42775637c142dcd0289d9973d698673`。
+调试器在 inferior 已退出后查询寄存器，观察脚本退出 1；保留这个脚本错误，不将其
+计为产品崩溃。主机、归档路径及调试时序与托管 CI 不同，未取得此次崩溃的 core，
+因此这些结果只证明本地未复现，不能确定根因或证明修复。源码、二进制和运行时库前后
+摘要相同；未构建 SDK，未改正式堆配置或产品优化参数。
+
+在等待上游发布期间，使用合并工具源码的私有资格配置，对干净主仓 `d7d93e5` 与宏仓
+D819 继续发布前源码评估。实际执行：
+
+```sh
+python3 scripts/generate_api_docs.py --cjdoc <qualified-cjdoc> --config <evaluation-config> --output <site>
+python3 scripts/run_api_doc_examples.py <site>
+python3 scripts/check_api_documentation.py <site>
+```
+
+三条命令均退出 0。九包共 1035 项可见声明的中文契约、HTML 与 Agent 分组检查通过；
+1076 个参数、558 个适用返回说明均有中文，质量 finding 为零。333 个应用示例全部
+实际编译运行成功，333 份可下载源码及消费方 manifest 与执行输入一致。离线包已生成；
+禁用网络的 18 次查询与 17 次 stdio MCP 源码指南读取通过。生成 Doc IR SHA-256 为
+`bcf13a7957821338a6a9ab1bd5631d8214072925bb9b24c75f24a6417560bef1`，
+该评估的工具二进制与前述第一份独立冷构建相同。评估沿用文档读取的 2 GiB 堆和
+128 MiB 栈，不改变基准测量或正式 CI 配置。
+
+这份结果不作为上游公开发布、最终主仓冻结输入、Windows/macOS 示例或实际 Pages 的
+验收证明。上游 0.7.7 尚未发布，主仓生产工具配置按发布流程保留原已发布版本；
+正式工具登记和线上交付仍未完成。
+
+前一提交 `fd0e5b2` 的 Reader 候选构建在依赖 markdown 的 `llc -O2` 阶段退出 139；
+macOS 则在 678 项原生测试通过后的依赖重编译中退出 138。首次失败保留，未改优化参数
+或自动重试；新提交触发的正式检查通过不能反向证明旧失败的编译器根因。
+
+性能输入冻结为主仓 `ac4f8b987910a473ada7d77f10ce6cd3c12d2248` 与宏仓 D819。
+新产品摘要为 `4251be5ff98c50a91afdd162ae130d94f8bf2a70c85faf5da6a78304232771af`，
+生产 harness 摘要为 `9d457f09101cb4466a82b000d2494e9c12b2f495b5b16b4fef809811a60d8852`。
+Server 上重新构建 Pure 两侧、四个仓颉基准程序与 Java harness，真实编译 argv、源码、
+SDK 与链接库审计通过。测量代码均使用普通 O2，CHIR 函数内联保持开启；没有构建 SDK。
+24 项、11 轮的 Pure 正式测量已通过，全部候选/基线比不超过 1.05，双方变异系数均不
+超过 5%，最大比率 `1.017936`，最大单侧 CV 为 `3.207%`。七库两批各 770 个单元
+已完成，每批重新构建、审计并选择闲核；第一批 9/10、第二批 7/10 workload 满足
+七库全部 CV 不超过 5%，全部 noisy 行保留。两批中 yjson 自身十项均稳定。
+
+原始五包和全部成员下载校验通过，独立离线复核重放了完整矩阵、RSS、固定工作量、
+JSON/CSV/Markdown 汇总和真实编译参数。七库额外从原始 execve 日志重放实际成功编译；
+Pure 的参数证据为已散列的实际 argv 收据，其原始 execve 日志未包含在五包中。
+公开 harness 增补冻结导出的 315 个文件，187 个重叠文件逐字节不变，完整产品、harness
+及九包清单身份独立重算一致。结果见[本轮七库](../performance/results/2026-10-30-api-contracts-seven-library.md)
+和 [Pure 报告](../performance/results/2026-10-30-api-contracts-pure.md)。干净检出 `d7d93e5` 的完整 strict 与 40 项回归已通过，
+隔离副本只通过 GitButler 校准旧索引，原工作区及三份用户文件保持不变。发布源码暂存
+首次发现两份新报告未进入收录清单，补入相关文档后，同一干净检出的
+`release_temp_tree.py --enforce-clean` 成功暂存 377 个文件；未改性能输入。
+旧报告、失败批与所有噪声记录按原身份保留。此后主仓只更新本实施记录中的验收事实，
+不改变已冻结测量的产品、harness、依赖或基准协议。
 
 本次确认不等于授权收窄公开 API。七个截图类型当前均由独立包、宏展开代码或公开返回类型
 依赖。`DirectBufferWriterTarget` 的构造、重置、取字符串与字节，以及

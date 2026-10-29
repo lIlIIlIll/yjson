@@ -170,31 +170,28 @@ let name = document.root().member("name").getOrThrow().asString()
 
 ## 性能
 
-生产候选 `5576cdd` 在 STS `1.2.0` 下通过同 SDK 的 Pure 回退检查：24 个用例、
-528 个计时样本，最大候选/基线比率约 1.01394，全部不超过原有 1.05 门槛。
-七库两批独立构建各完成 770 个单元，第一批 8/10、第二批 9/10 workload 满足
-`Max CV <= 5%`；噪声行保留，没有第三批。整合提交 `7d48eb2` 的干净检出通过完整 strict 检查。
+生产源码 `ac4f8b9` 在 STS `1.2.0` 下通过 Pure 回退检查：24 项、528 个计时样本，
+最大候选/基线比率为 1.017936，全部不超过原有 `1.05` 门槛。
+七库两批各 770 个单元，第一批 9/10、第二批 7/10 workload 满足七库全部 `CV <= 5%`；
+噪声行完整保留，没有第三批。干净检出 `d8859ee` 的完整 strict 检查与 40 项回归已通过。
 
-下表只列第二批满足稳定性标准的九项，单位为微秒/操作、中位数。
-本次构建的仓颉测量程序及源码依赖实际采用显式 `-O2`，未禁用 CHIR 函数内联；进程配置
-`cjProcessorNum=1`、`cjHeapSize=128MB`，七库仍单核绑定，不代表默认运行时配置。
+下表只列第二批七库均稳定的七项，单位为微秒/操作、中位数。
+仓颉测量构建使用显式 `-O2`，CHIR 函数内联保持启用；进程配置为
+`cjProcessorNum=1`、`cjHeapSize=128MB`，七库单核绑定。
 
 | Workload | yjson | stdx.json | cangjieJSON | json4cj | cjfast_json | Jackson | fastjson2 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Address encode | 0.389 | 1.046 | 0.901 | 1.005 | 0.911 | 0.178 | 0.066 |
-| Address decode | 0.249 | 1.876 | 0.562 | 1.781 | 0.694 | 0.327 | 0.072 |
-| Person encode | 1.072 | 4.067 | 5.659 | 2.226 | 3.736 | 0.573 | 0.274 |
-| Person decode | 1.529 | 7.136 | 4.931 | 6.194 | 4.732 | 1.127 | 0.422 |
-| Large Array encode | 18.582 | 38.068 | 80.519 | 37.754 | 34.651 | 9.100 | 4.150 |
-| Large Map encode | 3.741 | 25.576 | 46.896 | 29.436 | 27.811 | 1.785 | 1.740 |
-| Large Map decode | 11.873 | 53.633 | 58.544 | 50.433 | 49.665 | 5.418 | 3.957 |
-| Deep Nested encode | 20.798 | 29.941 | 51.388 | 29.257 | 26.026 | 4.515 | 2.456 |
-| Deep Nested decode | 47.085 | 48.827 | 36.425 | 44.393 | 32.946 | 10.377 | 3.398 |
+| Address decode | 0.249 | 1.868 | 0.562 | 1.783 | 0.691 | 0.323 | 0.071 |
+| Person encode | 1.070 | 4.057 | 5.675 | 2.228 | 3.733 | 0.568 | 0.268 |
+| Person decode | 1.536 | 7.115 | 4.929 | 6.195 | 4.695 | 1.129 | 0.419 |
+| Large Array encode | 18.582 | 37.966 | 80.448 | 37.735 | 34.564 | 9.125 | 4.140 |
+| Large Map decode | 11.876 | 53.624 | 58.784 | 50.266 | 49.766 | 5.393 | 3.991 |
+| Deep Nested encode | 20.732 | 29.896 | 51.346 | 28.971 | 26.081 | 4.572 | 2.493 |
+| Deep Nested decode | 46.830 | 48.643 | 36.399 | 44.246 | 32.868 | 10.362 | 3.424 |
 
-完整波动、RSS、输入身份与失败记录见[七库报告](docs/performance/results/2026-10-26-cjdoc-020-seven-library.md)
-和 [Pure 报告](docs/performance/results/2026-10-26-cjdoc-020-pure.md)。两种协议不拼接样本；
-旧 SDK 的历史结果不证明当前候选、跨 SDK 或 Native 性能。方法与历史导航见
-[性能文档](docs/performance/README.md)。本次不发布 yjson。
+完整波动、RSS、输入身份与历史记录见[七库报告](docs/performance/results/2026-10-30-api-contracts-seven-library.md)
+和 [Pure 报告](docs/performance/results/2026-10-30-api-contracts-pure.md)。两种协议不拼接样本；本次不发布 yjson，
+不外推到 Native、默认并发配置、其他平台或其他 SDK。方法见[性能文档](docs/performance/README.md)。
 
 ## 文档
 

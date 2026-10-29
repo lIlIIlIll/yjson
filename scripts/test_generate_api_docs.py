@@ -307,7 +307,7 @@ class RepositoryLinksIntegrationTest(unittest.TestCase):
             'docs/maintainers/api-documentation.md', 'docs/maintainers/native-internals.md',
             'docs/maintainers/releasing.md', 'docs/maintainers/repository-layout.md', 'docs/maintainers/testing.md',
             'docs/performance/README.md', 'docs/performance/methodology.md',
-            'docs/performance/results/2026-10-26-cjdoc-020-pure.md', 'docs/performance/results/2026-10-26-cjdoc-020-seven-library.md',
+            'docs/performance/results/2026-10-30-api-contracts-pure.md', 'docs/performance/results/2026-10-30-api-contracts-seven-library.md',
             'packages/examples/README.md', 'release/0.1.1/binary-compatibility.json', 'release/0.1.1/evidence.md',
             'release/0.2.0/enum-case-inventory.json', 'release/cjdoc-policy.toml', 'release/cjdoc-tool.toml',
             'release/public-api-inventory.toml', 'release/public-api-snapshot.txt',
