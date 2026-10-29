@@ -27,6 +27,7 @@ private let YYJSON_FALLBACK_METADATA = JsonBackendMetadata(
  * 解析返回的 `BackendJsonDocument` 必须关闭，文档和视图支持打开期间的并发只读访问。
  * 流解码读取到 EOF，流编码先缓存整份文档；输入输出流的所有权仍归调用方。
  * 该入口不会改变普通 `YJson` 的进程级加速状态。
+ * @group 10-application 应用 API
  */
 public class YyjsonBackendFacade {
     init() {}
@@ -49,6 +50,7 @@ public class YyjsonBackendFacade {
      * yyjson
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func metadata(): JsonBackendMetadata { YYJSON_METADATA }
 
@@ -74,6 +76,7 @@ public class YyjsonBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func parseDocument(text: String,
         options!: JsonReadOptions = JsonReadOptions.defaults): BackendJsonDocument {
@@ -102,6 +105,7 @@ public class YyjsonBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func parseDocument(bytes: Array<Byte>,
         options!: JsonReadOptions = JsonReadOptions.defaults): BackendJsonDocument {
@@ -125,6 +129,7 @@ public class YyjsonBackendFacade {
      * ```output
      * [1,2]
      * ```
+     * @group 10-application 应用 API
      */
     public func toJson(value: JsonValueView,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): String {
@@ -151,6 +156,7 @@ public class YyjsonBackendFacade {
      * ```output
      * [1,2]
      * ```
+     * @group 10-application 应用 API
      */
     public func toJsonBytes(value: JsonValueView,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): Array<Byte> {
@@ -181,6 +187,7 @@ public class YyjsonBackendFacade {
      * ```output
      * [1,2]
      * ```
+     * @group 10-application 应用 API
      */
     public func writeJson(value: JsonValueView, output: OutputStream,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): Unit {
@@ -206,6 +213,7 @@ public class YyjsonBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func toJson<T>(value: T,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): String
@@ -233,6 +241,7 @@ public class YyjsonBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func toJson<T>(value: T, codec!: JsonCodec<T>,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): String {
@@ -261,6 +270,7 @@ public class YyjsonBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func toJsonBytes<T>(value: T,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): Array<Byte>
@@ -289,6 +299,7 @@ public class YyjsonBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func toJsonBytes<T>(value: T, codec!: JsonCodec<T>,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): Array<Byte> {
@@ -320,6 +331,7 @@ public class YyjsonBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func writeJson<T>(value: T, output: OutputStream,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): Unit
@@ -351,6 +363,7 @@ public class YyjsonBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func writeJson<T>(value: T, output: OutputStream, codec!: JsonCodec<T>,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): Unit {
@@ -376,6 +389,7 @@ public class YyjsonBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func fromJson<T>(text: String,
         options!: JsonReadOptions = JsonReadOptions.defaults): T
@@ -403,6 +417,7 @@ public class YyjsonBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func fromJson<T>(text: String, codec!: JsonCodec<T>,
         options!: JsonReadOptions = JsonReadOptions.defaults): T {
@@ -428,6 +443,7 @@ public class YyjsonBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func fromJson<T>(bytes: Array<Byte>,
         options!: JsonReadOptions = JsonReadOptions.defaults): T
@@ -455,6 +471,7 @@ public class YyjsonBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func fromJson<T>(bytes: Array<Byte>, codec!: JsonCodec<T>,
         options!: JsonReadOptions = JsonReadOptions.defaults): T {
@@ -482,6 +499,7 @@ public class YyjsonBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func fromJson<T>(input: InputStream,
         options!: JsonReadOptions = JsonReadOptions.defaults): T
@@ -511,6 +529,7 @@ public class YyjsonBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func fromJson<T>(input: InputStream, codec!: JsonCodec<T>,
         options!: JsonReadOptions = JsonReadOptions.defaults): T {
@@ -523,6 +542,7 @@ public class YyjsonBackendFacade {
  *
  * 通过静态属性取得已限定的后端入口，不能由此注册任意后端实现。
  * facade 不需要关闭，由它创建的资源文档仍由调用方关闭。
+ * @group 10-application 应用 API
  */
 public class YyjsonBackends {
     private static let qualified = YyjsonBackendFacade()
@@ -543,6 +563,7 @@ public class YyjsonBackends {
      * ```output
      * yyjson
      * ```
+     * @group 10-application 应用 API
      */
     public static prop yyjson: YyjsonBackendFacade {
         get() { qualified }

@@ -17,20 +17,33 @@ import std.io.*
  * ```output
  * true
  * ```
+ * @group 10-application 应用 API
  */
 @Derive[Equatable]
 public enum JsonKind {
-    /** JSON 空值。 */
+    /** JSON 空值。
+     * @group 10-application 应用 API
+     */
     Null
-    /** JSON 布尔值。 */
+    /** JSON 布尔值。
+     * @group 10-application 应用 API
+     */
     | Boolean
-    /** JSON 数字，不区分整数和浮点数。 */
+    /** JSON 数字，不区分整数和浮点数。
+     * @group 10-application 应用 API
+     */
     | Number
-    /** JSON 字符串。 */
+    /** JSON 字符串。
+     * @group 10-application 应用 API
+     */
     | String
-    /** JSON 数组。 */
+    /** JSON 数组。
+     * @group 10-application 应用 API
+     */
     | Array
-    /** JSON 对象。 */
+    /** JSON 对象。
+     * @group 10-application 应用 API
+     */
     | Object
 }
 
@@ -38,18 +51,22 @@ public enum JsonKind {
  * JSON 错误在 UTF-8 输入中的位置。
  *
  * byteOffset 从 0 开始，line 和 column 从 1 开始。列按字节位置计算，不是字符或显示宽度；换行后重新从 1 计数。
+ * @group 10-application 应用 API
  */
 public struct JsonLocation {
     /**
      * 从 0 开始的 UTF-8 字节偏移。
+     * @group 10-application 应用 API
      */
     public let byteOffset: Int64
     /**
      * 从 1 开始的输入行号。
+     * @group 10-application 应用 API
      */
     public let line: Int64
     /**
      * 从 1 开始的行内字节列号。
+     * @group 10-application 应用 API
      */
     public let column: Int64
 
@@ -79,6 +96,7 @@ public struct JsonLocation {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public init(byteOffset: Int64, line: Int64, column: Int64) {
         if (byteOffset < 0) { throw IllegalArgumentException("byteOffset must not be negative") }
@@ -94,18 +112,22 @@ public struct JsonLocation {
  * 携带错误类别、JSON Pointer 和可选输入位置的 JSON 异常。
  *
  * 使用 code 分支处理错误。path 为空串时表示根值；输入流 I/O 异常和自定义 codec 异常可能原样传播。message 用于诊断，不应从文本提取错误类别。
+ * @group 10-application 应用 API
  */
 public open class JsonException <: Exception {
     /**
      * 供程序判断的错误类别，如 type_mismatch 或 max_depth。
+     * @group 10-application 应用 API
      */
     public let code: String
     /**
      * 错误值的 RFC 6901 JSON Pointer；空串表示根。
+     * @group 10-application 应用 API
      */
     public let path: String
     /**
      * 有输入位置时为 Some，否则为 None。
+     * @group 10-application 应用 API
      */
     public let location: Option<JsonLocation>
 
@@ -137,6 +159,7 @@ public open class JsonException <: Exception {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public init(
         message: String,
@@ -170,6 +193,7 @@ public open class JsonException <: Exception {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public init(
         message: String,
@@ -198,6 +222,7 @@ public open class JsonException <: Exception {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     protected open override func getClassName(): String {
         "JsonException"
@@ -223,11 +248,16 @@ private func validateJsonExceptionPath(path: String): Unit {
  * ```output
  * true
  * ```
+ * @group 10-application 应用 API
  */
 public enum JsonUnknownFieldPolicy {
-    /** 类型化解码时跳过 codec 不认识的字段。 */
+    /** 类型化解码时跳过 codec 不认识的字段。
+     * @group 10-application 应用 API
+     */
     Ignore
-    /** 遇到不允许的字段或重复键时抛出 JsonException。 */
+    /** 遇到不允许的字段或重复键时抛出 JsonException。
+     * @group 10-application 应用 API
+     */
     | Reject
 }
 
@@ -245,11 +275,16 @@ public enum JsonUnknownFieldPolicy {
  * ```output
  * true
  * ```
+ * @group 10-application 应用 API
  */
 public enum JsonDuplicateKeyPolicy {
-    /** 对象中重复名称的最后一个值覆盖先前值。 */
+    /** 对象中重复名称的最后一个值覆盖先前值。
+     * @group 10-application 应用 API
+     */
     LastWins
-    /** 遇到不允许的字段或重复键时抛出 JsonException。 */
+    /** 遇到不允许的字段或重复键时抛出 JsonException。
+     * @group 10-application 应用 API
+     */
     | Reject
 }
 
@@ -257,30 +292,37 @@ public enum JsonDuplicateKeyPolicy {
  * 不可变的读取策略与单次文档资源预算。
  *
  * 默认忽略未知类型化字段、拒绝重复键；输入上限 64 MiB，解码后的单字符串上限 16 MiB，捕获值缓冲上限 8 MiB，容器深度上限 256。所有预算必须为正数，0 不表示无限。
+ * @group 10-application 应用 API
  */
 public class JsonReadOptions {
     /**
      * 类型化 codec 处理未知对象字段的策略。
+     * @group 10-application 应用 API
      */
     public let unknownFieldPolicy: JsonUnknownFieldPolicy
     /**
      * 读取同一对象内重复名称的策略。
+     * @group 10-application 应用 API
      */
     public let duplicateKeyPolicy: JsonDuplicateKeyPolicy
     /**
      * 单份文档输入的 UTF-8 字节上限；流读取不为检查此限制而预读到 EOF。
+     * @group 10-application 应用 API
      */
     public let maxInputBytes: Int64
     /**
      * 单个键名或字符串解码后的 UTF-8 字节上限。
+     * @group 10-application 应用 API
      */
     public let maxStringBytes: Int64
     /**
      * 需要捕获完整值时的字节缓冲上限；不是整个进程的内存限制。
+     * @group 10-application 应用 API
      */
     public let maxBufferedValueBytes: Int64
     /**
      * 允许的数组和对象嵌套层数上限。
+     * @group 10-application 应用 API
      */
     public let maxDepth: Int64
     let defaultFastPath: Bool
@@ -315,6 +357,7 @@ public class JsonReadOptions {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public init(
         unknownFieldPolicy!: JsonUnknownFieldPolicy = JsonUnknownFieldPolicy.Ignore,
@@ -349,6 +392,7 @@ public class JsonReadOptions {
 
     /**
      * 可以共享的不可变默认读取配置。
+     * @group 10-application 应用 API
      */
     public static let defaults: JsonReadOptions = JsonReadOptions()
 
@@ -365,6 +409,7 @@ public class JsonReadOptions {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func rejectsUnknownFields(): Bool {
         match (unknownFieldPolicy) {
@@ -385,6 +430,7 @@ public class JsonReadOptions {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func rejectsDuplicateKeys(): Bool {
         match (duplicateKeyPolicy) {
@@ -478,6 +524,7 @@ func jsonStreamColumnAt(newlineOffsets: ArrayList<Int64>, offset: Int64): Int64 
  * 与存储表示无关的 JSON 只读访问接口。
  *
  * 只读访问不使底层 JsonNode 变为快照，也不提供线程安全。托管文档视图保留存储；Native 等资源后端视图依赖所属文档未关闭。需要独立可修改树时调用 materialize。
+ * @group 10-application 应用 API
  */
 public interface JsonValueView {
     /**
@@ -493,6 +540,7 @@ public interface JsonValueView {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     func kind(): JsonKind
     /**
@@ -508,6 +556,7 @@ public interface JsonValueView {
      * ```output
      * 2
      * ```
+     * @group 10-application 应用 API
      */
     func size(): Int64
     /**
@@ -525,6 +574,7 @@ public interface JsonValueView {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     func element(index: Int64): Option<JsonValueView>
     /**
@@ -542,6 +592,7 @@ public interface JsonValueView {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     func member(name: String): Option<JsonValueView>
     /**
@@ -559,6 +610,7 @@ public interface JsonValueView {
      * ```output
      * id
      * ```
+     * @group 10-application 应用 API
      */
     func memberName(index: Int64): String
     /**
@@ -576,6 +628,7 @@ public interface JsonValueView {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     func memberValue(index: Int64): JsonValueView
     /**
@@ -592,6 +645,7 @@ public interface JsonValueView {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     func asBool(): Bool
     /**
@@ -608,6 +662,7 @@ public interface JsonValueView {
      * ```output
      * hello
      * ```
+     * @group 10-application 应用 API
      */
     func asString(): String
     /**
@@ -624,6 +679,7 @@ public interface JsonValueView {
      * ```output
      * 42
      * ```
+     * @group 10-application 应用 API
      */
     func asInt64(): Int64
     /**
@@ -640,6 +696,7 @@ public interface JsonValueView {
      * ```output
      * 42
      * ```
+     * @group 10-application 应用 API
      */
     func asUInt64(): UInt64
     /**
@@ -656,6 +713,7 @@ public interface JsonValueView {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     func asFloat64(): Float64
     /**
@@ -672,6 +730,7 @@ public interface JsonValueView {
      * ```output
      * 1.20e2
      * ```
+     * @group 10-application 应用 API
      */
     func asNumberText(): String
     /**
@@ -690,6 +749,7 @@ public interface JsonValueView {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     func materialize(): JsonNode
     /**
@@ -719,6 +779,7 @@ public interface JsonValueView {
      * ```output
      * work_limit_exceeded
      * ```
+     * @group 10-application 应用 API
      */
     func materialize(maxNodes: Int64): JsonNode
 }
@@ -727,6 +788,7 @@ public interface JsonValueView {
  * 由 GC 管理的 JSON 树节点基类。
  *
  * JsonArray 和 JsonObject 可修改，插入子节点不会复制或冻结它。JsonValueView 只限制访问接口，不能隔离其他持有者的修改；deepCopy 和 materialize 才生成独立树。不要并发修改同一棵树。
+ * @group 10-application 应用 API
  */
 public abstract class JsonNode <: ToString & JsonValueView {
     /**
@@ -741,6 +803,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public static prop nullValue: JsonNode {
         get() {
@@ -761,6 +824,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public static func boolean(value: Bool): JsonNode { JsonBoolValue(value) }
     /**
@@ -776,6 +840,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * -2
      * ```
+     * @group 10-application 应用 API
      */
     public static func int64(value: Int64): JsonNode { JsonIntValue(value) }
     /**
@@ -791,6 +856,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * 2
      * ```
+     * @group 10-application 应用 API
      */
     public static func uint64(value: UInt64): JsonNode { JsonUIntValue(value) }
     /**
@@ -806,6 +872,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public static func float64(value: Float64): JsonNode { JsonFloatValue(value) }
     /**
@@ -832,6 +899,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public static func number(text: String): JsonNode { JsonNumberLiteralValue(text) }
     /**
@@ -847,6 +915,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * hello
      * ```
+     * @group 10-application 应用 API
      */
     public static func string(value: String): JsonNode { JsonStringValue(value) }
     /**
@@ -861,6 +930,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * 0
      * ```
+     * @group 10-application 应用 API
      */
     public static func array(): JsonArray { JsonArray() }
     /**
@@ -879,6 +949,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public static func array(items: Array<JsonNode>): JsonArray { JsonArray(items) }
     /**
@@ -893,6 +964,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * 0
      * ```
+     * @group 10-application 应用 API
      */
     public static func object(): JsonObject { JsonObject() }
 
@@ -922,6 +994,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * document_too_large
      * ```
+     * @group 10-application 应用 API
      */
     public static func parse(text: String, config!: JsonReadOptions = JsonReadOptions.defaults): JsonNode {
         JsonParser(text, config: config).parse()
@@ -942,6 +1015,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * [1]
      * ```
+     * @group 10-application 应用 API
      */
     public static func parse(bytes: Array<Byte>, config!: JsonReadOptions = JsonReadOptions.defaults): JsonNode {
         parseJsonValueFromBytes(bytes, config: config)
@@ -974,6 +1048,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * cyclic_json_node
      * ```
+     * @group 10-application 应用 API
      */
     public func toJson(options!: JsonWriteOptions = JsonWriteOptions.defaults): String {
         freezeYJsonRuntime()
@@ -998,6 +1073,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * [1]
      * ```
+     * @group 10-application 应用 API
      */
     public func writeJson(output: OutputStream,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): Unit {
@@ -1017,6 +1093,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func kind(): JsonKind
     /**
@@ -1031,6 +1108,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * 1
      * ```
+     * @group 10-application 应用 API
      */
     public func size(): Int64
 
@@ -1050,6 +1128,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func deepCopy(): JsonNode {
         deepCopyJsonNode(this)
@@ -1071,6 +1150,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func materialize(): JsonNode { deepCopyJsonNode(this) }
 
@@ -1100,6 +1180,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * work_limit_exceeded
      * ```
+     * @group 10-application 应用 API
      */
     public func materialize(maxNodes: Int64): JsonNode {
         deepCopyJsonNode(this, maxNodes)
@@ -1123,6 +1204,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func equivalentTo(other: JsonNode): Bool {
         jsonNodesEquivalent(this, other)
@@ -1143,6 +1225,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func toPrettyString(): String {
         toPrettyString("  ")
@@ -1164,6 +1247,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func toPrettyString(indent: String): String
 
@@ -1191,6 +1275,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * type_mismatch
      * ```
+     * @group 10-application 应用 API
      */
     public func asBool(): Bool {
         match (this) {
@@ -1224,6 +1309,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * number_out_of_range
      * ```
+     * @group 10-application 应用 API
      */
     public func asInt64(): Int64 {
         match (this) {
@@ -1255,6 +1341,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * 42
      * ```
+     * @group 10-application 应用 API
      */
     public func asUInt64(): UInt64 {
         match (this) {
@@ -1286,6 +1373,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func asFloat64(): Float64 {
         match (this) {
@@ -1310,6 +1398,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * 1.20e2
      * ```
+     * @group 10-application 应用 API
      */
     public func asNumberText(): String {
         match (this) {
@@ -1335,6 +1424,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * hello
      * ```
+     * @group 10-application 应用 API
      */
     public func asString(): String {
         match (this) {
@@ -1359,6 +1449,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * 1
      * ```
+     * @group 10-application 应用 API
      */
     public func asArray(): JsonArray {
         match (this) {
@@ -1383,6 +1474,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * 1
      * ```
+     * @group 10-application 应用 API
      */
     public func asObject(): JsonObject {
         match (this) {
@@ -1406,6 +1498,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func element(index: Int64): Option<JsonValueView> {
         match (asArray().get(index)) {
@@ -1429,6 +1522,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func member(name: String): Option<JsonValueView> {
         match (asObject().get(name)) {
@@ -1452,6 +1546,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * id
      * ```
+     * @group 10-application 应用 API
      */
     public func memberName(index: Int64): String { asObject().nameAt(index) }
     /**
@@ -1469,6 +1564,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func memberValue(index: Int64): JsonValueView { asObject().valueAt(index) }
 
@@ -1484,6 +1580,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public prop isNull: Bool {
         get() {
@@ -1510,6 +1607,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public operator func [](key: String): JsonNode {
         asObject().get(key).getOrThrow({
@@ -1533,6 +1631,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public operator func [](key: String, value!: JsonNode): Unit {
         asObject().put(key, value)
@@ -1554,6 +1653,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public operator func [](key: String, value!: Bool): Unit {
         asObject().put(key, value)
@@ -1575,6 +1675,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public operator func [](key: String, value!: Int64): Unit {
         asObject().put(key, value)
@@ -1596,6 +1697,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public operator func [](key: String, value!: Float64): Unit {
         asObject().put(key, value)
@@ -1617,6 +1719,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * x
      * ```
+     * @group 10-application 应用 API
      */
     public operator func [](key: String, value!: Rune): Unit {
         asObject().put(key, value)
@@ -1638,6 +1741,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * hello
      * ```
+     * @group 10-application 应用 API
      */
     public operator func [](key: String, value!: String): Unit {
         asObject().put(key, value)
@@ -1659,6 +1763,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * 1
      * ```
+     * @group 10-application 应用 API
      */
     public operator func [](key: String, value!: Array<JsonNode>): Unit {
         asObject().put(key, jsonNodeValue(value))
@@ -1680,6 +1785,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public operator func [](index: Int64): JsonNode {
         asArray().get(index).getOrThrow({
@@ -1703,6 +1809,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public operator func [](index: Int64, value!: JsonNode): Unit {
         asArray().set(index, value)
@@ -1724,6 +1831,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public operator func [](index: Int64, value!: Bool): Unit {
         asArray().set(index, value)
@@ -1745,6 +1853,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public operator func [](index: Int64, value!: Int64): Unit {
         asArray().set(index, value)
@@ -1766,6 +1875,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public operator func [](index: Int64, value!: Float64): Unit {
         asArray().set(index, value)
@@ -1787,6 +1897,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * x
      * ```
+     * @group 10-application 应用 API
      */
     public operator func [](index: Int64, value!: Rune): Unit {
         asArray().set(index, value)
@@ -1808,6 +1919,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * hello
      * ```
+     * @group 10-application 应用 API
      */
     public operator func [](index: Int64, value!: String): Unit {
         asArray().set(index, value)
@@ -1829,6 +1941,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
      * ```output
      * 1
      * ```
+     * @group 10-application 应用 API
      */
     public operator func [](index: Int64, value!: Array<JsonNode>): Unit {
         asArray().set(index, jsonNodeValue(value))
@@ -2045,6 +2158,7 @@ class JsonStringValue <: JsonNode {
  * 可修改、保留元素顺序的 JSON 数组。
  *
  * 元素以引用共享；add、set 和 insert 不深复制子节点。允许重复引用，但形成循环后不能序列化、深复制或比较。
+ * @group 10-application 应用 API
  */
 public class JsonArray <: JsonNode {
     private let items: ArrayList<JsonNode>
@@ -2059,6 +2173,7 @@ public class JsonArray <: JsonNode {
      * ```output
      * 0
      * ```
+     * @group 10-application 应用 API
      */
     public init() {
         items = ArrayList<JsonNode>()
@@ -2079,6 +2194,7 @@ public class JsonArray <: JsonNode {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public init(items: ArrayList<JsonNode>) {
         this.items = items
@@ -2099,6 +2215,7 @@ public class JsonArray <: JsonNode {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public init(items: Array<JsonNode>) {
         this.items = ArrayList<JsonNode>(items)
@@ -2107,7 +2224,7 @@ public class JsonArray <: JsonNode {
     /**
      * 读取数组类型标记。
      *
-     * @return JsonKind.Array。
+     * @return 数组类型标记 JsonKind.Array。
      *
      * @example 调用并检查结果 {run}
      * ```cangjie
@@ -2116,6 +2233,7 @@ public class JsonArray <: JsonNode {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func kind(): JsonKind {
         JsonKind.Array
@@ -2134,6 +2252,7 @@ public class JsonArray <: JsonNode {
      * ```output
      * [7]
      * ```
+     * @group 10-application 应用 API
      */
     public func add(value: JsonNode): JsonArray {
         items.add(value)
@@ -2155,6 +2274,7 @@ public class JsonArray <: JsonNode {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func add<T>(value: T): JsonArray where T <: GeneratedCodecProviderV1<T> {
         add(jsonNodeValue(value))
@@ -2187,6 +2307,7 @@ public class JsonArray <: JsonNode {
      * ```output
      * index_out_of_bounds
      * ```
+     * @group 10-application 应用 API
      */
     public func set(index: Int64, value: JsonNode): JsonArray {
         if (index < 0 || index >= items.size) {
@@ -2213,6 +2334,7 @@ public class JsonArray <: JsonNode {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func set<T>(index: Int64, value: T): JsonArray where T <: GeneratedCodecProviderV1<T> {
         set(index, jsonNodeValue(value))
@@ -2234,6 +2356,7 @@ public class JsonArray <: JsonNode {
      * ```output
      * [1,2]
      * ```
+     * @group 10-application 应用 API
      */
     public func insert(index: Int64, value: JsonNode): JsonArray {
         if (index < 0 || index > items.size) {
@@ -2258,6 +2381,7 @@ public class JsonArray <: JsonNode {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func removeAt(index: Int64): JsonNode {
         if (index < 0 || index >= items.size) {
@@ -2278,6 +2402,7 @@ public class JsonArray <: JsonNode {
      * ```output
      * 2
      * ```
+     * @group 10-application 应用 API
      */
     public func size(): Int64 {
         items.size
@@ -2301,6 +2426,7 @@ public class JsonArray <: JsonNode {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func get(index: Int64): Option<JsonNode> {
         items.get(index)
@@ -2319,6 +2445,7 @@ public class JsonArray <: JsonNode {
      * ```output
      * [7]
      * ```
+     * @group 10-application 应用 API
      */
     public func toString(): String {
         freezeYJsonRuntime()
@@ -2340,6 +2467,7 @@ public class JsonArray <: JsonNode {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func toPrettyString(indent: String): String {
         freezeYJsonRuntime()
@@ -2351,6 +2479,7 @@ public class JsonArray <: JsonNode {
  * 按成员插入顺序枚举的可修改 JSON 对象。
  *
  * 名称唯一，put 已有名称时更新值并保留原位置。子节点以引用共享；移除后重新插入的名称排在末尾。
+ * @group 10-application 应用 API
  */
 public class JsonObject <: JsonNode {
     private let fields: HashMap<String, JsonNode>
@@ -2366,6 +2495,7 @@ public class JsonObject <: JsonNode {
      * ```output
      * 0
      * ```
+     * @group 10-application 应用 API
      */
     public init() {
         fields = HashMap<String, JsonNode>()
@@ -2390,6 +2520,7 @@ public class JsonObject <: JsonNode {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public init(fields: HashMap<String, JsonNode>) {
         this.fields = HashMap<String, JsonNode>()
@@ -2400,7 +2531,7 @@ public class JsonObject <: JsonNode {
     /**
      * 读取对象类型标记。
      *
-     * @return JsonKind.Object。
+     * @return 对象类型标记 JsonKind.Object。
      *
      * @example 调用并检查结果 {run}
      * ```cangjie
@@ -2409,6 +2540,7 @@ public class JsonObject <: JsonNode {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func kind(): JsonKind {
         JsonKind.Object
@@ -2426,6 +2558,7 @@ public class JsonObject <: JsonNode {
      * ```output
      * 1
      * ```
+     * @group 10-application 应用 API
      */
     public func size(): Int64 {
         fields.size
@@ -2444,6 +2577,7 @@ public class JsonObject <: JsonNode {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func contains(key: String): Bool {
         fields.contains(key)
@@ -2464,6 +2598,7 @@ public class JsonObject <: JsonNode {
      * ```output
      * {"id":7}
      * ```
+     * @group 10-application 应用 API
      */
     public func put(key: String, value: JsonNode): JsonObject {
         if (!fields.contains(key)) { names.add(key) }
@@ -2487,6 +2622,7 @@ public class JsonObject <: JsonNode {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func put<T>(key: String, value: T): JsonObject where T <: GeneratedCodecProviderV1<T> {
         put(key, jsonNodeValue(value))
@@ -2506,6 +2642,7 @@ public class JsonObject <: JsonNode {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func get(key: String): Option<JsonNode> {
         fields.get(key)
@@ -2525,6 +2662,7 @@ public class JsonObject <: JsonNode {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func remove(key: String): Option<JsonNode> {
         let removed = fields.remove(key)
@@ -2560,6 +2698,7 @@ public class JsonObject <: JsonNode {
      * ```output
      * index_out_of_bounds
      * ```
+     * @group 10-application 应用 API
      */
     public func nameAt(index: Int64): String {
         names.get(index).getOrThrow({ =>
@@ -2581,6 +2720,7 @@ public class JsonObject <: JsonNode {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func valueAt(index: Int64): JsonNode {
         fields.get(nameAt(index)).getOrThrow({ =>
@@ -2605,6 +2745,7 @@ public class JsonObject <: JsonNode {
      * ```output
      * {"id":7}
      * ```
+     * @group 10-application 应用 API
      */
     public func toString(): String {
         freezeYJsonRuntime()
@@ -2626,6 +2767,7 @@ public class JsonObject <: JsonNode {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func toPrettyString(indent: String): String {
         freezeYJsonRuntime()

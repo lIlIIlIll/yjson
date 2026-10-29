@@ -703,6 +703,10 @@ def generate(*, cjdoc_binary: pathlib.Path, output: pathlib.Path,
             if not (site / path).is_file() or (site / path).is_symlink():
                 raise ApiDocsError('cjdoc did not produce required artifact: ' + path)
         validate_homepage(site)
+        from check_api_documentation import validate_rendered_groups
+        rendered_groups = validate_rendered_groups(
+            site, json.loads((site / 'docs.json').read_text(encoding='utf-8')),
+            json.loads((frozen / 'release/api-documentation-required.json').read_text(encoding='utf-8')))
         file_links = validate_html_file_links(site)
         agent_reading = validate_agent_reading(binary, site, environment, guide_pages)
         interface_inventory = write_maintainer_inventory(site)
@@ -735,6 +739,7 @@ def generate(*, cjdoc_binary: pathlib.Path, output: pathlib.Path,
                     'maintainerInterfaces': interface_inventory, 'sourceGuide': source_guide,
                     'standardQuality': quality_evidence, 'htmlFileLinks': file_links,
                     'applicationBindings': application_bindings,
+                    'renderedGroups': rendered_groups,
                     'sourceUrlPolicy': 'Doc IR16 machine source URL unavailable; exact repository links are an ordinary source guide',
                     'agentReading': agent_reading, 'consumerSources': 'consumer-sources',
                     'exampleChecking': {

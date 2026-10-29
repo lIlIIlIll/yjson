@@ -9,26 +9,31 @@ import std.math.numeric.*
 /**
  * 一次 JSON Schema 不匹配的诊断，记录实例路径、模式路径、错误码和可读消息。
  *
+ * @group 10-application 应用 API
  */
 public class JsonSchemaViolation {
     /**
      * 未通过验证的实例位置，使用 JSON Pointer，根位置为空字符串。
      *
+     * @group 10-application 应用 API
      */
     public let instancePath: String
     /**
      * 产生诊断的模式位置，根位置为 `#`。
      *
+     * @group 10-application 应用 API
      */
     public let schemaPath: String
     /**
      * 诊断的机器可读错误码，默认 `schema_validation`。
      *
+     * @group 10-application 应用 API
      */
     public let code: String
     /**
      * 解释不匹配原因的消息；应用逻辑应依据错误码和路径。
      *
+     * @group 10-application 应用 API
      */
     public let message: String
 
@@ -50,6 +55,7 @@ public class JsonSchemaViolation {
      * /age
      * schema_validation
      * ```
+     * @group 10-application 应用 API
      */
     public init(instancePath: String, schemaPath: String, message: String,
         code!: String = "schema_validation") {
@@ -63,6 +69,7 @@ public class JsonSchemaViolation {
 /**
  * 一次完整 JSON Schema 验证的不可变结果；不匹配保存为诊断，工作预算或读取错误通过异常报告。
  *
+ * @group 10-application 应用 API
  */
 public class JsonSchemaResult {
     private let items: Array<JsonSchemaViolation>
@@ -82,6 +89,7 @@ public class JsonSchemaResult {
      * ```output
      * false
      * ```
+     * @group 10-application 应用 API
      */
     public prop valid: Bool { get() { items.isEmpty() } }
     /**
@@ -97,6 +105,7 @@ public class JsonSchemaResult {
      * ```output
      * 1
      * ```
+     * @group 10-application 应用 API
      */
     public prop size: Int64 { get() { items.size } }
     /**
@@ -112,6 +121,7 @@ public class JsonSchemaResult {
      * ```output
      * false
      * ```
+     * @group 10-application 应用 API
      */
     public func isEmpty(): Bool { items.isEmpty() }
     /**
@@ -129,6 +139,7 @@ public class JsonSchemaResult {
      * ```output
      * schema_validation
      * ```
+     * @group 10-application 应用 API
      */
     public operator func [](index: Int64): JsonSchemaViolation { items[index] }
 
@@ -148,6 +159,7 @@ public class JsonSchemaResult {
      * 1
      * schema_validation
      * ```
+     * @group 10-application 应用 API
      */
     public func violations(): Array<JsonSchemaViolation> {
         let copy = ArrayList<JsonSchemaViolation>(items.size)
@@ -161,6 +173,7 @@ private class JsonSchemaMismatchSignal <: Exception {}
 /**
  * 一个命名格式的字符串断言。实例可被多个验证器共享，且可能并发调用；实现须保持不可变或自行同步状态。
  *
+ * @group 10-application 应用 API
  */
 public interface JsonSchemaFormat {
     /**
@@ -181,6 +194,7 @@ public interface JsonSchemaFormat {
      * true
      * true
      * ```
+     * @group 10-application 应用 API
      */
     func validate(value: String): Bool
 }
@@ -188,6 +202,7 @@ public interface JsonSchemaFormat {
 /**
  * 将一组相关格式安装到显式注册表的提供者；安装规则和名称冲突处理由实现决定。
  *
+ * @group 10-application 应用 API
  */
 public interface JsonSchemaFormatProvider {
     /**
@@ -207,6 +222,7 @@ public interface JsonSchemaFormatProvider {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     func installInto(registry: JsonSchemaFormatRegistry): Unit
 }
@@ -214,6 +230,7 @@ public interface JsonSchemaFormatProvider {
 /**
  * Assertion 模式使用的命名格式注册表；构建模式时会复制并冻结表，格式实例本身仍由调用者提供。
  *
+ * @group 10-application 应用 API
  */
 public class JsonSchemaFormatRegistry {
     private let formats = HashMap<String, JsonSchemaFormat>()
@@ -240,6 +257,7 @@ public class JsonSchemaFormatRegistry {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func register(name: String, format: JsonSchemaFormat, replace!: Bool = false): Unit {
         if (frozen) { throw IllegalStateException("Schema format registry is immutable") }
@@ -266,6 +284,7 @@ public class JsonSchemaFormatRegistry {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func install(provider: JsonSchemaFormatProvider): Unit { provider.installInto(this) }
 
@@ -285,6 +304,7 @@ public class JsonSchemaFormatRegistry {
      * true
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func resolve(name: String): Option<JsonSchemaFormat> { formats.get(name) }
 
@@ -305,6 +325,7 @@ public class JsonSchemaFormatRegistry {
      * true
      * false
      * ```
+     * @group 10-application 应用 API
      */
     public static func withCoreFormats(): JsonSchemaFormatRegistry {
         let registry = JsonSchemaFormatRegistry()
@@ -326,6 +347,7 @@ public class JsonSchemaFormatRegistry {
 /**
  * 模式构建期间使用的资源解析器；可以读取内存、磁盘或应用缓存，yjson 自身不执行网络 I/O。构建完成后验证器不再持有解析器。
  *
+ * @group 10-application 应用 API
  */
 public interface UriResolver {
     /**
@@ -348,6 +370,7 @@ public interface UriResolver {
      * true
      * true
      * ```
+     * @group 10-application 应用 API
      */
     func resolve(uri: String): Option<JsonNode>
 }
@@ -355,6 +378,7 @@ public interface UriResolver {
 /**
  * 内存中的模式资源解析器；注册和读取均深复制，外部修改不会改变已登记的资源。
  *
+ * @group 10-application 应用 API
  */
 public class JsonSchemaRegistry <: UriResolver {
     private let resources = HashMap<String, JsonNode>()
@@ -380,6 +404,7 @@ public class JsonSchemaRegistry <: UriResolver {
      * true
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func register(uri: String, schema: JsonNode): Unit {
         if (uri.isEmpty() || uri.contains("#")) {
@@ -410,6 +435,7 @@ public class JsonSchemaRegistry <: UriResolver {
      * true
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func register(uri: String, schemaText: String): Unit { register(uri, JsonNode.parse(schemaText)) }
 
@@ -430,6 +456,7 @@ public class JsonSchemaRegistry <: UriResolver {
      * true
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func resolve(uri: String): Option<JsonNode> {
         match (resources.get(uri)) {
@@ -442,16 +469,19 @@ public class JsonSchemaRegistry <: UriResolver {
 /**
  * JSON Schema 中 format 关键字的求值策略。
  *
+ * @group 10-application 应用 API
  */
 public enum JsonSchemaFormatMode {
     /**
      * 将 format 视为注解，不对实例字符串执行格式断言。
      *
+     * @group 10-application 应用 API
      */
     | Annotation
     /**
      * 对已经注册的格式执行断言；未知格式名称仍被忽略。
      *
+     * @group 10-application 应用 API
      */
     | Assertion
 }
@@ -459,26 +489,31 @@ public enum JsonSchemaFormatMode {
 /**
  * 模式构建与验证配置；构建模式时会分离资源和冻结格式名称映射，预算对象本身不可变。
  *
+ * @group 10-application 应用 API
  */
 public class JsonSchemaConfig {
     /**
      * 构建时解析外部模式资源的可选解析器；验证阶段不再调用它。
      *
+     * @group 10-application 应用 API
      */
     public let resolver: Option<UriResolver>
     /**
      * format 关键字作为注解或断言的求值策略。
      *
+     * @group 10-application 应用 API
      */
     public let formatMode: JsonSchemaFormatMode
     /**
      * 可用的格式名称映射；构建模式时快照并冻结，格式实例可能被共享。
      *
+     * @group 10-application 应用 API
      */
     public let formats: JsonSchemaFormatRegistry
     /**
      * 模式编译和每次验证的工作预算。
      *
+     * @group 10-application 应用 API
      */
     public let limits: JsonSchemaLimits
 
@@ -500,6 +535,7 @@ public class JsonSchemaConfig {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public init(resolver!: Option<UriResolver> = None<UriResolver>,
         formatMode!: JsonSchemaFormatMode = JsonSchemaFormatMode.Annotation,
@@ -514,6 +550,7 @@ public class JsonSchemaConfig {
     /**
      * 默认注解模式配置，使用已冻结的核心格式注册表和默认工作预算。
      *
+     * @group 10-application 应用 API
      */
     public static let defaults = JsonSchemaConfig(
         formats: JsonSchemaFormatRegistry.withCoreFormats().frozenCopy())
@@ -522,6 +559,7 @@ public class JsonSchemaConfig {
 /**
  * JSON Schema Draft 2020-12 的已编译快照；构建时复制模式、解析外部资源并编译正则，验证期间不再调用资源解析器。
  *
+ * @group 10-application 应用 API
  */
 public class JsonSchema {
     private let documentValue: JsonNode
@@ -530,11 +568,13 @@ public class JsonSchema {
     /**
      * 模式使用的方言 URI；当前构造入口接受 Draft 2020-12 的标准 URI 及其 # 形式。
      *
+     * @group 10-application 应用 API
      */
     public let draft: String
     /**
      * 构建后的配置快照；解析器引用已清除，格式名称映射已冻结，保留格式模式和预算。
      *
+     * @group 10-application 应用 API
      */
     public let config: JsonSchemaConfig
     let validationVocabulary: Bool
@@ -556,6 +596,7 @@ public class JsonSchema {
      * integer
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public prop document: JsonNode {
         get() { documentValue.deepCopy() }
@@ -579,6 +620,7 @@ public class JsonSchema {
      * true
      * false
      * ```
+     * @group 10-application 应用 API
      */
     public init(document: JsonValueView, draft!: String = "https://json-schema.org/draft/2020-12/schema",
         config!: JsonSchemaConfig = JsonSchemaConfig.defaults) {
@@ -644,6 +686,7 @@ public class JsonSchema {
      * true
      * false
      * ```
+     * @group 10-application 应用 API
      */
     public static func parse(text: String, config!: JsonSchemaConfig = JsonSchemaConfig.defaults): JsonSchema {
         JsonSchema(JsonNode.parse(text), config: config)
@@ -665,6 +708,7 @@ public class JsonSchema {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public static func fromValue(value: JsonValueView,
         config!: JsonSchemaConfig = JsonSchemaConfig.defaults): JsonSchema {
@@ -686,6 +730,7 @@ public class JsonSchema {
      * true
      * false
      * ```
+     * @group 10-application 应用 API
      */
     public func validator(): JsonSchemaValidator {
         JsonSchemaValidator(this)
@@ -710,6 +755,7 @@ public class JsonSchema {
      * true
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func validate(instance: JsonValueView): JsonSchemaResult {
         validator().validate(instance)
@@ -734,6 +780,7 @@ public class JsonSchema {
      * true
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func validate(document: JsonDocument): JsonSchemaResult {
         validator().validate(document.root())
@@ -758,6 +805,7 @@ public class JsonSchema {
      * true
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func isValid(instance: JsonValueView): Bool { validator().isValid(instance) }
 
@@ -780,6 +828,7 @@ public class JsonSchema {
      * true
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func isValid(document: JsonDocument): Bool { validator().isValid(document.root()) }
 
@@ -810,6 +859,7 @@ private class ValidationContext {
 /**
  * 可复用的 JSON Schema 验证器；每次调用创建独立的验证上下文，已编译模式和格式实例可以共享。
  *
+ * @group 10-application 应用 API
  */
 public class JsonSchemaValidator {
     private let schema: JsonSchema
@@ -828,6 +878,7 @@ public class JsonSchemaValidator {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public init(schema: JsonSchema) {
         this.schema = schema
@@ -852,6 +903,7 @@ public class JsonSchemaValidator {
      * true
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func validate(instance: JsonValueView): JsonSchemaResult {
         JsonSchemaResult(runValidation(instance, false).toArray())
@@ -892,6 +944,7 @@ public class JsonSchemaValidator {
      * true
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func isValid(instance: JsonValueView): Bool {
         try {
@@ -921,6 +974,7 @@ public class JsonSchemaValidator {
      * true
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func validate(document: JsonDocument): JsonSchemaResult {
         validate(document.root())
@@ -945,6 +999,7 @@ public class JsonSchemaValidator {
      * true
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func isValid(document: JsonDocument): Bool { isValid(document.root()) }
     private func validateSchemaValue(context: ValidationContext,

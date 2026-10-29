@@ -32,6 +32,13 @@ struct JsonObjectKeyView {
     func isSource(): Bool { sourceStart >= 0 }
 }
 
+/**
+ * 提供匹配版本生成代码使用的字节游标读取实现。
+ *
+ * raw 方法推进游标，但不完整管理容器、字段路径或生成代码深度；相应状态由生成代码和 GeneratedReadStateV1 协作维护。公开构造器均用默认选项。数组输入直接保留，字符串输入保留原字符串及其 UTF-8 数据；读取期间不得修改共享数组。Fast 入口不额外保证完整语义校验或数值精度。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ */
 public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Owner {
     private let data: Array<Byte>
     private let size: Int64
@@ -67,6 +74,14 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
 
     private let generatedState = GeneratedReadStateV1(JsonReadOptions.defaults)
 
+    /**
+     * 以字符串的 UTF-8 数据创建读取游标。
+     *
+     * 保留原字符串，不先复制为整份独立输入；字符串模式不重复执行字节输入的 UTF-8 校验。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param text 待读取的 JSON 文本。
+     */
     public init(text: String) {
         unsafe {
             data = text.rawData()
@@ -77,6 +92,14 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         sourceText = Some(text)
     }
 
+    /**
+     * 以共享字节数组创建读取游标。
+     *
+     * 不复制数组，调用方在读取期间不得修改它；字符串解码的检查路径会校验 UTF-8。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param bytes 待读取的 UTF-8 JSON 字节数组。
+     */
     public init(bytes: Array<Byte>) {
         data = bytes
         size = bytes.size
@@ -85,6 +108,14 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         sourceText = None<String>
     }
 
+    /**
+     * 跳过尾部空白并确认没有剩余字节。
+     *
+     * 只检查游标之后的输入，不验证调用方是否已读过一个根值。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @throws JsonException 跳过空白后仍有输入，错误码为 parse_error。
+     */
     public func expectEnd(): Unit {
         skipSpaces()
         if (hasMore()) {
@@ -92,11 +123,26 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         }
     }
 
+    /**
+     * 取得读取器共用的生成代码状态。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 该实例持有的路径和深度状态对象。
+     */
     public func generatedReadStateV1(): GeneratedReadStateV1 { generatedState }
 
     // Package consumers such as CompactJsonDocument need only the semantic
     // token kind; exposing it avoids duplicating whitespace and token-start
     // validation while keeping the reader cursor and source private.
+    /**
+     * 查看下一个值的起始字节所表示的类型。
+     *
+     * 跳过空白，但不消费值，也不校验完整 token。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 下一个值的 JsonKind。
+     * @throws JsonException 输入结束或起始字节不是可识别的 JSON 值，错误码为 parse_error。
+     */
     public func peekRawKind(): JsonKind {
         skipSpaces()
         if (!hasMore()) { fail("Unexpected end of JSON input") }
@@ -187,6 +233,16 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
     // consumes only an exact compact `"name":` token (and the comma when this
     // is not the first field).  A miss is transactional so generated codecs
     // can immediately continue with the general name dispatcher.
+    /**
+     * 尝试消费紧凑对象中精确匹配的字段 token。
+     *
+     * 只匹配无空白的双引号名称和紧随其后的冒号；非首字段还消费前导逗号。不解码转义。失败时不改变游标，可接着走通用字段读取。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首字段；为 false 时必须先匹配逗号。
+     * @param expectedNameBytes 预期名称的原始 UTF-8 字节，不含引号、冒号或逗号。
+     * @return 精确匹配并消费成功时为 true，否则为 false。
+     */
     public func tryReadRawCompactNameTokenBytes(
         first: Bool,
         expectedNameBytes: Array<Byte>
@@ -239,11 +295,27 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         index = currentIndex + 2
         true
     }
+    /**
+     * 消费对象开始符。
+     *
+     * 跳过空白后消费 {，不压入或弹出语义容器状态，也不自动计算生成代码深度。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @throws JsonException 缺少预期分隔符或输入结束，错误码为 parse_error。
+     */
     public func startRawObject(): Unit {
         skipSpaces()
         expectByte(b'{')
     }
 
+    /**
+     * 按剩余字节数估算对象初始容量。
+     *
+     * 不推进游标，不统计真实字段数。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 4 到 256 之间的容量提示。
+     */
     public func suggestRawObjectCapacity(): Int64 {
         // Object entries are usually much smaller than the conservative
         // generic container hint (especially String -> Int64 maps). A
@@ -262,11 +334,28 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         }
     }
 
+    /**
+     * 消费对象结束符。
+     *
+     * 跳过空白后消费 }，不压入或弹出语义容器状态，也不自动计算生成代码深度。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @throws JsonException 缺少预期分隔符或输入结束，错误码为 parse_error。
+     */
     public func endRawObject(): Unit {
         skipSpaces()
         expectByte(b'}')
     }
 
+    /**
+     * 检查游标是否仍可能有字段。
+     *
+     * 跳过空白后只判断是否到达输入末尾或 }，不消费逗号，也不校验后续值。当前实现不使用 first。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 保留的首项状态参数；该实现不依此参数分支。
+     * @return 仍有字节且当前字节不是 } 时为 true。
+     */
     public func hasRawObjectField(first: Bool): Bool {
         skipSpaces()
         let _ = first
@@ -275,6 +364,15 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
 
     // Compact generated containers have no whitespace.  Keep the delimiter
     // check branch-only; readRawNameFast() consumes the comma when needed.
+    /**
+     * 按首项状态检查对象是否还有下一项。
+     *
+     * 跳过空白；首项判断当前字节是否不是 }，后续项判断是否为逗号。结果不代表后续内容已通过语法校验，逗号仍由后续读取消费。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否还未消费该容器的第一项。
+     * @return 当前位置符合对应首项或逗号条件时为 true。
+     */
     public func hasRawObjectFieldFast(first: Bool): Bool {
         if (!hasMore()) { return false }
         var current = data[index]
@@ -320,6 +418,16 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         true
     }
 
+    /**
+     * 消费字段名前的分隔符、名称和冒号。
+     *
+     * 跳过空白；非首字段先消费逗号。本方法不更新生成代码路径，也不处理未知字段或重复键策略。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首字段；为 false 时先消费逗号。
+     * @return 解码后的 JSON 字段名。
+     * @throws JsonException 分隔符、字符串或冒号无效，或字符串校验失败。
+     */
     public func readRawName(first: Bool): String {
         let original = index
         skipSpaces()
@@ -359,6 +467,16 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         name
     }
 
+    /**
+     * 消费字段名前的分隔符、名称和冒号。
+     *
+     * 跳过空白；非首字段先消费逗号。本方法不更新生成代码路径，也不处理未知字段或重复键策略。当前实现转调 readRawName。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首字段；为 false 时先消费逗号。
+     * @return 解码后的 JSON 字段名。
+     * @throws JsonException 分隔符、字符串或冒号无效，或字符串校验失败。
+     */
     public func readRawNameFast(first: Bool): String {
         readRawName(first)
     }
@@ -397,6 +515,18 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         fail("Unterminated string literal")
     }
 
+    /**
+     * 消费对象字段名并匹配 UTF-8 候选名称。
+     *
+     * 同时消费前导分隔符和尾随冒号；按解码后的名称匹配，不更新路径或自行拒绝未知字段。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首字段。
+     * @param candidates 按返回索引排列的有效 UTF-8 字段名字节数组。
+     * @return 匹配候选的索引，未匹配时为 -1。
+     * @throws JsonException 字段语法或字符串内容无效。
+     * @throws Exception 候选名称在需要转换为字符串的路径中不是有效 UTF-8。
+     */
     public func readRawNameIdBytes(first: Bool, candidates: Array<Array<Byte>>): Int64 {
         beforeRawFieldName(first)
         let id = match (tryParseSimpleNameId(candidates)) {
@@ -413,6 +543,14 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         name
     }
 
+    /**
+     * 消费数组开始符。
+     *
+     * 跳过空白后消费 [，不压入或弹出语义容器状态，也不自动计算生成代码深度。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @throws JsonException 缺少预期分隔符或输入结束，错误码为 parse_error。
+     */
     public func startRawArray(): Unit {
         skipSpaces()
         expectByte(b'[')
@@ -428,16 +566,25 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
     }
 
     // Capacity hint retained for the existing scalar collection helpers.
+    /**
+     * 按剩余字节数估算数组初始容量。
+     *
+     * 不推进游标，不统计真实元素数。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 4 到 64 之间的容量提示。
+     */
     public func suggestRawArrayCapacity(): Int64 {
         suggestContainerCapacity(32)
     }
 
     /**
-     * Returns a bounded allocation hint for a raw collection after the array
-     * opener has been consumed. This is public because macro-generated fast
-     * codecs execute in the consumer package. It never advances the cursor or
-     * retains the input; callers must treat the value as a hint, not a size
-     * guarantee.
+     * 为已消费开始符的数组估算初始容量。
+     *
+     * 不推进游标，不保证等于元素数。根数组可采样前部内容；其他位置按剩余字节估算。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 根据当前位置及可采样内容得到的容量提示。
      */
     public func suggestRawCollectionCapacity(): Int64 {
         let remaining = size - index
@@ -508,6 +655,14 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         if (estimate > 1024) { 1024 } else { estimate }
     }
 
+    /**
+     * 消费数组结束符。
+     *
+     * 跳过空白后消费 ]，不压入或弹出语义容器状态，也不自动计算生成代码深度。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @throws JsonException 缺少预期分隔符或输入结束，错误码为 parse_error。
+     */
     public func endRawArray(): Unit {
         skipSpaces()
         expectByte(b']')
@@ -521,12 +676,30 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         false
     }
 
+    /**
+     * 检查游标是否仍可能有元素。
+     *
+     * 跳过空白后只判断是否到达输入末尾或 ]，不消费逗号，也不校验后续值。当前实现不使用 first。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 保留的首项状态参数；该实现不依此参数分支。
+     * @return 仍有字节且当前字节不是 ] 时为 true。
+     */
     public func hasRawArrayItem(first: Bool): Bool {
         skipSpaces()
         let _ = first
         hasMore() && peek() != b']'
     }
 
+    /**
+     * 按首项状态检查数组是否还有下一项。
+     *
+     * 跳过空白；首项判断当前字节是否不是 ]，后续项判断是否为逗号。结果不代表后续内容已通过语法校验，逗号仍由后续读取消费。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否还未消费该容器的第一项。
+     * @return 当前位置符合对应首项或逗号条件时为 true。
+     */
     public func hasRawArrayItemFast(first: Bool): Bool {
         if (!hasMore()) { return false }
         var current = data[index]
@@ -590,6 +763,15 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         true
     }
 
+    /**
+     * 消费数组元素之前的空白和必要逗号。
+     *
+     * 首项只跳过空白，后续项还必须消费逗号。不读取元素值，不更新生成代码路径。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前数组的首元素。
+     * @throws JsonException 非首项之前缺少逗号或输入结束，错误码为 parse_error。
+     */
     public func beforeRawArrayItem(first: Bool): Unit {
         skipSpaces()
         if (!first) {
@@ -598,6 +780,15 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         }
     }
 
+    /**
+     * 消费数组元素之前的空白和必要逗号。
+     *
+     * 首项只跳过空白，后续项还必须消费逗号。不读取元素值，不更新生成代码路径。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前数组的首元素。
+     * @throws JsonException 非首项之前缺少逗号或输入结束，错误码为 parse_error。
+     */
     public func beforeRawArrayItemFast(first: Bool): Unit {
         if (!first) {
             // hasRawArrayItemFast has already checked the comma.  Consume it
@@ -609,6 +800,15 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         skipSpaces()
     }
 
+    /**
+     * 尝试消费当前位置的 null 字面量。
+     *
+     * 先跳过空白；下一非空白字节不是 n 时返回 false。以 n 开头时匹配 null 的各个字符，不额外检查 token 后的分隔符。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 已消费 null 时为 true，起始字节不匹配时为 false。
+     * @throws JsonException 以 n 开头但不完整匹配 null，错误码为 parse_error。
+     */
     public func tryReadRawNull(): Bool {
         if (!hasMore() || isJsonSpace(peek())) {
             skipSpaces()
@@ -620,6 +820,15 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         true
     }
 
+    /**
+     * 消费一个布尔字面量。
+     *
+     * 跳过空白后读取 true 或 false。匹配字面量字符，不额外检查后续分隔符。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 字面量对应的布尔值。
+     * @throws JsonException 不能读出 true 或 false，错误码为 parse_error。
+     */
     public func readRawBool(): Bool {
         if (!hasMore() || isJsonSpace(peek())) {
             skipSpaces()
@@ -627,6 +836,15 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         readRawBoolCompact()
     }
 
+    /**
+     * 消费一个布尔字面量。
+     *
+     * 跳过空白后读取 true 或 false。快速分支检查字面量后的分隔符；不匹配时回退到 readRawBool。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 字面量对应的布尔值。
+     * @throws JsonException 不能读出 true 或 false，错误码为 parse_error。
+     */
     public func readRawBoolFast(): Bool {
         let original = index
         if (!hasMore() || isJsonSpace(peek())) {
@@ -659,6 +877,15 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         false
     }
 
+    /**
+     * 消费 JSON 字符串并解码转义。
+     *
+     * 跳过前导空白，按字符串输入模式处理 UTF-8；不更新生成代码路径。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 解码后的字符串。
+     * @throws JsonException 字符串未闭合、转义或编码无效，或字符串预算超限。
+     */
     public func readRawString(): String {
         if (!hasMore() || isJsonSpace(peek())) {
             skipSpaces()
@@ -669,6 +896,15 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
     // Generated compact codecs normally receive strings emitted by the
     // matching writer.  Scan the common unescaped ASCII form directly and
     // retain the checked parser for escaped or non-ASCII input.
+    /**
+     * 消费字符串，未转义内容使用直接扫描。
+     *
+     * 遇到转义、控制字符或未闭合内容时回退到 readRawString。未转义直接分支不执行字符串或值的字节预算检查；非 ASCII 内容仍交给相应 UTF-8 转换路径。此入口供匹配版本生成代码调用，不能替代完整字符串校验契约。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 读取并构造的字符串。
+     * @throws JsonException 检查或回退路径发现字符串语法、编码或预算错误。
+     */
     public func readRawStringFast(): String {
         if (!hasMore() || isJsonSpace(peek())) {
             skipSpaces()
@@ -784,15 +1020,41 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         true
     }
 
+    /**
+     * 校验并跳过一个 JSON 字符串。
+     *
+     * 跳过前导空白后扫描，不返回解码结果。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @throws JsonException 字符串语法、编码或资源预算校验失败。
+     */
     public func skipRawString(): Unit {
         skipSpaces()
         scanRawString()
     }
 
+    /**
+     * 消费一个 Int64 范围内的 JSON 整数。
+     *
+     * 跳过空白；拒绝前导零、小数及指数形式。不更新生成代码路径。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 解析得到的 Int64。
+     * @throws JsonException 整数语法无效、小数或指数不适用（invalid_value），或超过目标范围（number_out_of_range）。
+     */
     public func readRawInt64(): Int64 {
         parseInt64Literal()
     }
 
+    /**
+     * 消费生成代码整数路径中的 Int64 值。
+     *
+     * 先尝试直接累积数字，不适用时回退到 readRawInt64。直接分支不拒绝前导零，不能作为对任意外部数字文本的完整语法验证。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 读取的 Int64 值。
+     * @throws JsonException 回退检查路径发现语法、类型或范围错误。
+     */
     public func readRawInt64Fast(): Int64 {
         let original = index
         if (!hasMore() || isJsonSpace(peek())) {
@@ -978,6 +1240,15 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         None<Array<Int64>>
     }
 
+    /**
+     * 消费一个字符串到 Int64 的对象。
+     *
+     * 重名字段后值覆盖前值。构造新集合，但不自行进入或退出生成代码深度状态；调用方负责相关语义上下文。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 新构造的字符串到 Int64 的对象集合。
+     * @throws JsonException 容器语法、成员类型或整数范围不符。
+     */
     public func readRawInt64MapFast(): HashMap<String, Int64> {
         let original = index
         startRawObject()
@@ -988,6 +1259,15 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         readRawInt64MapChecked()
     }
 
+    /**
+     * 消费一个Int64 数组。
+     *
+     * 可使用已安装的 Native 整数数组路径；否则尝试紧凑路径并回退到通用数组读取。构造新集合，但不自行进入或退出生成代码深度状态；调用方负责相关语义上下文。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 新构造的Int64 数组集合。
+     * @throws JsonException 容器语法、成员类型或整数范围不符。
+     */
     public func readRawInt64ArrayFast(): Array<Int64> {
         if (let Some(result) <- tryReadNativeInt64ArrayList()) {
             return result.toArray()
@@ -1088,6 +1368,15 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         None<HashMap<String, Array<Int64>>>
     }
 
+    /**
+     * 消费一个字符串到 Int64 数组的对象。
+     *
+     * 重名字段后值覆盖前值。构造新集合，但不自行进入或退出生成代码深度状态；调用方负责相关语义上下文。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 新构造的字符串到 Int64 数组的对象集合。
+     * @throws JsonException 容器语法、成员类型或整数范围不符。
+     */
     public func readRawInt64ArrayMapFast(): HashMap<String, Array<Int64>> {
         let original = index
         startRawObject()
@@ -1098,6 +1387,15 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         readRawInt64ArrayMapChecked()
     }
 
+    /**
+     * 消费生成代码整数路径中的 UInt64 值。
+     *
+     * 先尝试直接累积数字，不适用时回退到 readRawUInt64。直接分支不拒绝前导零，不能作为对任意外部数字文本的完整语法验证。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 读取的 UInt64 值。
+     * @throws JsonException 回退检查路径发现语法、类型或范围错误。
+     */
     public func readRawUInt64Fast(): UInt64 {
         let original = index
         if (!hasMore() || isJsonSpace(peek())) {
@@ -1128,6 +1426,16 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         result
     }
 
+    /**
+     * 消费生成代码快速路径中的浮点数字内容。
+     *
+     * 无指数时用 Float64 逐位累积整数和小数；指数路径回退到 Float64.parse。手工分支不完整检查数字语法或尾随分隔符，也不保证等同于核心 Float64.parse 的舍入结果。生成代码通用浮点桥接使用 jsonFastReadFloat64。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 累积或解析得到的 Float64；此处不限制结果必须有限。
+     * @throws JsonException 回退路径发现 JSON 数字语法错误。
+     * @throws Exception 回退数值解析失败，或输入不足导致底层数组读取失败。
+     */
     public func readRawFloat64Fast(): Float64 {
         if (!hasMore() || isJsonSpace(peek())) {
             skipSpaces()
@@ -1170,6 +1478,15 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         if (negative) { -result } else { result }
     }
 
+    /**
+     * 消费一个 Int32 范围内的 JSON 整数。
+     *
+     * 跳过空白；拒绝前导零、小数及指数形式。不更新生成代码路径。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 解析得到的 Int32。
+     * @throws JsonException 整数语法无效、小数或指数不适用（invalid_value），或超过目标范围（number_out_of_range）。
+     */
     public func readRawInt32(): Int32 {
         let value = parseInt64Literal()
         int64ToInt32(value)
@@ -1182,6 +1499,15 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         Int32(value)
     }
 
+    /**
+     * 消费一个 Int16 范围内的 JSON 整数。
+     *
+     * 跳过空白；拒绝前导零、小数及指数形式。不更新生成代码路径。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 解析得到的 Int16。
+     * @throws JsonException 整数语法无效、小数或指数不适用（invalid_value），或超过目标范围（number_out_of_range）。
+     */
     public func readRawInt16(): Int16 {
         let value = parseInt64Literal()
         int64ToInt16(value)
@@ -1194,6 +1520,15 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         Int16(value)
     }
 
+    /**
+     * 消费一个 Int8 范围内的 JSON 整数。
+     *
+     * 跳过空白；拒绝前导零、小数及指数形式。不更新生成代码路径。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 解析得到的 Int8。
+     * @throws JsonException 整数语法无效、小数或指数不适用（invalid_value），或超过目标范围（number_out_of_range）。
+     */
     public func readRawInt8(): Int8 {
         let value = parseInt64Literal()
         int64ToInt8(value)
@@ -1206,10 +1541,28 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         Int8(value)
     }
 
+    /**
+     * 消费一个 UInt64 范围内的 JSON 整数。
+     *
+     * 跳过空白；拒绝前导零、小数及指数形式。无符号类型拒绝负号。不更新生成代码路径。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 解析得到的 UInt64。
+     * @throws JsonException 整数语法无效、小数或指数不适用（invalid_value），或超过目标范围（number_out_of_range）。
+     */
     public func readRawUInt64(): UInt64 {
         parseUInt64Literal()
     }
 
+    /**
+     * 消费一个 UInt32 范围内的 JSON 整数。
+     *
+     * 跳过空白；拒绝前导零、小数及指数形式。无符号类型拒绝负号。不更新生成代码路径。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 解析得到的 UInt32。
+     * @throws JsonException 整数语法无效、小数或指数不适用（invalid_value），或超过目标范围（number_out_of_range）。
+     */
     public func readRawUInt32(): UInt32 {
         let value = parseUInt64Literal()
         uint64ToUInt32(value)
@@ -1222,6 +1575,15 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         UInt32(value)
     }
 
+    /**
+     * 消费一个 UInt16 范围内的 JSON 整数。
+     *
+     * 跳过空白；拒绝前导零、小数及指数形式。无符号类型拒绝负号。不更新生成代码路径。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 解析得到的 UInt16。
+     * @throws JsonException 整数语法无效、小数或指数不适用（invalid_value），或超过目标范围（number_out_of_range）。
+     */
     public func readRawUInt16(): UInt16 {
         let value = parseUInt64Literal()
         uint64ToUInt16(value)
@@ -1234,6 +1596,15 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         UInt16(value)
     }
 
+    /**
+     * 消费一个 UInt8 范围内的 JSON 整数。
+     *
+     * 跳过空白；拒绝前导零、小数及指数形式。无符号类型拒绝负号。不更新生成代码路径。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 解析得到的 UInt8。
+     * @throws JsonException 整数语法无效、小数或指数不适用（invalid_value），或超过目标范围（number_out_of_range）。
+     */
     public func readRawUInt8(): UInt8 {
         let value = parseUInt64Literal()
         uint64ToUInt8(value)
@@ -1246,14 +1617,43 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         UInt8(value)
     }
 
+    /**
+     * 消费数字文本并调用 BigInt.parse。
+     *
+     * 直接传播标准库数值解析异常，不使用将其包装为 invalid_value 的类型化桥接。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 解析得到的 BigInt 值。
+     * @throws JsonException JSON 数字语法或数字字节预算校验失败。
+     * @throws Exception 标准库 BigInt.parse 解析失败。
+     */
     public func readRawBigInt(): BigInt {
         BigInt.parse(readRawNumberLiteral())
     }
 
+    /**
+     * 消费数字文本并调用 Decimal.parse。
+     *
+     * 直接传播标准库数值解析异常，不使用将其包装为 invalid_value 的类型化桥接。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 解析得到的 Decimal 值。
+     * @throws JsonException JSON 数字语法或数字字节预算校验失败。
+     * @throws Exception 标准库 Decimal.parse 解析失败。
+     */
     public func readRawDecimal(): Decimal {
         Decimal.parse(readRawNumberLiteral())
     }
 
+    /**
+     * 消费一个 JSON 数字并保留文本。
+     *
+     * 按数字语法读取整数、小数和指数部分；不检查其后的容器分隔符。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 已消费数字 token 的 ASCII 文本。
+     * @throws JsonException JSON 数字语法不符或数字字节预算超限。
+     */
     public func readRawNumberLiteral(): String {
         parseNumberLiteral()
     }
@@ -1445,13 +1845,27 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
         rawTokenNumberHasNonZero
     }
 
+    /**
+     * 按语法扫描并跳过一个完整值。
+     *
+     * 不设置额外容器深度上限；符合条件时可使用 Native 跳过原语。不执行跳过对象内的重复键策略。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @throws JsonException 值语法、字符串或字节预算校验失败。
+     */
     public func skipRaw(): Unit {
         skipRawValueBounded(0, -1)
     }
 
     /**
-     * Skips one value while enforcing a container-depth budget relative to
-     * the current generated-code context. A scalar consumes no depth.
+     * 在相对容器深度预算内按语法跳过一个值。
+     *
+     * 标量不消耗深度；不执行跳过对象中的重复键策略。有界路径不使用 Native 的无深度跳过原语。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param maxDepth 相对当前生成代码上下文的剩余容器层数；0 只允许标量，不能为负。
+     * @throws IllegalArgumentException maxDepth 为负。
+     * @throws JsonException 值语法或预算无效，或容器深度超限（max_depth）。
      */
     public func skipRawWithDepth(maxDepth: Int64): Unit {
         if (maxDepth < 0) { throw IllegalArgumentException("maxDepth must not be negative") }
@@ -1459,13 +1873,14 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
     }
 
     /**
-     * Policy-aware unknown-field skip used by generated codecs. Unlike the
-     * raw skip, this variant never routes container scanning to the native
-     * skip (which is a pure syntax scan), and when
-     * duplicateKeyPolicy==Reject it tracks decoded member names per object
-     * level so duplicate keys inside skipped subtrees fail with the stable
-     * "duplicate_key" code. The remaining depth budget is relative to the
-     * current generated-code context.
+     * 按读取策略和深度预算跳过未知字段的值。
+     *
+     * 拒绝重复键时按解码后的名称逐层检查（duplicate_key）；不使用只扫描语法的 Native 跳过路径。标量不消耗容器深度。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param maxDepth 相对当前生成代码上下文的剩余容器层数；0 只允许标量，不能为负。
+     * @throws IllegalArgumentException maxDepth 为负。
+     * @throws JsonException 值语法、预算、深度（max_depth）或重复键策略（duplicate_key）校验失败。
      */
     public func skipValue(maxDepth: Int64): Unit {
         if (maxDepth < 0) { throw IllegalArgumentException("maxDepth must not be negative") }

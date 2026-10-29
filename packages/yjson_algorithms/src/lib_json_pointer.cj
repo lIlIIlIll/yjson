@@ -14,6 +14,7 @@ func jsonPointerError(message: String, pointer: String,
 /**
  * 不可变的 RFC 6901 JSON Pointer；空字符串表示根，令牌中的 `~0` 和 `~1` 分别表示 `~` 和 `/`。
  *
+ * @group 10-application 应用 API
  */
 public class JsonPointer <: ToString {
     private let source: String
@@ -39,6 +40,7 @@ public class JsonPointer <: ToString {
      * ```output
      * a/b
      * ```
+     * @group 10-application 应用 API
      */
     public static func parse(pointer: String): JsonPointer {
         JsonPointer(pointer, parseJsonPointerSegments(pointer))
@@ -59,6 +61,7 @@ public class JsonPointer <: ToString {
      * ```output
      * a b
      * ```
+     * @group 10-application 应用 API
      */
     public static func parseUriFragment(fragment: String): JsonPointer {
         if (!fragment.startsWith("#")) {
@@ -83,6 +86,7 @@ public class JsonPointer <: ToString {
      * a~b
      * c
      * ```
+     * @group 10-application 应用 API
      */
     public func tokens(): Array<String> {
         let result = ArrayList<String>(segments.size)
@@ -104,6 +108,7 @@ public class JsonPointer <: ToString {
      * true
      * false
      * ```
+     * @group 10-application 应用 API
      */
     public func isRoot(): Bool { segments.isEmpty() }
 
@@ -119,6 +124,7 @@ public class JsonPointer <: ToString {
      * ```output
      * /a b
      * ```
+     * @group 10-application 应用 API
      */
     public func toString(): String { source }
 
@@ -134,6 +140,7 @@ public class JsonPointer <: ToString {
      * ```output
      * #/a%20b
      * ```
+     * @group 10-application 应用 API
      */
     public func toUriFragment(): String {
         let bytes = unsafe { source.rawData() }
@@ -170,6 +177,7 @@ public class JsonPointer <: ToString {
      * 7
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func find(root: JsonValueView): Option<JsonValueView> {
         var current: JsonValueView = root
@@ -209,6 +217,7 @@ public class JsonPointer <: ToString {
      * 7
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func find(document: JsonDocument): Option<JsonValueView> { find(document.root()) }
 
@@ -231,6 +240,7 @@ public class JsonPointer <: ToString {
      * 7
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func evaluate(root: JsonValueView): JsonValueView {
         find(root).getOrThrow({ =>
@@ -258,6 +268,7 @@ public class JsonPointer <: ToString {
      * 7
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func evaluate(document: JsonDocument): JsonValueView { evaluate(document.root()) }
 

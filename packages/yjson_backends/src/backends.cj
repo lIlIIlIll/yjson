@@ -5,16 +5,19 @@ import yjson.*
 /**
  * 后端在输入与输出时采用的缓冲方式；该信息描述实现行为，不改变流的所有权。
  *
+ * @group 10-application 应用 API
  */
 public enum JsonStreamBufferingMode {
     /**
      * 可以分批处理输入或输出，无需先缓存整个文档。
      *
+     * @group 10-application 应用 API
      */
     | Incremental
     /**
      * 先缓存整个文档，再完成解析或序列化。
      *
+     * @group 10-application 应用 API
      */
     | WholeDocument
 }
@@ -22,31 +25,37 @@ public enum JsonStreamBufferingMode {
 /**
  * 实际持有后端文档的引擎元数据；各字段在构造后不可变。
  *
+ * @group 10-application 应用 API
  */
 public class JsonBackendMetadata {
     /**
      * 引擎名称，例如 `custom-native`。
      *
+     * @group 10-application 应用 API
      */
     public let name: String
     /**
      * 引擎版本；不能由此推断跨版本兼容性。
      *
+     * @group 10-application 应用 API
      */
     public let version: String
     /**
      * 引擎是否使用原生实现。
      *
+     * @group 10-application 应用 API
      */
     public let native: Bool
     /**
      * 解码时实际采用的缓冲方式。
      *
+     * @group 10-application 应用 API
      */
     public let decodeBuffering: JsonStreamBufferingMode
     /**
      * 编码时实际采用的缓冲方式。
      *
+     * @group 10-application 应用 API
      */
     public let encodeBuffering: JsonStreamBufferingMode
 
@@ -70,6 +79,7 @@ public class JsonBackendMetadata {
      * example-engine
      * false
      * ```
+     * @group 10-application 应用 API
      */
     public init(name: String, version: String, native: Bool,
         decodeBuffering: JsonStreamBufferingMode,
@@ -85,6 +95,7 @@ public class JsonBackendMetadata {
 /**
  * 显式拥有后端资源的 JSON 文档。使用结束后调用 `close`；根视图依赖文档资源，关闭后不再可读。需要在关闭后保留数据时，先调用 `materialize` 取得独立副本。
  *
+ * @group 10-application 应用 API
  */
 public interface BackendJsonDocument <: Resource {
     /**
@@ -100,6 +111,7 @@ public interface BackendJsonDocument <: Resource {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     func metadata(): JsonBackendMetadata
     /**
@@ -118,6 +130,7 @@ public interface BackendJsonDocument <: Resource {
      * false
      * true
      * ```
+     * @group 10-application 应用 API
      */
     func isClosed(): Bool
     /**
@@ -134,6 +147,7 @@ public interface BackendJsonDocument <: Resource {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     func close(): Unit
     /**
@@ -151,6 +165,7 @@ public interface BackendJsonDocument <: Resource {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     func root(): JsonValueView
     /**
@@ -172,6 +187,7 @@ public interface BackendJsonDocument <: Resource {
      * 7
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     func materialize(): JsonNode
     /**
@@ -195,6 +211,7 @@ public interface BackendJsonDocument <: Resource {
      * 7
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     func materialize(maxNodes: Int64): JsonNode
 }

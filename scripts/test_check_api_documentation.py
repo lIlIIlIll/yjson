@@ -12,27 +12,33 @@ import shutil
 import os
 from unittest.mock import patch
 
-from check_api_documentation import declaration_key, doc_ir_digest, validate, write_offline_archive, verify_agent_reading, main
+from check_api_documentation import (declaration_key, doc_ir_digest, validate, write_offline_archive,
+                                     verify_agent_reading, validate_rendered_groups, main)
 from run_api_doc_examples import extract_example, load_profile, consumer_source, ROOT
 
 
 def fixture():
     example = {'name': 'example', 'directives': '{run}', 'description': '```cangjie\nprintln(Example().read("{}"))\n```\n```output\nvalue\n```'}
     owner = {'id': 'owner', 'name': 'Example', 'qualifiedName': 'yjson.Example', 'packageName': 'yjson',
+             'moduleId': 'root',
              'ownerId': None, 'visibility': 'public', 'kind': 'class', 'parameters': [],
              'headerSpelling': 'public class Example', 'documentation': {'summary': '读取 JSON。', 'tags': []}}
     member = {'id': 'method', 'name': 'read', 'qualifiedName': 'yjson.Example.read', 'packageName': 'yjson',
+              'moduleId': 'root',
               'ownerId': 'owner', 'visibility': 'public', 'kind': 'function',
               'headerSpelling': 'public func read(text: String): String',
               'parameters': [{'name': 'text', 'documentation': None}], 'returnType': {'spelling': 'String'},
               'documentation': {'summary': '读取文本。', 'tags': [{'name': 'param', 'subject': 'text', 'description': '输入 JSON。'},
                   {'name': 'return', 'description': '读取结果。'}, example]}}
-    document = {'schemaVersion': 'cjdoc.doc-ir/16', 'packages': [{'name': 'yjson'}],
+    document = {'schemaVersion': 'cjdoc.doc-ir/16', 'packages': [{'name': 'yjson', 'moduleId': 'root'}],
                 'declarations': [owner, member], 'unsupportedDeclarations': []}
     contract = {'schemaVersion': 2, 'cjcVersion': '1.2.0', 'packages': ['yjson'],
                 'requiredOwners': {'Example': {'read': 1}}, 'declarations': {
                     declaration_key(owner): {'category': 'application', 'profile': 'core'},
                     declaration_key(member): {'category': 'application', 'profile': 'core'}}}
+    for declaration in document['declarations']:
+        declaration['documentation']['tags'].append(
+            {'name': 'group', 'subject': '10-application', 'description': '应用 API'})
     execution = {'schemaVersion': 'yjson.api-doc-examples/1', 'docIrSha256': doc_ir_digest(document),
                  'qualificationStatus': 'qualified',
                  'status': 'complete', 'failures': 0, 'partialProfileSelection': None,
@@ -65,6 +71,53 @@ class DocumentationContractTest(unittest.TestCase):
         report = self.check(fixture())
         self.assertEqual(report['requiredDeclarations'], 2)
         self.assertEqual(report['executedPositiveExamples'], 1)
+
+    def test_generated_and_internal_declarations_require_chinese_contracts(self):
+        for category, group in (('generated-spi', ('20-generated-spi', '生成代码 SPI')),
+                                ('first-party-internal', ('30-first-party-internal', '第一方内部接口'))):
+            for missing in ('summary', 'param', 'return'):
+                document, contract, execution = fixture()
+                member = document['declarations'][1]
+                contract['declarations'][declaration_key(member)] = {'category': category}
+                tags = member['documentation']['tags']
+                next(tag for tag in tags if tag['name'] == 'group').update(subject=group[0], description=group[1])
+                if missing == 'summary':
+                    member['documentation']['summary'] = 'English only.'
+                else:
+                    tags[:] = [tag for tag in tags if tag['name'] != missing]
+                with self.subTest(category=category, missing=missing), self.assertRaisesRegex(ValueError, 'Chinese|@param|@return'):
+                    validate(document, contract, execution, require_examples=False)
+
+    def test_english_parameter_and_return_contracts_fail_in_every_category(self):
+        for category, group in (('application', ('10-application', '应用 API')),
+                                ('generated-spi', ('20-generated-spi', '生成代码 SPI')),
+                                ('first-party-internal', ('30-first-party-internal', '第一方内部接口'))):
+            for field in ('bound-parameter', 'param', 'return'):
+                document, contract, _ = fixture()
+                member = document['declarations'][1]
+                contract['declarations'][declaration_key(member)]['category'] = category
+                tags = member['documentation']['tags']
+                next(tag for tag in tags if tag['name'] == 'group').update(subject=group[0], description=group[1])
+                if field == 'bound-parameter':
+                    member['parameters'][0]['documentation'] = 'English only.'
+                else:
+                    next(tag for tag in tags if tag['name'] == field)['description'] = 'English only.'
+                with self.subTest(category=category, field=field), self.assertRaisesRegex(ValueError, '@param|@return'):
+                    validate(document, contract, require_examples=False)
+
+    def test_every_visible_declaration_requires_exactly_one_matching_source_group(self):
+        for variant in ('missing', 'duplicate', 'wrong-category', 'wrong-title'):
+            document, contract, execution = fixture()
+            tags = document['declarations'][1]['documentation']['tags']
+            tag = next(tag for tag in tags if tag['name'] == 'group')
+            if variant == 'missing': tags.remove(tag)
+            elif variant == 'duplicate': tags.append(deepcopy(tag))
+            elif variant == 'wrong-category': tag['subject'] = '20-generated-spi'
+            else: tag['description'] = 'Other title'
+            with self.subTest(variant=variant), self.assertRaisesRegex(ValueError, 'source declaration group'):
+                validate(document, contract, execution, require_examples=False)
+
+
 
     def test_disappearing_declaration_or_overload_fails(self):
         f = fixture(); f[0]['declarations'].pop()
@@ -196,6 +249,94 @@ class DocumentationContractTest(unittest.TestCase):
                     self.assertEqual(opened.read(relative).decode(), contents)
 
 
+class RenderedGroupContractTest(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.site = pathlib.Path(self.temporary.name)
+        self.document, self.contract, _ = fixture()
+        for declaration in self.document['declarations']:
+            declaration['moduleId'] = 'root'
+        self.document['packages'][0]['moduleId'] = 'root'
+        support = deepcopy(self.document['declarations'][1])
+        support.update(id='support', name='support', qualifiedName='yjson.Example.support',
+                       headerSpelling='public func support(): Unit', parameters=[], returnType={'spelling': 'Unit'})
+        support['documentation'] = {'summary': '支持生成代码。', 'tags': [
+            {'name': 'group', 'subject': '20-generated-spi', 'description': '生成代码 SPI'}]}
+        self.document['declarations'].append(support)
+        self.contract['declarations'][declaration_key(support)] = {'category': 'generated-spi'}
+        entries, representations = [], []
+        for declaration in self.document['declarations']:
+            identity = declaration['id']
+            group = next(tag for tag in declaration['documentation']['tags'] if tag['name'] == 'group')
+            route = f'symbols/{identity}.html'
+            markdown = f'agent/{identity}.md'
+            entries.append({'id': identity, 'href': route})
+            representations.append({'kind': 'symbol', 'id': identity, 'html': route, 'markdown': markdown})
+            badge = f'<p data-cjdoc-declaration-group="{group["subject"]}">{group["description"]}</p>'
+            self.write(route, badge)
+            self.write(markdown, f'接口分组： `{group["subject"]}` · {group["description"]}')
+        self.write('symbols/owner.html', self.read('symbols/owner.html') +
+                   '<section data-cjdoc-declaration-group="10-application"><details data-cjdoc-member data-member-name="read"></details></section>' +
+                   '<section data-cjdoc-declaration-group="20-generated-spi"><details data-cjdoc-member data-member-name="support"></details></section>')
+        self.write('packages/root.html', '<section data-cjdoc-declaration-group="10-application">' +
+                   '<a class="declaration-row-link" href="../symbols/owner.html">Example</a></section>')
+        representations.append({'kind': 'package', 'id': 'package', 'html': 'packages/root.html', 'json': 'agent/package.json'})
+        self.write('agent/package.json', json.dumps({'package': {'moduleId': 'root', 'name': 'yjson'}}))
+        self.write('agent/manifest.json', json.dumps({'representations': representations}))
+        self.write('symbol-index.json', json.dumps({'entries': entries}))
+
+    def write(self, path, content):
+        target = self.site / 'html' / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content)
+
+    def read(self, path):
+        return (self.site / 'html' / path).read_text()
+
+    def check(self):
+        return validate_rendered_groups(self.site, self.document, self.contract)
+
+    def test_accepts_real_group_contract_without_rewriting_artifacts(self):
+        before = {p.relative_to(self.site): p.read_bytes() for p in self.site.rglob('*') if p.is_file()}
+        self.assertEqual(self.check()['declarations'], 3)
+        self.assertEqual(self.check()['mixedPurposeOwners'], 1)
+        self.assertEqual(before, {p.relative_to(self.site): p.read_bytes() for p in self.site.rglob('*') if p.is_file()})
+
+    def test_missing_standalone_html_group_is_rejected(self):
+        self.write('symbols/support.html', '<p>生成代码 SPI</p>')
+        with self.assertRaisesRegex(ValueError, 'standalone HTML'):
+            self.check()
+
+    def test_agent_page_without_group_identity_is_rejected(self):
+        self.write('agent/support.md', '生成代码 SPI')
+        with self.assertRaisesRegex(ValueError, 'standalone Agent'):
+            self.check()
+
+    def test_wrong_package_membership_is_rejected(self):
+        self.write('packages/root.html', self.read('packages/root.html').replace('10-application', '20-generated-spi'))
+        with self.assertRaisesRegex(ValueError, 'package declaration membership'):
+            self.check()
+
+    def test_duplicate_package_group_is_rejected(self):
+        self.write('packages/root.html', self.read('packages/root.html') +
+                   '<section data-cjdoc-declaration-group="10-application"></section>')
+        with self.assertRaisesRegex(ValueError, 'duplicated or out of order'):
+            self.check()
+
+    def test_mixed_purpose_members_cannot_remain_in_application_group(self):
+        self.write('symbols/owner.html', self.read('symbols/owner.html').replace('20-generated-spi', '10-application'))
+        with self.assertRaisesRegex(ValueError, 'mixed-purpose members'):
+            self.check()
+
+    def test_symbol_inventory_cannot_hide_a_grouped_declaration(self):
+        entries = json.loads(self.read('symbol-index.json'))['entries']
+        self.write('symbol-index.json', json.dumps({'entries': entries[:-1]}))
+        with self.assertRaisesRegex(ValueError, 'symbol inventory'):
+            self.check()
+
+
+
 class ExportArchiveBoundaryTest(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(); self.addCleanup(self.temporary.cleanup)
@@ -218,12 +359,30 @@ class ExportArchiveBoundaryTest(unittest.TestCase):
         record.update(source='examples/' + identifier + '.cj', manifest='examples/' + identifier + '.toml',
                       compileOption='-O2', overrideCompileOption='-O2')
         profile, prelude = load_profile('core')
-        example = extract_example(document['declarations'][1]['documentation']['tags'][-1])
+        example = extract_example(next(tag for tag in document['declarations'][1]['documentation']['tags']
+                                       if tag['name'] == 'example'))
         (site / 'examples').mkdir()
         (site / 'examples/index.html').write_bytes(b'<!doctype html><title>Consumer exports</title>')
         (site / 'html').mkdir()
         (site / 'html/index.html').write_text(
             '<main><h1>yjson</h1><article><p>yjson 是仓颉 JSON 库。</p></article></main>', encoding='utf-8')
+        # The final entry point also checks actual rendered grouping artifacts.
+        for directory in ('symbols', 'packages', 'agent'):
+            (site / 'html' / directory).mkdir()
+        badge = '<p data-cjdoc-declaration-group="10-application">应用 API</p>'
+        for identity in ('owner', 'method'):
+            (site / 'html/symbols' / (identity + '.html')).write_text(badge)
+            (site / 'html/agent' / (identity + '.md')).write_text('接口分组： `10-application` · 应用 API')
+        (site / 'html/packages/root.html').write_text(
+            '<section data-cjdoc-declaration-group="10-application">'
+            '<a class="declaration-row-link" href="../symbols/owner.html">Example</a></section>')
+        (site / 'html/symbol-index.json').write_text(json.dumps({'entries': [
+            {'id': 'owner', 'href': 'symbols/owner.html'}, {'id': 'method', 'href': 'symbols/method.html'}]}))
+        (site / 'html/agent/package.json').write_text(json.dumps({'package': {'moduleId': 'root', 'name': 'yjson'}}))
+        (site / 'html/agent/manifest.json').write_text(json.dumps({'representations': [
+            {'kind': 'symbol', 'id': 'owner', 'html': 'symbols/owner.html', 'markdown': 'agent/owner.md'},
+            {'kind': 'symbol', 'id': 'method', 'html': 'symbols/method.html', 'markdown': 'agent/method.md'},
+            {'kind': 'package', 'id': 'package', 'html': 'packages/root.html', 'json': 'agent/package.json'}]}))
         (site / record['source']).write_bytes(consumer_source(profile, prelude, example['code'], 'YJSON_DOC_' + identifier[:24]).encode())
         # Independent literal oracle: compare the delivered bytes, not a second renderer.
         (site / record['manifest']).write_text('[package]\nname = "yjson_doc_example"\nversion = "0.0.0"\ncjc-version = "1.2.0"\n'
@@ -263,6 +422,11 @@ class ExportArchiveBoundaryTest(unittest.TestCase):
         (site / 'html/index.html').write_text(
             '<main><h1>yjson</h1><article><p>介绍。</p>'
             '<pre><code>&lt;p align="center"&gt;介绍&lt;/p&gt;</code></pre></article></main>', encoding='utf-8')
+        self.assertEqual(self.check(site, manifest), (1, 0))
+
+    def test_wrong_rendered_group_prevents_archiving(self):
+        site, manifest, _ = self.artifact()
+        (site / 'html/symbols/method.html').write_text('<p>没有分组</p>')
         self.assertEqual(self.check(site, manifest), (1, 0))
 
     def test_post_execution_frozen_source_tamper_missing_and_extra_are_rejected(self):

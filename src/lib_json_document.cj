@@ -4,6 +4,7 @@ package yjson
  * 由 GC 管理的不可变 JSON 文档。
  *
  * 不需要 close。root 返回的视图保留底层存储；materialize 生成不共享可变节点的副本。默认复制上限为 100,000 个节点和 256 层。
+ * @group 10-application 应用 API
  */
 public interface JsonDocument {
     /**
@@ -19,6 +20,7 @@ public interface JsonDocument {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     func root(): JsonValueView
     /**
@@ -37,6 +39,7 @@ public interface JsonDocument {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     func materialize(): JsonNode
     /**
@@ -66,6 +69,7 @@ public interface JsonDocument {
      * ```output
      * work_limit_exceeded
      * ```
+     * @group 10-application 应用 API
      */
     func materialize(maxNodes: Int64): JsonNode
     /**
@@ -81,6 +85,7 @@ public interface JsonDocument {
      * ```output
      * [1]
      * ```
+     * @group 10-application 应用 API
      */
     func toString(): String
 }

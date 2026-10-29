@@ -15,37 +15,44 @@ private func jsonPatchError(message: String, operationIndex!: Int64 = -1,
 /**
  * RFC 6902 JSON Patch 操作类型；字符串形式采用标准小写操作名。
  *
+ * @group 10-application 应用 API
  */
 @Derive[Equatable]
 public enum JsonPatchOperationKind <: ToString {
     /**
      * 向对象写入成员或向数组插入值；数组 `-` 表示追加。
      *
+     * @group 10-application 应用 API
      */
     | Add
     /**
      * 删除已经存在的对象成员或数组元素；不允许删除整个根文档。
      *
+     * @group 10-application 应用 API
      */
     | Remove
     /**
      * 替换已经存在的目标，根指针可以替换整个文档。
      *
+     * @group 10-application 应用 API
      */
     | Replace
     /**
      * 先从来源删除值，再将同一个值添加到目标；不允许移动到来源的后代。
      *
+     * @group 10-application 应用 API
      */
     | Move
     /**
      * 复制来源值并添加到目标。
      *
+     * @group 10-application 应用 API
      */
     | Copy
     /**
      * 按 JSON 值等价语义测试目标值；失败使整次 Patch 失败。
      *
+     * @group 10-application 应用 API
      */
     | Test
 
@@ -61,6 +68,7 @@ public enum JsonPatchOperationKind <: ToString {
      * ```output
      * replace
      * ```
+     * @group 10-application 应用 API
      */
     public func toString(): String {
         match (this) {
@@ -77,26 +85,31 @@ public enum JsonPatchOperationKind <: ToString {
 /**
  * 一个经过必要字段检查的 JSON Patch 操作；构造时复制 `value`，路径对象本身不可变。
  *
+ * @group 10-application 应用 API
  */
 public class JsonPatchOperation {
     /**
      * 操作类型，决定 `source` 和 `value` 哪些字段必需。
      *
+     * @group 10-application 应用 API
      */
     public let kind: JsonPatchOperationKind
     /**
      * 写入或测试的目标 JSON Pointer。
      *
+     * @group 10-application 应用 API
      */
     public let path: JsonPointer
     /**
      * Move、Copy 操作的来源指针；其他操作不使用此字段。
      *
+     * @group 10-application 应用 API
      */
     public let source: Option<JsonPointer>
     /**
      * Add、Replace、Test 操作持有的值副本；构造后仍可通过可变 JsonNode 修改其内容。
      *
+     * @group 10-application 应用 API
      */
     public let value: Option<JsonNode>
 
@@ -119,6 +132,7 @@ public class JsonPatchOperation {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public init(kind: JsonPatchOperationKind, path: JsonPointer,
         source!: Option<JsonPointer> = None<JsonPointer>,
@@ -137,6 +151,7 @@ public class JsonPatchOperation {
 /**
  * 可复用的 RFC 6902 操作序列；应用时先处理独立副本，失败不会把部分操作写入输入树。
  *
+ * @group 10-application 应用 API
  */
 public class JsonPatch {
     private let patchOperations: Array<JsonPatchOperation>
@@ -157,6 +172,7 @@ public class JsonPatch {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public init(operations: Array<JsonPatchOperation>) {
         let copied = ArrayList<JsonPatchOperation>(operations.size)
@@ -183,6 +199,7 @@ public class JsonPatch {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public static func parse(text: String,
         config!: JsonReadOptions = JsonReadOptions(duplicateKeyPolicy: JsonDuplicateKeyPolicy.Reject)): JsonPatch {
@@ -205,6 +222,7 @@ public class JsonPatch {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public static func fromValue(value: JsonValueView): JsonPatch {
         if (value.kind() != JsonKind.Array) {
@@ -233,6 +251,7 @@ public class JsonPatch {
      * 1
      * remove
      * ```
+     * @group 10-application 应用 API
      */
     public func operations(): Array<JsonPatchOperation> {
         let result = ArrayList<JsonPatchOperation>(patchOperations.size)
@@ -263,6 +282,7 @@ public class JsonPatch {
      * 1
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func apply(target: JsonValueView, limits!: JsonPatchLimits = JsonPatchLimits.defaults): JsonNode {
         enforceWorkLimit(patchOperations.size, limits.maxOperations, "patch operations")
@@ -297,6 +317,7 @@ public class JsonPatch {
      * 7
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func applyInPlace(target: JsonNode,
         limits!: JsonPatchLimits = JsonPatchLimits.defaults): JsonNode {
@@ -308,6 +329,7 @@ public class JsonPatch {
 /**
  * RFC 7396 Merge Patch：对象递归合并，值为 null 的成员被删除，非对象 Patch 替换整个目标。
  *
+ * @group 10-application 应用 API
  */
 public class JsonMergePatch {
     /**
@@ -333,6 +355,7 @@ public class JsonMergePatch {
      * false
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public static func apply(target: JsonValueView, patch: JsonValueView,
         limits!: JsonPatchLimits = JsonPatchLimits.defaults): JsonNode {
@@ -363,6 +386,7 @@ public class JsonMergePatch {
      * 7
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public static func applyInPlace(target: JsonNode, patch: JsonNode,
         limits!: JsonPatchLimits = JsonPatchLimits.defaults): JsonNode {

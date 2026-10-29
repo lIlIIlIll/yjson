@@ -5,51 +5,61 @@ import yjson.*
 /**
  * JSONPath 编译与单次执行的工作预算；各维度为 `0` 时不限制，负值无效。
  *
+ * @group 10-application 应用 API
  */
 public class JsonPathLimits {
     /**
      * 单次执行允许访问的候选节点数，包含遍历和过滤子查询。 `0` 表示不限制。
      *
+     * @group 10-application 应用 API
      */
     public let maxVisitedNodes: Int64
     /**
      * 单次执行允许进行的过滤候选求值次数。 `0` 表示不限制。
      *
+     * @group 10-application 应用 API
      */
     public let maxFilterSteps: Int64
     /**
      * 单次执行中正则编译与匹配共用的步骤预算。 `0` 表示不限制。
      *
+     * @group 10-application 应用 API
      */
     public let maxRegexSteps: Int64
     /**
      * 单次执行允许输出的匹配数，重复匹配也计数。 `0` 表示不限制。
      *
+     * @group 10-application 应用 API
      */
     public let maxMatches: Int64
     /**
      * 遍历候选节点允许达到的深度。 `0` 表示不限制。
      *
+     * @group 10-application 应用 API
      */
     public let maxDepth: Int64
     /**
      * 编译单个过滤表达式允许的 UTF-8 字节数。 `0` 表示不限制。
      *
+     * @group 10-application 应用 API
      */
     public let maxFilterExpressionBytes: Int64
     /**
      * 编译单个过滤表达式允许的逻辑运算符数量。 `0` 表示不限制。
      *
+     * @group 10-application 应用 API
      */
     public let maxFilterOperators: Int64
     /**
      * 编译单个过滤表达式允许的逻辑嵌套深度。 `0` 表示不限制。
      *
+     * @group 10-application 应用 API
      */
     public let maxFilterDepth: Int64
     /**
      * 单次执行允许实际求值的逻辑运算次数。 `0` 表示不限制。
      *
+     * @group 10-application 应用 API
      */
     public let maxFilterOperations: Int64
     /**
@@ -74,6 +84,7 @@ public class JsonPathLimits {
      * ```output
      * 1
      * ```
+     * @group 10-application 应用 API
      */
     public init(maxVisitedNodes!: Int64 = 100000, maxFilterSteps!: Int64 = 100000,
         maxRegexSteps!: Int64 = 100000, maxMatches!: Int64 = 10000, maxDepth!: Int64 = 256,
@@ -96,11 +107,13 @@ public class JsonPathLimits {
     /**
      * 带签名所列有限预算的默认配置。
      *
+     * @group 10-application 应用 API
      */
     public static let defaults = JsonPathLimits()
     /**
      * 关闭全部预算的配置；仅适用于输入与工作量受信任的场景。
      *
+     * @group 10-application 应用 API
      */
     public static let unlimited = JsonPathLimits(maxVisitedNodes: 0, maxFilterSteps: 0,
         maxRegexSteps: 0, maxMatches: 0, maxDepth: 0, maxFilterExpressionBytes: 0,
@@ -110,21 +123,25 @@ public class JsonPathLimits {
 /**
  * JSON Patch 和 Merge Patch 的工作预算；各维度为 `0` 时不限制，负值无效。
  *
+ * @group 10-application 应用 API
  */
 public class JsonPatchLimits {
     /**
      * JSON Patch 允许执行的操作数，Merge Patch 不使用此维度。 `0` 表示不限制。
      *
+     * @group 10-application 应用 API
      */
     public let maxOperations: Int64
     /**
      * JSON Patch 每个目标指针及来源指针允许的令牌数。 `0` 表示不限制。
      *
+     * @group 10-application 应用 API
      */
     public let maxPointerSegments: Int64
     /**
      * 允许复制的节点预算；JSON Patch 累计初始副本和操作值等复制，Merge Patch 检查输入合计与结果节点数。 `0` 表示不限制。
      *
+     * @group 10-application 应用 API
      */
     public let maxCopiedNodes: Int64
     /**
@@ -144,6 +161,7 @@ public class JsonPatchLimits {
      * ```output
      * 1
      * ```
+     * @group 10-application 应用 API
      */
     public init(maxOperations!: Int64 = 10000, maxPointerSegments!: Int64 = 256,
         maxCopiedNodes!: Int64 = 100000) {
@@ -155,11 +173,13 @@ public class JsonPatchLimits {
     /**
      * 带签名所列有限预算的默认配置。
      *
+     * @group 10-application 应用 API
      */
     public static let defaults = JsonPatchLimits()
     /**
      * 关闭全部预算的配置；仅适用于输入与工作量受信任的场景。
      *
+     * @group 10-application 应用 API
      */
     public static let unlimited = JsonPatchLimits(maxOperations: 0, maxPointerSegments: 0, maxCopiedNodes: 0)
 }
@@ -167,31 +187,37 @@ public class JsonPatchLimits {
 /**
  * JSON Schema 编译与单次验证的工作预算；各维度为 `0` 时不限制，负值无效。
  *
+ * @group 10-application 应用 API
  */
 public class JsonSchemaLimits {
     /**
      * 单次验证允许的模式求值与额外比较工作量。 `0` 表示不限制。
      *
+     * @group 10-application 应用 API
      */
     public let maxEvaluations: Int64
     /**
      * 模式编译和验证允许的引用解析预算。 `0` 表示不限制。
      *
+     * @group 10-application 应用 API
      */
     public let maxRefResolutions: Int64
     /**
      * 正则编译或单次验证中共用的正则步骤预算。 `0` 表示不限制。
      *
+     * @group 10-application 应用 API
      */
     public let maxRegexSteps: Int64
     /**
      * 一次完整验证允许产生的错误条目数，超出预算会抛出异常。 `0` 表示不限制。
      *
+     * @group 10-application 应用 API
      */
     public let maxErrors: Int64
     /**
      * 验证实例时允许的递归深度。 `0` 表示不限制。
      *
+     * @group 10-application 应用 API
      */
     public let maxDepth: Int64
     /**
@@ -213,6 +239,7 @@ public class JsonSchemaLimits {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public init(maxEvaluations!: Int64 = 100000, maxRefResolutions!: Int64 = 1000,
         maxRegexSteps!: Int64 = 100000, maxErrors!: Int64 = 100, maxDepth!: Int64 = 256) {
@@ -225,11 +252,13 @@ public class JsonSchemaLimits {
     /**
      * 带签名所列有限预算的默认配置。
      *
+     * @group 10-application 应用 API
      */
     public static let defaults = JsonSchemaLimits()
     /**
      * 关闭全部预算的配置；仅适用于输入与工作量受信任的场景。
      *
+     * @group 10-application 应用 API
      */
     public static let unlimited = JsonSchemaLimits(maxEvaluations: 0, maxRefResolutions: 0,
         maxRegexSteps: 0, maxErrors: 0, maxDepth: 0)

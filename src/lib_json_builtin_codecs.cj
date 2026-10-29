@@ -164,14 +164,47 @@ func jsonFastReadFloat16(reader: JsonFastReader): Float16 {
     Float16(jsonFastReadFloat64(reader))
 }
 
+/**
+ * 为生成代码消费一个 Float64 浮点值。
+ *
+ * reader 必须是运行时拥有的 JsonFastReader。可用原生转换拒绝 token 时回退到核心 Float64.parse。此方法不自行执行非有限结果检查。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param reader 供本次数值解码消费的 V1 读取器。
+ * @return 解析得到的 Float64 值。
+ * @throws JsonException 读取器不匹配（generated_protocol_mismatch），或 JSON 数字语法、字节预算不符。
+ * @throws Exception 核心 Float64 数值解析失败。
+ */
 public func jsonFastReadFloat64(reader: GeneratedSupportV1Reader): Float64 {
     jsonFastReadFloat64(yJsonGeneratedReaderV1(reader))
 }
 
+/**
+ * 为生成代码消费一个 Float32 浮点值。
+ *
+ * reader 必须是运行时拥有的 JsonFastReader。可用原生转换拒绝 token 时回退到核心 Float64.parse。之后转换为 Float32；此处不额外拒绝窄化产生的非有限结果。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param reader 供本次数值解码消费的 V1 读取器。
+ * @return 解析并转换得到的 Float32 值。
+ * @throws JsonException 读取器不匹配（generated_protocol_mismatch），或 JSON 数字语法、字节预算不符。
+ * @throws Exception 核心 Float64 数值解析失败。
+ */
 public func jsonFastReadFloat32(reader: GeneratedSupportV1Reader): Float32 {
     jsonFastReadFloat32(yJsonGeneratedReaderV1(reader))
 }
 
+/**
+ * 为生成代码消费一个 Float16 浮点值。
+ *
+ * reader 必须是运行时拥有的 JsonFastReader。可用原生转换拒绝 token 时回退到核心 Float64.parse。之后转换为 Float16；此处不额外拒绝窄化产生的非有限结果。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param reader 供本次数值解码消费的 V1 读取器。
+ * @return 解析并转换得到的 Float16 值。
+ * @throws JsonException 读取器不匹配（generated_protocol_mismatch），或 JSON 数字语法、字节预算不符。
+ * @throws Exception 核心 Float64 数值解析失败。
+ */
 public func jsonFastReadFloat16(reader: GeneratedSupportV1Reader): Float16 {
     jsonFastReadFloat16(yJsonGeneratedReaderV1(reader))
 }
