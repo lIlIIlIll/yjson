@@ -221,6 +221,9 @@ class ExportArchiveBoundaryTest(unittest.TestCase):
         example = extract_example(document['declarations'][1]['documentation']['tags'][-1])
         (site / 'examples').mkdir()
         (site / 'examples/index.html').write_bytes(b'<!doctype html><title>Consumer exports</title>')
+        (site / 'html').mkdir()
+        (site / 'html/index.html').write_text(
+            '<main><h1>yjson</h1><article><p>yjson 是仓颉 JSON 库。</p></article></main>', encoding='utf-8')
         (site / record['source']).write_bytes(consumer_source(profile, prelude, example['code'], 'YJSON_DOC_' + identifier[:24]).encode())
         # Independent literal oracle: compare the delivered bytes, not a second renderer.
         (site / record['manifest']).write_text('[package]\nname = "yjson_doc_example"\nversion = "0.0.0"\ncjc-version = "1.2.0"\n'
@@ -254,6 +257,13 @@ class ExportArchiveBoundaryTest(unittest.TestCase):
     def test_original_exported_bytes_are_accepted_and_archived(self):
         site, manifest, _ = self.artifact()
         self.assertEqual(self.check(site, manifest), (0, 1))
+
+    def test_raw_homepage_presentation_prevents_archiving(self):
+        site, manifest, _ = self.artifact()
+        (site / 'html/index.html').write_text(
+            '<main><h1>yjson</h1><article><p>介绍。</p>'
+            '<pre><code>&lt;p align="center"&gt;介绍&lt;/p&gt;</code></pre></article></main>', encoding='utf-8')
+        self.assertEqual(self.check(site, manifest), (1, 0))
 
     def test_post_execution_frozen_source_tamper_missing_and_extra_are_rejected(self):
         for mode in ('tamper', 'missing', 'extra'):

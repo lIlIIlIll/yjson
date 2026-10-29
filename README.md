@@ -1,20 +1,14 @@
-<!-- BEAUTIFIED -->
+# yjson
 
-<h1 align="center">yjson</h1>
+**面向仓颉的类型安全 JSON 库**
 
-<p align="center">
-  <strong>面向仓颉的类型安全 JSON 库</strong>
-  <br />
-  <em>编译期编解码 · 可修改 JSON 树 · 只读文档 · 流式读写</em>
-</p>
+*编译期编解码 · 可修改 JSON 树 · 只读文档 · 流式读写*
 
-<p align="center">
-  <a href="https://github.com/lIlIIlIll/yjson/actions/workflows/ci.yml"><img src="https://github.com/lIlIIlIll/yjson/actions/workflows/ci.yml/badge.svg?branch=main" alt="Tests" /></a>
-  <a href="https://codecov.io/gh/lIlIIlIll/yjson"><img src="https://codecov.io/gh/lIlIIlIll/yjson/branch/main/graph/badge.svg?flag=core" alt="Core Coverage" /></a>
-  <a href="https://github.com/lIlIIlIll/yjson/releases/latest"><img src="https://img.shields.io/github/v/release/lIlIIlIll/yjson?display_name=tag&sort=semver&label=historical%20release" alt="Latest historical GitHub release" /></a>
-  <img src="https://img.shields.io/badge/current%20candidate-0.2.0-F59E0B" alt="Current candidate 0.2.0" />
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache--2.0-yellow" alt="Apache License 2.0" /></a>
-</p>
+[![Tests](https://github.com/lIlIIlIll/yjson/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/lIlIIlIll/yjson/actions/workflows/ci.yml)
+[![Core Coverage](https://codecov.io/gh/lIlIIlIll/yjson/branch/main/graph/badge.svg?flag=core)](https://codecov.io/gh/lIlIIlIll/yjson)
+[![Latest historical GitHub release](https://img.shields.io/github/v/release/lIlIIlIll/yjson?display_name=tag&sort=semver&label=historical%20release)](https://github.com/lIlIIlIll/yjson/releases/latest)
+![Current candidate 0.2.0](https://img.shields.io/badge/current%20candidate-0.2.0-F59E0B)
+[![Apache License 2.0](https://img.shields.io/badge/License-Apache--2.0-yellow)](LICENSE)
 
 yjson 是仓颉 JSON 库，支持类型与 JSON 互转、构造和修改 JSON 树、只读查询以及流式读写。
 默认使用纯仓颉实现，由 GC 管理内存。
@@ -23,12 +17,8 @@ yjson 是仓颉 JSON 库，支持类型与 JSON 互转、构造和修改 JSON �
 之间的源码、API、ABI、生成代码或旧 SDK 兼容。升级时同步第一方依赖，重新展开宏并编译应用。
 历史版本的接口与验证结果不定义当前候选的保证。
 
-<p align="center">
-  <a href="#快速开始">快速开始</a> ·
-  <a href="#按任务选择-api">API 选择</a> ·
-  <a href="#可选包">可选包</a> ·
-  <a href="docs/README.md">完整文档</a>
-</p>
+[快速开始](#快速开始) · [API 选择](#按任务选择-api) · [可选包](#可选包) ·
+[完整文档](docs/README.md)
 
 ## 适合什么场景
 

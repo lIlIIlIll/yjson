@@ -507,7 +507,8 @@ def main() -> int:
         manifest = json.loads((args.site / 'api-docs.json').read_text(encoding='utf-8'))
         if manifest.get('qualificationStatus') != 'qualified':
             raise ValueError('development-only documentation cannot satisfy qualified acceptance')
-        from generate_api_docs import source_identity, sha256_file, verify_standard_quality
+        from generate_api_docs import source_identity, sha256_file, verify_standard_quality, validate_homepage
+        validate_homepage(args.site)
         if source_identity() != manifest.get('source'):
             raise ValueError('generated documentation belongs to different current source inputs')
         if sha256_file(args.site / 'docs.json') != manifest.get('docIrSha256'):
