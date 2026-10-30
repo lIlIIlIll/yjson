@@ -4,7 +4,10 @@
 需求、实际检查结果和剩余缺口统一记录在[实施记录](../../docs/implementation/cjdoc-020.md)。
 本页固定输入身份，不把尚未执行的检查写成通过。
 
-## 当前工具链与源码
+## 工具链与已验收源码快照
+
+本节记录 `e0db001` 的已验收部署快照，原件保留在对应工作流 artifact。
+Pages 与 ZIP 链接随 main 更新；本表摘要只适用于该快照，新下载件以其公开 sidecar 为准。
 
 | 输入 | 固定身份 |
 | --- | --- |
@@ -19,8 +22,14 @@
 | 工具资格配置 SHA-256 | `dbfcce51f26cb7229ee236ac2a78b692591d21d3170d8bd4ce1db50ba5c6c7d2` |
 | cjdoc 精确源码归档 SHA-256 | `21a6e03a80ff5fcef259c1a80f55401f81e01c0fe33c9390c9409a0cf1f6cc75`；995 个文件及权限与 Git blob 一致 |
 | 主仓本地验证源码 | `2945d3beb0ceb696cd7c673a0adee69b9635d860`，tree `7c0ad7021985a2509d815f4e9cdef157ce62a94f`；完整 strict 与全部 17 个 fresh CI gate 通过 |
-| 正式生成 Doc IR SHA-256 | `fe4eb7b2d7315684f969986bc1529284a45c1dc41a676edc484f5c569c1e691b`；九包 1035 项声明及 333 个实际执行示例通过 |
+| 本地生成 Doc IR SHA-256 | `fe4eb7b2d7315684f969986bc1529284a45c1dc41a676edc484f5c569c1e691b`；九包 1035 项声明及 333 个实际执行示例通过 |
 | 本地完整离线包 | 16659640 字节，SHA-256 `4c810d798bf27054dfb9c51f4fa93aca11124f72b4e2856ff6f89ff295a9b4b3`；5331 个文件与站点相同，真实断网 query/MCP 及空 cjpm 缓存下全部 333 示例、11 profile 重建通过 |
+| 主仓正式合并候选 | `e0db0019d6b8cdb83034c0f5a5325a021dbe3e62`，tree `76af8598b8c0d55e4cb4b07375fb94dca8b7ce8b`；[PR #17](https://github.com/lIlIIlIll/yjson/pull/17) 已合并，保留测量与本地验证提交 |
+| 最终 PR 门禁与审查 | HEAD `69d1b93`；[41058984673 / attempt 2](https://github.com/lIlIIlIll/yjson/actions/runs/41058984673/attempts/2) 的 29 项门禁通过；官方代码复审无 findings，安全审查 completed |
+| main 门禁与 Pages | [41072855354 / attempt 2](https://github.com/lIlIIlIll/yjson/actions/runs/41072855354/attempts/2) 的全部 30 项检查通过；[Pages](https://liliilill.github.io/yjson/) 已部署并经真实 Chrome 桌面、移动与搜索验收 |
+| 正式源码输入 SHA-256 | `c17e8825d83a5b4db4c8d7f300a25e96b42b34ae81be718477e4da066fa1c9d8`；全部 145 文件与本地冻结输入相同 |
+| 正式 Doc IR 文件 SHA-256 | `3db768d9696a749fdf9ca854cf05bb1a43e4cc82ec20aa0e773cf1bd49dc514a`；规范化执行摘要为 `713d1a1507128badef1ff3cbbe4be99745fa79bdb429d3484c36d2d69eab02cf` |
+| 正式完整离线包 | [ZIP](https://liliilill.github.io/yjson/downloads/yjson-api-docs-offline.zip)，16661014 字节，5331 文件，SHA-256 `4d472fee4f61fe691cbdee30bd5d3294ca2b05840c4704db96450b30e8e6d6db`；与托管 artifact 及公开 sidecar 逐字节一致 |
 
 本地工具资格使用下表中相同的 cjc/cjpm 和普通 static stdx，SDK、构建策略与 wrapper
 摘要不变。两个独立空缓存构建的二进制 SHA-256 分别为
@@ -41,9 +50,16 @@ payload、固定 SDK 及嵌入候选收据均独立检查通过。三个收据�
 main 前两次失败及 Release 首次 macOS `markdown` 依赖的 `llc -O2` 退出 139 均保留。
 用户明确授权完整重跑及同任务后续操作；所有门禁、优化参数和堆配置保持不变。
 Linux 公开二进制与 main attempt 2 的失败二进制相同；后续通过不确定 GC 或 LLVM 故障根因。
-本地主仓冻结输入已单独验收；托管三平台文档示例与 yjson Pages 仍待验收，不以 cjdoc
-发布或本地结果替代。随后仅追加本页和实施记录正文，不改变生成器的 145 文件输入、
-工具配置、产品或 harness。托管按最终 PR/main 提交重新生成，本地证据仍绑定 2945d3b。
+主仓正式合并候选 e0db001 的托管三平台、文档示例与 Pages 已独立验收。
+Linux 333 项示例通过，Windows 和 macOS 各 285 项通过、48 项明确不适用。
+PR 首轮 macOS `llc -O2` 退出 139，以及 main 首轮 Windows `llc.exe` 的
+`0xC0000005` 均保留日志与执行 JSON。匹配对照支持偶发后端失败分类，未确定崩溃根因。
+用户授权后，各原运行只完整重跑一次，源码、SDK、优化参数和门禁未变。
+
+结果回写仅修改本页和实施记录正文，不改变生成器的 145 文件输入、工具配置、产品或
+harness。正式 Doc IR 仅将本地输入的精确源码链接由 2945d3b 更新为 e0db001，替换该
+提交身份后完整 JSON 相等。因此真实断网 query、MCP 和 333 示例重建证据按不变输入
+复用，不将本轮下载及收据检查写成重新执行。完整验收和限制见实施记录的最终交付节。
 
 ## 当前性能输入
 
