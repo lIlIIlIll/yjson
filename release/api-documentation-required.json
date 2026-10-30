@@ -307,7 +307,7 @@
       "category": "first-party-internal"
     },
     "yjson.DirectBufferWriterTarget.reserveCapacity|function|public func reserveCapacity(additional: Int64): Unit": {
-      "category": "first-party-internal"
+      "category": "generated-spi"
     },
     "yjson.DirectBufferWriterTarget.reset|function|public func reset(): Unit": {
       "category": "first-party-internal"
@@ -349,7 +349,7 @@
       "category": "first-party-internal"
     },
     "yjson.DirectBufferWriterTarget.writeObjectEntryNameBoolNoEscapeFast|function|public func writeObjectEntryNameBoolNoEscapeFast( first: Bool, name: String, value: Bool ): Bool": {
-      "category": "first-party-internal"
+      "category": "generated-spi"
     },
     "yjson.DirectBufferWriterTarget.writeObjectEntryNameBoolNoEscape|function|public func writeObjectEntryNameBoolNoEscape( first: Bool, name: Array<Byte>, value: Bool ): Bool": {
       "category": "first-party-internal"
@@ -358,7 +358,7 @@
       "category": "first-party-internal"
     },
     "yjson.DirectBufferWriterTarget.writeObjectEntryNameFloat64NoEscapeFast|function|public func writeObjectEntryNameFloat64NoEscapeFast( first: Bool, name: String, value: Float64 ): Bool": {
-      "category": "first-party-internal"
+      "category": "generated-spi"
     },
     "yjson.DirectBufferWriterTarget.writeObjectEntryNameFloat64NoEscape|function|public func writeObjectEntryNameFloat64NoEscape( first: Bool, name: Array<Byte>, value: Float64 ): Bool": {
       "category": "first-party-internal"
@@ -391,7 +391,7 @@
       "category": "first-party-internal"
     },
     "yjson.DirectBufferWriterTarget.writeObjectEntryNameInt64NoEscapeFast|function|public func writeObjectEntryNameInt64NoEscapeFast(first: Bool, name: String, value: Int64): Bool": {
-      "category": "first-party-internal"
+      "category": "generated-spi"
     },
     "yjson.DirectBufferWriterTarget.writeObjectEntryNameInt64NoEscape|function|public func writeObjectEntryNameInt64NoEscape(first: Bool, name: Array<Byte>, value: Int64): Bool": {
       "category": "first-party-internal"
@@ -415,7 +415,7 @@
       "category": "first-party-internal"
     },
     "yjson.DirectBufferWriterTarget.writeObjectEntryNameUInt64NoEscapeFast|function|public func writeObjectEntryNameUInt64NoEscapeFast( first: Bool, name: String, value: UInt64 ): Bool": {
-      "category": "first-party-internal"
+      "category": "generated-spi"
     },
     "yjson.DirectBufferWriterTarget.writeObjectEntryNameUInt64NoEscape|function|public func writeObjectEntryNameUInt64NoEscape( first: Bool, name: Array<Byte>, value: UInt64 ): Bool": {
       "category": "first-party-internal"
@@ -448,7 +448,7 @@
       "category": "first-party-internal"
     },
     "yjson.DirectBufferWriterTarget|class|public class DirectBufferWriterTarget <: JsonDirectWriterTarget": {
-      "category": "first-party-internal"
+      "category": "generated-spi"
     },
     "yjson.GeneratedBulkWriterV1.tryWriteCompactFloat64Array|function|func tryWriteCompactFloat64Array(values: Array<Float64>): Bool": {
       "category": "generated-spi"

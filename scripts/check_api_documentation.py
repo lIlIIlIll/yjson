@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check the complete classified application surface in the generated Doc IR."""
+"""Check documentation and source groups for every visible declaration."""
 from __future__ import annotations
 
 import argparse
@@ -10,6 +10,8 @@ import pathlib
 import re
 import sys
 import zipfile
+import posixpath
+from html.parser import HTMLParser
 
 sys.dont_write_bytecode = True
 
@@ -18,6 +20,11 @@ DEFAULT_CONTRACT = ROOT / 'release/api-documentation-required.json'
 CATEGORIES = frozenset(('application', 'generated-spi', 'first-party-internal', 'c-abi'))
 ENTRY_KINDS = frozenset(('function', 'constructor', 'macro', 'property'))
 CHINESE = re.compile(r'[\u3400-\u9fff]')
+DECLARATION_GROUPS = {
+    'application': ('10-application', '应用 API'),
+    'generated-spi': ('20-generated-spi', '生成代码 SPI'),
+    'first-party-internal': ('30-first-party-internal', '第一方内部接口'),
+}
 
 
 def nonempty(value: object) -> bool:
@@ -68,9 +75,9 @@ def is_entry(declaration: dict) -> bool:
 
 def has_bound_parameter_documentation(declaration: dict, parameter: dict) -> bool:
     if nonempty(parameter.get('documentation')):
-        return True
+        return CHINESE.search(parameter['documentation']) is not None
     return any(t.get('name') == 'param' and t.get('subject') == parameter.get('name')
-               and nonempty(t.get('description'))
+               and nonempty(t.get('description')) and CHINESE.search(t['description'])
                for t in (declaration.get('documentation') or {}).get('tags', []) if isinstance(t, dict))
 
 
@@ -122,25 +129,32 @@ def validate(document: dict, contract: dict, execution: dict | None = None, *,
                 failures.append(f'{key}: missing bound @param {parameter.get("name")}')
         result = declaration.get('returnType')
         if declaration.get('kind') == 'function' and isinstance(result, dict) and result.get('spelling', '').strip() != 'Unit':
-            if not any(t.get('name') == 'return' and nonempty(t.get('description'))
+            if not any(t.get('name') == 'return' and nonempty(t.get('description')) and CHINESE.search(t['description'])
                        for t in (declaration.get('documentation') or {}).get('tags', [])):
                 failures.append(f'{key}: missing @return description')
     selected = [d for key, d in actual.items() if entries.get(key, {}).get('category') == 'application']
     selected_ids = {declaration['id'] for declaration in selected}
+    visible_ids = {declaration['id'] for declaration in declarations}
     quality_findings = None
     if quality is not None:
         if quality.get('schemaVersion') != 'cjdoc.documentation-quality/1' or quality.get('audience') != 'external':
             raise ValueError('documentation quality report has an unexpected schema or audience')
-        quality_findings = [finding for finding in quality.get('findings', []) if finding.get('symbolId') in selected_ids]
+        quality_findings = [finding for finding in quality.get('findings', []) if finding.get('symbolId') in visible_ids]
         for finding in quality_findings:
             failures.append(f'{finding["symbolId"]}: cjdoc documentation quality finding {finding.get("code")}')
     parameter_count = return_count = entry_count = 0
-    for declaration in selected:
+    for declaration in declarations:
         key = declaration_key(declaration)
         doc = declaration.get('documentation') or {}
         summary = doc.get('summary')
         if not nonempty(summary) or not CHINESE.search(summary):
             failures.append(f'{key}: missing bound Chinese documentation summary')
+        category = entries.get(key, {}).get('category')
+        group = DECLARATION_GROUPS.get(category)
+        tags = [tag for tag in doc.get('tags', []) if tag.get('name') == 'group']
+        if (group is None or len(tags) != 1
+                or (tags[0].get('subject'), tags[0].get('description')) != group):
+            failures.append(f'{key}: missing or mismatched source declaration group')
         for parameter in declaration.get('parameters', []):
             parameter_count += 1
             if not has_bound_parameter_documentation(declaration, parameter):
@@ -150,9 +164,9 @@ def validate(document: dict, contract: dict, execution: dict | None = None, *,
             failures.append(f'{key}: missing collected return type')
         if declaration.get('kind') in ('function', 'macro') and isinstance(result, dict) and result.get('spelling', '').strip() != 'Unit':
             return_count += 1
-            if not any(t.get('name') == 'return' and nonempty(t.get('description')) for t in doc.get('tags', [])):
+            if not any(t.get('name') == 'return' and nonempty(t.get('description')) and CHINESE.search(t['description']) for t in doc.get('tags', [])):
                 failures.append(f'{key}: missing @return description')
-        if is_entry(declaration):
+        if category == 'application' and is_entry(declaration):
             entry_count += 1
             if not nonempty(entries[key].get('profile')):
                 failures.append(f'{key}: missing explicit consumer profile')
@@ -248,14 +262,136 @@ def validate(document: dict, contract: dict, execution: dict | None = None, *,
     categories = Counter(e['category'] for e in entries.values())
     return {'schemaVersion': 'yjson.documentation-coverage/2', 'categories': dict(sorted(categories.items())),
             'packages': sorted(packages), 'publicDeclarations': len(declarations),
-            'requiredTypes': len(contract.get('requiredOwners', {})), 'requiredDeclarations': len(selected),
+            'requiredTypes': len(contract.get('requiredOwners', {})), 'requiredDeclarations': len(declarations),
+            'applicationDeclarations': len(selected),
             'documentedRequiredParameters': parameter_count, 'documentedRequiredReturns': return_count,
             'applicationEntries': entry_count, 'executedPositiveExamples': executed,
-            'applicationQualityFindings': len(quality_findings) if quality_findings is not None else None,
+            'visibleQualityFindings': len(quality_findings) if quality_findings is not None else None,
+            'applicationQualityFindings': sum(finding.get('symbolId') in selected_ids for finding in quality_findings)
+                if quality_findings is not None else None,
             'status': 'accepted' if require_examples else 'bindings-only',
             'coveragePercent': {'summaries': 100, 'parameters': 100, 'returns': 100,
                                 'examples': 100 if require_examples else None},
-            'scope': 'All classified public/protected application declarations in eight release packages; excluded categories remain inventoried.'}
+            'scope': 'All visible public/protected declarations in all nine packages require Chinese summaries, bound parameters/returns and source groups. Executable examples cover application entries.'}
+
+
+class RenderedGroupPage(HTMLParser):
+    """Read native group sections without interpreting or rewriting their HTML."""
+
+    def __init__(self, content: str):
+        super().__init__(convert_charrefs=True)
+        self.sections: list[str | None] = []
+        self.groups: list[str] = []
+        self.rows: list[tuple[str, str | None]] = []
+        self.members: set[tuple[str, str | None]] = set()
+        self.badges: list[tuple[str, str]] = []
+        self._badge: tuple[str, list[str]] | None = None
+        self.feed(content)
+
+    def handle_starttag(self, tag: str, attributes: list[tuple[str, str | None]]) -> None:
+        attrs = dict(attributes)
+        if tag == 'section':
+            role = attrs.get('data-cjdoc-declaration-group')
+            self.sections.append(role)
+            if role is not None:
+                self.groups.append(role)
+        role = next((value for value in reversed(self.sections) if value is not None), None)
+        if tag == 'a' and 'declaration-row-link' in (attrs.get('class') or '').split():
+            self.rows.append((attrs.get('href') or '', role))
+        if tag == 'details' and 'data-cjdoc-member' in attrs:
+            self.members.add((attrs.get('data-member-name') or '', role))
+        if tag == 'p' and 'data-cjdoc-declaration-group' in attrs:
+            self._badge = (attrs['data-cjdoc-declaration-group'] or '', [])
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == 'section' and self.sections:
+            self.sections.pop()
+        if tag == 'p' and self._badge is not None:
+            self.badges.append((self._badge[0], ''.join(self._badge[1]).strip()))
+            self._badge = None
+
+    def handle_data(self, data: str) -> None:
+        if self._badge is not None:
+            self._badge[1].append(data)
+
+
+def validate_rendered_groups(site: pathlib.Path, document: dict, contract: dict) -> dict:
+    """Verify real package/member sections and every standalone HTML/Agent page."""
+    from generate_api_docs import regular_input_path
+
+    def read_json(path: str) -> dict:
+        return json.loads(regular_input_path(site, 'html/' + path).read_text(encoding='utf-8'))
+
+    visible = visible_declarations(document)
+    by_id = {declaration['id']: declaration for declaration in visible}
+    index = read_json('symbol-index.json')
+    entries = index.get('entries', [])
+    routes = {entry['id']: entry['href'] for entry in entries}
+    if len(routes) != len(entries) or routes.keys() != by_id.keys():
+        raise ValueError('rendered grouping symbol inventory differs from visible declarations')
+    for route in routes.values():
+        path = pathlib.PurePosixPath(route)
+        if (not route.startswith('symbols/') or path.suffix != '.html' or path.as_posix() != route
+                or '..' in path.parts or any(char in route for char in ('\\', '#', '?'))):
+            raise ValueError('rendered grouping requires canonical standalone symbol routes')
+    manifest = read_json('agent/manifest.json')
+    representations = manifest.get('representations', [])
+    symbols = {item['id']: item for item in representations if item['kind'] == 'symbol'}
+    if symbols.keys() != by_id.keys():
+        raise ValueError('rendered grouping Agent inventory differs from visible declarations')
+    cache: dict[str, RenderedGroupPage] = {}
+
+    def page(route: str) -> RenderedGroupPage:
+        if route not in cache:
+            content = regular_input_path(site, 'html/' + route).read_text(encoding='utf-8')
+            cache[route] = RenderedGroupPage(content)
+        return cache[route]
+
+    expected = {}
+    for declaration in visible:
+        key = declaration_key(declaration)
+        group = DECLARATION_GROUPS[contract['declarations'][key]['category']]
+        expected[declaration['id']] = group
+        if page(routes[declaration['id']]).badges != [group]:
+            raise ValueError(f'{key}: standalone HTML declaration group differs from source')
+        resource = symbols[declaration['id']]
+        markdown = regular_input_path(site, 'html/' + resource['markdown']).read_text(encoding='utf-8')
+        if resource['html'] != routes[declaration['id']] or f'`{group[0]}`' not in markdown or group[1] not in markdown:
+            raise ValueError(f'{key}: standalone Agent declaration group differs from source')
+    packages = {}
+    for item in representations:
+        if item['kind'] != 'package':
+            continue
+        package = read_json(item['json'])['package']
+        identity = package['moduleId'], package['name']
+        if identity in packages:
+            raise ValueError('rendered grouping package routes are duplicated')
+        packages[identity] = item['html']
+    package_ids = {(package['moduleId'], package['name']) for package in document['packages']}
+    if packages.keys() != package_ids:
+        raise ValueError('rendered grouping package inventory differs from Doc IR')
+    for identity, route in packages.items():
+        top = [declaration for declaration in visible if declaration['ownerId'] is None
+               and (declaration['moduleId'], declaration['packageName']) == identity]
+        required = {(routes[declaration['id']], expected[declaration['id']][0]) for declaration in top}
+        actual_page = page(route)
+        actual = [(posixpath.normpath(posixpath.join(posixpath.dirname(route), href)), group)
+                  for href, group in actual_page.rows]
+        if len(actual) != len(required) or set(actual) != required:
+            raise ValueError('rendered package declaration membership differs from source groups')
+        if actual_page.groups != sorted({group for _, group in required}):
+            raise ValueError('rendered package groups are missing, duplicated or out of order')
+    mixed_owners = 0
+    for owner_id in by_id:
+        members = [declaration for declaration in visible if declaration['ownerId'] == owner_id]
+        if len({expected[member['id']][0] for member in members}) <= 1:
+            continue
+        mixed_owners += 1
+        required = {(member['name'], expected[member['id']][0]) for member in members}
+        if not required.issubset(page(routes[owner_id]).members):
+            raise ValueError('rendered mixed-purpose members are missing or in the wrong source group')
+    return {'schemaVersion': 'yjson.rendered-api-groups/1', 'status': 'passed',
+            'declarations': len(visible), 'packages': len(packages), 'mixedPurposeOwners': mixed_owners}
 
 
 def verify_agent_reading(site: pathlib.Path, manifest: dict, document: dict) -> dict:
@@ -526,6 +662,7 @@ def main() -> int:
                           expected_source_sha256=manifest['source']['sha256'], expected_sdk=manifest['sdk'],
                           expected_contract_sha256=manifest['source']['files']['release/api-documentation-required.json'],
                           quality=quality)
+        report['renderedGroups'] = validate_rendered_groups(args.site, document, contract)
         report['consumerExports'] = verify_consumer_exports(
             args.site, manifest, document, contract, execution)
         report['agentReading'] = reading

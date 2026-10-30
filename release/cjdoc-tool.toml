@@ -4,15 +4,15 @@ reason = "Exact source cold-build qualification; public release evidence is reco
 distribution = "source"
 platform = "linux-x86_64"
 
-version = "0.7.6"
-version_output = "cjdoc 0.7.6"
+version = "0.7.7"
+version_output = "cjdoc 0.7.7"
 version_args = ["--version"]
 
-source_url = "https://github.com/lIlIIlIll/cjdoc/tree/653457d1aa46ef2939cd10e130d7e1b16fd5d999"
-source_archive_url = "https://github.com/lIlIIlIll/cjdoc/archive/653457d1aa46ef2939cd10e130d7e1b16fd5d999.tar.gz"
-source_archive_sha256 = "ac116b3fb587505f7ebae93c0b44fd6befa9a61464dbe77af208e31f8125646d"
-source_revision = "653457d1aa46ef2939cd10e130d7e1b16fd5d999"
-source_directory = "cjdoc-653457d1aa46ef2939cd10e130d7e1b16fd5d999"
+source_url = "https://github.com/lIlIIlIll/cjdoc/tree/8cc8f71a296b1c6321e575b56fadbd0c379e242a"
+source_archive_url = "https://github.com/lIlIIlIll/cjdoc/archive/8cc8f71a296b1c6321e575b56fadbd0c379e242a.tar.gz"
+source_archive_sha256 = "21a6e03a80ff5fcef259c1a80f55401f81e01c0fe33c9390c9409a0cf1f6cc75"
+source_revision = "8cc8f71a296b1c6321e575b56fadbd0c379e242a"
+source_directory = "cjdoc-8cc8f71a296b1c6321e575b56fadbd0c379e242a"
 binary_path = "target/release/bin/main"
 build_command = ["python3", "scripts/with_stdx.py", "--variant", "static", "--", "bash", "-c", "source scripts/with_sts_cjpm.sh; ulimit -s 131072; cjpm build --jobs 1"]
 compile_options = ["-O2", "--fno-chir-function-inlining"]
@@ -27,5 +27,5 @@ cjc_channel = "sts"
 cjc_version = "1.2.0"
 
 license_spdx = "MIT"
-license_url = "https://github.com/lIlIIlIll/cjdoc/blob/653457d1aa46ef2939cd10e130d7e1b16fd5d999/LICENSE"
-manual_url = "https://github.com/lIlIIlIll/cjdoc/blob/653457d1aa46ef2939cd10e130d7e1b16fd5d999/README.md"
+license_url = "https://github.com/lIlIIlIll/cjdoc/blob/8cc8f71a296b1c6321e575b56fadbd0c379e242a/LICENSE"
+manual_url = "https://github.com/lIlIIlIll/cjdoc/blob/8cc8f71a296b1c6321e575b56fadbd0c379e242a/README.md"

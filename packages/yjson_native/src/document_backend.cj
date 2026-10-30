@@ -19,6 +19,7 @@ private let CUSTOM_NATIVE_METADATA = JsonBackendMetadata(
  * 解析返回的 `BackendJsonDocument` 必须关闭，文档和视图支持打开期间的并发只读访问。
  * 流解码读取到 EOF，流编码先缓存整份文档；输入输出流的所有权仍归调用方。
  * 该入口不会改变普通 `YJson` 的进程级加速状态。
+ * @group 10-application 应用 API
  */
 public class NativeBackendFacade {
     init() {}
@@ -41,6 +42,7 @@ public class NativeBackendFacade {
      * custom-native
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func metadata(): JsonBackendMetadata { CUSTOM_NATIVE_METADATA }
 
@@ -66,6 +68,7 @@ public class NativeBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func parseDocument(text: String,
         options!: JsonReadOptions = JsonReadOptions.defaults): BackendJsonDocument {
@@ -94,6 +97,7 @@ public class NativeBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func parseDocument(bytes: Array<Byte>,
         options!: JsonReadOptions = JsonReadOptions.defaults): BackendJsonDocument {
@@ -117,6 +121,7 @@ public class NativeBackendFacade {
      * ```output
      * [1,2]
      * ```
+     * @group 10-application 应用 API
      */
     public func toJson(value: JsonValueView,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): String {
@@ -143,6 +148,7 @@ public class NativeBackendFacade {
      * ```output
      * [1,2]
      * ```
+     * @group 10-application 应用 API
      */
     public func toJsonBytes(value: JsonValueView,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): Array<Byte> {
@@ -173,6 +179,7 @@ public class NativeBackendFacade {
      * ```output
      * [1,2]
      * ```
+     * @group 10-application 应用 API
      */
     public func writeJson(value: JsonValueView, output: OutputStream,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): Unit {
@@ -198,6 +205,7 @@ public class NativeBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func toJson<T>(value: T,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): String
@@ -225,6 +233,7 @@ public class NativeBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func toJson<T>(value: T, codec!: JsonCodec<T>,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): String {
@@ -253,6 +262,7 @@ public class NativeBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func toJsonBytes<T>(value: T,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): Array<Byte>
@@ -281,6 +291,7 @@ public class NativeBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func toJsonBytes<T>(value: T, codec!: JsonCodec<T>,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): Array<Byte> {
@@ -312,6 +323,7 @@ public class NativeBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func writeJson<T>(value: T, output: OutputStream,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): Unit
@@ -343,6 +355,7 @@ public class NativeBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func writeJson<T>(value: T, output: OutputStream, codec!: JsonCodec<T>,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): Unit {
@@ -368,6 +381,7 @@ public class NativeBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func fromJson<T>(text: String,
         options!: JsonReadOptions = JsonReadOptions.defaults): T
@@ -395,6 +409,7 @@ public class NativeBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func fromJson<T>(text: String, codec!: JsonCodec<T>,
         options!: JsonReadOptions = JsonReadOptions.defaults): T {
@@ -420,6 +435,7 @@ public class NativeBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func fromJson<T>(bytes: Array<Byte>,
         options!: JsonReadOptions = JsonReadOptions.defaults): T
@@ -447,6 +463,7 @@ public class NativeBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func fromJson<T>(bytes: Array<Byte>, codec!: JsonCodec<T>,
         options!: JsonReadOptions = JsonReadOptions.defaults): T {
@@ -474,6 +491,7 @@ public class NativeBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func fromJson<T>(input: InputStream,
         options!: JsonReadOptions = JsonReadOptions.defaults): T
@@ -503,6 +521,7 @@ public class NativeBackendFacade {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func fromJson<T>(input: InputStream, codec!: JsonCodec<T>,
         options!: JsonReadOptions = JsonReadOptions.defaults): T {
@@ -515,6 +534,7 @@ public class NativeBackendFacade {
  *
  * 通过静态属性取得已限定的后端入口，不能由此注册任意后端实现。
  * facade 不需要关闭，由它创建的资源文档仍由调用方关闭。
+ * @group 10-application 应用 API
  */
 public class NativeBackends {
     private static let qualified = NativeBackendFacade()
@@ -535,6 +555,7 @@ public class NativeBackends {
      * ```output
      * custom-native
      * ```
+     * @group 10-application 应用 API
      */
     public static prop customNative: NativeBackendFacade {
         get() { qualified }

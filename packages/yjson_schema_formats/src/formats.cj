@@ -12,6 +12,7 @@ foreign func YJ_Schema_IdnaValidate(input: CPointer<UInt8>, length: Int64, ascii
 /**
  * 为 JSON Schema 安装国际化主机名、电子邮件、URI、IRI 与 URI Template 格式。主机名验证使用系统 libidn2 的 IDNA2008、Punycode 往返、Bidi 和 ContextJ 检查；需要可用的原生 libidn2。
  *
+ * @group 10-application 应用 API
  */
 public class StandardInternationalFormats <: JsonSchemaFormatProvider {
     /**
@@ -35,6 +36,7 @@ public class StandardInternationalFormats <: JsonSchemaFormatProvider {
      * true
      * false
      * ```
+     * @group 10-application 应用 API
      */
     public func installInto(registry: JsonSchemaFormatRegistry): Unit {
         registry.register("hostname", InternationalSchemaFormat("hostname"))

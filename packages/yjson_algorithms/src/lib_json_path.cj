@@ -17,16 +17,19 @@ func jsonPathError(message: String, expression: String,
 /**
  * JSONPath 的一次匹配，包含值视图和 RFC 9535 规范路径；值视图保留输入的存储依赖。
  *
+ * @group 10-application 应用 API
  */
 public class JsonPathMatch {
     /**
      * 本次匹配的只读视图；不会物化为独立树，输入为原生文档时必须保持文档打开。
      *
+     * @group 10-application 应用 API
      */
     public let value: JsonValueView
     /**
      * 以 `$` 为根的 RFC 9535 规范路径；使用单引号成员选择器和规范数组下标。
      *
+     * @group 10-application 应用 API
      */
     public let normalizedPath: String
 
@@ -46,6 +49,7 @@ public class JsonPathMatch {
      * 7
      * $[0]
      * ```
+     * @group 10-application 应用 API
      */
     public init(value: JsonValueView, normalizedPath: String) {
         this.value = value
@@ -56,11 +60,13 @@ public class JsonPathMatch {
 /**
  * 已经解析的 JSONPath 表达式。可以复用解析结果，每次查询创建独立工作预算；结果视图依赖输入存储。
  *
+ * @group 10-application 应用 API
  */
 public class JsonPath {
     /**
      * 解析时的原始 JSONPath 表达式文本。
      *
+     * @group 10-application 应用 API
      */
     public let expression: String
     private let segments: Array<JsonPathSegment>
@@ -89,6 +95,7 @@ public class JsonPath {
      * 7
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public static func parse(expression: String): JsonPath {
         parse(expression, limits: JsonPathLimits.defaults)
@@ -114,6 +121,7 @@ public class JsonPath {
      * 7
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public static func parse(expression: String, limits!: JsonPathLimits): JsonPath {
         JsonPathParser(expression, JsonPathFilterBudget(limits)).parse()
@@ -139,6 +147,7 @@ public class JsonPath {
      * 7
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func matches(root: JsonValueView,
         limits!: JsonPathLimits = JsonPathLimits.defaults): JsonPathCursor {
@@ -165,6 +174,7 @@ public class JsonPath {
      * 7
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func matches(document: JsonDocument,
         limits!: JsonPathLimits = JsonPathLimits.defaults): JsonPathCursor {
@@ -191,6 +201,7 @@ public class JsonPath {
      * 2
      * 2
      * ```
+     * @group 10-application 应用 API
      */
     public func collect(root: JsonValueView,
         limits!: JsonPathLimits = JsonPathLimits.defaults): ArrayList<JsonPathMatch> {
@@ -217,6 +228,7 @@ public class JsonPath {
      * 2
      * 2
      * ```
+     * @group 10-application 应用 API
      */
     public func collect(document: JsonDocument,
         limits!: JsonPathLimits = JsonPathLimits.defaults): ArrayList<JsonPathMatch> {
@@ -250,6 +262,7 @@ public class JsonPath {
      * 8
      * 8
      * ```
+     * @group 10-application 应用 API
      */
     public func collectValues(root: JsonValueView,
         limits!: JsonPathLimits = JsonPathLimits.defaults): ArrayList<JsonValueView> {
@@ -276,6 +289,7 @@ public class JsonPath {
      * 8
      * 8
      * ```
+     * @group 10-application 应用 API
      */
     public func collectValues(document: JsonDocument,
         limits!: JsonPathLimits = JsonPathLimits.defaults): ArrayList<JsonValueView> {
@@ -309,6 +323,7 @@ public class JsonPath {
      * 7
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func first(root: JsonValueView, limits!: JsonPathLimits = JsonPathLimits.defaults): Option<JsonPathMatch> {
         matches(root, limits: limits).next()
@@ -334,6 +349,7 @@ public class JsonPath {
      * 7
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public func first(document: JsonDocument,
         limits!: JsonPathLimits = JsonPathLimits.defaults): Option<JsonPathMatch> {
@@ -403,6 +419,7 @@ class JsonPathWork {
 /**
  * 单线程使用的惰性 JSONPath 结果游标；持续持有根视图，调用期间保持底层后端文档打开。游标没有单独的关闭操作。
  *
+ * @group 10-application 应用 API
  */
 public class JsonPathCursor <: Iterator<JsonPathMatch> {
     private let root: JsonValueView
@@ -437,6 +454,7 @@ public class JsonPathCursor <: Iterator<JsonPathMatch> {
      * true
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func next(): Option<JsonPathMatch> {
         if (finished) { return None<JsonPathMatch> }

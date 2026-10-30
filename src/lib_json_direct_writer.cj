@@ -157,21 +157,61 @@ abstract class JsonDirectWriterTarget {
 
 }
 
+/**
+ * 为生成代码的字符串和字节写出路径保存 UTF-8 输出缓冲。
+ *
+ * 只维护已写字节，不检查 JSON 容器、语义路径、最大深度或输出预算。NoEscape 成员依赖调用方的免转义判断，Fast 成员还依赖预先保留的容量。JsonDirectWriter.generatedBufferV1 将此目标提供给生成 codec。原始字节调用方负责保证 UTF-8 有效性。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ */
 public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
     private var buffer: Array<Byte>
     private var used: Int64 = 0
 
+    /**
+     * 创建供生成代码写出 UTF-8 内容的内存缓冲目标。
+     *
+     * 只分配初始缓冲区，不写入 JSON 内容。实际写入路径要求初始容量为正数。容量 0 用于流写出器的占位目标。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param capacity 初始缓冲区字节容量，默认 128。实际写入时使用正数。
+     */
     public init(capacity!: Int64 = JSON_DIRECT_BYTES_INITIAL_CAPACITY) {
         buffer = Array<Byte>(capacity, repeat: 0)
     }
+    /**
+     * 清除已写长度并复用已经分配的缓冲区。
+     *
+     * 保留缓冲容量。后续写入从缓冲区开头重新开始。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     */
     public func reset(): Unit {
         used = 0
     }
 
+    /**
+     * 将字符串的 UTF-8 字节原样追加到缓冲区。
+     *
+     * 不添加双引号或转义，也不解析 JSON。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param value 要原样写入的文本。
+     */
     public func writeText(value: String): Unit {
         writeTextRange(value, 0, value.size)
     }
 
+    /**
+     * 将字符串指定字节区间原样追加到缓冲区。
+     *
+     * 使用 UTF-8 字节偏移，不按字符索引。end 不大于 start 时不写入内容。其余调用必须提供有效区间，并保证最终文本的 UTF-8 有效性。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param value 包含待写片段的字符串。
+     * @param start 片段首字节的偏移，包含该位置。
+     * @param end 片段结束偏移，不包含该位置。
+     */
     public func writeTextRange(value: String, start: Int64, end: Int64): Unit {
         let size = end - start
         if (size <= 0) {
@@ -184,11 +224,27 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         used += size
     }
 
+    /**
+     * 追加一个未经 JSON 或 UTF-8 校验的原始字节。
+     *
+     * 供生成代码写出语法字节或已校验内容。调用方保证最终内容的结构和 UTF-8 有效性。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param value 要原样追加的字节。
+     */
     public func writeByte(value: Byte): Unit {
         ensureCapacity(used + 1)
         writeRawByteNoEnsure(value)
     }
 
+    /**
+     * 追加未经解析的原始字节数组。
+     *
+     * 不转义，也不校验 JSON 结构或 UTF-8。空数组不产生输出。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param value 要原样追加的字节。
+     */
     public func writeBytes(value: Array<Byte>): Unit {
         if (value.isEmpty()) { return }
         ensureCapacity(used + value.size)
@@ -196,6 +252,16 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         used += value.size
     }
 
+    /**
+     * 追加原始字节数组的半开区间。
+     *
+     * 使用字节偏移。end 不大于 start 时不写入内容。其余调用必须提供有效的数组区间。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param value 包含待写片段的字节数组。
+     * @param start 片段首字节的偏移，包含该位置。
+     * @param end 片段结束偏移，不包含该位置。
+     */
     public func writeBytesRange(value: Array<Byte>, start: Int64, end: Int64): Unit {
         let size = end - start
         if (size <= 0) { return }
@@ -204,12 +270,30 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         used += size
     }
 
+    /**
+     * 为后续追加的内容预留缓冲容量。
+     *
+     * additional 为正数时，保证当前已写内容之后至少还能容纳相应字节数。非正数不触发操作，已写长度不变。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param additional 需要在当前已写内容之后额外容纳的字节数。
+     */
     public func reserveCapacity(additional: Int64): Unit {
         if (additional > 0) {
             ensureCapacity(used + additional)
         }
     }
 
+    /**
+     * 尝试使用已安装的 Native 实现写出紧凑 Int64 列表。
+     *
+     * 元素数量未达到内部阈值、未启用 Native 实现或本次 Native 缓冲容量不足时返回 false。返回 false 时不增加已写长度，调用方可改用通用写出路径。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param values 按列表顺序写出的 Int64 元素。
+     * @return 完整数组已经写入时为 true。未采用该路径时为 false。
+     * @throws JsonException 启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
+     */
     public func tryWriteNativeInt64Array(values: ArrayList<Int64>): Bool {
         if (values.size < YJSON_NATIVE_MIN_WRITER_INT64_COUNT) { return false }
         let required = values.size * 21 + 1
@@ -221,6 +305,14 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         false
     }
 
+    /**
+     * 原样加引号写入不需要转义的字符串。
+     *
+     * 不扫描或转义字符串内容，调用方保证其中没有需要 JSON 转义的字符。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param value 不需要 JSON 转义的字符串内容。
+     */
     public func writeStringLiteralNoEscape(value: String): Unit {
         ensureCapacity(used + value.size + 2)
         buffer[used] = b'"'
@@ -233,6 +325,14 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         used++
     }
 
+    /**
+     * 原样加引号写入免转义字符串字段名并追加冒号。
+     *
+     * 供生成代码写出已经验证的字段名。不扫描或转义内容，也不自动写出逗号。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param value 不需要 JSON 转义的字段名。
+     */
     public func writeStringLiteralNoEscapeName(value: String): Unit {
         ensureCapacity(used + value.size + 3)
         buffer[used] = b'"'
@@ -247,6 +347,14 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         used++
     }
 
+    /**
+     * 原样加引号写入免转义 UTF-8 字节字段名并追加冒号。
+     *
+     * 供生成代码写出已经验证的字段名。不扫描或转义内容，也不自动写出逗号。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param value 有效 UTF-8 且不需要 JSON 转义的字段名字节。
+     */
     public func writeStringLiteralNoEscapeName(value: Array<Byte>): Unit {
         ensureCapacity(used + value.size + 3)
         buffer[used] = b'"'
@@ -259,6 +367,16 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         used++
     }
 
+    /**
+     * 从已知首个转义位置开始写出完整 JSON 字符串字面量。
+     *
+     * 包含两端双引号，并转义控制字符、双引号和反斜线。调用方保证 firstEscape 之前的字节不需要按所选规则转义。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param value 要加引号并转义的字符串。
+     * @param firstEscape 首个需要转义的 UTF-8 字节偏移，必须位于字符串有效范围内。
+     * @param htmlSafe 是否同时转义小于号、大于号、与号、等号和单引号。
+     */
     public func writeEscapedStringLiteralFromFirstEscape(value: String, firstEscape: Int64, htmlSafe: Bool): Unit {
         ensureCapacity(used + value.size + 8)
         writeRawByteNoEnsure(b'"')
@@ -294,6 +412,15 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         writeRawByteNoEnsure(b'"')
     }
 
+    /**
+     * 追加原始前缀和无需转义的字符串字面量。
+     *
+     * 前缀原样写入，value 两端添加双引号，内容不扫描或转义。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param prefix 字面量之前原样追加的文本。
+     * @param value 不需要 JSON 转义的字符串内容。
+     */
     public func writeTextStringLiteralNoEscape(prefix: String, value: String): Unit {
         ensureCapacity(used + prefix.size + value.size + 2)
         copyTextNoEnsure(prefix)
@@ -302,6 +429,16 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         writeRawByteNoEnsure(b'"')
     }
 
+    /**
+     * 追加原始前缀和无需转义的字符串列表。
+     *
+     * 前缀原样写入，列表写成紧凑 JSON 数组。调用方预先确认所有元素无需 JSON 转义，并提供准确的字符串总字节数以预留容量。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param prefix 数组之前原样追加的文本。
+     * @param values 按列表顺序输出、均无需 JSON 转义的字符串。
+     * @param totalStringSize 所有字符串的 UTF-8 字节数之和，必须足以覆盖实际内容。
+     */
     public func writeTextStringArrayListNoEscape(prefix: String, values: ArrayList<String>, totalStringSize: Int64): Unit {
         ensureCapacity(used + prefix.size + totalStringSize + values.size * 3 + 2)
         copyTextNoEnsure(prefix)
@@ -320,6 +457,15 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         writeRawByteNoEnsure(b']')
     }
 
+    /**
+     * 追加原始前缀和字符串键 Int64 值的紧凑 JSON 对象。
+     *
+     * 前缀原样写入。对象按 HashMap 的迭代顺序输出，对键执行标准 JSON 转义，不额外转义 HTML 敏感字符。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param prefix 对象之前原样追加的文本，调用方保证它适合当前位置。
+     * @param values 要写出的键值映射。
+     */
     public func writeCompactInt64Map(prefix: String, values: HashMap<String, Int64>): Unit {
         reserveCapacity(jsonRawInt64MapReserveHint(prefix.size, values.size))
         ensureCapacity(used + prefix.size + 1)
@@ -352,6 +498,15 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         writeByte(b'}')
     }
 
+    /**
+     * 将 Int64 数组追加为紧凑 JSON 数组。
+     *
+     * 按数组顺序输出，优先尝试 Native 数组格式化，未采用时使用通用十进制写出路径。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param values 要按顺序写出的 Int64 数组。
+     * @throws JsonException 启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
+     */
     public func writeCompactInt64Array(values: Array<Int64>): Unit {
         ensureCapacity(used + values.size * 4 + 2)
         if (let Some(written) <- jsonNativeFormatInt64ArrayInto(values, buffer, used)) {
@@ -370,6 +525,15 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         writeRawByteNoEnsure(b']')
     }
 
+    /**
+     * 将 Float64 数组追加为紧凑 JSON 数组。
+     *
+     * 按数组顺序输出，优先尝试 Native 数组格式化，未采用时使用各元素的浮点文本。此缓冲级入口不检查有限性，调用方须预先排除 NaN 和无穷大。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param values 已经由调用方检查为有限值的 Float64 数组。
+     * @throws JsonException 启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
+     */
     public func writeCompactFloat64Array(values: Array<Float64>): Unit {
         reserveCapacity(values.size * 20 + 2)
         if (let Some(written) <- jsonNativeFormatFloat64ArrayInto(values, buffer, used)) {
@@ -392,6 +556,16 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         writeRawByteNoEnsure(b']')
     }
 
+    /**
+     * 追加换行文本和指定层数的缩进。
+     *
+     * newline 原样写入一次，然后将 indent 原样重复 depth 次。调用方提供非负深度。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param newline 本次先写入的换行文本，可为空。
+     * @param indent 每一层使用的缩进文本。
+     * @param depth 缩进重复次数，必须非负。
+     */
     public func writeNewlineAndIndent(newline: String, indent: String, depth: Int64): Unit {
         ensureCapacity(used + newline.size + indent.size * depth)
         copyTextNoEnsure(newline)
@@ -400,6 +574,17 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         }
     }
 
+    /**
+     * 向缓冲区写入免转义字符串字段名和 Int64 字段值。
+     *
+     * 供已建立 raw 对象上下文的生成代码调用。字段名原样复制，不执行转义。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 不需要 JSON 转义的字段名。
+     * @param value 要写出的有符号整数。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     */
     public func writeObjectEntryNameInt64NoEscape(first: Bool, name: String, value: Int64): Bool {
         ensureCapacity(used + name.size + 24)
         if (!first) {
@@ -413,6 +598,17 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         false
     }
 
+    /**
+     * 向缓冲区写入免转义 UTF-8 字节字段名和 Int64 字段值。
+     *
+     * 供已建立 raw 对象上下文的生成代码调用。字段名原样复制，不执行转义。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 不需要 JSON 转义的有效 UTF-8 字段名字节。
+     * @param value 要写出的有符号整数。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     */
     public func writeObjectEntryNameInt64NoEscape(first: Bool, name: Array<Byte>, value: Int64): Bool {
         ensureCapacity(used + name.size + 24)
         if (!first) {
@@ -430,6 +626,17 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
     // Generated compact objects reserve their scalar field budget once before
     // entering the field loop.  These variants deliberately omit the
     // repeated capacity branch on that proven buffer path.
+    /**
+     * 在已预留容量的缓冲区中写入免转义字符串字段名和 Int64 字段值。
+     *
+     * 供已建立 raw 对象上下文的生成代码调用。字段名原样复制，不执行转义。调用方必须预先为完整字段及可能的逗号预留足够容量，本入口省略相应容量检查。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 不需要 JSON 转义的字段名。
+     * @param value 要写出的有符号整数。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     */
     public func writeObjectEntryNameInt64NoEscapeFast(first: Bool, name: String, value: Int64): Bool {
         if (!first) { writeRawByteNoEnsure(b',') }
         writeRawByteNoEnsure(b'"')
@@ -440,6 +647,17 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         false
     }
 
+    /**
+     * 向缓冲区写入免转义字符串字段名和字符串字段值。
+     *
+     * 供已建立 raw 对象上下文的生成代码调用。字段名原样复制，不执行转义。字符串值也原样加引号，调用方保证字段名和值都不需要 JSON 转义。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 不需要 JSON 转义的字段名。
+     * @param value 不需要 JSON 转义的字符串值。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     */
     public func writeObjectEntryNameStringNoEscape(
         first: Bool, name: String, value: String
     ): Bool {
@@ -455,6 +673,17 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         false
     }
 
+    /**
+     * 向缓冲区写入免转义 UTF-8 字节字段名和字符串字段值。
+     *
+     * 供已建立 raw 对象上下文的生成代码调用。字段名原样复制，不执行转义。字符串值也原样加引号，调用方保证字段名和值都不需要 JSON 转义。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 不需要 JSON 转义的有效 UTF-8 字段名字节。
+     * @param value 不需要 JSON 转义的字符串值。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     */
     public func writeObjectEntryNameStringNoEscape(
         first: Bool, name: Array<Byte>, value: String
     ): Bool {
@@ -475,6 +704,17 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
     // entering the field loop. Keep the common unescaped case free of a
     // repeated capacity check; callers must use writeObjectEntryNameStringFast
     // so values containing JSON escapes take the checked path.
+    /**
+     * 在已预留容量的缓冲区中写入免转义字符串字段名和字符串字段值。
+     *
+     * 供已建立 raw 对象上下文的生成代码调用。字段名原样复制，不执行转义。字符串值也原样加引号，调用方保证字段名和值都不需要 JSON 转义。调用方必须预先为完整字段及可能的逗号预留足够容量，本入口省略相应容量检查。需要检查值中转义字符的生成调用应使用 JsonDirectWriter.writeRawObjectEntryKnownNameStringFast。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 不需要 JSON 转义的字段名。
+     * @param value 不需要 JSON 转义的字符串值。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     */
     public func writeObjectEntryNameStringNoEscapeFast(
         first: Bool, name: String, value: String
     ): Bool {
@@ -492,6 +732,19 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         false
     }
 
+    /**
+     * 向缓冲区写入免转义字符串字段名和需要转义的字符串值。
+     *
+     * 字段名原样复制，值从 firstEscape 开始扫描并转义。调用方保证此前字节不需转义。非首项调用还须保证缓冲区至少留有一个字节用于先写入逗号。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 不需要转义的字段名。
+     * @param value 要加引号并转义的字符串值。
+     * @param firstEscape 值中首个需要转义的 UTF-8 字节偏移，必须位于值的有效范围内。
+     * @param htmlSafe 是否同时转义 HTML 敏感 ASCII 字符。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     */
     public func writeObjectEntryNameStringEscaped(
         first: Bool, name: String, value: String, firstEscape: Int64, htmlSafe: Bool
     ): Bool {
@@ -535,6 +788,19 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         false
     }
 
+    /**
+     * 向缓冲区写入免转义 UTF-8 字节字段名和需要转义的字符串值。
+     *
+     * 字段名原样复制，值从 firstEscape 开始扫描并转义。调用方保证此前字节不需转义。非首项调用还须保证缓冲区至少留有一个字节用于先写入逗号。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 不需要转义的有效 UTF-8 字段名字节。
+     * @param value 要加引号并转义的字符串值。
+     * @param firstEscape 值中首个需要转义的 UTF-8 字节偏移，必须位于值的有效范围内。
+     * @param htmlSafe 是否同时转义 HTML 敏感 ASCII 字符。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     */
     public func writeObjectEntryNameStringEscaped(
         first: Bool, name: Array<Byte>, value: String, firstEscape: Int64, htmlSafe: Bool
     ): Bool {
@@ -573,6 +839,17 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         false
     }
 
+    /**
+     * 向缓冲区写入免转义字符串字段名和布尔字段值。
+     *
+     * 供已建立 raw 对象上下文的生成代码调用。字段名原样复制，不执行转义。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 不需要 JSON 转义的字段名。
+     * @param value 写为 true 或 false 的字段值。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     */
     public func writeObjectEntryNameBoolNoEscape(
         first: Bool, name: String, value: Bool
     ): Bool {
@@ -598,6 +875,17 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         false
     }
 
+    /**
+     * 向缓冲区写入免转义 UTF-8 字节字段名和布尔字段值。
+     *
+     * 供已建立 raw 对象上下文的生成代码调用。字段名原样复制，不执行转义。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 不需要 JSON 转义的有效 UTF-8 字段名字节。
+     * @param value 写为 true 或 false 的字段值。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     */
     public func writeObjectEntryNameBoolNoEscape(
         first: Bool, name: Array<Byte>, value: Bool
     ): Bool {
@@ -623,6 +911,17 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         false
     }
 
+    /**
+     * 在已预留容量的缓冲区中写入免转义字符串字段名和布尔字段值。
+     *
+     * 供已建立 raw 对象上下文的生成代码调用。字段名原样复制，不执行转义。调用方必须预先为完整字段及可能的逗号预留足够容量，本入口省略相应容量检查。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 不需要 JSON 转义的字段名。
+     * @param value 写为 true 或 false 的字段值。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     */
     public func writeObjectEntryNameBoolNoEscapeFast(
         first: Bool, name: String, value: Bool
     ): Bool {
@@ -646,6 +945,17 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         false
     }
 
+    /**
+     * 向缓冲区写入免转义字符串字段名和 UInt64 字段值。
+     *
+     * 供已建立 raw 对象上下文的生成代码调用。字段名原样复制，不执行转义。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 不需要 JSON 转义的字段名。
+     * @param value 要写出的无符号整数。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     */
     public func writeObjectEntryNameUInt64NoEscape(
         first: Bool, name: String, value: UInt64
     ): Bool {
@@ -660,6 +970,17 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         false
     }
 
+    /**
+     * 向缓冲区写入免转义 UTF-8 字节字段名和 UInt64 字段值。
+     *
+     * 供已建立 raw 对象上下文的生成代码调用。字段名原样复制，不执行转义。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 不需要 JSON 转义的有效 UTF-8 字段名字节。
+     * @param value 要写出的无符号整数。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     */
     public func writeObjectEntryNameUInt64NoEscape(
         first: Bool, name: Array<Byte>, value: UInt64
     ): Bool {
@@ -674,6 +995,17 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         false
     }
 
+    /**
+     * 在已预留容量的缓冲区中写入免转义字符串字段名和 UInt64 字段值。
+     *
+     * 供已建立 raw 对象上下文的生成代码调用。字段名原样复制，不执行转义。调用方必须预先为完整字段及可能的逗号预留足够容量，本入口省略相应容量检查。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 不需要 JSON 转义的字段名。
+     * @param value 要写出的无符号整数。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     */
     public func writeObjectEntryNameUInt64NoEscapeFast(
         first: Bool, name: String, value: UInt64
     ): Bool {
@@ -686,6 +1018,18 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         false
     }
 
+    /**
+     * 向缓冲区写入免转义字符串字段名和 Float64 字段值。
+     *
+     * 供已建立 raw 对象上下文的生成代码调用。字段名原样复制，不执行转义。先拒绝非有限值，再尝试 Native 浮点格式化。未采用时写入浮点文本。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 不需要 JSON 转义的字段名。
+     * @param value 要写出的有限浮点值。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 浮点值为 NaN 或无穷大。启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
+     */
     public func writeObjectEntryNameFloat64NoEscape(
         first: Bool, name: String, value: Float64
     ): Bool {
@@ -705,6 +1049,18 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         false
     }
 
+    /**
+     * 向缓冲区写入免转义 UTF-8 字节字段名和 Float64 字段值。
+     *
+     * 供已建立 raw 对象上下文的生成代码调用。字段名原样复制，不执行转义。先拒绝非有限值，再尝试 Native 浮点格式化。未采用时写入浮点文本。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 不需要 JSON 转义的有效 UTF-8 字段名字节。
+     * @param value 要写出的有限浮点值。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 浮点值为 NaN 或无穷大。启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
+     */
     public func writeObjectEntryNameFloat64NoEscape(
         first: Bool, name: Array<Byte>, value: Float64
     ): Bool {
@@ -724,6 +1080,18 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         false
     }
 
+    /**
+     * 在已预留容量的缓冲区中写入免转义字符串字段名和 Float64 字段值。
+     *
+     * 供已建立 raw 对象上下文的生成代码调用。字段名原样复制，不执行转义。调用方必须预先为完整字段及可能的逗号预留足够容量，本入口省略相应容量检查。先拒绝非有限值，再尝试 Native 浮点格式化。未采用时写入浮点文本。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 不需要 JSON 转义的字段名。
+     * @param value 要写出的有限浮点值。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 浮点值为 NaN 或无穷大。启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
+     */
     public func writeObjectEntryNameFloat64NoEscapeFast(
         first: Bool, name: String, value: Float64
     ): Bool {
@@ -747,6 +1115,18 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
     // caller has already established raw-container depth; keeping the field
     // name and value in this concrete target avoids three wrapper calls for
     // every small Array<Int64> field.
+    /**
+     * 向缓冲区写入免转义字符串字段名和紧凑 Int64 数组字段。
+     *
+     * 供已建立 raw 对象上下文的紧凑生成代码调用，字段名原样复制。数组按元素顺序输出，符合条件时尝试 Native 格式化。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 不需要转义的字段名。
+     * @param values 要写出的 Int64 数组。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
+     */
     public func writeObjectEntryNameInt64ArrayNoEscape(
         first: Bool, name: String, values: Array<Int64>
     ): Bool {
@@ -780,6 +1160,18 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         false
     }
 
+    /**
+     * 向缓冲区写入免转义 UTF-8 字节字段名和紧凑 Int64 数组字段。
+     *
+     * 供已建立 raw 对象上下文的紧凑生成代码调用，字段名原样复制。数组按元素顺序输出，符合条件时尝试 Native 格式化。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 不需要转义的有效 UTF-8 字段名字节。
+     * @param values 要写出的 Int64 数组。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
+     */
     public func writeObjectEntryNameInt64ArrayNoEscape(
         first: Bool, name: Array<Byte>, values: Array<Int64>
     ): Bool {
@@ -813,6 +1205,17 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         false
     }
 
+    /**
+     * 向缓冲区写入免转义字符串字段名和紧凑 Int64 映射字段。
+     *
+     * 供已建立 raw 对象上下文的紧凑生成代码调用，字段名原样复制。映射按自身迭代顺序输出。映射键执行标准 JSON 转义，不额外转义 HTML 敏感字符。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 不需要转义的字段名。
+     * @param values 字符串键与 Int64 值的映射。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     */
     public func writeObjectEntryNameInt64MapNoEscape(
         first: Bool, name: String, values: HashMap<String, Int64>
     ): Bool {
@@ -832,6 +1235,17 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
     // generic map writer must scan every key for JSON escapes, while this
     // path can copy the key bytes directly and avoid one full pass per key.
     // Callers are responsible for restricting this method to known-safe keys.
+    /**
+     * 向缓冲区写入免转义字符串字段名和紧凑 Int64 映射字段。
+     *
+     * 供已建立 raw 对象上下文的紧凑生成代码调用，字段名原样复制。映射按自身迭代顺序输出。映射键直接复制，不扫描转义字符。调用方须保证键是可直接放入 JSON 字符串的 ASCII 文本。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 不需要转义的字段名。
+     * @param values 键为无需转义 ASCII 文本、值为 Int64 的映射。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     */
     public func writeObjectEntryNameInt64MapKnownAsciiKeys(
         first: Bool, name: String, values: HashMap<String, Int64>
     ): Bool {
@@ -865,6 +1279,17 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         false
     }
 
+    /**
+     * 向缓冲区写入免转义 UTF-8 字节字段名和紧凑 Int64 映射字段。
+     *
+     * 供已建立 raw 对象上下文的紧凑生成代码调用，字段名原样复制。映射按自身迭代顺序输出。映射键直接复制，不扫描转义字符。调用方须保证键是可直接放入 JSON 字符串的 ASCII 文本。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 不需要转义的有效 UTF-8 字段名字节。
+     * @param values 键为无需转义 ASCII 文本、值为 Int64 的映射。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     */
     public func writeObjectEntryNameInt64MapKnownAsciiKeys(
         first: Bool, name: Array<Byte>, values: HashMap<String, Int64>
     ): Bool {
@@ -894,6 +1319,18 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         false
     }
 
+    /**
+     * 向缓冲区写入免转义字符串字段名和紧凑 Int64 数组映射字段。
+     *
+     * 供已建立 raw 对象上下文的紧凑生成代码调用，字段名原样复制。映射按自身迭代顺序输出。映射键执行标准 JSON 转义，不额外转义 HTML 敏感字符。数组按元素顺序输出，符合条件时尝试 Native 格式化。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 不需要转义的字段名。
+     * @param values 字符串键与 Int64 数组值的映射。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
+     */
     public func writeObjectEntryNameInt64ArrayMapNoEscape(
         first: Bool, name: String, values: HashMap<String, Array<Int64>>
     ): Bool {
@@ -927,6 +1364,18 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
     // ASCII-key counterpart of the nested Int64-array map path.  This is
     // deliberately separate from the general writer because generated code
     // opts into it only for the compact, known-shape benchmark path.
+    /**
+     * 向缓冲区写入免转义字符串字段名和紧凑 Int64 数组映射字段。
+     *
+     * 供已建立 raw 对象上下文的紧凑生成代码调用，字段名原样复制。映射按自身迭代顺序输出。映射键直接复制，不扫描转义字符。调用方须保证键是可直接放入 JSON 字符串的 ASCII 文本。数组按元素顺序输出，符合条件时尝试 Native 格式化。调用方还须保证已知键形状及剩余容量足以直接写入各映射键。此路径不为任意键长重新预留容量。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 不需要转义的字段名。
+     * @param values 键和值都由调用方限制为已知形状、键无需转义的 Int64 数组映射。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
+     */
     public func writeObjectEntryNameInt64ArrayMapKnownAsciiKeys(
         first: Bool, name: String, values: HashMap<String, Array<Int64>>
     ): Bool {
@@ -971,6 +1420,18 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         false
     }
 
+    /**
+     * 向缓冲区写入免转义 UTF-8 字节字段名和紧凑 Int64 数组映射字段。
+     *
+     * 供已建立 raw 对象上下文的紧凑生成代码调用，字段名原样复制。映射按自身迭代顺序输出。映射键直接复制，不扫描转义字符。调用方须保证键是可直接放入 JSON 字符串的 ASCII 文本。数组按元素顺序输出，符合条件时尝试 Native 格式化。调用方还须保证已知键形状及剩余容量足以直接写入各映射键。此路径不为任意键长重新预留容量。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 不需要转义的有效 UTF-8 字段名字节。
+     * @param values 键和值都由调用方限制为已知形状、键无需转义的 Int64 数组映射。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
+     */
     public func writeObjectEntryNameInt64ArrayMapKnownAsciiKeys(
         first: Bool, name: Array<Byte>, values: HashMap<String, Array<Int64>>
     ): Bool {
@@ -1011,6 +1472,12 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         writeRawByteNoEnsure(b'}')
         false
     }
+    /**
+     * 追加布尔值对应的 JSON 文本。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param value 写为 true 或 false 的布尔值。
+     */
     public func writeBoolText(value: Bool): Unit {
         if (value) {
             writeText("true")
@@ -1019,15 +1486,36 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         }
     }
 
+    /**
+     * 以十进制文本追加一个 Int64 值。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param value 要写出的有符号整数。
+     */
     public func writeInt64Text(value: Int64): Unit {
         ensureCapacity(used + 21)
         writeInt64NoEnsure(value)
     }
 
+    /**
+     * 以十进制文本追加一个 UInt64 值。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param value 要写出的无符号整数。
+     */
     public func writeUInt64Text(value: UInt64): Unit {
         writeUInt64Digits(value)
     }
 
+    /**
+     * 追加 Float64 的数值文本。
+     *
+     * 优先尝试 Native 浮点格式化，未采用时使用 toString。此缓冲级入口不检查有限性，调用方须预先排除 NaN 和无穷大。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param value 已由调用方检查为有限值的浮点数。
+     * @throws JsonException 启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
+     */
     public func writeFloat64Text(value: Float64): Unit {
         ensureCapacity(used + 40)
         if (let Some(written) <- jsonNativeFormatFloat64Into(value, buffer, used)) {
@@ -1221,11 +1709,32 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
     }
 
 
+    /**
+     * 完成内存目标的写出阶段。
+     *
+     * 此目标没有待刷新的外部资源，本方法不修改缓冲区，也不检查 JSON 结构或预算。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     */
     public func finish(): Unit {}
 
+    /**
+     * 返回当前缓冲区的已写字节数。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @return 自创建或最近一次 reset 以来追加的字节数。
+     */
     public func bytesWritten(): Int64 { used }
 
 
+    /**
+     * 将已经写入的缓冲内容构造成 UTF-8 字符串。
+     *
+     * 使用免校验的 UTF-8 构造路径。调用方必须保证通过原始字节入口写入的内容也是有效 UTF-8。本方法不检查 JSON 完整性。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @return 由当前已写字节构造的字符串。
+     */
     public func buildString(): String {
         // Every writer entry point appends either bytes copied from a String or
         // JSON syntax/number bytes generated by this module. The buffer is
@@ -1234,6 +1743,14 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         unsafe { String.fromUtf8Unchecked(buffer[0..used]) }
     }
 
+    /**
+     * 返回缓冲区中已经写入的字节。
+     *
+     * 不检查 JSON 完整性，也不重置已写长度。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @return 当前已写部分对应的字节数组。
+     */
     public func buildBytes(): Array<Byte> {
         buffer[0..used]
     }
@@ -1670,6 +2187,13 @@ class DirectStreamWriterTarget <: JsonDirectWriterTarget {
 
 }
 
+/**
+ * 供 codec 和生成代码将一个 JSON 根值直接写入字符串、字节数组或调用方流。
+ *
+ * 语义入口维护容器状态和 JSON Pointer，raw 入口依赖生成代码维护对象字段、逗号和相配的边界。内存目标的总输出预算在完成阶段检查，部分转义路径还会提前检查。流目标在追加内容时检查预算。流的所有权属于调用方，finish 刷新但不关闭流，失败时可能已有部分输出。生成代码取得的缓冲目标只能用于字符串或字节目标。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ */
 public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV1Owner {
     private static let ARRAY_FIRST: UInt8 = 0x1
     private static let ARRAY_NEXT: UInt8 = 0x0
@@ -1723,6 +2247,14 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
     private var lastRawString: Option<String> = None<String>
     private var lastRawStringEscapeIndex: Int64 = -1
 
+    /**
+     * 创建输出字符串的直接 JSON 写出器。
+     *
+     * pretty 为 true 时使用 JsonWriteOptions.pretty() 的两空格缩进预设，否则使用 compact 预设。最终字符串由 finishString 取得。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param pretty 是否采用两空格缩进的格式化输出，默认 false。
+     */
     public init(pretty!: Bool = false) {
         let writerConfig = if (pretty) { JsonWriteOptions.pretty() } else { JsonWriteOptions.compact }
         bufferTarget = DirectBufferWriterTarget(capacity: directStringWriterInitialCapacity(writerConfig))
@@ -1732,6 +2264,14 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         resultKind = 0
     }
 
+    /**
+     * 按给定写出选项创建字符串目标的直接 JSON 写出器。
+     *
+     * 保留配置中的缩进、HTML 转义、输出字节预算和最大深度。最终字符串由 finishString 取得。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param config 本次写出使用的不可变格式和资源限制。
+     */
     public init(config: JsonWriteOptions) {
         bufferTarget = DirectBufferWriterTarget(capacity: directStringWriterInitialCapacity(config))
         target = bufferTarget
@@ -1740,6 +2280,15 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         resultKind = 0
     }
 
+    /**
+     * 创建将 JSON 写入调用方输出流的直接写出器。
+     *
+     * 流由调用方持有。finish 会写出内部剩余缓冲并刷新该流，但不会关闭流。写出失败时流中可能已有部分内容。此目标使用 finish 完成写出。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param out 接收 UTF-8 JSON 字节的输出流，所有权保留在调用方。
+     * @param config 格式和资源限制，默认使用紧凑预设。
+     */
     public init(out: OutputStream, config!: JsonWriteOptions = JsonWriteOptions.compact) {
         bufferTarget = DirectBufferWriterTarget(capacity: 0)
         target = DirectStreamWriterTarget(out, config)
@@ -1756,6 +2305,15 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         this.resultKind = resultKind
     }
 
+    /**
+     * 创建输出 UTF-8 字节数组的直接 JSON 写出器。
+     *
+     * 最终字节由 finishBytes 取得。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param config 格式和资源限制，默认使用紧凑预设。
+     * @return 使用内存字节目标的新写出器。
+     */
     public static func bytes(config!: JsonWriteOptions = JsonWriteOptions.compact): JsonDirectWriter {
         JsonDirectWriter(DirectBufferWriterTarget(), config, 1)
     }
@@ -1800,9 +2358,25 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         if (resultKind == 2) { target.writeBoolText(value) } else { bufferTarget.writeBoolText(value) }
     }
 
+    /**
+     * 创建绑定到当前写出器的生成代码游标。
+     *
+     * 游标继续操作同一个写出器及其目标和状态。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 绑定到当前 JsonDirectWriter 的写出游标。
+     */
     public func generatedCursorV1(): GeneratedSupportV1WriteCursor {
         GeneratedSupportV1WriteCursor(this)
     }
+    /**
+     * 返回供生成代码直接写入的缓冲目标。
+     *
+     * 字符串和字节目标使用该缓冲区作为实际输出目标。流模式下返回的是零容量占位缓冲区，生成代码不得通过它写出流内容。此方法本身不检查目标种类。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 此写出器持有的同一个 DirectBufferWriterTarget。
+     */
     public func generatedBufferV1(): DirectBufferWriterTarget {
         bufferTarget
     }
@@ -1817,20 +2391,65 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         }
     }
 
+    /**
+     * 返回当前写出器共享的生成代码遍历状态。
+     *
+     * 首次访问时按写出配置创建状态，后续访问复用同一个状态对象，用于生成代码维护路径和遍历深度。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 当前写出器持有的 GeneratedWriteStateV1。
+     */
     public func generatedWriteStateV1(): GeneratedWriteStateV1 { writeState() }
 
+    /**
+     * 返回当前写出路径的 JSON Pointer。
+     *
+     * 路径由语义入口及生成代码共享的遍历状态提供。根路径为空串。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 当前 JSON Pointer，根为长度为零的字符串。
+     */
     public func path(): String { writeState().currentPath() }
 
+    /**
+     * 构造携带当前 JSON Pointer 的 JSON 异常。
+     *
+     * 只构造异常对象，不主动抛出。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param message 供人阅读的错误说明。
+     * @param code 供程序判断的错误类别。
+     * @return 携带 message、code 和当前路径的 JsonException。
+     */
     public func error(message: String, code: String): JsonException {
         JsonException(message, code: code, path: path())
     }
 
+    /**
+     * 核对完整根值并完成目标写出。
+     *
+     * 要求恰有一个完整根值，且语义容器、raw 容器和预占值状态均已结束。流目标随后写出剩余缓冲并刷新流，最后检查总输出字节数。不会关闭调用方流。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @throws JsonException 根值未完成、容器未闭合或预占值未消费，错误码为 writer_state。总输出超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入或刷新操作抛出异常时，原样传播该异常。
+     */
     public func finish(): Unit {
         ensureCompleteWriterState()
         target.finish()
         enforceOutputLimit()
     }
 
+    /**
+     * 完成写出并取得字符串结果。
+     *
+     * 先核对完整根值、完成目标写出并检查输出字节预算，再确认目标类型。只适用于通过字符串目标构造器创建的写出器。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 当前完整 JSON 的字符串。
+     * @throws JsonException 根值或容器状态不完整，错误码为 writer_state。超过输出预算，错误码为 output_too_large。目标类型不匹配时也抛出此异常。
+     * @throws Exception 在流目标上误用时，完成阶段可能传播输出流写入或刷新的异常。
+     */
     public func finishString(): String {
         ensureCompleteWriterState()
         target.finish()
@@ -1845,10 +2464,14 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
     }
 
     /**
-     * Finish a generated compact string whose codec has emitted the balanced
-     * raw root itself.  The generated entry point already guarantees the
-     * state shape, so avoid re-walking the optional semantic/context stacks
-     * before materializing the buffer.
+     * 取得由生成 codec 已经写完的紧凑 JSON 字符串。
+     *
+     * 供生成代码已经保证一个完整、平衡 raw 根值的入口调用。本方法省略根值和容器状态复核，完成目标写出、检查输出预算和字符串目标类型后构造结果。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 已完成的生成式紧凑 JSON 字符串。
+     * @throws JsonException 超过 maxOutputBytes，错误码为 output_too_large。当前目标不是字符串目标时也抛出此异常。
+     * @throws Exception 在流目标上误用时，完成阶段可能传播输出流写入或刷新的异常。
      */
     public func finishGeneratedCompactString(): String {
         target.finish()
@@ -1858,11 +2481,26 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         }
         bufferTarget.buildString()
     }
+    /**
+     * 判断当前字符串写出器是否满足生成代码复用条件。
+     *
+     * 只有字符串目标、空缩进、关闭 HTML 额外转义、不限制输出字节数且最大深度为 256 时返回 true。该判断只检查目标和配置。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 满足生成代码复用条件时为 true，否则为 false。
+     */
     public func canReuseGeneratedCompactWriter(): Bool {
         resultKind == 0 && config.indent.isEmpty() && !config.htmlSafe &&
             config.maxOutputBytes == 0 && config.maxDepth == 256
     }
 
+    /**
+     * 在配置允许时重置字符串写出器以供生成代码复用。
+     *
+     * 满足 canReuseGeneratedCompactWriter 时，清除输出长度、路径、容器、根值、raw 状态和字符串转义缓存，并保留已分配的输出缓冲区。不满足条件时直接返回，不修改状态。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     */
     public func resetForGeneratedReuse(): Unit {
         if (!canReuseGeneratedCompactWriter()) { return }
         bufferTarget.reset()
@@ -1883,6 +2521,16 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         lastRawStringEscapeIndex = -1
     }
 
+    /**
+     * 完成写出并取得 UTF-8 字节数组结果。
+     *
+     * 先核对完整根值、完成目标写出并检查输出字节预算，再确认目标类型。只适用于通过 JsonDirectWriter.bytes 创建的字节目标。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 当前完整 JSON 的 UTF-8 字节数组。
+     * @throws JsonException 根值或容器状态不完整，错误码为 writer_state。超过输出预算，错误码为 output_too_large。目标类型不匹配时也抛出此异常。
+     * @throws Exception 在流目标上误用时，完成阶段可能传播输出流写入或刷新的异常。
+     */
     public func finishBytes(): Array<Byte> {
         ensureCompleteWriterState()
         target.finish()
@@ -1942,6 +2590,16 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         contextsAreEmpty() && !rootWritten && !multiline && !config.useSpaceAfterSeparators && !config.htmlSafe
     }
 
+    /**
+     * 尝试为紧凑生成代码预占下一个 raw 值的位置。
+     *
+     * 配置启用换行、分隔符后空格或 HTML 额外转义时返回 false，不预占值。成功时先执行语义值前置处理，后续 raw 写入负责消费该预占位置并输出完整值。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 已经预占位置并可使用紧凑 raw 写出时为 true，否则为 false。
+     * @throws JsonException 已经写入根值，或当前对象尚未写字段名而不能接受值。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func tryBeginGeneratedCompactRawValue(): Bool {
         if (multiline || config.useSpaceAfterSeparators || config.htmlSafe) {
             return false
@@ -1952,21 +2610,58 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         true
     }
 
+    /**
+     * 在已有 raw 写出流程中追加一个原始字节。
+     *
+     * 消费尚未使用的 raw 值预占标记，但不主动建立根值或校验 JSON 语法。调用方保证最终结构和 UTF-8 有效性。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param value 要原样写入的语法或内容字节。
+     * @throws JsonException 流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeRawByte(value: Byte): Unit {
         consumeRawRootPreclaim()
         rawTargetWriteByte(value)
     }
 
+    /**
+     * 开始一个 raw JSON 数组。
+     *
+     * 检查当前容器深度，在需要时占用语义值位置，并记录 raw 数组类别。调用方负责数组内部元素及逗号。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @throws JsonException 当前字段或容器入口超过 maxDepth，错误码为 max_depth。已经写入根值，或当前对象尚未写字段名而不能接受值。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeRawBeginArray(): Unit {
         beginRawContainer(RAW_ARRAY)
         rawTargetWriteByte(b'[')
     }
 
+    /**
+     * 结束顶部 raw JSON 数组。
+     *
+     * 核对 raw 栈顶部是数组后写入右方括号，不自动处理父级字段或逗号。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @throws JsonException 没有可结束的 raw 容器，或顶部容器不是数组，错误码为 writer_state。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeRawEndArray(): Unit {
         endRawContainer(RAW_ARRAY)
         rawTargetWriteByte(b']')
     }
 
+    /**
+     * 开始一个 raw JSON 对象。
+     *
+     * 调用方负责对象字段及逗号。普通路径记录容器类别。已选用生成紧凑缓冲路径时只更新 raw 深度，由生成代码保证容器配对。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @throws JsonException 当前字段或容器入口超过 maxDepth，错误码为 max_depth。已经写入根值，或当前对象尚未写字段名而不能接受值。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeRawBeginObject(): Unit {
         if (generatedCompactRawFast) {
             if (rawDepth == 0) {
@@ -1988,6 +2683,15 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         rawTargetWriteByte(b'{')
     }
 
+    /**
+     * 结束当前 raw JSON 对象。
+     *
+     * 普通路径核对顶部容器类别。生成紧凑缓冲路径只检查 raw 深度为正并递减深度，由生成代码保证对象边界配对。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @throws JsonException 没有可结束的 raw 容器，或普通路径顶部容器不是对象，错误码为 writer_state。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeRawEndObject(): Unit {
         if (generatedCompactRawFast) {
             if (rawDepth <= 0) {
@@ -2009,6 +2713,18 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
     }
 
 
+    /**
+     * 按当前转义配置写入 raw 对象字段名和冒号。
+     *
+     * 供已建立 raw 对象上下文的紧凑生成代码调用。调用方维护字段顺序、逗号状态和语义路径。字段名执行标准 JSON 转义及配置要求的 HTML 额外转义。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param value 要按当前配置转义的字段名。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeRawObjectEntryName(first: Bool, value: String): Bool {
         if (!first) {
             rawTargetWriteByte(b',')
@@ -2017,12 +2733,34 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         false
     }
 
+    /**
+     * 写入已知免转义字符串字段名和冒号。
+     *
+     * 供已建立 raw 对象上下文的紧凑生成代码调用。调用方维护字段顺序、逗号状态和语义路径。字段名直接复制，调用方保证按当前规则无需转义。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的字段名。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeRawObjectEntryKnownName(first: Bool, name: String): Bool {
         if (!first) { rawTargetWriteByte(b',') }
         rawTargetWriteNameNoEscape(name)
         false
     }
 
+    /**
+     * 仅向缓冲目标写入已知免转义 UTF-8 字节字段名和冒号。
+     *
+     * 供字符串或字节目标的生成代码调用，直接追加到内存缓冲区。调用方维护 raw 对象结构和语义路径。流目标不得使用此入口。字段名直接复制，调用方保证按当前规则无需转义。此字节字段名重载不会根据目标种类切换到流写出。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的有效 UTF-8 字段名字节。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     */
     public func writeRawObjectEntryKnownName(first: Bool, name: Array<Byte>): Bool {
         writeRawObjectEntryKnownNameBuffer(first, name)
     }
@@ -2039,6 +2777,19 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         false
     }
 
+    /**
+     * 写入已知免转义字段名和按配置转义的字符串字段值。
+     *
+     * 供已建立 raw 对象上下文的紧凑生成代码调用。调用方维护字段顺序、逗号状态和语义路径。字段名直接复制，调用方保证按当前规则无需转义。字符串值按当前配置执行转义。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的字段名。
+     * @param value 要写出的字符串值。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeRawObjectEntryKnownNameString(
         first: Bool, name: String, value: String
     ): Bool {
@@ -2056,6 +2807,19 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         next
     }
 
+    /**
+     * 写入已知免转义字段名和布尔字段值。
+     *
+     * 供已建立 raw 对象上下文的紧凑生成代码调用。调用方维护字段顺序、逗号状态和语义路径。字段名直接复制，调用方保证按当前规则无需转义。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的字段名。
+     * @param value 要写出的布尔值。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeRawObjectEntryKnownNameBool(
         first: Bool, name: String, value: Bool
     ): Bool {
@@ -2064,6 +2828,19 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         next
     }
 
+    /**
+     * 写入已知免转义字段名和 Int64 字段值。
+     *
+     * 供已建立 raw 对象上下文的紧凑生成代码调用。调用方维护字段顺序、逗号状态和语义路径。字段名直接复制，调用方保证按当前规则无需转义。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的字段名。
+     * @param value 要写出的 Int64 值。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeRawObjectEntryKnownNameInt64(
         first: Bool, name: String, value: Int64
     ): Bool {
@@ -2076,12 +2853,36 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
     // Static compact codecs used by String/bytes entry points never target a
     // stream. Keep a buffer-only seam for those generated calls so each
     // scalar field avoids the resultKind branch and stream virtual dispatch.
+    /**
+     * 仅向缓冲目标写入已知免转义字段名和 Int64 字段值。
+     *
+     * 供字符串或字节目标的生成代码调用，直接追加到内存缓冲区。调用方维护 raw 对象结构和语义路径。流目标不得使用此入口。字段名直接复制，调用方保证按当前规则无需转义。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的字段名。
+     * @param value 要写出的 Int64 值。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     */
     public func writeRawObjectEntryKnownNameInt64Buffer(
         first: Bool, name: String, value: Int64
     ): Bool {
         bufferTarget.writeObjectEntryNameInt64NoEscape(first, name, value)
     }
 
+    /**
+     * 写入已知免转义字段名和 UInt64 字段值。
+     *
+     * 供已建立 raw 对象上下文的紧凑生成代码调用。调用方维护字段顺序、逗号状态和语义路径。字段名直接复制，调用方保证按当前规则无需转义。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的字段名。
+     * @param value 要写出的 UInt64 值。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeRawObjectEntryKnownNameUInt64(
         first: Bool, name: String, value: UInt64
     ): Bool {
@@ -2090,12 +2891,36 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         next
     }
 
+    /**
+     * 仅向缓冲目标写入已知免转义字段名和 UInt64 字段值。
+     *
+     * 供字符串或字节目标的生成代码调用，直接追加到内存缓冲区。调用方维护 raw 对象结构和语义路径。流目标不得使用此入口。字段名直接复制，调用方保证按当前规则无需转义。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的字段名。
+     * @param value 要写出的 UInt64 值。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     */
     public func writeRawObjectEntryKnownNameUInt64Buffer(
         first: Bool, name: String, value: UInt64
     ): Bool {
         bufferTarget.writeObjectEntryNameUInt64NoEscape(first, name, value)
     }
 
+    /**
+     * 写入已知免转义字段名和有限 Float64 字段值。
+     *
+     * 供已建立 raw 对象上下文的紧凑生成代码调用。调用方维护字段顺序、逗号状态和语义路径。字段名直接复制，调用方保证按当前规则无需转义。写出前检查所有浮点值均有限。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的字段名。
+     * @param value 要写出的有限浮点字段值。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 浮点值为 NaN 或无穷大。启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeRawObjectEntryKnownNameFloat64(
         first: Bool, name: String, value: Float64
     ): Bool {
@@ -2105,6 +2930,18 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         next
     }
 
+    /**
+     * 仅向缓冲目标写入已知免转义字段名和有限 Float64 字段值。
+     *
+     * 供字符串或字节目标的生成代码调用，直接追加到内存缓冲区。调用方维护 raw 对象结构和语义路径。流目标不得使用此入口。字段名直接复制，调用方保证按当前规则无需转义。写出前检查所有浮点值均有限。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的字段名。
+     * @param value 要写出的有限浮点字段值。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 浮点值为 NaN 或无穷大。启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
+     */
     public func writeRawObjectEntryKnownNameFloat64Buffer(
         first: Bool, name: String, value: Float64
     ): Bool {
@@ -2112,6 +2949,19 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         bufferTarget.writeObjectEntryNameFloat64NoEscape(first, name, value)
     }
 
+    /**
+     * 写入已知免转义字段名和紧凑 Int64 数组字段。
+     *
+     * 供已建立 raw 对象上下文的紧凑生成代码调用。调用方维护字段顺序、逗号状态和语义路径。字段名直接复制，调用方保证按当前规则无需转义。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的字段名。
+     * @param values 要写出的 Int64 数组。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 当前字段或容器入口超过 maxDepth，错误码为 max_depth。启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeRawObjectEntryKnownNameInt64Array(
         first: Bool, name: String, values: Array<Int64>
     ): Bool {
@@ -2125,6 +2975,18 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         next
     }
 
+    /**
+     * 仅向缓冲目标写入已知免转义字段名和 Int64 映射字段。
+     *
+     * 供字符串或字节目标的生成代码调用，直接追加到内存缓冲区。调用方维护 raw 对象结构和语义路径。流目标不得使用此入口。字段名直接复制，调用方保证按当前规则无需转义。映射按自身迭代顺序输出。映射键执行标准 JSON 转义，不额外转义 HTML 敏感字符，适用于关闭 HTML 额外转义的紧凑生成路径。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的字段名。
+     * @param values 要写出的 Int64 映射。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 当前字段或容器入口超过 maxDepth，错误码为 max_depth。
+     */
     public func writeRawObjectEntryKnownNameInt64MapBuffer(
         first: Bool, name: String, values: HashMap<String, Int64>
     ): Bool {
@@ -2133,9 +2995,16 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
     }
 
     /**
-     * Compact generated path for maps whose keys are known ASCII-safe by the
-     * generated benchmark shape. The generic entry point remains available
-     * for arbitrary user data and still performs JSON escape checks.
+     * 仅向缓冲目标写入已知免转义字段名和 ASCII 安全键的 Int64 映射字段。
+     *
+     * 供字符串或字节目标的生成代码调用，直接追加到内存缓冲区。调用方维护 raw 对象结构和语义路径。流目标不得使用此入口。字段名直接复制，调用方保证按当前规则无需转义。映射按自身迭代顺序输出。这是生成基准形状使用的已知 ASCII 键路径，映射键不扫描或转义。任意键应使用会检查转义的通用入口。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的字段名。
+     * @param values 键为无需转义 ASCII 文本的 Int64 映射。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 当前字段或容器入口超过 maxDepth，错误码为 max_depth。
      */
     public func writeRawObjectEntryKnownNameInt64MapKnownAsciiBuffer(
         first: Bool, name: String, values: HashMap<String, Int64>
@@ -2144,6 +3013,18 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         bufferTarget.writeObjectEntryNameInt64MapKnownAsciiKeys(first, name, values)
     }
 
+    /**
+     * 仅向缓冲目标写入已知免转义字段名和字符串映射字段。
+     *
+     * 供字符串或字节目标的生成代码调用，直接追加到内存缓冲区。调用方维护 raw 对象结构和语义路径。流目标不得使用此入口。字段名直接复制，调用方保证按当前规则无需转义。映射按自身迭代顺序输出。这是关闭 HTML 额外转义的紧凑生成路径，对映射键和值执行 JSON 转义。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的字段名。
+     * @param values 要写出的字符串映射。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 当前字段或容器入口超过 maxDepth，错误码为 max_depth。
+     */
     public func writeRawObjectEntryKnownNameStringMapBuffer(
         first: Bool, name: String, values: HashMap<String, String>
     ): Bool {
@@ -2178,6 +3059,18 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         next
     }
 
+    /**
+     * 仅向缓冲目标写入已知免转义字段名和 Int64 数组映射字段。
+     *
+     * 供字符串或字节目标的生成代码调用，直接追加到内存缓冲区。调用方维护 raw 对象结构和语义路径。流目标不得使用此入口。字段名直接复制，调用方保证按当前规则无需转义。映射按自身迭代顺序输出。映射键执行标准 JSON 转义，不额外转义 HTML 敏感字符，适用于关闭 HTML 额外转义的紧凑生成路径。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的字段名。
+     * @param values 要写出的 Int64 数组映射。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 当前字段或容器入口超过 maxDepth，错误码为 max_depth。启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
+     */
     public func writeRawObjectEntryKnownNameInt64ArrayMapBuffer(
         first: Bool, name: String, values: HashMap<String, Array<Int64>>
     ): Bool {
@@ -2186,7 +3079,16 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
     }
 
     /**
-     * Compact generated path for nested maps with known ASCII-safe keys.
+     * 仅向缓冲目标写入已知免转义字段名和 ASCII 安全键的 Int64 数组映射字段。
+     *
+     * 供字符串或字节目标的生成代码调用，直接追加到内存缓冲区。调用方维护 raw 对象结构和语义路径。流目标不得使用此入口。字段名直接复制，调用方保证按当前规则无需转义。映射按自身迭代顺序输出。这是生成基准形状使用的已知 ASCII 键路径，映射键不扫描或转义。任意键应使用会检查转义的通用入口。调用方还须保证已知键形状及剩余容量足以直接写入各映射键。此路径不为任意键长重新预留容量。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的字段名。
+     * @param values 键形状与写入容量已由生成代码约束、键无需 JSON 转义的 ASCII 键 Int64 数组映射。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 当前字段或容器入口超过 maxDepth，错误码为 max_depth。启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
      */
     public func writeRawObjectEntryKnownNameInt64ArrayMapKnownAsciiBuffer(
         first: Bool, name: String, values: HashMap<String, Array<Int64>>
@@ -2195,6 +3097,19 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         bufferTarget.writeObjectEntryNameInt64ArrayMapKnownAsciiKeys(first, name, values)
     }
 
+    /**
+     * 写入已知免转义字段名和紧凑 Float64 数组字段。
+     *
+     * 供已建立 raw 对象上下文的紧凑生成代码调用。调用方维护字段顺序、逗号状态和语义路径。字段名直接复制，调用方保证按当前规则无需转义。写出前检查所有浮点值均有限。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的字段名。
+     * @param values 所有元素均为有限值的 Float64 数组。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 当前字段或容器入口超过 maxDepth，错误码为 max_depth。浮点值为 NaN 或无穷大。启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeRawObjectEntryKnownNameFloat64Array(
         first: Bool, name: String, values: Array<Float64>
     ): Bool {
@@ -2209,6 +3124,19 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         next
     }
 
+    /**
+     * 写入已知免转义字段名和紧凑字符串数组字段。
+     *
+     * 供已建立 raw 对象上下文的紧凑生成代码调用。调用方维护字段顺序、逗号状态和语义路径。字段名直接复制，调用方保证按当前规则无需转义。字符串值按当前配置执行转义。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的字段名。
+     * @param values 要写出的字符串数组。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 当前字段或容器入口超过 maxDepth，错误码为 max_depth。启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeRawObjectEntryKnownNameStringArray(
         first: Bool, name: String, values: Array<String>
     ): Bool {
@@ -2223,6 +3151,17 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         next
     }
 
+    /**
+     * 仅向缓冲目标写入已知免转义字符串字段名和字符串字段值。
+     *
+     * 供字符串或字节目标的生成代码调用，直接追加到内存缓冲区。调用方维护 raw 对象结构和语义路径。流目标不得使用此入口。字段名直接复制，调用方保证按当前规则无需转义。字符串值按当前配置执行转义。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的字段名。
+     * @param value 要写出的字符串值。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     */
     public func writeRawObjectEntryKnownNameStringBuffer(
         first: Bool, name: String, value: String
     ): Bool {
@@ -2237,6 +3176,17 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
     // Generated compact records use this buffer-only seam after reserving the
     // object budget. Reuse the writer's long-string escape cache, then skip
     // the target capacity check only for the proven unescaped case.
+    /**
+     * 在预留容量后写入已知免转义字段名和字符串字段值。
+     *
+     * 供字符串或字节目标的生成代码调用，直接追加到内存缓冲区。调用方维护 raw 对象结构和语义路径。流目标不得使用此入口。字段名直接复制，调用方保证按当前规则无需转义。字符串值按当前配置执行转义。调用方先预留整个对象所需容量。无需转义的值直接写入，需要转义的值改走会扩容的分支。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的字段名。
+     * @param value 要写出的字符串值。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     */
     public func writeRawObjectEntryKnownNameStringFast(
         first: Bool, name: String, value: String
     ): Bool {
@@ -2248,6 +3198,17 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
             first, name, value, firstEscape, config.htmlSafe)
     }
 
+    /**
+     * 仅向缓冲目标写入已知免转义 UTF-8 字节字段名和字符串字段值。
+     *
+     * 供字符串或字节目标的生成代码调用，直接追加到内存缓冲区。调用方维护 raw 对象结构和语义路径。流目标不得使用此入口。字段名直接复制，调用方保证按当前规则无需转义。字符串值按当前配置执行转义。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的有效 UTF-8 字段名字节。
+     * @param value 要写出的字符串值。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     */
     public func writeRawObjectEntryKnownNameStringBuffer(
         first: Bool, name: Array<Byte>, value: String
     ): Bool {
@@ -2259,12 +3220,35 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
             first, name, value, firstEscape, config.htmlSafe)
     }
 
+    /**
+     * 仅向缓冲目标写入已知免转义字段名和布尔字段值。
+     *
+     * 供字符串或字节目标的生成代码调用，直接追加到内存缓冲区。调用方维护 raw 对象结构和语义路径。流目标不得使用此入口。字段名直接复制，调用方保证按当前规则无需转义。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的字段名。
+     * @param value 要写出的布尔值。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     */
     public func writeRawObjectEntryKnownNameBoolBuffer(
         first: Bool, name: String, value: Bool
     ): Bool {
         bufferTarget.writeObjectEntryNameBoolNoEscape(first, name, value)
     }
 
+    /**
+     * 仅向缓冲目标写入已知免转义字段名和 Int64 数组字段。
+     *
+     * 供字符串或字节目标的生成代码调用，直接追加到内存缓冲区。调用方维护 raw 对象结构和语义路径。流目标不得使用此入口。字段名直接复制，调用方保证按当前规则无需转义。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的字段名。
+     * @param values 要写出的 Int64 数组。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 当前字段或容器入口超过 maxDepth，错误码为 max_depth。启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
+     */
     public func writeRawObjectEntryKnownNameInt64ArrayBuffer(
         first: Bool, name: String, values: Array<Int64>
     ): Bool {
@@ -2272,6 +3256,18 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         bufferTarget.writeObjectEntryNameInt64ArrayNoEscape(first, name, values)
     }
 
+    /**
+     * 仅向缓冲目标写入已知免转义字符串字段名和 Float64 数组字段。
+     *
+     * 供字符串或字节目标的生成代码调用，直接追加到内存缓冲区。调用方维护 raw 对象结构和语义路径。流目标不得使用此入口。字段名直接复制，调用方保证按当前规则无需转义。写出前检查所有浮点值均有限。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的字段名。
+     * @param values 所有元素均为有限值的 Float64 数组。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 当前字段或容器入口超过 maxDepth，错误码为 max_depth。浮点值为 NaN 或无穷大。启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
+     */
     public func writeRawObjectEntryKnownNameFloat64ArrayBuffer(
         first: Bool, name: String, values: Array<Float64>
     ): Bool {
@@ -2282,6 +3278,18 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         next
     }
 
+    /**
+     * 仅向缓冲目标写入已知免转义 UTF-8 字节字段名和 Float64 数组字段。
+     *
+     * 供字符串或字节目标的生成代码调用，直接追加到内存缓冲区。调用方维护 raw 对象结构和语义路径。流目标不得使用此入口。字段名直接复制，调用方保证按当前规则无需转义。写出前检查所有浮点值均有限。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的有效 UTF-8 字段名字节。
+     * @param values 所有元素均为有限值的 Float64 数组。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 当前字段或容器入口超过 maxDepth，错误码为 max_depth。浮点值为 NaN 或无穷大。启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
+     */
     public func writeRawObjectEntryKnownNameFloat64ArrayBuffer(
         first: Bool, name: Array<Byte>, values: Array<Float64>
     ): Bool {
@@ -2292,6 +3300,19 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         next
     }
 
+    /**
+     * 写入已知免转义字段名和紧凑 Int64 映射字段。
+     *
+     * 供已建立 raw 对象上下文的紧凑生成代码调用。调用方维护字段顺序、逗号状态和语义路径。字段名直接复制，调用方保证按当前规则无需转义。映射按自身迭代顺序输出。映射键执行标准 JSON 转义，不额外转义 HTML 敏感字符，适用于关闭 HTML 额外转义的紧凑生成路径。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的字段名。
+     * @param values 要写出的 Int64 映射。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 当前字段或容器入口超过 maxDepth，错误码为 max_depth。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeRawObjectEntryKnownNameInt64Map(
         first: Bool, name: String, values: HashMap<String, Int64>
     ): Bool {
@@ -2301,6 +3322,19 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         next
     }
 
+    /**
+     * 写入已知免转义字段名和紧凑字符串映射字段。
+     *
+     * 供已建立 raw 对象上下文的紧凑生成代码调用。调用方维护字段顺序、逗号状态和语义路径。字段名直接复制，调用方保证按当前规则无需转义。映射按自身迭代顺序输出。映射键和值按当前配置执行转义。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的字段名。
+     * @param values 要写出的字符串映射。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 当前字段或容器入口超过 maxDepth，错误码为 max_depth。启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeRawObjectEntryKnownNameStringMap(
         first: Bool, name: String, values: HashMap<String, String>
     ): Bool {
@@ -2315,6 +3349,19 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         next
     }
 
+    /**
+     * 写入已知免转义字段名和紧凑 Int64 数组映射字段。
+     *
+     * 供已建立 raw 对象上下文的紧凑生成代码调用。调用方维护字段顺序、逗号状态和语义路径。字段名直接复制，调用方保证按当前规则无需转义。映射按自身迭代顺序输出。映射键按当前配置执行转义。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 按当前转义规则无需转义的字段名。
+     * @param values 要写出的 Int64 数组映射。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 当前字段或容器入口超过 maxDepth，错误码为 max_depth。启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeRawObjectEntryKnownNameInt64ArrayMap(
         first: Bool, name: String, values: HashMap<String, Array<Int64>>
     ): Bool {
@@ -2333,6 +3380,19 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         rawTargetWriteByte(b'}')
         next
     }
+    /**
+     * 按当前转义配置写入 raw 对象字段名和字符串字段值。
+     *
+     * 供已建立 raw 对象上下文的紧凑生成代码调用。调用方维护字段顺序、逗号状态和语义路径。字段名执行标准 JSON 转义及配置要求的 HTML 额外转义。字符串值按当前配置执行转义。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 要按当前配置转义的字段名。
+     * @param value 要写出的字符串值。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeRawObjectEntryNameString(first: Bool, name: String, value: String): Bool {
         if (!first) {
             rawTargetWriteByte(b',')
@@ -2342,6 +3402,19 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         false
     }
 
+    /**
+     * 按当前转义配置写入 raw 对象字段名和 Int64 字段值。
+     *
+     * 供已建立 raw 对象上下文的紧凑生成代码调用。调用方维护字段顺序、逗号状态和语义路径。字段名执行标准 JSON 转义及配置要求的 HTML 额外转义。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 要按当前配置转义的字段名。
+     * @param value 要写出的 Int64 值。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeRawObjectEntryNameInt64(first: Bool, name: String, value: Int64): Bool {
         let firstEscape = firstStringEscapeIndex(name)
         if (firstEscape < 0) {
@@ -2358,12 +3431,38 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         false
     }
 
+    /**
+     * 按当前转义配置写入 raw 对象字段名和 UInt64 字段值。
+     *
+     * 供已建立 raw 对象上下文的紧凑生成代码调用。调用方维护字段顺序、逗号状态和语义路径。字段名执行标准 JSON 转义及配置要求的 HTML 额外转义。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 要按当前配置转义的字段名。
+     * @param value 要写出的 UInt64 值。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeRawObjectEntryNameUInt64(first: Bool, name: String, value: UInt64): Bool {
         let next = writeRawObjectEntryName(first, name)
         rawTargetWriteUInt64(value)
         next
     }
 
+    /**
+     * 按当前转义配置写入 raw 对象字段名和有限 Float64 字段值。
+     *
+     * 供已建立 raw 对象上下文的紧凑生成代码调用。调用方维护字段顺序、逗号状态和语义路径。字段名执行标准 JSON 转义及配置要求的 HTML 额外转义。写出前检查所有浮点值均有限。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 要按当前配置转义的字段名。
+     * @param value 要写出的有限浮点字段值。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 浮点值为 NaN 或无穷大。启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeRawObjectEntryNameFloat64(first: Bool, name: String, value: Float64): Bool {
         ensureFiniteJsonFloat(value)
         let next = writeRawObjectEntryName(first, name)
@@ -2371,6 +3470,19 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         next
     }
 
+    /**
+     * 按当前转义配置写入 raw 对象字段名和布尔字段值。
+     *
+     * 供已建立 raw 对象上下文的紧凑生成代码调用。调用方维护字段顺序、逗号状态和语义路径。字段名执行标准 JSON 转义及配置要求的 HTML 额外转义。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param first 是否为当前对象的首个字段。false 时先写入逗号。
+     * @param name 要按当前配置转义的字段名。
+     * @param value 要写出的布尔值。
+     * @return 恒为 false，供调用方作为后续字段的 first 状态。
+     * @throws JsonException 启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeRawObjectEntryNameBool(first: Bool, name: String, value: Bool): Bool {
         if (!first) {
             rawTargetWriteByte(b',')
@@ -2444,6 +3556,17 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         true
     }
 
+    /**
+     * 尝试在当前值位置写出紧凑 Int64 数组。
+     *
+     * 配置使用换行、分隔符后空格或 HTML 额外转义时返回 false，不开始该值。按数组顺序输出整数。采用该路径时检查容器入口深度并占用当前值位置，调用方不另写该容器的外层边界。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param values 要写出的 Int64 数组。
+     * @return 已写出完整容器时为 true。配置不适用时为 false。
+     * @throws JsonException 当前字段或容器入口超过 maxDepth，错误码为 max_depth。已经写入根值，或当前对象尚未写字段名而不能接受值。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func tryWriteCompactInt64Array(values: Array<Int64>): Bool {
         if (multiline || config.useSpaceAfterSeparators || config.htmlSafe) {
             return false
@@ -2463,6 +3586,17 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         true
     }
 
+    /**
+     * 尝试在当前值位置写出紧凑 Float64 数组。
+     *
+     * 配置使用换行、分隔符后空格或 HTML 额外转义时返回 false，不开始该值。按数组顺序输出有限浮点值。采用该路径时检查容器入口深度并占用当前值位置，调用方不另写该容器的外层边界。任一元素为 NaN 或无穷大时也返回 false。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param values 要写出的 Float64 数组。
+     * @return 已写出完整容器时为 true。配置不适用或包含非有限浮点值时为 false。
+     * @throws JsonException 当前字段或容器入口超过 maxDepth，错误码为 max_depth。已经写入根值，或当前对象尚未写字段名而不能接受值。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func tryWriteCompactFloat64Array(values: Array<Float64>): Bool {
         if (multiline || config.useSpaceAfterSeparators || config.htmlSafe) {
             return false
@@ -2485,6 +3619,17 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         true
     }
 
+    /**
+     * 尝试在当前值位置写出紧凑字符串数组。
+     *
+     * 配置使用换行、分隔符后空格或 HTML 额外转义时返回 false，不开始该值。按数组顺序输出字符串，对内容执行标准 JSON 转义。采用该路径时检查容器入口深度并占用当前值位置，调用方不另写该容器的外层边界。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param values 要写出的字符串数组。
+     * @return 已写出完整容器时为 true。配置不适用时为 false。
+     * @throws JsonException 当前字段或容器入口超过 maxDepth，错误码为 max_depth。已经写入根值，或当前对象尚未写字段名而不能接受值。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func tryWriteCompactStringArray(values: Array<String>): Bool {
         if (multiline || config.useSpaceAfterSeparators || config.htmlSafe) {
             return false
@@ -2505,6 +3650,17 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         true
     }
 
+    /**
+     * 尝试在当前值位置写出紧凑 Int64 列表。
+     *
+     * 配置使用换行、分隔符后空格或 HTML 额外转义时返回 false，不开始该值。按列表顺序输出整数，优先尝试 Native 列表格式化。采用该路径时检查容器入口深度并占用当前值位置，调用方不另写该容器的外层边界。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param values 要写出的 Int64 列表。
+     * @return 已写出完整容器时为 true。配置不适用时为 false。
+     * @throws JsonException 当前字段或容器入口超过 maxDepth，错误码为 max_depth。已经写入根值，或当前对象尚未写字段名而不能接受值。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func tryWriteCompactInt64ArrayList(values: ArrayList<Int64>): Bool {
         if (multiline || config.useSpaceAfterSeparators || config.htmlSafe) {
             return false
@@ -2534,6 +3690,17 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         true
     }
 
+    /**
+     * 尝试在当前值位置写出紧凑字符串列表。
+     *
+     * 配置使用换行、分隔符后空格或 HTML 额外转义时返回 false，不开始该值。按列表顺序输出字符串，对内容执行标准 JSON 转义。采用该路径时检查容器入口深度并占用当前值位置，调用方不另写该容器的外层边界。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param values 要写出的字符串列表。
+     * @return 已写出完整容器时为 true。配置不适用时为 false。
+     * @throws JsonException 当前字段或容器入口超过 maxDepth，错误码为 max_depth。已经写入根值，或当前对象尚未写字段名而不能接受值。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func tryWriteCompactStringArrayList(values: ArrayList<String>): Bool {
         if (multiline || config.useSpaceAfterSeparators || config.htmlSafe) {
             return false
@@ -2549,6 +3716,17 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         true
     }
 
+    /**
+     * 尝试在当前值位置写出紧凑 Int64 映射。
+     *
+     * 配置使用换行、分隔符后空格或 HTML 额外转义时返回 false，不开始该值。按映射迭代顺序输出对象，键执行标准 JSON 转义。采用该路径时检查容器入口深度并占用当前值位置，调用方不另写该容器的外层边界。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param values 要写出的 Int64 映射。
+     * @return 已写出完整容器时为 true。配置不适用时为 false。
+     * @throws JsonException 当前字段或容器入口超过 maxDepth，错误码为 max_depth。已经写入根值，或当前对象尚未写字段名而不能接受值。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func tryWriteCompactInt64Map(values: HashMap<String, Int64>): Bool {
         if (multiline || config.useSpaceAfterSeparators || config.htmlSafe) {
             return false
@@ -2564,6 +3742,17 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         true
     }
 
+    /**
+     * 尝试在当前值位置写出紧凑字符串映射。
+     *
+     * 配置使用换行、分隔符后空格或 HTML 额外转义时返回 false，不开始该值。按映射迭代顺序输出对象，对键和值执行标准 JSON 转义。采用该路径时检查容器入口深度并占用当前值位置，调用方不另写该容器的外层边界。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param values 要写出的字符串映射。
+     * @return 已写出完整容器时为 true。配置不适用时为 false。
+     * @throws JsonException 当前字段或容器入口超过 maxDepth，错误码为 max_depth。已经写入根值，或当前对象尚未写字段名而不能接受值。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func tryWriteCompactStringMap(values: HashMap<String, String>): Bool {
         if (multiline || config.useSpaceAfterSeparators || config.htmlSafe) {
             return false
@@ -2584,6 +3773,17 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         true
     }
 
+    /**
+     * 尝试在当前值位置写出紧凑 Int64 数组映射。
+     *
+     * 配置使用换行、分隔符后空格或 HTML 额外转义时返回 false，不开始该值。按映射迭代顺序输出对象键和数组值，键执行标准 JSON 转义。采用该路径时检查容器入口深度并占用当前值位置，调用方不另写该容器的外层边界。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param values 要写出的 Int64 数组映射。
+     * @return 已写出完整容器时为 true。配置不适用时为 false。
+     * @throws JsonException 当前字段或容器入口超过 maxDepth，错误码为 max_depth。已经写入根值，或当前对象尚未写字段名而不能接受值。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func tryWriteCompactInt64ArrayMap(values: HashMap<String, Array<Int64>>): Bool {
         if (multiline || config.useSpaceAfterSeparators || config.htmlSafe) {
             return false
@@ -2619,6 +3819,15 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         writeStringLiteralFromFirstEscape(value, firstEscape)
     }
 
+    /**
+     * 在当前 raw 值位置写入 JSON null。
+     *
+     * 位于 raw 容器内时不自动写逗号。容器外则消费预占位置或执行语义值前置处理。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @throws JsonException 已经写入根值，或当前对象尚未写字段名而不能接受值。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeRawNull(): Unit {
         beginRawScalar()
         rawTargetWriteText("null")
@@ -2634,6 +3843,16 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         rawTargetWriteInt64(value)
     }
 
+    /**
+     * 在当前 raw 值位置写入 UInt64 十进制文本。
+     *
+     * 位于 raw 容器内时不自动写逗号。容器外则消费预占位置或执行语义值前置处理。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param value 要写出的无符号整数。
+     * @throws JsonException 已经写入根值，或当前对象尚未写字段名而不能接受值。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeRawUInt64(value: UInt64): Unit {
         beginRawScalar()
         rawTargetWriteUInt64(value)
@@ -2750,6 +3969,15 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         }
     }
 
+    /**
+     * 在当前语义值位置开始一个 JSON 对象。
+     *
+     * 检查容器深度，处理根值或父容器分隔符，并记录新容器及其语义路径。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @throws JsonException 当前字段或容器入口超过 maxDepth，错误码为 max_depth。已经写入根值，或当前对象尚未写字段名而不能接受值。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func startObject(): Unit {
         ensureContainerDepth()
         let pathPushed = beforeValue()
@@ -2758,6 +3986,15 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         semanticPathContextValues().add(JsonDirectSemanticPathContext(writeState().pathDepth(), pathPushed))
     }
 
+    /**
+     * 结束当前语义对象并恢复父级写出路径。
+     *
+     * 检查顶部容器类别。对象还有未写值的字段时不能结束。非空且配置使用换行时，先写出父级缩进，再输出结束符。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @throws JsonException 没有对应的开放容器、顶部容器类别不符或对象仍在等待字段值。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func endObject(): Unit {
         let context = popContext(true)
         let values = contextValues()
@@ -2770,6 +4007,15 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         writeState().completeAutoValue(pathContext.entryPathPushed)
     }
 
+    /**
+     * 在当前语义值位置开始一个 JSON 数组。
+     *
+     * 检查容器深度，处理根值或父容器分隔符，并记录新容器及其语义路径。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @throws JsonException 当前字段或容器入口超过 maxDepth，错误码为 max_depth。已经写入根值，或当前对象尚未写字段名而不能接受值。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func startArray(): Unit {
         ensureContainerDepth()
         let pathPushed = beforeValue()
@@ -2778,6 +4024,15 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         semanticPathContextValues().add(JsonDirectSemanticPathContext(writeState().pathDepth(), pathPushed))
     }
 
+    /**
+     * 结束当前语义数组并恢复父级写出路径。
+     *
+     * 检查顶部容器类别。非空且配置使用换行时，先写出父级缩进，再输出结束符。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @throws JsonException 没有对应的开放容器、顶部容器类别不符或对象仍在等待字段值。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func endArray(): Unit {
         let context = popContext(false)
         let values = contextValues()
@@ -2790,6 +4045,16 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         writeState().completeAutoValue(pathContext.entryPathPushed)
     }
 
+    /**
+     * 在当前语义对象中写入字段名并等待字段值。
+     *
+     * 按当前 HTML 转义选项写出带双引号的字段名和冒号，需要时追加分隔空格，同时为接下来的值记录字段路径。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param name 要写出的字段名，可以包含需要 JSON 转义的字符。
+     * @throws JsonException 当前不在语义对象中，或上一个字段还没有写入值。启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeName(name: String): Unit {
         beforeName()
         writeStringLiteralName(name)
@@ -2820,26 +4085,75 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         values[index] = OBJECT_EXPECTING_VALUE
     }
 
+    /**
+     * 在当前语义值位置写入 JSON null。
+     *
+     * 自动处理父容器的分隔符和路径。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @throws JsonException 已经写入根值，或当前对象尚未写字段名而不能接受值。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeNull(): Unit {
         let pathPushed = beforeValue()
         try { target.writeText("null") } finally { writeState().completeAutoValue(pathPushed) }
     }
 
+    /**
+     * 在当前语义值位置写入一个布尔值。
+     *
+     * 自动处理父容器的分隔符和路径。写出结束或抛出异常后结束本次自动路径范围。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param value 要写出的 Bool 值。
+     * @throws JsonException 已经写入根值，或当前对象尚未写字段名而不能接受值。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeBool(value: Bool): Unit {
         let pathPushed = beforeValue()
         try { target.writeBoolText(value) } finally { writeState().completeAutoValue(pathPushed) }
     }
 
+    /**
+     * 在当前语义值位置写入一个有符号整数。
+     *
+     * 自动处理父容器的分隔符和路径。写出结束或抛出异常后结束本次自动路径范围。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param value 要写出的 Int64 值。
+     * @throws JsonException 已经写入根值，或当前对象尚未写字段名而不能接受值。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeInt64(value: Int64): Unit {
         let pathPushed = beforeValue()
         try { target.writeInt64Text(value) } finally { writeState().completeAutoValue(pathPushed) }
     }
 
+    /**
+     * 在当前语义值位置写入一个无符号整数。
+     *
+     * 自动处理父容器的分隔符和路径。写出结束或抛出异常后结束本次自动路径范围。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param value 要写出的 UInt64 值。
+     * @throws JsonException 已经写入根值，或当前对象尚未写字段名而不能接受值。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeUInt64(value: UInt64): Unit {
         let pathPushed = beforeValue()
         try { target.writeUInt64Text(value) } finally { writeState().completeAutoValue(pathPushed) }
     }
 
+    /**
+     * 在当前语义值位置写入一个有限 Float64 值。
+     *
+     * 自动处理父容器的分隔符和路径，拒绝 NaN 和无穷大。先尝试 Native 浮点格式化，未采用时使用浮点文本。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param value 要写出的有限浮点值。
+     * @throws JsonException 已经写入根值，或当前对象尚未写字段名而不能接受值。浮点值为 NaN 或无穷大。启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeFloat64(value: Float64): Unit {
         let pathPushed = beforeValue()
         try {
@@ -2848,6 +4162,16 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         } finally { writeState().completeAutoValue(pathPushed) }
     }
 
+    /**
+     * 在当前语义值位置写入已经验证的 JSON 数字字面量。
+     *
+     * 先校验完整 JSON 数字语法，再原样写入文本。不把数字转成浮点数或整数。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param value 必须完全符合 JSON 数字语法的文本。
+     * @throws JsonException 已经写入根值，或当前对象尚未写字段名而不能接受值。value 不是合法的完整 JSON 数字字面量，错误码为 invalid_number。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeNumberLiteral(value: String): Unit {
         let pathPushed = beforeValue()
         try {
@@ -2858,6 +4182,16 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         } finally { writeState().completeAutoValue(pathPushed) }
     }
 
+    /**
+     * 在当前语义值位置写入 JSON 字符串。
+     *
+     * 自动处理父容器分隔符和路径，并按当前配置添加双引号、执行标准 JSON 转义及适用的 HTML 额外转义。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param value 要写出的字符串内容。
+     * @throws JsonException 已经写入根值，或当前对象尚未写字段名而不能接受值。启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。流目标追加内容时超过 maxOutputBytes，错误码为 output_too_large。
+     * @throws Exception 调用方输出流的写入操作抛出异常时，原样传播该异常。
+     */
     public func writeString(value: String): Unit {
         let pathPushed = beforeValue()
         try { writeStringLiteral(value) } finally { writeState().completeAutoValue(pathPushed) }

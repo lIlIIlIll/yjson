@@ -7,6 +7,7 @@ import yjson_native_primitives.*
  *
  * 在进程中第一次普通 `YJson` 调用前执行 `initialize()`，成功后继续使用普通读写 API。
  * 该类不提供独立 DOM 后端，原生临时资源由实现释放。
+ * @group 10-application 应用 API
  */
 public class YJsonNativeAccel {
     /**
@@ -28,6 +29,7 @@ public class YJsonNativeAccel {
      * ```output
      * 7
      * ```
+     * @group 10-application 应用 API
      */
     public static func initialize(): Unit {
         initializeYJsonNativePrimitivesV1()

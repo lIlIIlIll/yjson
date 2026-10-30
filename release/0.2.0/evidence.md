@@ -4,7 +4,61 @@
 需求、实际检查结果和剩余缺口统一记录在[实施记录](../../docs/implementation/cjdoc-020.md)。
 本页固定输入身份，不把尚未执行的检查写成通过。
 
-## 工具链与源码
+## 当前工具链与源码
+
+| 输入 | 固定身份 |
+| --- | --- |
+| 九包候选版本与 SDK | `0.2.0`；Cangjie STS `1.2.0` 与匹配 stdx `1.2.0.1` |
+| 独立宏仓提交 | `d819745310f8cc6aa416e1298f706ea5138b7d16`；[PR #10](https://github.com/lIlIIlIll/yjson_macros/pull/10) 已合并，仅新增四条分类注释 |
+| 文档工具 | 已发布的 [cjdoc `0.7.7`](https://github.com/lIlIIlIll/cjdoc/releases/tag/v0.7.7)，[工具配置](../cjdoc-tool.toml)绑定精确源码与两次独立冷构建 |
+| cjdoc 已合并源码 | `8cc8f71a296b1c6321e575b56fadbd0c379e242a`，tree `8bc115f09ed8823cdbe8dd66fdd940bf29b35af8`；[PR #168](https://github.com/lIlIIlIll/cjdoc/pull/168) 已合并 |
+| cjdoc tag ref | `v0.7.7` 为轻量标签，直接指向上述 commit；没有独立 tag object |
+| cjdoc main CI | [40994003657 / attempt 3](https://github.com/lIlIIlIll/cjdoc/actions/runs/40994003657/attempts/3)，三平台与 Doc IR 身份门禁通过 |
+| cjdoc Reader 与站点 | [Reader](https://github.com/lIlIIlIll/cjdoc/actions/runs/40994003637) 通过；[Pages](https://github.com/lIlIIlIll/cjdoc/actions/runs/41027932006) 绑定 CI attempt 3，源码重现、浏览器、阅读与正式部署通过 |
+| cjdoc 正式发布运行 | [41029708849 / attempt 2](https://github.com/lIlIIlIll/cjdoc/actions/runs/41029708849/attempts/2)，三平台、性能、打包及原发布器通过 |
+| 工具资格配置 SHA-256 | `dbfcce51f26cb7229ee236ac2a78b692591d21d3170d8bd4ce1db50ba5c6c7d2` |
+| cjdoc 精确源码归档 SHA-256 | `21a6e03a80ff5fcef259c1a80f55401f81e01c0fe33c9390c9409a0cf1f6cc75`；995 个文件及权限与 Git blob 一致 |
+| 主仓本地验证源码 | `2945d3beb0ceb696cd7c673a0adee69b9635d860`，tree `7c0ad7021985a2509d815f4e9cdef157ce62a94f`；完整 strict 与全部 17 个 fresh CI gate 通过 |
+| 正式生成 Doc IR SHA-256 | `fe4eb7b2d7315684f969986bc1529284a45c1dc41a676edc484f5c569c1e691b`；九包 1035 项声明及 333 个实际执行示例通过 |
+| 本地完整离线包 | 16659640 字节，SHA-256 `4c810d798bf27054dfb9c51f4fa93aca11124f72b4e2856ff6f89ff295a9b4b3`；5331 个文件与站点相同，真实断网 query/MCP 及空 cjpm 缓存下全部 333 示例、11 profile 重建通过 |
+
+本地工具资格使用下表中相同的 cjc/cjpm 和普通 static stdx，SDK、构建策略与 wrapper
+摘要不变。两个独立空缓存构建的二进制 SHA-256 分别为
+`a3e7875eba73cc02e65b3b3df00d968e6a4ae48e29a2b14758ccb12c74789808` 和
+`482a128e9e70de09b69cc5424948a8eb80bd69a97c8f33ef3d6e7a574468e8c7`。
+两份真实构建收据均与当前配置一致，不宣称二进制可重现。
+
+公开 Release 的 12 项资产已全部下载；GitHub 摘要、六份校验文件、三份包的精确源码
+payload、固定 SDK 及嵌入候选收据均独立检查通过。三个收据都绑定 Release attempt 2，
+包内二进制与对应独立下载件一致；Linux 下载件实际输出 `cjdoc 0.7.7`。
+
+| 平台 | 公开分发包 SHA-256 | 公开可执行文件 SHA-256 |
+| --- | --- | --- |
+| Linux x64 | `ee328b037828891534d34b17a0691ee95ad521125868200f0ba2a37f58a89de4` | `9c218e606d916a7411e70d7dc70a50ff7eeb704aa72a6fc45a284f01ae8ae386` |
+| Windows x64 | `2300aeaf30f52cc74dedd7d0439a4bf62255d4acffc4da082bbbdd5bfd1113b7` | `141445a081a47d4de82b845b0ea8a38c798048c5c726682a714d6583b73514cc` |
+| macOS arm64 | `a60a482a2705115b7764c652f26e4ea37636431470476ce06216b406aa91f0c7` | `182004e95efbae3ccd58ac0e68c274693d7e864c779c3b9adee6418e84936688` |
+
+main 前两次失败及 Release 首次 macOS `markdown` 依赖的 `llc -O2` 退出 139 均保留。
+用户明确授权完整重跑及同任务后续操作；所有门禁、优化参数和堆配置保持不变。
+Linux 公开二进制与 main attempt 2 的失败二进制相同；后续通过不确定 GC 或 LLVM 故障根因。
+本地主仓冻结输入已单独验收；托管三平台文档示例与 yjson Pages 仍待验收，不以 cjdoc
+发布或本地结果替代。随后仅追加本页和实施记录正文，不改变生成器的 145 文件输入、
+工具配置、产品或 harness。托管按最终 PR/main 提交重新生成，本地证据仍绑定 2945d3b。
+
+## 当前性能输入
+
+| 输入 | 固定身份 |
+| --- | --- |
+| 生产测量候选 | `ac4f8b987910a473ada7d77f10ce6cd3c12d2248`；宏仓 D819 |
+| 产品源码摘要 | `4251be5ff98c50a91afdd162ae130d94f8bf2a70c85faf5da6a78304232771af` |
+| 生产 harness 摘要 | `9d457f09101cb4466a82b000d2494e9c12b2f495b5b16b4fef809811a60d8852` |
+
+Pure 24 项、11 轮正式测量通过；七库两批共 1540 单元，全部噪声行保留。
+完整公开证据及独立重放见[本轮 Pure](../../docs/performance/results/2026-10-30-api-contracts-pure.md)
+和[七库报告](../../docs/performance/results/2026-10-30-api-contracts-seven-library.md)。
+工具配置与验收记录更新不属于已冻结的产品或 harness 输入。
+
+## 历史工具链与源码（cjdoc 0.7.6）
 
 | 输入 | 固定身份 |
 | --- | --- |
@@ -47,7 +101,7 @@
 用户确认暂按偶发故障记录，并明确授权上述一次完整重跑。公开 Linux 二进制与首次失败相同；
 本次通过没有修改 SDK、编译参数或门禁，也不确定两类故障的根因。
 
-## 性能输入
+## 历史性能输入（5576cdd 及更早）
 
 首次正式批未通过，以下身份和失败证据保留，不作为当前候选的通过结论。
 

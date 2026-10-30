@@ -750,32 +750,92 @@ func __yJsonReadFastHashMapStringDecimal(
     try { jsonFastReadHashMapStringDecimal(reader) } finally { context.leaveValue() }
 }
 
+/**
+ * 为生成代码消费一个 BigInt 数字值。
+ *
+ * reader 必须是运行时拥有的 JsonFastReader。先尝试数字 token 路径，其余情况读取数字文本；数值解析失败包装为 invalid_value。此标量桥接不进入容器深度状态。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param reader 供本次解码消费的 V1 读取器。
+ * @return 解析得到的 BigInt 值。
+ * @throws JsonException 读取器实现不匹配（generated_protocol_mismatch）、数字语法或预算不符，或数值转换失败（invalid_value）。
+ */
 public func jsonFastReadBigInt(reader: GeneratedSupportV1Reader): BigInt {
     jsonFastReadBigInt(yJsonGeneratedReaderV1(reader))
 }
 
+/**
+ * 为生成代码消费一个 Decimal 数字值。
+ *
+ * reader 必须是运行时拥有的 JsonFastReader。先尝试数字 token 路径，其余情况读取数字文本；数值解析失败包装为 invalid_value。此标量桥接不进入容器深度状态。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param reader 供本次解码消费的 V1 读取器。
+ * @return 解析得到的 Decimal 值。
+ * @throws JsonException 读取器实现不匹配（generated_protocol_mismatch）、数字语法或预算不符，或数值转换失败（invalid_value）。
+ */
 public func jsonFastReadDecimal(reader: GeneratedSupportV1Reader): Decimal {
     jsonFastReadDecimal(yJsonGeneratedReaderV1(reader))
 }
 
+/**
+ * 为生成代码消费元素为 BigInt 的数组。
+ *
+ * 先验证读取器实现，再进入一次生成代码深度状态，退出时恢复。内部尝试紧凑数字路径，不适用时回退到通用容器读取。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param reader 供本次容器解码消费的 V1 读取器。
+ * @return 新构造的 ArrayList<BigInt>。
+ * @throws JsonException 读取器不匹配、深度超限（max_depth）、容器或数字语法错误，或转换失败（invalid_value）。
+ */
 public func __yJsonReadFastArrayListBigInt(
     reader: GeneratedSupportV1Reader
 ): ArrayList<BigInt> {
     __yJsonReadFastArrayListBigInt(yJsonGeneratedReaderV1(reader))
 }
 
+/**
+ * 为生成代码消费字符串键、BigInt 值的对象。
+ *
+ * 先验证读取器实现，再进入一次生成代码深度状态，退出时恢复。内部尝试紧凑数字路径，不适用时回退到通用容器读取。重复名称后值覆盖前值。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param reader 供本次容器解码消费的 V1 读取器。
+ * @return 新构造的 HashMap<String, BigInt>。
+ * @throws JsonException 读取器不匹配、深度超限（max_depth）、容器或数字语法错误，或转换失败（invalid_value）。
+ */
 public func __yJsonReadFastHashMapStringBigInt(
     reader: GeneratedSupportV1Reader
 ): HashMap<String, BigInt> {
     __yJsonReadFastHashMapStringBigInt(yJsonGeneratedReaderV1(reader))
 }
 
+/**
+ * 为生成代码消费元素为 Decimal 的数组。
+ *
+ * 先验证读取器实现，再进入一次生成代码深度状态，退出时恢复。内部尝试紧凑数字路径，不适用时回退到通用容器读取。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param reader 供本次容器解码消费的 V1 读取器。
+ * @return 新构造的 ArrayList<Decimal>。
+ * @throws JsonException 读取器不匹配、深度超限（max_depth）、容器或数字语法错误，或转换失败（invalid_value）。
+ */
 public func __yJsonReadFastArrayListDecimal(
     reader: GeneratedSupportV1Reader
 ): ArrayList<Decimal> {
     __yJsonReadFastArrayListDecimal(yJsonGeneratedReaderV1(reader))
 }
 
+/**
+ * 为生成代码消费字符串键、Decimal 值的对象。
+ *
+ * 先验证读取器实现，再进入一次生成代码深度状态，退出时恢复。内部尝试紧凑数字路径，不适用时回退到通用容器读取。重复名称后值覆盖前值。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param reader 供本次容器解码消费的 V1 读取器。
+ * @return 新构造的 HashMap<String, Decimal>。
+ * @throws JsonException 读取器不匹配、深度超限（max_depth）、容器或数字语法错误，或转换失败（invalid_value）。
+ */
 public func __yJsonReadFastHashMapStringDecimal(
     reader: GeneratedSupportV1Reader
 ): HashMap<String, Decimal> {

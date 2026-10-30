@@ -1,0 +1,64 @@
+{
+  "allMembersRegular": true,
+  "archiveFilesInspected": 10264,
+  "controlledPathMatchesReviewed": [
+    {
+      "archive": "seven-library-020-batch1.tar.gz",
+      "disposition": "controlled /mnt/home namespace or parameterized $formal_root/home expression; no local username",
+      "member": "seven-library-020-batch1/build-provenance/api-groups-seven-batch-01-seven-yjson-compiler-argv.json",
+      "patternKind": "non-generic-home-path"
+    },
+    {
+      "archive": "seven-library-020-batch2.tar.gz",
+      "disposition": "controlled /mnt/home namespace or parameterized $formal_root/home expression; no local username",
+      "member": "seven-library-020-batch2/build-provenance/api-groups-seven-batch-02-seven-yjson-compiler-argv.json",
+      "patternKind": "non-generic-home-path"
+    },
+    {
+      "archive": "seven-library-020-build-audits.tar.gz",
+      "disposition": "controlled /mnt/home namespace or parameterized $formal_root/home expression; no local username",
+      "member": "seven-library-020-build-audits/audits/seven-batch-01/logs/seven-yjson-bench.execve.log",
+      "patternKind": "non-generic-home-path"
+    },
+    {
+      "archive": "seven-library-020-build-audits.tar.gz",
+      "disposition": "controlled /mnt/home namespace or parameterized $formal_root/home expression; no local username",
+      "member": "seven-library-020-build-audits/audits/seven-batch-01/receipts/api-groups-seven-batch-01-seven-yjson-compiler-argv.json",
+      "patternKind": "non-generic-home-path"
+    },
+    {
+      "archive": "seven-library-020-build-audits.tar.gz",
+      "disposition": "controlled /mnt/home namespace or parameterized $formal_root/home expression; no local username",
+      "member": "seven-library-020-build-audits/audits/seven-batch-02/logs/seven-yjson-bench.execve.log",
+      "patternKind": "non-generic-home-path"
+    },
+    {
+      "archive": "seven-library-020-build-audits.tar.gz",
+      "disposition": "controlled /mnt/home namespace or parameterized $formal_root/home expression; no local username",
+      "member": "seven-library-020-build-audits/audits/seven-batch-02/receipts/api-groups-seven-batch-02-seven-yjson-compiler-argv.json",
+      "patternKind": "non-generic-home-path"
+    },
+    {
+      "archive": "seven-library-020-build-audits.tar.gz",
+      "disposition": "controlled /mnt/home namespace or parameterized $formal_root/home expression; no local username",
+      "member": "seven-library-020-build-audits/shared-receipts/api-groups-seven-yjson-compiler-argv.json",
+      "patternKind": "non-generic-home-path"
+    },
+    {
+      "archive": "seven-library-020-build-audits.tar.gz",
+      "disposition": "controlled /mnt/home namespace or parameterized $formal_root/home expression; no local username",
+      "member": "seven-library-020-build-audits/tools/with-sts120",
+      "patternKind": "non-generic-home-path"
+    },
+    {
+      "archive": "seven-library-020-harness.tar.gz",
+      "disposition": "controlled /mnt/home namespace or parameterized $formal_root/home expression; no local username",
+      "member": "seven-library-020-harness/provenance/current-build/api-groups-seven-yjson-compiler-argv.json",
+      "patternKind": "non-generic-home-path"
+    }
+  ],
+  "executableMagicFound": false,
+  "findings": [],
+  "firstScanSha256": "c1536d43904a48576b967d75a8ca386fa55242b8ff6e6a5a74518615d1569060",
+  "scope": "Every archive member, existing explicit privacy rules, regular-file/path/executable checks; controlled path matches independently bound to environment receipt and wrapper source."
+}

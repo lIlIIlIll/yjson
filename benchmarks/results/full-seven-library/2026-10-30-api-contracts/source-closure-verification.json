@@ -1,0 +1,19 @@
+{
+  "candidateBindingMethod": "release_candidate_binding over the verified frozen source export; clean-checkout validation remains required",
+  "cleanCheckoutGeneratorExecuted": false,
+  "downloadedArchiveSha256": "61741e0b61ddb1e3d0e59ca6bb82b1480db254744c868e617af94ae1130d799a",
+  "effectiveHarnessManifestFileCount": 51,
+  "effectiveHarnessSha256": "9d457f09101cb4466a82b000d2494e9c12b2f495b5b16b4fef809811a60d8852",
+  "filesAddedFromUnchangedFrozenExport": 315,
+  "json4cjMeasuredFilesBoundToPriorPublicLicenseReceipt": 197,
+  "json4cjReadmeSha256": "c03caed9790acea77b39777d241622f94794ec443d0dddca887529e73bc31c0d",
+  "macroCommit": "d819745310f8cc6aa416e1298f706ea5138b7d16",
+  "originalArchiveSha256": "9ac9240619307db68e5fe67ec701eae797d8a84d96fcd61cb6fa0e109fb2ab47",
+  "originalSourceFileCount": 502,
+  "overlappingFilesComparedByteForByte": 187,
+  "productAndHarnessManifestsMatchPremeasurementReceipts": true,
+  "productManifestFileCount": 51,
+  "productSourceSha256": "4251be5ff98c50a91afdd162ae130d94f8bf2a70c85faf5da6a78304232771af",
+  "rawFormalArchivesChanged": false,
+  "sourceCommit": "ac4f8b987910a473ada7d77f10ce6cd3c12d2248"
+}

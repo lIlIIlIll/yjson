@@ -382,3 +382,9 @@ tests/doc_examples/macros/prelude.cj
 tests/doc_examples/native-accel/profile.json
 tests/doc_examples/native/profile.json
 tests/doc_examples/yyjson/profile.json
+
+# API contract documentation performance reports
+docs/performance/results/2026-10-30-api-contracts-pure.md
+docs/performance/results/2026-10-30-api-contracts-seven-library.md
+benchmarks/results/full-seven-library/2026-10-30-api-contracts/README.md
+benchmarks/results/full-seven-library/2026-10-30-api-contracts/independent-validation.md

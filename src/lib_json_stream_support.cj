@@ -17,6 +17,7 @@ import std.io.*
  * ```output
  * [1]
  * ```
+ * @group 10-application 应用 API
  */
 public class YJsonMemoryOutputStream <: OutputStream {
     private let buffer = ArrayList<Byte>()
@@ -36,6 +37,7 @@ public class YJsonMemoryOutputStream <: OutputStream {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public func write(bytes: Array<Byte>): Unit { buffer.add(all: bytes) }
     /**
@@ -51,6 +53,7 @@ public class YJsonMemoryOutputStream <: OutputStream {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public func flush(): Unit {}
     /**
@@ -69,6 +72,7 @@ public class YJsonMemoryOutputStream <: OutputStream {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func toByteArray(): Array<Byte> { buffer.toArray() }
     /**
@@ -86,6 +90,7 @@ public class YJsonMemoryOutputStream <: OutputStream {
      * ```output
      * 你好
      * ```
+     * @group 10-application 应用 API
      */
     public func toUtf8String(): String { String.fromUtf8(toByteArray()) }
 }
@@ -94,6 +99,7 @@ public class YJsonMemoryOutputStream <: OutputStream {
  * 从内存中的 UTF-8 字节或文本顺序读取的 InputStream。
  *
  * read 和 readRemainingBytes 共用一个游标，消耗的数据不会再次返回。字节构造器借用传入数组；读取期间不要修改该数组。此类本身不校验 JSON 或 UTF-8。
+ * @group 10-application 应用 API
  */
 public class YJsonByteArrayInputStream <: InputStream {
     private let bytes: Array<Byte>
@@ -113,6 +119,7 @@ public class YJsonByteArrayInputStream <: InputStream {
      * ```output
      * [1]
      * ```
+     * @group 10-application 应用 API
      */
     public init(bytes: Array<Byte>) {
         this.bytes = bytes
@@ -132,6 +139,7 @@ public class YJsonByteArrayInputStream <: InputStream {
      * ```output
      * [1]
      * ```
+     * @group 10-application 应用 API
      */
     public init(text: String) { this(unsafe { text.rawData() }) }
 
@@ -152,6 +160,7 @@ public class YJsonByteArrayInputStream <: InputStream {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func read(buf: Array<Byte>): Int64 {
         if (remain == 0) { return 0 }
@@ -176,6 +185,7 @@ public class YJsonByteArrayInputStream <: InputStream {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public func readRemainingBytes(): Array<Byte> {
         let result = bytes[start..start + remain]

@@ -157,7 +157,12 @@ private class CustomNativeAccelerationProviderV1 <: JsonNativePrimitivesProvider
 }
 
 /**
- * Versioned closed SPI consumed by yjson_native_accel during startup.
+ * 验证第一方原生原语并初始化进程级加速。
+ *
+ * 供 yjson_native_accel 启动入口调用。provider 声明 V1 协议和 ABI，激活时检查原生探针及 CPU 能力；成功后冻结该 provider。同一 provider 可重复初始化，普通入口先冻结 Pure 后再调用会失败。
+ *
+ * @group 30-first-party-internal 第一方内部接口
+ * @throws JsonException 初始化过晚、provider 冲突、协议或 ABI 不符、探针不匹配、CPU 不支持、递归初始化或激活失败。
  */
 public func initializeYJsonNativePrimitivesV1(): Unit {
     initializeYJsonAccelerationV1(CustomNativeAccelerationProviderV1())

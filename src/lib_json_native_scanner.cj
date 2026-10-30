@@ -20,65 +20,293 @@ const YJSON_NATIVE_MIN_ARRAY_ELEMENT_COUNT = 16
 
 // Cross-package seam used by the optional native package. The core package has
 // no foreign declarations and continues to work when no backend is installed.
+/**
+ * 定义第一方 Native 结构及字符串扫描原语。
+ *
+ * 所有指针只在本次调用期间借用，不保留或释放调用方存储；输入区间及输出容量由调用方保证有效。扫描不维护 codec 路径、对象策略或生成代码深度。状态码 0 为成功、1 为回退、2 为容量不足、-1 为失败；各原语只使用适用状态。
+ *
+ * @group 30-first-party-internal 第一方内部接口
+ */
 public interface JsonNativeScannerBackend {
+    /**
+     * 查询已链接原生扫描器的能力位。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @return 能力位掩码；当前第一方实现位 0 表示基础能力，位 1 表示 AVX2。
+     */
     func simdCaps(): UInt32
+    /**
+     * 从指定位置扫描一个完整 JSON 值。
+     *
+     * 所有指针只在本次调用期间借用，不保留或释放调用方存储；输入区间及输出容量由调用方保证有效。扫描不维护 codec 路径、对象策略或生成代码深度。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param input 调用期间有效的输入字节首地址。
+     * @param len 输入区间总字节数。
+     * @param start 从输入首地址起算的扫描起始偏移。
+     * @param flags 扫描标志；位 0 要求校验字符串 UTF-8。
+     * @param outEnd 成功时写入值后第一个字节的偏移。
+     * @param outError 成功时为 -1；失败或回退时写入诊断偏移。
+     * @return 扫描状态码：0 成功、1 要求回退、-1 失败。
+     */
     func skipValue(input: CPointer<UInt8>, len: Int64, start: Int64, flags: UInt32, outEnd: CPointer<Int64>, outError: CPointer<Int64>): Int32
+    /**
+     * 扫描对象并记录直接字段的名称和值区间。
+     *
+     * 所有指针只在本次调用期间借用，不保留或释放调用方存储；输入区间及输出容量由调用方保证有效。扫描不维护 codec 路径、对象策略或生成代码深度。每字段占五个 UInt64：名称起点、名称字节长度、名称哈希、值起点和值终点；字段名需走原语支持的未转义路径。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param input 调用期间有效的输入字节首地址。
+     * @param len 输入区间总字节数。
+     * @param start 从输入首地址起算的扫描起始偏移。
+     * @param flags 扫描标志；位 0 要求校验字符串 UTF-8。
+     * @param fields 字段输出区，每字段五个 UInt64；可传空指针仅扫描。
+     * @param fieldCap 最多容纳的字段数，不是 UInt64 数量。
+     * @param outEnd 成功时写入对象结束后的输入偏移。
+     * @param outError 成功时为字段数（空对象为 -1）；容量不足时为至少需要的字段数；其他状态为诊断偏移。
+     * @return 0 成功、1 回退、2 字段容量不足、-1 失败。
+     */
     func scanObjectFields(input: CPointer<UInt8>, len: Int64, start: Int64, flags: UInt32, fields: CPointer<UInt64>, fieldCap: Int64, outEnd: CPointer<Int64>, outError: CPointer<Int64>): Int32
+    /**
+     * 扫描数组并记录直接元素的值区间。
+     *
+     * 所有指针只在本次调用期间借用，不保留或释放调用方存储；输入区间及输出容量由调用方保证有效。扫描不维护 codec 路径、对象策略或生成代码深度。每元素占两个 UInt64：值起点和值终点。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param input 调用期间有效的输入字节首地址。
+     * @param len 输入区间总字节数。
+     * @param start 从输入首地址起算的扫描起始偏移。
+     * @param flags 扫描标志；位 0 要求校验字符串 UTF-8。
+     * @param elements 元素输出区，每元素两个 UInt64；可传空指针仅扫描。
+     * @param elementCap 最多容纳的元素数，不是 UInt64 数量。
+     * @param outEnd 成功时写入数组结束后的输入偏移。
+     * @param outError 成功时为元素数（空数组为 -1）；容量不足时为至少需要的元素数；其他状态为诊断偏移。
+     * @return 0 成功、1 回退、2 元素容量不足、-1 失败。
+     */
     func scanArrayElements(input: CPointer<UInt8>, len: Int64, start: Int64, flags: UInt32, elements: CPointer<UInt64>, elementCap: Int64, outEnd: CPointer<Int64>, outError: CPointer<Int64>): Int32
+    /**
+     * 扫描一个带引号的 JSON 字符串 token。
+     *
+     * 所有指针只在本次调用期间借用，不保留或释放调用方存储；输入区间及输出容量由调用方保证有效。扫描不维护 codec 路径、对象策略或生成代码深度。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param input 调用期间有效的输入字节首地址。
+     * @param len 输入区间总字节数。
+     * @param start 从输入首地址起算的扫描起始偏移。
+     * @param flags 扫描标志；位 0 要求校验字符串 UTF-8。
+     * @param outEnd 成功时写入结束引号后的偏移。
+     * @param outError 成功时为 -1；失败或回退时写入诊断偏移。
+     * @return 扫描状态码：0 成功、1 要求回退、-1 失败。
+     */
     func scanString(input: CPointer<UInt8>, len: Int64, start: Int64, flags: UInt32, outEnd: CPointer<Int64>, outError: CPointer<Int64>): Int32
+    /**
+     * 解码一个 JSON 字符串到调用方缓冲区。
+     *
+     * 所有指针只在本次调用期间借用，不保留或释放调用方存储；输入区间及输出容量由调用方保证有效。扫描不维护 codec 路径、对象策略或生成代码深度。输出不含引号，也不追加终止字节。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param input 调用期间有效的输入字节首地址。
+     * @param len 输入区间总字节数。
+     * @param start 从输入首地址起算的扫描起始偏移。
+     * @param flags 扫描标志；位 0 要求校验字符串 UTF-8。
+     * @param output 接收解码后 UTF-8 字节的缓冲区。
+     * @param outputCap 输出区字节容量。
+     * @param outEnd 成功时写入结束引号后的输入偏移。
+     * @param outWritten 成功时写入已输出的 UTF-8 字节数。
+     * @param outError 成功时为 -1；容量不足时为所需容量提示，失败时为诊断偏移。
+     * @return 0 成功、1 回退、2 容量不足、-1 失败；非成功输出不能当作完整字符串。
+     */
     func decodeString(input: CPointer<UInt8>, len: Int64, start: Int64, flags: UInt32, output: CPointer<UInt8>, outputCap: Int64, outEnd: CPointer<Int64>, outWritten: CPointer<Int64>, outError: CPointer<Int64>): Int32
 }
 
 // Separate additive seam for bulk numeric scanning. Keeping it independent
 // avoids changing third-party implementations of the established scanner
 // backend while allowing one FFI call to return many validated number tokens.
+/**
+ * 定义数字数组分块扫描及 Int64 数组转换原语。
+ *
+ * 所有指针只在本次调用期间借用，不保留或释放调用方存储；输入区间及输出容量由调用方保证有效。扫描不维护 codec 路径、对象策略或生成代码深度。每个数字记录占四个 UInt64：起点、终点、小整数幅值、标志。位 0 表示负号、位 1 表示指数、位 2 表示小整数幅值有效，位 8 至 39 保存小数位数。
+ *
+ * @group 30-first-party-internal 第一方内部接口
+ */
 public interface JsonNativeNumericScannerBackend {
+    /**
+     * 扫描数字数组的一个可续接片段。
+     *
+     * 所有指针只在本次调用期间借用，不保留或释放调用方存储；输入区间及输出容量由调用方保证有效。扫描不维护 codec 路径、对象策略或生成代码深度。每个数字记录占四个 UInt64：起点、终点、小整数幅值、标志。位 0 表示负号、位 1 表示指数、位 2 表示小整数幅值有效，位 8 至 39 保存小数位数。调用方已消费数组开始符；返回位置越过已消费数字后面的逗号和空白。遇到非数字值时保留已完成记录并返回回退状态；形似数字但语法错误时失败。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param input 调用期间有效的输入字节首地址。
+     * @param len 输入区间总字节数。
+     * @param start 下一个数字或数组结束符的输入偏移，不指向数组开始符。
+     * @param flags 扫描标志；位 0 要求校验字符串 UTF-8。
+     * @param tokens 调用方持有的四字记录输出区。
+     * @param tokenCap 数字记录容量，必须为正；缓冲区至少包含四倍数量的 UInt64。
+     * @param outNext 可继续扫描的位置；回退时指向未消费的非数字值。
+     * @param outCount 成功或回退时已提交的记录数。
+     * @param outDone 只有消费数组结束符时为 1，否则为 0。
+     * @param outError 成功或回退时为 -1，失败时为诊断偏移。
+     * @return 0 表示完成本块，1 表示须回退读取非数字值，-1 表示失败；缓冲区满可作为成功分块返回。
+     */
     func scanNumericArrayChunk(input: CPointer<UInt8>, len: Int64, start: Int64,
         flags: UInt32, tokens: CPointer<UInt64>, tokenCap: Int64,
         outNext: CPointer<Int64>, outCount: CPointer<Int64>, outDone: CPointer<Int64>,
         outError: CPointer<Int64>): Int32
+    /**
+     * 校验并转换一个完整 Int64 JSON 数组。
+     *
+     * 所有指针只在本次调用期间借用，不保留或释放调用方存储；输入区间及输出容量由调用方保证有效。扫描不维护 codec 路径、对象策略或生成代码深度。只有整个数组成功时 outEnd 和 outCount 才可用；回退或失败时可能已写入部分整数。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param input 调用期间有效的输入字节首地址。
+     * @param len 输入区间总字节数。
+     * @param start 从输入首地址起算的扫描起始偏移。
+     * @param values 接收连续 Int64 元素的输出区。
+     * @param valueCap 输出区可容纳的 Int64 元素数。
+     * @param outEnd 成功时写入数组结束后的输入偏移。
+     * @param outCount 成功时写入解析出的元素数。
+     * @param outError 成功时为 -1；容量不足时为至少需要的元素数，回退或失败时为诊断偏移。
+     * @return 0 成功，1 表示语法或数值形态须回退处理，2 容量不足，-1 参数失败。
+     */
     func parseInt64Array(input: CPointer<UInt8>, len: Int64, start: Int64,
         values: CPointer<Int64>, valueCap: Int64, outEnd: CPointer<Int64>,
         outCount: CPointer<Int64>, outError: CPointer<Int64>): Int32
 }
 
+/**
+ * 定义有界输入页中的数字 token 预扫描原语。
+ *
+ * 所有指针只在本次调用期间借用，不保留或释放调用方存储；输入区间及输出容量由调用方保证有效。扫描不维护 codec 路径、对象策略或生成代码深度。只提供数字位置和形状信息，不校验完整 JSON 结构，也不构造 DOM。
+ *
+ * @group 30-first-party-internal 第一方内部接口
+ */
 public interface JsonNativeNumericTapeBackend {
+    /**
+     * 在一个输入页内预扫描数字 token。
+     *
+     * 所有指针只在本次调用期间借用，不保留或释放调用方存储；输入区间及输出容量由调用方保证有效。扫描不维护 codec 路径、对象策略或生成代码深度。每个数字记录占四个 UInt64：起点、终点、小整数幅值、标志。位 0 表示负号、位 1 表示指数、位 2 表示小整数幅值有效，位 8 至 39 保存小数位数。扫描跳过带引号字符串，页边界截断的 token 留待后续处理；JSON 语法及 DOM 构造仍由调用方负责。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param input 调用期间有效的输入字节首地址。
+     * @param len 输入区间总字节数。
+     * @param start 从输入首地址起算的扫描起始偏移。
+     * @param pageBytes 从 start 起最多扫描的字节窗口，必须为正。
+     * @param flags 扫描标志；位 0 要求校验字符串 UTF-8。
+     * @param tokens 调用方可复用的四字数字记录区。
+     * @param tokenCap 最多写入的记录数，必须为正。
+     * @param outNext 本页或记录区停止时的位置，可能指向未扫描完整的 token。
+     * @param outCount 成功时写入的记录数。
+     * @param outError 成功时为 -1，参数无效时为诊断偏移。
+     * @return 0 表示本页扫描完成或停止，-1 表示参数失败；成功不代表整份 JSON 语法有效。
+     */
     func scanNumericTape(input: CPointer<UInt8>, len: Int64, start: Int64, pageBytes: Int64,
         flags: UInt32, tokens: CPointer<UInt64>, tokenCap: Int64,
         outNext: CPointer<Int64>, outCount: CPointer<Int64>, outError: CPointer<Int64>): Int32
 }
 
 /**
- * Optional scalar seam for numeric-heavy typed codecs. The portable package
- * never installs this backend; yjson_native provides a short, non-blocking
- * @FastNative implementation. A Float64 NaN return means that the backend
- * declined the token and the caller must use the semantic Cangjie parser.
+ * 定义已验证数字 token 的可选 Float64 转换原语。
+ *
+ * 所有指针只在本次调用期间借用，不保留或释放调用方存储；输入区间及输出容量由调用方保证有效。扫描不维护 codec 路径、对象策略或生成代码深度。NaN 表示拒绝 token，调用方须转用核心 Float64 解析。
+ *
+ * @group 30-first-party-internal 第一方内部接口
  */
 public interface JsonNativeFloatParserBackend {
+    /**
+     * 尝试转换一个已验证的 JSON 数字 token。
+     *
+     * 所有指针只在本次调用期间借用，不保留或释放调用方存储；输入区间及输出容量由调用方保证有效。扫描不维护 codec 路径、对象策略或生成代码深度。输入须已通过 JSON 数字语法校验。NaN 是请求调用方使用语义解析器的信号。当前第一方实现还拒绝超过 16 字节的 token。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param input 调用期间有效的输入字节首地址。
+     * @param len 输入区间总字节数。
+     * @param start 数字 token 的输入起点。
+     * @param tokenLength 数字 token 的字节长度。
+     * @return 转换得到的 Float64，或表示拒绝 token 的 NaN；调用方处理非有限结果及语义回退。
+     */
     func parseFloat64(input: CPointer<UInt8>, len: Int64, start: Int64, tokenLength: Int64): Float64
 }
 
 /**
- * Writer-side primitive. It only transforms a single already accepted
- * Cangjie String into one quoted JSON token; separator/state/limits remain in
- * JsonDirectWriter.
+ * 定义无状态的原生字符串转义和数字写出原语。
+ *
+ * 指针只在调用期间借用。调用方管理分隔符、路径、单根状态和资源预算；这些原语只生成单个 token 或紧凑数组。失败或容量不足时输出可能已部分写入。
+ *
+ * @group 30-first-party-internal 第一方内部接口
  */
 public interface JsonNativeWriterBackend {
+    /**
+     * 将 UTF-8 字符串转义为完整 JSON 字符串 token。
+     *
+     * 输入是已接受的字符串字节，不含引号；输出包含双引号，不追加终止字节。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param input 调用期间借用的字符串 UTF-8 字节地址。
+     * @param len 输入字节数。
+     * @param htmlSafe 是否额外转义小于号、大于号、与号、等号和单引号。
+     * @param output 接收带引号 token 的输出区。
+     * @param outputCap 输出区字节容量。
+     * @param outWritten 仅成功时写入完整 token 的字节数。
+     * @return 0 成功、2 容量不足、-1 参数失败；非成功输出不能当作完整 token。
+     */
     func escapeString(input: CPointer<UInt8>, len: Int64, htmlSafe: Bool,
         output: CPointer<UInt8>, outputCap: Int64, outWritten: CPointer<Int64>): Int32
+    /**
+     * 将连续 Int64 值写为紧凑 JSON 数组。
+     *
+     * 输出包含方括号和逗号，不追加终止字节。存储由调用方持有。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param values 调用期间借用的连续 Int64 元素地址。
+     * @param count 输入元素个数，不能为负。
+     * @param output 接收数组文本的输出区首地址。
+     * @param outputCap 整个输出区的字节容量。
+     * @param outputOffset 从输出区首地址起算的写入偏移。
+     * @param outWritten 成功时写入本次数组文本的字节数，不含 outputOffset。
+     * @return 0 成功、2 容量不足、-1 参数失败。
+     */
     func formatInt64Array(values: CPointer<Int64>, count: Int64,
         output: CPointer<UInt8>, outputCap: Int64, outputOffset: Int64,
         outWritten: CPointer<Int64>): Int32
+    /**
+     * 将连续 Float64 值写为紧凑 JSON 数组。
+     *
+     * 输出包含方括号和逗号，不追加终止字节。NaN 或无穷大使原语失败。存储由调用方持有。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param values 调用期间借用的连续 Float64 元素地址。
+     * @param count 输入元素个数，不能为负。
+     * @param output 接收数组文本的输出区首地址。
+     * @param outputCap 整个输出区的字节容量。
+     * @param outputOffset 从输出区首地址起算的写入偏移。
+     * @param outWritten 成功时写入本次数组文本的字节数，不含 outputOffset。
+     * @return 0 成功、2 容量不足、-1 参数失败或遇到非有限浮点数。
+     */
     func formatFloat64Array(values: CPointer<Float64>, count: Int64,
         output: CPointer<UInt8>, outputCap: Int64, outputOffset: Int64,
         outWritten: CPointer<Int64>): Int32
+    /**
+     * 将一个有限 Float64 写入指定输出位置。
+     *
+     * 不写分隔符或终止字节；当前原语要求偏移后至少有 40 字节容量。
+     *
+     * @group 30-first-party-internal 第一方内部接口
+     * @param value 待格式化的有限 Float64。
+     * @param output 调用期间借用的输出区首地址。
+     * @param outputCap 整个输出区的字节容量。
+     * @param outputOffset 从输出区首地址起算的写入偏移。
+     * @return 成功时为本次写入字节数；参数无效、容量不足或值非有限时为 -1。
+     */
     func formatFloat64(value: Float64, output: CPointer<UInt8>, outputCap: Int64,
         outputOffset: Int64): Int64
 }
 
 /**
- * Versioned internal product bundle consumed by yjson_native. Applications
- * configure it only through YJsonNativeAccel.initialize().
+ * 聚合第一方 Native 加速所需的 V1 原语集合。
+ *
+ * 同时提供结构、字符串和数字扫描、浮点转换及写出原语；运行时在 provider 激活成功后一次安装。供第一方包之间调用。
+ *
+ * @group 30-first-party-internal 第一方内部接口
  */
 public interface JsonNativeAccelerationPrimitivesV1 <: JsonNativeScannerBackend &
     JsonNativeNumericScannerBackend & JsonNativeNumericTapeBackend & JsonNativeFloatParserBackend &

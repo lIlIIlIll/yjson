@@ -6,22 +6,27 @@ import std.io.*
  * 不可变的 JSON 格式与输出资源限制。
  *
  * 默认紧凑输出。缩进只能包含空格和制表符，空串表示紧凑格式；maxOutputBytes 为 0 表示不限制，maxDepth 始终必须为正数。
+ * @group 10-application 应用 API
  */
 public class JsonWriteOptions {
     /**
      * 每层缩进；空串表示紧凑格式。
+     * @group 10-application 应用 API
      */
     public let indent: String
     /**
      * 是否额外转义 HTML 敏感字符。
+     * @group 10-application 应用 API
      */
     public let htmlSafe: Bool
     /**
      * 本次输出的 UTF-8 字节上限；0 表示不限制。
+     * @group 10-application 应用 API
      */
     public let maxOutputBytes: Int64
     /**
      * 允许写出的数组和对象嵌套层数上限。
+     * @group 10-application 应用 API
      */
     public let maxDepth: Int64
     let newline: String
@@ -55,6 +60,7 @@ public class JsonWriteOptions {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public init(
         indent!: String = "",
@@ -75,10 +81,12 @@ public class JsonWriteOptions {
 
     /**
      * 共享的默认紧凑格式配置，深度上限 256，输出字节数不设上限。
+     * @group 10-application 应用 API
      */
     public static let defaults: JsonWriteOptions = JsonWriteOptions()
     /**
      * 紧凑格式预设；与 defaults 使用相同的格式和资源默认值。
+     * @group 10-application 应用 API
      */
     public static let compact: JsonWriteOptions = JsonWriteOptions()
 
@@ -97,6 +105,7 @@ public class JsonWriteOptions {
      * ```output
      * true
      * ```
+     * @group 10-application 应用 API
      */
     public static func pretty(indent!: String = "  "): JsonWriteOptions {
         JsonWriteOptions(indent: indent)
@@ -104,6 +113,7 @@ public class JsonWriteOptions {
 
     /**
      * 启用 HTML 敏感字符转义的紧凑格式预设。
+     * @group 10-application 应用 API
      */
     public static let htmlSafePreset: JsonWriteOptions = JsonWriteOptions(htmlSafe: true)
 }

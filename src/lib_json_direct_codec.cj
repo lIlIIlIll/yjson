@@ -10,6 +10,7 @@ import std.time.*
  * 供手写 codec 读取一个 JSON 值的语义接口。
  *
  * 通过 JsonCodec.read 获得 reader。容器必须成对开始与结束；字段名和数组分隔由 reader 管理。读取遵守调用的 JsonReadOptions，错误可带 JSON 路径和源码位置。reader 由 YJson 管理，codec 不应保存或关闭它。
+ * @group 10-application 应用 API
  */
 public interface JsonReader {
     /**
@@ -29,6 +30,7 @@ public interface JsonReader {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func path(): String
     /**
@@ -48,6 +50,7 @@ public interface JsonReader {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func location(): Option<JsonLocation>
     /**
@@ -70,6 +73,7 @@ public interface JsonReader {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func error(message: String, code: String): JsonException
     /**
@@ -90,6 +94,7 @@ public interface JsonReader {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func startObject(): Unit
     /**
@@ -110,6 +115,7 @@ public interface JsonReader {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func endObject(): Unit
     /**
@@ -135,6 +141,7 @@ public interface JsonReader {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func hasObjectField(): Bool
     /**
@@ -158,6 +165,7 @@ public interface JsonReader {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func readName(): String
     /**
@@ -178,6 +186,7 @@ public interface JsonReader {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func startArray(): Unit
     /**
@@ -198,6 +207,7 @@ public interface JsonReader {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func endArray(): Unit
     /**
@@ -222,6 +232,7 @@ public interface JsonReader {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func hasArrayItem(): Bool
     /**
@@ -242,6 +253,7 @@ public interface JsonReader {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func tryReadNull(): Bool
     /**
@@ -261,6 +273,7 @@ public interface JsonReader {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func readNull(): Unit
     /**
@@ -281,6 +294,7 @@ public interface JsonReader {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func readBool(): Bool
     /**
@@ -301,6 +315,7 @@ public interface JsonReader {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func readString(): String
     /**
@@ -320,6 +335,7 @@ public interface JsonReader {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func readInt64(): Int64
     /**
@@ -340,6 +356,7 @@ public interface JsonReader {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func readUInt64(): UInt64
     /**
@@ -360,6 +377,7 @@ public interface JsonReader {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func readFloat64(): Float64
     /**
@@ -380,6 +398,7 @@ public interface JsonReader {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func readBigInt(): BigInt
     /**
@@ -400,6 +419,7 @@ public interface JsonReader {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func readDecimal(): Decimal
     /**
@@ -420,6 +440,7 @@ public interface JsonReader {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func readNumberLiteral(): String
     /**
@@ -439,6 +460,7 @@ public interface JsonReader {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func skipValue(): Unit
     /**
@@ -459,25 +481,55 @@ public interface JsonReader {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func readNode(): JsonNode
 }
 
 /**
- * A captured JSON value that can be replayed without serializing and parsing
- * it again. This is public because generated codecs live in a separate
- * package; applications normally do not need to implement it.
+ * 保存已捕获的 JSON 值，供生成的多态 codec 查询和重放。
+ *
+ * 因生成 codec 位于消费方包而公开。实现可使用 JsonNode 或二进制 tape 保存值，通常由捕获方在 finally 中关闭。关闭后查询、重放和 materialize 都会失败；普通应用无需实现此协议。
+ *
+ * @group 20-generated-spi 生成代码 SPI
  */
 public interface GeneratedReplayValueV1 <: Resource {
+    /**
+     * 读取捕获的根对象中指定名称的字符串字段。
+     *
+     * 字段不存在时返回 None。重复键拒绝在捕获时完成；允许 LastWins 时按该策略查找。查询要求根值为对象，匹配字段为字符串。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param name 待查询的根对象字段名。
+     * @return 存在时返回字段字符串，否则返回 None。
+     * @throws JsonException 根值不是对象，或匹配字段不是字符串。
+     * @throws IllegalStateException 捕获值已经关闭。
+     */
     func rootStringField(name: String): Option<String>
 
     /**
-     * Opens a fresh reader over the captured root object while omitting every
-     * occurrence of `name`. Duplicate rejection has already happened when the
-     * value was captured; LastWins lookup is used by `rootStringField`.
+     * 为捕获的根对象创建省略指定字段的新 reader。
+     *
+     * 省略所有与 name 同名的字段。重复键拒绝已在捕获阶段执行；rootStringField 使用 LastWins 查找。具体实现可复制 tape，或将过滤后的节点重新写为文本再读取。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param name 在新 reader 中省略的根对象字段名。
+     * @return 从过滤后根对象开始读取的新语义 reader。
+     * @throws JsonException 根值不是对象，或过滤后的值在重放时超过读取、写出或节点处理限制。
+     * @throws IllegalStateException 捕获值已经关闭。
      */
     func openObjectReaderExcluding(name: String): JsonReader
 
+    /**
+     * 以 JsonNode 形式取得捕获的完整 JSON 值。
+     *
+     * 不保证深拷贝：节点实现可返回已捕获节点，tape 实现会从 tape 构造节点。调用方需要独立可变副本时应另外复制。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 包含捕获值的 JsonNode，具体实现可能返回已有节点。
+     * @throws JsonException 从捕获表示构造节点时遇到无效数据或资源限制。
+     * @throws IllegalStateException 捕获值已经关闭。
+     */
     func materialize(): JsonNode
 }
 
@@ -485,6 +537,7 @@ public interface GeneratedReplayValueV1 <: Resource {
  * 供手写 codec 输出一个 JSON 值的语义接口。
  *
  * 通过 JsonCodec.write 获得 writer。对象中先写字段名再写值，容器必须成对开始与结束。调用遵守 JsonWriteOptions；非有限浮点数和非法数值字面量会失败。codec 不负责结束文档或关闭调用方的流。
+ * @group 10-application 应用 API
  */
 public interface JsonWriter {
     /**
@@ -504,6 +557,7 @@ public interface JsonWriter {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func path(): String
     /**
@@ -526,6 +580,7 @@ public interface JsonWriter {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func error(message: String, code: String): JsonException
     /**
@@ -544,6 +599,7 @@ public interface JsonWriter {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func startObject(): Unit
     /**
@@ -563,6 +619,7 @@ public interface JsonWriter {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func endObject(): Unit
     /**
@@ -582,6 +639,7 @@ public interface JsonWriter {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func startArray(): Unit
     /**
@@ -601,6 +659,7 @@ public interface JsonWriter {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func endArray(): Unit
     /**
@@ -623,6 +682,7 @@ public interface JsonWriter {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func writeName(name: String): Unit
     /**
@@ -641,6 +701,7 @@ public interface JsonWriter {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func writeNull(): Unit
     /**
@@ -660,6 +721,7 @@ public interface JsonWriter {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func writeBool(value: Bool): Unit
     /**
@@ -679,6 +741,7 @@ public interface JsonWriter {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func writeInt64(value: Int64): Unit
     /**
@@ -698,6 +761,7 @@ public interface JsonWriter {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func writeUInt64(value: UInt64): Unit
     /**
@@ -717,6 +781,7 @@ public interface JsonWriter {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func writeFloat64(value: Float64): Unit
     /**
@@ -736,6 +801,7 @@ public interface JsonWriter {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func writeNumberLiteral(value: String): Unit
     /**
@@ -755,6 +821,7 @@ public interface JsonWriter {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func writeString(value: String): Unit
 }
@@ -762,7 +829,20 @@ public interface JsonWriter {
 // Runtime-owned cursor state used only by the matching generated-code SPI.
 // It is deliberately absent from JsonCodec, JsonReader, and JsonWriter so
 // application codecs never manage mutable path or depth bookkeeping.
+/**
+ * 暴露 writer 所拥有的生成代码写入状态。
+ *
+ * GeneratedSupportV1.writeState 通过此协议取得共享状态。状态属于当前 writer，不应在不同写入调用之间共享。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ */
 public interface GeneratedWriteStateV1Owner {
+    /**
+     * 返回此 writer 本次写入所使用的共享状态。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 记录生成代码字段路径、数组下标和遍历深度的状态对象。
+     */
     func generatedWriteStateV1(): GeneratedWriteStateV1
 }
 
@@ -771,20 +851,114 @@ interface GeneratedReadStateV1Owner {
 }
 
 /**
- * Optional bulk hooks used by generated and built-in codecs. Returning false
- * asks the codec to use the structural `JsonWriter` fallback.
+ * 提供内置 codec 和生成 codec 可选的集合批量写入能力。
+ *
+ * 返回 true 表示已写入完整集合值，返回 false 要求调用方通过 JsonWriter 的结构接口回退。能力实现仍使用当前 writer 的配置与资源限制。
+ *
+ * @group 20-generated-spi 生成代码 SPI
  */
 public interface GeneratedBulkWriterV1 {
+    /**
+     * 尝试将Int64 数组作为完整JSON 数组批量写入。
+     *
+     * 返回 false 时由调用方执行结构化写入回退。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param values 按当前遍历顺序编码为JSON 数组的Int64 数组。
+     * @return 已完成写入时为 true，需要调用方回退时为 false。
+     * @throws JsonException 写入器检测到无效状态、深度或输出限制错误。
+     */
     func tryWriteCompactInt64Array(values: Array<Int64>): Bool
+    /**
+     * 尝试将Float64 数组作为完整JSON 数组批量写入。
+     *
+     * 返回 false 时由调用方执行结构化写入回退。具体 JsonDirectWriter 在发现非有限浮点数时返回 false；结构化回退仍会拒绝该值，tape writer 会在写入时拒绝该值。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param values 按当前遍历顺序编码为JSON 数组的Float64 数组。
+     * @return 已完成写入时为 true，需要调用方回退时为 false。
+     * @throws JsonException 写入器拒绝非有限浮点数，或检测到无效状态、深度或输出限制错误。
+     */
     func tryWriteCompactFloat64Array(values: Array<Float64>): Bool
+    /**
+     * 尝试将字符串数组作为完整JSON 数组批量写入。
+     *
+     * 返回 false 时由调用方执行结构化写入回退。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param values 按当前遍历顺序编码为JSON 数组的字符串数组。
+     * @return 已完成写入时为 true，需要调用方回退时为 false。
+     * @throws JsonException 写入器检测到无效状态、深度或输出限制错误。
+     */
     func tryWriteCompactStringArray(values: Array<String>): Bool
+    /**
+     * 尝试将Int64 列表作为完整JSON 数组批量写入。
+     *
+     * 返回 false 时由调用方执行结构化写入回退。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param values 按当前遍历顺序编码为JSON 数组的Int64 列表。
+     * @return 已完成写入时为 true，需要调用方回退时为 false。
+     * @throws JsonException 写入器检测到无效状态、深度或输出限制错误。
+     */
     func tryWriteCompactInt64ArrayList(values: ArrayList<Int64>): Bool
+    /**
+     * 尝试将字符串列表作为完整JSON 数组批量写入。
+     *
+     * 返回 false 时由调用方执行结构化写入回退。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param values 按当前遍历顺序编码为JSON 数组的字符串列表。
+     * @return 已完成写入时为 true，需要调用方回退时为 false。
+     * @throws JsonException 写入器检测到无效状态、深度或输出限制错误。
+     */
     func tryWriteCompactStringArrayList(values: ArrayList<String>): Bool
+    /**
+     * 尝试将字符串键、Int64 值的映射作为完整JSON 对象批量写入。
+     *
+     * 返回 false 时由调用方执行结构化写入回退。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param values 按当前遍历顺序编码为JSON 对象的字符串键、Int64 值的映射。
+     * @return 已完成写入时为 true，需要调用方回退时为 false。
+     * @throws JsonException 写入器检测到无效状态、深度或输出限制错误。
+     */
     func tryWriteCompactInt64Map(values: HashMap<String, Int64>): Bool
+    /**
+     * 尝试将字符串键、字符串值的映射作为完整JSON 对象批量写入。
+     *
+     * 返回 false 时由调用方执行结构化写入回退。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param values 按当前遍历顺序编码为JSON 对象的字符串键、字符串值的映射。
+     * @return 已完成写入时为 true，需要调用方回退时为 false。
+     * @throws JsonException 写入器检测到无效状态、深度或输出限制错误。
+     */
     func tryWriteCompactStringMap(values: HashMap<String, String>): Bool
+    /**
+     * 尝试将字符串键、Int64 数组值的映射作为完整JSON 对象批量写入。
+     *
+     * 返回 false 时由调用方执行结构化写入回退。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param values 按当前遍历顺序编码为JSON 对象的字符串键、Int64 数组值的映射。
+     * @return 已完成写入时为 true，需要调用方回退时为 false。
+     * @throws JsonException 写入器检测到无效状态、深度或输出限制错误。
+     */
     func tryWriteCompactInt64ArrayMap(values: HashMap<String, Array<Int64>>): Bool
 }
 
+/**
+ * 尝试通过 writer 的批量能力写入Int64 数组。
+ *
+ * writer 实现 GeneratedBulkWriterV1 时转发对应方法，否则返回 false。本函数不执行结构化回退。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param writer 接收当前集合值的语义 writer，可选实现批量写入协议。
+ * @param values 待编码为JSON 数组的Int64 数组。
+ * @return 批量实现的结果；writer 未提供该能力时为 false。
+ * @throws JsonException 写入器检测到无效状态、深度或输出限制错误。
+ */
 public func jsonTryWriteCompactInt64Array(
     writer: JsonWriter,
     values: Array<Int64>
@@ -795,6 +969,17 @@ public func jsonTryWriteCompactInt64Array(
     }
 }
 
+/**
+ * 尝试通过 writer 的批量能力写入Float64 数组。
+ *
+ * writer 实现 GeneratedBulkWriterV1 时转发对应方法，否则返回 false。本函数不执行结构化回退。具体 JsonDirectWriter 在发现非有限浮点数时返回 false；结构化回退仍会拒绝该值，tape writer 会在写入时拒绝该值。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param writer 接收当前集合值的语义 writer，可选实现批量写入协议。
+ * @param values 待编码为JSON 数组的Float64 数组。
+ * @return 批量实现的结果；writer 未提供该能力时为 false。
+ * @throws JsonException 写入器拒绝非有限浮点数，或检测到无效状态、深度或输出限制错误。
+ */
 public func jsonTryWriteCompactFloat64Array(
     writer: JsonWriter,
     values: Array<Float64>
@@ -805,6 +990,17 @@ public func jsonTryWriteCompactFloat64Array(
     }
 }
 
+/**
+ * 尝试通过 writer 的批量能力写入字符串数组。
+ *
+ * writer 实现 GeneratedBulkWriterV1 时转发对应方法，否则返回 false。本函数不执行结构化回退。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param writer 接收当前集合值的语义 writer，可选实现批量写入协议。
+ * @param values 待编码为JSON 数组的字符串数组。
+ * @return 批量实现的结果；writer 未提供该能力时为 false。
+ * @throws JsonException 写入器检测到无效状态、深度或输出限制错误。
+ */
 public func jsonTryWriteCompactStringArray(
     writer: JsonWriter,
     values: Array<String>
@@ -815,6 +1011,17 @@ public func jsonTryWriteCompactStringArray(
     }
 }
 
+/**
+ * 尝试通过 writer 的批量能力写入Int64 列表。
+ *
+ * writer 实现 GeneratedBulkWriterV1 时转发对应方法，否则返回 false。本函数不执行结构化回退。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param writer 接收当前集合值的语义 writer，可选实现批量写入协议。
+ * @param values 待编码为JSON 数组的Int64 列表。
+ * @return 批量实现的结果；writer 未提供该能力时为 false。
+ * @throws JsonException 写入器检测到无效状态、深度或输出限制错误。
+ */
 public func jsonTryWriteCompactInt64ArrayList(
     writer: JsonWriter,
     values: ArrayList<Int64>
@@ -825,6 +1032,17 @@ public func jsonTryWriteCompactInt64ArrayList(
     }
 }
 
+/**
+ * 尝试通过 writer 的批量能力写入字符串列表。
+ *
+ * writer 实现 GeneratedBulkWriterV1 时转发对应方法，否则返回 false。本函数不执行结构化回退。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param writer 接收当前集合值的语义 writer，可选实现批量写入协议。
+ * @param values 待编码为JSON 数组的字符串列表。
+ * @return 批量实现的结果；writer 未提供该能力时为 false。
+ * @throws JsonException 写入器检测到无效状态、深度或输出限制错误。
+ */
 public func jsonTryWriteCompactStringArrayList(
     writer: JsonWriter,
     values: ArrayList<String>
@@ -835,6 +1053,17 @@ public func jsonTryWriteCompactStringArrayList(
     }
 }
 
+/**
+ * 尝试通过 writer 的批量能力写入字符串键、Int64 值的映射。
+ *
+ * writer 实现 GeneratedBulkWriterV1 时转发对应方法，否则返回 false。本函数不执行结构化回退。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param writer 接收当前集合值的语义 writer，可选实现批量写入协议。
+ * @param values 待编码为JSON 对象的字符串键、Int64 值的映射。
+ * @return 批量实现的结果；writer 未提供该能力时为 false。
+ * @throws JsonException 写入器检测到无效状态、深度或输出限制错误。
+ */
 public func jsonTryWriteCompactInt64Map(
     writer: JsonWriter,
     values: HashMap<String, Int64>
@@ -845,6 +1074,17 @@ public func jsonTryWriteCompactInt64Map(
     }
 }
 
+/**
+ * 尝试通过 writer 的批量能力写入字符串键、字符串值的映射。
+ *
+ * writer 实现 GeneratedBulkWriterV1 时转发对应方法，否则返回 false。本函数不执行结构化回退。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param writer 接收当前集合值的语义 writer，可选实现批量写入协议。
+ * @param values 待编码为JSON 对象的字符串键、字符串值的映射。
+ * @return 批量实现的结果；writer 未提供该能力时为 false。
+ * @throws JsonException 写入器检测到无效状态、深度或输出限制错误。
+ */
 public func jsonTryWriteCompactStringMap(
     writer: JsonWriter,
     values: HashMap<String, String>
@@ -855,6 +1095,17 @@ public func jsonTryWriteCompactStringMap(
     }
 }
 
+/**
+ * 尝试通过 writer 的批量能力写入字符串键、Int64 数组值的映射。
+ *
+ * writer 实现 GeneratedBulkWriterV1 时转发对应方法，否则返回 false。本函数不执行结构化回退。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param writer 接收当前集合值的语义 writer，可选实现批量写入协议。
+ * @param values 待编码为JSON 对象的字符串键、Int64 数组值的映射。
+ * @return 批量实现的结果；writer 未提供该能力时为 false。
+ * @throws JsonException 写入器检测到无效状态、深度或输出限制错误。
+ */
 public func jsonTryWriteCompactInt64ArrayMap(
     writer: JsonWriter,
     values: HashMap<String, Array<Int64>>
@@ -869,6 +1120,7 @@ public func jsonTryWriteCompactInt64ArrayMap(
  * 定义 T 与一个 JSON 值之间的双向转换。
  *
  * write 和 read 必须采用相同的表示。实现只处理分配给它的一个值，不关闭流，不结束整个文档。YJson 负责验证输入末尾并完成输出。示例使用 core-codec profile 的 DocCallbackCodec，将回调接入真实 YJson reader/writer。
+ * @group 10-application 应用 API
  */
 public interface JsonCodec<T> {
     /**
@@ -888,6 +1140,7 @@ public interface JsonCodec<T> {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func write(value: T, writer: JsonWriter): Unit
 
@@ -908,124 +1161,348 @@ public interface JsonCodec<T> {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     func read(reader: JsonReader): T
 }
 
+/**
+ * 提供生成对象的字段写入接口及完整值的读写能力。
+ *
+ * writeObjectFields 只输出该 codec 所属对象的字段，供继承字段合并和多态分派使用。外围 codec 负责对象边界及该对象的深度记账。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ */
 public interface GeneratedObjectCodecV1<T> <: JsonCodec<T> {
+    /**
+     * 向已开始的 JSON 对象写入此 codec 所属类型的字段。
+     *
+     * 不写对象的开始和结束标记。生成代码根据字段标注处理名称、可选值和字段 codec，并在需要时维护字段路径。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param value 提供待写字段值的对象。
+     * @param writer 当前对象已开始、可继续接收字段的语义写入器。
+     * @throws JsonException 字段值不能按其 codec 编码，或写入器检测到无效状态、深度或输出限制。
+     */
     func writeObjectFields(value: T, writer: JsonWriter): Unit
 }
 
 /**
- * Zero-state type token that keeps inherited generated-codec providers
- * overloadable without erasing `T`.
+ * 保留类型参数 T 的无状态生成 codec 标记。
+ *
+ * 静态 provider 以此标记作为参数，使继承链上的不同 T 可以形成重载。标记不保存 codec 或读写状态。
+ *
+ * @group 20-generated-spi 生成代码 SPI
  */
 public class GeneratedCodecTokenV1<T> {
     init() {}
 }
 
+/**
+ * 通过静态方法提供 T 的完整 JSON codec。
+ *
+ * 供匹配版本的生成代码和运行时进行类型化分派。生成的具体类型和内置类型可以实现此协议；返回的 codec 负责一个完整 JSON 值的表示。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ */
 public interface GeneratedCodecProviderV1<T> {
+    /**
+     * 返回此类型的完整 JSON codec。
+     *
+     * 生成的 provider 会核对生成协议版本；内置 provider 返回对应的内置 codec。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param _ 携带 T 类型信息、用于区分静态重载的无状态标记。
+     * @return 用于读写一个 T 值的 codec。
+     * @throws JsonException 生成的 provider 检测到运行时协议版本不匹配，code 为 generated_protocol_mismatch。
+     */
     static func generatedCodecV1(_: GeneratedCodecTokenV1<T>): JsonCodec<T>
 }
 
 /**
- * 生成 compact codec 的静态分派接口。显式 codec 参数表达当前能力，
- * 生成的模型类型可通过自身的静态 provider 写入，减少逐值接口分派。
+ * 通过 T 的静态 provider 写入 compact JSON 值。
+ *
+ * 满足相应类型约束的 YJson 重载可直接调用此方法，保留具体生成 codec 的静态分派。调用流程仍需检查 compact 写入条件，并维护深度、路径和输出限制。
+ *
+ * @group 20-generated-spi 生成代码 SPI
  */
 public interface GeneratedCompactCodecProviderV1<T> {
+    /**
+     * 通过此类型的生成 codec 直接写入 compact JSON 值。
+     *
+     * 生成的实现先进入生成代码入口，校验协议并冻结运行时选择，再调用具体 codec 的 writeCompactRawWithWriter。外围流程负责确认 compact 模式并建立写入位置。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param value 待编码的 T 值。
+     * @param writer 当前调用拥有的具体写入器，已准备写入 compact 值。
+     * @throws JsonException 生成协议不匹配、运行时初始化失败、值不能编码，或超过写入深度限制。
+     */
     static func generatedCompactRawV1(value: T, writer: JsonDirectWriter): Unit
 }
 
 /**
- * Typed object-codec bridge used by generated polymorphic dispatch.
+ * 通过静态方法提供具体类型自身的对象 codec。
  *
- * This is deliberately separate from GeneratedCodecProviderV1<T>: a
- * polymorphic base codec performs subtype dispatch, while each concrete
- * subtype must expose its own object fields.
+ * 此协议与完整 codec provider 分开：多态基类 codec 负责子类型选择，具体子类型的对象 codec 暴露其自身字段。继承对象的完整写入流程可组合基类和子类的字段。
+ *
+ * @group 20-generated-spi 生成代码 SPI
  */
 public interface GeneratedObjectCodecProviderV1<T> {
+    /**
+     * 返回此类型自身的对象 codec。
+     *
+     * 生成的 provider 核对生成协议版本后返回具体对象 codec。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param _ 携带 T 类型信息、用于区分静态重载的无状态标记。
+     * @return 可读取对象并向已开始的对象写入自身字段的 codec。
+     * @throws JsonException 生成的 provider 检测到运行时协议版本不匹配，code 为 generated_protocol_mismatch。
+     */
     static func generatedObjectCodecV1(_: GeneratedCodecTokenV1<T>): GeneratedObjectCodecV1<T>
 }
 
+/**
+ * 调用 T 的静态 provider 获取完整 JSON codec。
+ *
+ * 构造 GeneratedCodecTokenV1<T> 后直接调用 T.generatedCodecV1，不保存 codec 缓存或执行读写。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @return T 的静态 provider 返回的 codec。
+ * @throws JsonException 生成的 provider 检测到运行时协议版本不匹配，code 为 generated_protocol_mismatch。
+ */
 public func generatedCodecV1Of<T>(): JsonCodec<T> where T <: GeneratedCodecProviderV1<T> {
     T.generatedCodecV1(GeneratedCodecTokenV1<T>())
 }
 
+/**
+ * 调用 T 的静态 provider 获取其自身的对象 codec。
+ *
+ * 构造 GeneratedCodecTokenV1<T> 后直接调用 T.generatedObjectCodecV1，供继承字段合并和多态分派使用。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @return T 的静态 provider 返回的对象 codec。
+ * @throws JsonException 生成的 provider 检测到运行时协议版本不匹配，code 为 generated_protocol_mismatch。
+ */
 public func generatedObjectCodecV1Of<T>(): GeneratedObjectCodecV1<T>
     where T <: GeneratedObjectCodecProviderV1<T> {
     T.generatedObjectCodecV1(GeneratedCodecTokenV1<T>())
 }
 
 // Kept as an internal optimization surface for the existing built-in codecs.
+/**
+ * 为 codec 增加匹配版本的 fast reader 读取能力。
+ *
+ * 运行时和生成代码在支持的读取选项下选择此能力。该协议仍继承 JsonCodec 的语义读写入口，不表示所有调用都使用 fast reader。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ */
 public interface GeneratedCodecV1<T> <: JsonCodec<T> {
+    /**
+     * 通过匹配版本的 fast reader 解码一个 T 值。
+     *
+     * 只消费当前值；外围调用负责检查文档末尾。实现需保留与自身语义读取入口一致的值表示，并维护生成读取状态。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param reader 当前定位在待解码值的匹配版本 reader。
+     * @return 从当前 JSON 值解码得到的 T 值。
+     * @throws JsonException 输入语法、类型或数值范围不符合 codec 契约，超过读取限制，或生成 reader 与运行时协议不匹配。
+     */
     func readFast(reader: GeneratedSupportV1Reader): T
 }
 /**
- * Optional concrete-reader seam for recursive generated fast decoding.
- * Generic containers use it only when every nested codec opts in; the
- * versioned reader overload remains the compatibility fallback.
+ * 为递归 codec 提供具体 JsonFastReader 读取入口。
+ *
+ * 泛型容器在内层 codec 也提供此能力时直接递归调用。内层缺少该能力时，当前容器实现转到 cursor 读取路径，再按已解析的内层能力调用。
+ *
+ * @group 20-generated-spi 生成代码 SPI
  */
 public interface GeneratedDirectFastReadCodecV1<T> <: JsonCodec<T> {
+    /**
+     * 保留具体 reader 类型并解码一个 T 值。
+     *
+     * 容器实现优先复用内层的具体 reader 能力；缺少该能力时转入自身的 cursor 读取路径。只消费当前值，不检查整个文档末尾。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param reader 当前定位在待解码值的具体 fast reader。
+     * @return 从当前 JSON 值解码得到的 T 值。
+     * @throws JsonException 输入不符合 codec 的 JSON 表示，超过读取限制，或嵌套 codec 读取失败。
+     */
     func readFastDirect(reader: JsonFastReader): T
 }
 
 /**
- * Opt-in generated-code seam for codecs that can consume an already-resolved
- * reader cursor. Recursive codecs pass the same cursor through the whole
- * value graph and use GeneratedCodecV1 only as a compatibility fallback.
+ * 为 codec 提供复用已解析读取 cursor 的入口。
+ *
+ * 递归调用可向内层传递同一个 cursor。当前容器优先使用内层的 cursor 能力，缺少时调用其匹配版本 fast 入口；生成字段读取也按已解析能力选择对应路径。
+ *
+ * @group 20-generated-spi 生成代码 SPI
  */
 public interface GeneratedCursorReadCodecV1<T> <: JsonCodec<T> {
+    /**
+     * 使用与 reader 对应的现有 cursor 解码一个 T 值。
+     *
+     * 调用方传入同一次读取的 reader 和 cursor，递归实现可继续复用 cursor。此方法只消费当前值。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param reader 拥有当前读取配置、路径和深度状态的匹配版本 reader。
+     * @param cursor 由同一 reader 解析得到、定位在当前值的读取 cursor。
+     * @return 从当前 JSON 值解码得到的 T 值。
+     * @throws JsonException 输入不符合 codec 的 JSON 表示，超过读取限制，或生成 reader 与运行时协议不匹配。
+     */
     func readFastWithCursor(reader: GeneratedSupportV1Reader,
         cursor: GeneratedSupportV1ReadCursor): T
 }
 
 /**
- * Matching-version bridge used by generated codecs to retain the concrete
- * direct-writer type across nested semantic encode calls.
+ * 为 codec 增加保留匹配版本 writer 的写入入口。
+ *
+ * 生成代码通过此入口传递 writer，并按 codec 能力和写入配置选择 compact 或语义写入。
+ *
+ * @group 20-generated-spi 生成代码 SPI
  */
 public interface GeneratedDirectWriteCodecV1<T> <: JsonCodec<T> {
+    /**
+     * 通过匹配版本 writer 写入一个 T 值。
+     *
+     * 生成对象和容器实现会先检查 compact 能力与格式条件；条件不满足时继续使用相同 writer 的语义结构接口。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param value 待编码的 T 值。
+     * @param writer 接收当前值并保存本次写入状态的匹配版本 writer。
+     * @throws JsonException 值不能按 codec 表示编码，或写入器检测到无效状态、深度或输出限制。
+     */
     func writeDirect(value: T, writer: GeneratedSupportV1Writer): Unit
 }
 
 /**
- * Matching-version generated-code bridge for objects whose fields can be
- * emitted directly in compact mode without bypassing encode context checks.
+ * 为 codec 增加可查询的 compact raw 写入能力。
+ *
+ * 能力检查覆盖嵌套 codec 是否支持所需写入路径；writer 的格式条件由外围调用另行检查。compact 写入仍须维护编码上下文。
+ *
+ * @group 20-generated-spi 生成代码 SPI
  */
 public interface GeneratedCompactWriteCodecV1<T> <: GeneratedDirectWriteCodecV1<T> {
+    /**
+     * 报告此 codec 及所需嵌套 codec 是否支持 compact raw 写入。
+     *
+     * 此查询不检查具体 writer 的缩进、空格或 htmlSafe 配置。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 具备所需 compact raw 能力时为 true，否则为 false。
+     */
     func supportsCompactRaw(): Bool
+    /**
+     * 按已确认的能力写入一个 compact raw 值。
+     *
+     * 调用方须先确认 supportsCompactRaw，并使 writer 处于允许 compact 值的写入位置。此入口不负责选择语义回退路径。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param value 待编码的 T 值。
+     * @param writer 已准备接收 compact raw 值的匹配版本 writer。
+     * @throws JsonException 嵌套 compact 能力不可用、值不能编码，或发生深度、写入状态及输出限制错误。
+     */
     func writeCompactRaw(value: T, writer: GeneratedSupportV1Writer): Unit
 }
 
 /**
- * Opt-in generated-code seam for custom and recursive codecs that can emit a
- * compact value through an already-resolved writer cursor.
+ * 为 codec 提供复用现有 writer cursor 的 compact 写入能力。
+ *
+ * 自定义 codec 和递归 codec 可复用同一个 cursor。调用方先查询能力，并另行检查 writer 是否允许 compact 输出。
+ *
+ * @group 20-generated-spi 生成代码 SPI
  */
 public interface GeneratedCursorWriteCodecV1<T> <: JsonCodec<T> {
+    /**
+     * 报告此 codec 是否可以使用已有 cursor 写入 compact 值。
+     *
+     * 当前容器还会根据内层 codec 的对应能力计算结果；此查询不检查具体 writer 的格式配置。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 具备所需 cursor compact 写入能力时为 true，否则为 false。
+     */
     func supportsCompactCursorWrite(): Bool
+    /**
+     * 通过与 writer 对应的现有 cursor 写入一个 compact 值。
+     *
+     * 调用方须先确认 supportsCompactCursorWrite，并准备当前值的 compact 写入位置。递归实现可将同一个 cursor 继续传给内层 codec。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param value 待编码的 T 值。
+     * @param writer 拥有本次写入配置、路径和深度状态的匹配版本 writer。
+     * @param cursor 由同一 writer 解析得到、接收当前值的写入 cursor。
+     * @throws JsonException 嵌套 compact 能力不可用、值不能编码，或发生深度、写入状态及输出限制错误。
+     */
     func writeCompactWithCursor(value: T, writer: GeneratedSupportV1Writer,
         cursor: GeneratedSupportV1WriteCursor): Unit
 }
 
 /**
- * Optional generated-code seam for nested compact objects. It refines the
- * general cursor protocol, so statically compact generated codecs need only
- * advertise one interface while remaining usable by generic containers.
+ * 组合生成对象的 compact 写入、cursor 写入和 fast 读取能力。
+ *
+ * 静态支持 compact 的生成对象可通过一个接口暴露这些能力，供 YJson 的特定重载和泛型容器调用。该接口还增加具体 JsonDirectWriter 的写入入口。
+ *
+ * @group 20-generated-spi 生成代码 SPI
  */
 public interface GeneratedCompactCursorWriteCodecV1<T> <:
     GeneratedCompactWriteCodecV1<T> & GeneratedCursorWriteCodecV1<T> &
     GeneratedCodecV1<T> & GeneratedCursorReadCodecV1<T> {
+    /**
+     * 使用现有 cursor 输出生成对象的 compact JSON 值。
+     *
+     * 生成实现增加当前对象的深度，写入对象边界及字段，并在 finally 中归还深度。需要路径信息的嵌套字段在调用前后成对压入和弹出字段路径。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param value 提供待写字段值的对象。
+     * @param writer 拥有本次编码状态的匹配版本 writer。
+     * @param cursor 由同一 writer 解析得到的写入 cursor。
+     * @throws JsonException 字段值不能编码、嵌套 compact 能力不可用，或发生深度、写入状态及输出限制错误。
+     */
     func writeCompactRawWithCursor(value: T, writer: GeneratedSupportV1Writer,
         cursor: GeneratedSupportV1WriteCursor): Unit
+    /**
+     * 通过具体 JsonDirectWriter 输出生成对象的 compact JSON 值。
+     *
+     * 生成实现保留具体 writer 类型，写入对象边界及字段，并维护当前对象深度与需要的字段路径。外围流程负责确认 compact 写入条件。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param value 提供待写字段值的对象。
+     * @param writer 已准备接收 compact 值的具体 writer。
+     * @throws JsonException 字段值不能编码，或发生深度、写入状态及输出限制错误。
+     */
     func writeCompactRawWithWriter(value: T, writer: JsonDirectWriter): Unit
 }
 /**
- * Optional generated-code bulk seam. ArrayList resolves it once so an
- * element codec can reuse one writer cursor across the complete loop.
+ * 为元素 codec 提供整个 ArrayList 的 compact 批量写入入口。
+ *
+ * ArrayList codec 在构造时解析此可选能力，写入时可让元素 codec 为完整循环复用一个 writer cursor。
+ *
+ * @group 20-generated-spi 生成代码 SPI
  */
 public interface GeneratedCompactArrayListElementCodecV1<T> {
+    /**
+     * 将列表写为 compact JSON 数组，并在元素间复用 cursor。
+     *
+     * 生成实现为数组计入一层深度，按列表顺序写入元素，并维护当前数组下标路径；每个元素仍由该元素 codec 写入。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param value 按当前列表顺序编码的元素集合。
+     * @param writer 已准备接收 compact 数组值的匹配版本 writer。
+     * @throws JsonException 元素不能编码，或发生深度、写入状态及输出限制错误。
+     */
     func writeCompactRawArrayList(value: ArrayList<T>, writer: GeneratedSupportV1Writer): Unit
 }
 
+/**
+ * 根据 codec 能力选择匹配版本写入或普通语义写入。
+ *
+ * codec 实现 GeneratedDirectWriteCodecV1 时调用 writeDirect，否则调用 codec.write。此函数不自行选择 compact 格式，也不结束整个文档。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param codec 决定当前值 JSON 表示的 codec。
+ * @param value 待编码的值。
+ * @param writer 接收当前值的匹配版本 writer，同时可作为 JsonWriter 使用。
+ * @throws JsonException 被调用的 codec 或 writer 拒绝值、状态或资源限制。
+ */
 public func writeJsonDirectWith<T>(
     codec: JsonCodec<T>,
     value: T,
@@ -1037,30 +1514,95 @@ public func writeJsonDirectWith<T>(
     }
 }
 
+/**
+ * 在 writer 格式允许时为一个 compact raw 值建立写入位置。
+ *
+ * 直接转发 writer 的对应能力。JsonDirectWriter 在多行、分隔符后带空格或 htmlSafe 模式下返回 false；成功时执行当前值的状态转换并预留 raw 根位置。返回 false 后由调用方选择语义写入。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param writer 即将接收当前值的匹配版本 writer。
+ * @return 已建立 compact raw 写入位置时为 true，格式条件不允许时为 false。
+ * @throws JsonException writer 已有根值、对象缺少字段名，或当前写入状态无效。
+ */
 public func jsonTryBeginGeneratedCompactRawValue(writer: GeneratedSupportV1Writer): Bool {
     writer.tryBeginGeneratedCompactRawValue()
 }
 
+/**
+ * 写入 compact 对象的开始标记。
+ *
+ * 直接转发 writer 的 raw 容器入口。调用方负责成对结束容器及生成上下文的深度和路径记账。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param writer 接收当前 raw 对象的匹配版本 writer。
+ * @throws JsonException 超过容器深度限制，或 writer 当前状态不允许开始该值。
+ */
 public func jsonWriteGeneratedCompactObjectBegin(writer: GeneratedSupportV1Writer): Unit {
     writer.writeRawBeginObject()
 }
 
+/**
+ * 写入 compact 对象的结束标记。
+ *
+ * 直接转发 writer 的 raw 容器结束入口。调用方负责与开始标记配对，不能以此代替生成上下文的 leaveValue。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param writer 当前 raw 对象尚未结束的匹配版本 writer。
+ * @throws JsonException raw 容器栈为空，或当前写入路径检测到容器结束标记不匹配。
+ */
 public func jsonWriteGeneratedCompactObjectEnd(writer: GeneratedSupportV1Writer): Unit {
     writer.writeRawEndObject()
 }
 
+/**
+ * 写入 compact 数组的开始标记。
+ *
+ * 直接转发 writer 的 raw 容器入口。调用方负责成对结束容器及生成上下文的深度和路径记账。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param writer 接收当前 raw 数组的匹配版本 writer。
+ * @throws JsonException 超过容器深度限制，或 writer 当前状态不允许开始该值。
+ */
 public func jsonWriteGeneratedCompactArrayBegin(writer: GeneratedSupportV1Writer): Unit {
     writer.writeRawBeginArray()
 }
 
+/**
+ * 写入 compact 数组的结束标记。
+ *
+ * 直接转发 writer 的 raw 容器结束入口。调用方负责与开始标记配对，不能以此代替生成上下文的 leaveValue。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param writer 当前 raw 数组尚未结束的匹配版本 writer。
+ * @throws JsonException raw 容器栈为空，或当前写入路径检测到容器结束标记不匹配。
+ */
 public func jsonWriteGeneratedCompactArrayEnd(writer: GeneratedSupportV1Writer): Unit {
     writer.writeRawEndArray()
 }
 
+/**
+ * 直接向 compact raw 输出写入逗号。
+ *
+ * 不判断是否为第一个元素，也不更新语义容器计数。调用方负责将逗号放在合法的成员或元素之间。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param writer 接收 raw 逗号字节的匹配版本 writer。
+ */
 public func jsonWriteGeneratedCompactComma(writer: GeneratedSupportV1Writer): Unit {
     writer.writeRawByte(b',')
 }
 
+/**
+ * 写入 compact 对象字段名及冒号，并按需要补逗号。
+ *
+ * 字段名通过 writer 的字符串转义逻辑写出。调用方随后仍须写入该字段的值，并将返回值保存为下一次调用的 first。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param writer 接收当前 raw 对象字段的匹配版本 writer。
+ * @param first 当前字段是对象首个输出字段时为 true，否则为 false。
+ * @param name 待转义写出的 JSON 字段名。
+ * @return false，表示对象已经写入一个字段名。
+ */
 public func jsonWriteGeneratedCompactObjectEntryName(
     writer: GeneratedSupportV1Writer,
     first: Bool,
@@ -1069,6 +1611,18 @@ public func jsonWriteGeneratedCompactObjectEntryName(
     writer.writeRawObjectEntryName(first, name)
 }
 
+/**
+ * 写入 compact 对象的字段名和字符串值。
+ *
+ * 根据 first 补写逗号，再通过 writer 写出转义后的字段名与对应值。调用方将返回值作为下一字段的 first，并维护需要的字段路径。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param writer 接收当前 raw 对象字段的匹配版本 writer。
+ * @param first 当前字段是对象首个输出字段时为 true，否则为 false。
+ * @param name 待转义写出的 JSON 字段名。
+ * @param value 当前字段的字符串值。
+ * @return false，表示对象已经写入一个完整字段。
+ */
 public func jsonWriteGeneratedCompactObjectEntryString(
     writer: GeneratedSupportV1Writer,
     first: Bool,
@@ -1078,6 +1632,18 @@ public func jsonWriteGeneratedCompactObjectEntryString(
     writer.writeRawObjectEntryNameString(first, name, value)
 }
 
+/**
+ * 写入 compact 对象的字段名和布尔值。
+ *
+ * 根据 first 补写逗号，再通过 writer 写出转义后的字段名与对应值。调用方将返回值作为下一字段的 first，并维护需要的字段路径。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param writer 接收当前 raw 对象字段的匹配版本 writer。
+ * @param first 当前字段是对象首个输出字段时为 true，否则为 false。
+ * @param name 待转义写出的 JSON 字段名。
+ * @param value 当前字段的布尔值。
+ * @return false，表示对象已经写入一个完整字段。
+ */
 public func jsonWriteGeneratedCompactObjectEntryBool(
     writer: GeneratedSupportV1Writer,
     first: Bool,
@@ -1087,6 +1653,18 @@ public func jsonWriteGeneratedCompactObjectEntryBool(
     writer.writeRawObjectEntryNameBool(first, name, value)
 }
 
+/**
+ * 写入 compact 对象的字段名和Int64 整数值。
+ *
+ * 根据 first 补写逗号，再通过 writer 写出转义后的字段名与对应值。调用方将返回值作为下一字段的 first，并维护需要的字段路径。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param writer 接收当前 raw 对象字段的匹配版本 writer。
+ * @param first 当前字段是对象首个输出字段时为 true，否则为 false。
+ * @param name 待转义写出的 JSON 字段名。
+ * @param value 当前字段的Int64 整数值。
+ * @return false，表示对象已经写入一个完整字段。
+ */
 public func jsonWriteGeneratedCompactObjectEntryInt64(
     writer: GeneratedSupportV1Writer,
     first: Bool,
@@ -1096,6 +1674,18 @@ public func jsonWriteGeneratedCompactObjectEntryInt64(
     writer.writeRawObjectEntryNameInt64(first, name, value)
 }
 
+/**
+ * 写入 compact 对象的字段名和UInt64 整数值。
+ *
+ * 根据 first 补写逗号，再通过 writer 写出转义后的字段名与对应值。调用方将返回值作为下一字段的 first，并维护需要的字段路径。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param writer 接收当前 raw 对象字段的匹配版本 writer。
+ * @param first 当前字段是对象首个输出字段时为 true，否则为 false。
+ * @param name 待转义写出的 JSON 字段名。
+ * @param value 当前字段的UInt64 整数值。
+ * @return false，表示对象已经写入一个完整字段。
+ */
 public func jsonWriteGeneratedCompactObjectEntryUInt64(
     writer: GeneratedSupportV1Writer,
     first: Bool,
@@ -1105,6 +1695,19 @@ public func jsonWriteGeneratedCompactObjectEntryUInt64(
     writer.writeRawObjectEntryNameUInt64(first, name, value)
 }
 
+/**
+ * 写入 compact 对象的字段名和Float64 数字值。
+ *
+ * 根据 first 补写逗号，再通过 writer 写出转义后的字段名与对应值。调用方将返回值作为下一字段的 first，并维护需要的字段路径。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param writer 接收当前 raw 对象字段的匹配版本 writer。
+ * @param first 当前字段是对象首个输出字段时为 true，否则为 false。
+ * @param name 待转义写出的 JSON 字段名。
+ * @param value 当前字段的Float64 数字值。
+ * @return false，表示对象已经写入一个完整字段。
+ * @throws JsonException value 为 NaN 或无穷大，不能表示为 JSON 数字。
+ */
 public func jsonWriteGeneratedCompactObjectEntryFloat64(
     writer: GeneratedSupportV1Writer,
     first: Bool,
@@ -1292,6 +1895,13 @@ private struct GeneratedTraversalStateV1 {
     }
 }
 
+/**
+ * 记录一次生成代码写入过程的路径与遍历深度。
+ *
+ * 由配套运行时 writer 创建并持有，深度上限来自本次写入选项。路径与深度分别记账，压入路径不会增加深度；生成代码需成对退出已经进入的值。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ */
 public class GeneratedWriteStateV1 {
     private var traversal: GeneratedTraversalStateV1
 
@@ -1299,10 +1909,49 @@ public class GeneratedWriteStateV1 {
         traversal = GeneratedTraversalStateV1(config.maxDepth)
     }
 
+    /**
+     * 将字段名加入当前错误路径。
+     *
+     * 若运行时刚自动压入同名字段位置，则接管该位置，避免重复路径片段；否则追加新片段。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param name 当前处理字段的 JSON 名称。
+     */
     public func pushField(name: String): Unit { traversal.pushField(name) }
+    /**
+     * 将数组下标加入当前错误路径。
+     *
+     * 若运行时刚自动压入相同数组位置，则接管该位置，避免重复路径片段；否则追加新片段。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param index 当前处理元素从 0 开始的数组下标。
+     */
     public func pushIndex(index: Int64): Unit { traversal.pushIndex(index) }
+    /**
+     * 移除当前路径的最后一个片段。
+     *
+     * 路径为空时不执行操作。此方法不减少遍历深度。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     */
     public func popPath(): Unit { traversal.popPath() }
+    /**
+     * 将当前路径的最后一个片段改为字段名。
+     *
+     * 用于字段循环复用现有片段；路径为空时不执行操作。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param name 替换最后一个路径片段的 JSON 字段名。
+     */
     public func updateLastField(name: String): Unit { traversal.updateLastField(name) }
+    /**
+     * 将当前路径的最后一个片段改为数组下标。
+     *
+     * 用于元素循环复用现有片段；路径为空时不执行操作。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param index 替换最后一个路径片段的从 0 开始的数组下标。
+     */
     public func updateLastIndex(index: Int64): Unit { traversal.updateLastIndex(index) }
 
     func pathDepth(): Int64 { traversal.pathDepth() }
@@ -1315,14 +1964,60 @@ public class GeneratedWriteStateV1 {
     func beginAutoValue(pushed: Bool): Unit { traversal.beginAutoValue(pushed) }
     func completeAutoValue(pushed: Bool): Unit { traversal.completeAutoValue(pushed) }
 
+    /**
+     * 在深度上限内进入一层生成值遍历。
+     *
+     * 先检查当前深度是否已达到选项中的 maxDepth，通过后才增加深度。成功进入后应在 finally 中调用 leaveValue。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @throws JsonException 当前深度已达到 maxDepth，code 为 max_depth，错误携带当前路径。
+     */
     public func enterValue(): Unit { traversal.enterValue() }
+    /**
+     * 退出一层已进入的生成值遍历。
+     *
+     * 当前深度大于 0 时减 1；深度为 0 时不执行操作。此方法不修改路径。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     */
     public func leaveValue(): Unit { traversal.leaveValue() }
+    /**
+     * 为一个待写对象进入一层生成值遍历。
+     *
+     * 当前实现只执行与 enterValue 相同的深度检查和递增，不使用对象身份进行环检测。成功进入后应在 finally 中调用 leaveObject。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param value 当前待写对象；此参数不参与深度计算。
+     * @throws JsonException 当前深度已达到 maxDepth，code 为 max_depth，错误携带当前路径。
+     */
     public func enterObject<T>(value: T): Unit { let _ = value; traversal.enterValue() }
+    /**
+     * 归还 enterObject 计入的一层深度。
+     *
+     * 当前深度大于 0 时减 1；深度为 0 时不执行操作。此方法不修改字段路径。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     */
     public func leaveObject(): Unit { traversal.leaveValue() }
+    /**
+     * 返回当前路径的 JSON Pointer 文本。
+     *
+     * 根路径为空字符串；字段名中的 ~ 转义为 ~0，/ 转义为 ~1，数组位置使用十进制下标。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 由当前字段和数组位置组成的 JSON Pointer；根位置为 ""。
+     */
     public func currentPath(): String { traversal.currentPath() }
     func resetForReuse(): Unit { traversal.reset() }
 }
 
+/**
+ * 记录一次生成代码读取过程的路径与遍历深度。
+ *
+ * 由配套运行时 reader 创建并持有，深度上限来自本次读取选项。路径与深度分别记账，压入路径不会增加深度；生成代码需成对退出已经进入的值。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ */
 public class GeneratedReadStateV1 {
     private var traversal: GeneratedTraversalStateV1
 
@@ -1330,8 +2025,31 @@ public class GeneratedReadStateV1 {
         traversal = GeneratedTraversalStateV1(config.maxDepth)
     }
 
+    /**
+     * 将字段名加入当前错误路径。
+     *
+     * 若运行时刚自动压入同名字段位置，则接管该位置，避免重复路径片段；否则追加新片段。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param name 当前处理字段的 JSON 名称。
+     */
     public func pushField(name: String): Unit { traversal.pushField(name) }
+    /**
+     * 将数组下标加入当前错误路径。
+     *
+     * 若运行时刚自动压入相同数组位置，则接管该位置，避免重复路径片段；否则追加新片段。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param index 当前处理元素从 0 开始的数组下标。
+     */
     public func pushIndex(index: Int64): Unit { traversal.pushIndex(index) }
+    /**
+     * 移除当前路径的最后一个片段。
+     *
+     * 路径为空时不执行操作。此方法不减少遍历深度。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     */
     public func popPath(): Unit { traversal.popPath() }
     func updateLastField(name: String): Unit { traversal.updateLastField(name) }
     func updateLastIndex(index: Int64): Unit { traversal.updateLastIndex(index) }
@@ -1346,9 +2064,40 @@ public class GeneratedReadStateV1 {
     func beginAutoValue(pushed: Bool): Unit { traversal.beginAutoValue(pushed) }
     func completeAutoValue(pushed: Bool): Unit { traversal.completeAutoValue(pushed) }
 
+    /**
+     * 在深度上限内进入一层生成值遍历。
+     *
+     * 先检查当前深度是否已达到选项中的 maxDepth，通过后才增加深度。成功进入后应在 finally 中调用 leaveValue。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @throws JsonException 当前深度已达到 maxDepth，code 为 max_depth，错误携带当前路径。
+     */
     public func enterValue(): Unit { traversal.enterValue() }
+    /**
+     * 退出一层已进入的生成值遍历。
+     *
+     * 当前深度大于 0 时减 1；深度为 0 时不执行操作。此方法不修改路径。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     */
     public func leaveValue(): Unit { traversal.leaveValue() }
+    /**
+     * 返回当前生成值遍历尚可进入的层数。
+     *
+     * 结果为配置的 maxDepth 减去已进入且尚未退出的层数，不表示剩余节点数或未读取输入的实际深度。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 本次读取的深度上限减去当前遍历深度。
+     */
     public func remainingDepth(): Int64 { traversal.remainingDepth() }
+    /**
+     * 返回当前路径的 JSON Pointer 文本。
+     *
+     * 根路径为空字符串；字段名中的 ~ 转义为 ~0，/ 转义为 ~1，数组位置使用十进制下标。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 由当前字段和数组位置组成的 JSON Pointer；根位置为 ""。
+     */
     public func currentPath(): String { traversal.currentPath() }
 }
 
@@ -1434,6 +2183,17 @@ class LambdaFastRawJsonCodec<T> <: GeneratedCodecV1<T> &
     }
 }
 
+/**
+ * 要求 codec 通过匹配版本的 fast 入口解码当前值。
+ *
+ * 先取得运行时读取状态，再检查 codec 是否实现 GeneratedCodecV1。缺少该能力时抛出错误，不自动调用语义 read，也不检查文档末尾。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param codec 必须提供 GeneratedCodecV1 读取能力的 codec。
+ * @param reader 定位在当前值、由匹配运行时拥有的生成 reader。
+ * @return fast 入口从当前 JSON 值解码得到的值。
+ * @throws JsonException codec 缺少 fast 能力时 code 为 codec_contract；reader 协议不匹配或实际解码失败时也会抛出。
+ */
 public func readJsonFastWith<T>(codec: JsonCodec<T>, reader: GeneratedSupportV1Reader): T {
     let context = GeneratedSupportV1.readState(reader)
     match (codec) {
@@ -2515,6 +3275,16 @@ private class StringArrayListJsonCodec <: GeneratedCodecV1<ArrayList<String>> &
 
 // Concrete generated-code bridges. They are public only because macro output
 // may live in a consumer package; ordinary users should use YJson codecs.
+/**
+ * 将当前 JSON 数组解码为字符串列表。
+ *
+ * 为数组计入一层生成读取深度，并在 finally 中归还。使用语义数组入口，按输入顺序逐项读取字符串。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param reader 定位在当前值、由运行时拥有的语义 reader。
+ * @return 按输入顺序构造的新字符串列表。
+ * @throws JsonException reader 不由运行时拥有，或读取值的语法、类型、范围及资源限制不符合要求。
+ */
 public func __yJsonReadStringArrayList(reader: JsonReader): ArrayList<String> {
     let context = GeneratedSupportV1.readState(reader)
     let _ = context
@@ -2532,6 +3302,16 @@ public func __yJsonReadStringArrayList(reader: JsonReader): ArrayList<String> {
     }
 }
 
+/**
+ * 将当前 JSON 数组解码为字符串列表。
+ *
+ * 为数组计入一层生成读取深度，并在 finally 中归还。使用 raw 数组和字符串入口，并按 reader 提示选择初始容量。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param reader 定位在当前值的匹配版本生成 reader。
+ * @return 按输入顺序构造的新字符串列表。
+ * @throws JsonException reader 与运行时协议不匹配，或读取值的语法、类型、范围及资源限制不符合要求。
+ */
 public func __yJsonReadFastStringArrayList(reader: GeneratedSupportV1Reader): ArrayList<String> {
 
     let context = GeneratedSupportV1.readState(reader)
@@ -2558,6 +3338,16 @@ public func __yJsonReadFastStringArrayList(reader: GeneratedSupportV1Reader): Ar
     }
 }
 
+/**
+ * 通过内置字符串列表 codec 写入一个 JSON 数组。
+ *
+ * 先取得运行时写入状态，再调用 JsonCodecs.arrayList(JsonCodecs.string).write；实际 codec 选择批量能力或结构化写入。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param value 按当前列表顺序写出的字符串集合。
+ * @param writer 接收当前数组值、由运行时拥有的语义 writer。
+ * @throws JsonException writer 不由运行时拥有，或发生深度、写入状态及输出限制错误。
+ */
 public func __yJsonWriteStringArrayList(
     value: ArrayList<String>,
     writer: JsonWriter
@@ -2569,6 +3359,16 @@ public func __yJsonWriteStringArrayList(
     JsonCodecs.arrayList(JsonCodecs.string).write(value, writer)
 }
 
+/**
+ * 将可选字符串写为标量或 JSON null。
+ *
+ * Some 写入所包含的标量，None 写入 null。先取得运行时写入状态，再调用语义 writer。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param value 待编码的可选字符串值。
+ * @param writer 接收当前值、由运行时拥有的语义 writer。
+ * @throws JsonException writer 不由运行时拥有，或当前写入状态及输出限制不允许写入该值。
+ */
 public func __yJsonWriteStringOption(value: Option<String>, writer: JsonWriter): Unit {
 
     let context = GeneratedSupportV1.writeState(writer)
@@ -2581,6 +3381,16 @@ public func __yJsonWriteStringOption(value: Option<String>, writer: JsonWriter):
     }
 }
 
+/**
+ * 将 JSON null 或字符串解码为可选值。
+ *
+ * null 返回 None，其他输入必须能按对应标量类型读取。只消费当前值，不检查文档末尾。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param reader 定位在当前值、由运行时拥有的语义 reader。
+ * @return null 对应 None，字符串对应 Some。
+ * @throws JsonException reader 不由运行时拥有，或读取值的语法、类型、范围及资源限制不符合要求。
+ */
 public func __yJsonReadStringOption(reader: JsonReader): Option<String> {
 
     let context = GeneratedSupportV1.readState(reader)
@@ -2594,6 +3404,16 @@ public func __yJsonReadStringOption(reader: JsonReader): Option<String> {
     }
 }
 
+/**
+ * 将 JSON null 或字符串解码为可选值。
+ *
+ * null 返回 None，其他输入必须能按对应标量类型读取。只消费当前值，不检查文档末尾。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param reader 定位在当前值的匹配版本生成 reader。
+ * @return null 对应 None，字符串对应 Some。
+ * @throws JsonException reader 与运行时协议不匹配，或读取值的语法、类型、范围及资源限制不符合要求。
+ */
 public func __yJsonReadFastStringOption(reader: GeneratedSupportV1Reader): Option<String> {
 
     let context = GeneratedSupportV1.readState(reader)
@@ -2607,6 +3427,16 @@ public func __yJsonReadFastStringOption(reader: GeneratedSupportV1Reader): Optio
     }
 }
 
+/**
+ * 将可选Int64 整数写为标量或 JSON null。
+ *
+ * Some 写入所包含的标量，None 写入 null。先取得运行时写入状态，再调用语义 writer。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param value 待编码的可选Int64 整数值。
+ * @param writer 接收当前值、由运行时拥有的语义 writer。
+ * @throws JsonException writer 不由运行时拥有，或当前写入状态及输出限制不允许写入该值。
+ */
 public func __yJsonWriteInt64Option(value: Option<Int64>, writer: JsonWriter): Unit {
     let context = GeneratedSupportV1.writeState(writer)
     let _ = context
@@ -2616,6 +3446,16 @@ public func __yJsonWriteInt64Option(value: Option<Int64>, writer: JsonWriter): U
     }
 }
 
+/**
+ * 将 JSON null 或Int64 整数解码为可选值。
+ *
+ * null 返回 None，其他输入必须能按对应标量类型读取。只消费当前值，不检查文档末尾。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param reader 定位在当前值、由运行时拥有的语义 reader。
+ * @return null 对应 None，Int64 整数对应 Some。
+ * @throws JsonException reader 不由运行时拥有，或读取值的语法、类型、范围及资源限制不符合要求。
+ */
 public func __yJsonReadInt64Option(reader: JsonReader): Option<Int64> {
     let context = GeneratedSupportV1.readState(reader)
     let _ = context
@@ -2626,6 +3466,16 @@ public func __yJsonReadInt64Option(reader: JsonReader): Option<Int64> {
     }
 }
 
+/**
+ * 将 JSON null 或Int64 整数解码为可选值。
+ *
+ * null 返回 None，其他输入必须能按对应标量类型读取。只消费当前值，不检查文档末尾。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param reader 定位在当前值的匹配版本生成 reader。
+ * @return null 对应 None，Int64 整数对应 Some。
+ * @throws JsonException reader 与运行时协议不匹配，或读取值的语法、类型、范围及资源限制不符合要求。
+ */
 public func __yJsonReadFastInt64Option(reader: GeneratedSupportV1Reader): Option<Int64> {
     let context = GeneratedSupportV1.readState(reader)
     let _ = context
@@ -3148,6 +3998,16 @@ private class Int64HashMapJsonCodec <: GeneratedCodecV1<HashMap<String, Int64>> 
     }
 }
 
+/**
+ * 将当前 JSON 对象解码为字符串键、Int64 值的映射。
+ *
+ * 按本次读取配置处理重复键：Reject 抛出 duplicate_key，LastWins 保留最后一次读取的值。为对象计入一层生成读取深度，并在 finally 中归还。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param reader 定位在当前值、由运行时拥有的语义 reader。
+ * @return 包含解码后对象成员的新映射。
+ * @throws JsonException reader 不由运行时拥有，或读取值的语法、类型、范围及资源限制不符合要求。重复键被拒绝时 code 为 duplicate_key。
+ */
 public func __yJsonReadInt64HashMap(reader: JsonReader): HashMap<String, Int64> {
 
     let context = GeneratedSupportV1.readState(reader)
@@ -3185,6 +4045,16 @@ public func __yJsonReadInt64HashMap(reader: JsonReader): HashMap<String, Int64> 
     }
 }
 
+/**
+ * 将当前 JSON 对象解码为字符串键、Int64 值的映射。
+ *
+ * fast 入口拒绝重复键，code 为 duplicate_key；不会读取 LastWins 配置来放宽此检查。为对象计入一层生成读取深度，并在 finally 中归还。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param reader 定位在当前值的匹配版本生成 reader。
+ * @return 包含解码后对象成员的新映射。
+ * @throws JsonException reader 与运行时协议不匹配，或读取值的语法、类型、范围及资源限制不符合要求。重复键被拒绝时 code 为 duplicate_key。
+ */
 public func __yJsonReadFastInt64HashMap(reader: GeneratedSupportV1Reader): HashMap<String, Int64> {
 
     let context = GeneratedSupportV1.readState(reader)
@@ -3218,6 +4088,16 @@ public func __yJsonReadFastInt64HashMap(reader: GeneratedSupportV1Reader): HashM
     }
 }
 
+/**
+ * 通过内置映射 codec 写入字符串键、Int64 值的 JSON 对象。
+ *
+ * 先取得运行时写入状态，再调用 JsonCodecs.stringMap(JsonCodecs.int64).write；实际 codec 选择批量能力或结构化写入。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ * @param value 按当前映射遍历顺序写出的对象成员。
+ * @param writer 接收当前对象值、由运行时拥有的语义 writer。
+ * @throws JsonException writer 不由运行时拥有，或发生深度、写入状态及输出限制错误。
+ */
 public func __yJsonWriteInt64HashMap(
     value: HashMap<String, Int64>,
     writer: JsonWriter
@@ -3293,15 +4173,17 @@ private func releaseGeneratedCompactWriter(writer: JsonDirectWriter): Unit {
  * JSON 编解码、只读视图输出和托管文档的应用入口。
  *
  * 无 codec 参数的重载采用 T 的生成 codec；显式 codec 重载也接受手写 codec。每次读取消费一个完整文档，输入输出流由调用方管理。可选原生加速须在进程第一次普通 YJson 操作前初始化。示例的 core-codec profile 提供完整模型和导入。
+ * @group 10-application 应用 API
  */
 public class YJson {
     /**
-     * Acquires a compact string writer for generated-code integration.
+     * 为生成代码取得当前调用独占的字符串 writer。
      *
-     * Internal cross-package support API. Applications should call toJson instead. Nondefault options are not inserted into the default writer pool.
+     * 这是跨包生成代码支持入口，普通应用使用 YJson.toJson。空缩进、非 htmlSafe、无输出字节上限且 maxDepth 为 256 时，可从单槽池取出 writer；其他配置新建 writer，不加入该池。使用后应在 finally 中释放。
      *
-     * @param options Read or write policies and resource limits for this call.
-     * @return Writer to release in a finally block.
+     * @group 20-generated-spi 生成代码 SPI
+     * @param options 本次写入的格式、转义策略、输出预算和深度上限。
+     * @return 本次调用持有、使用后须释放的 JsonDirectWriter。
      */
     public static func acquireGeneratedCompactStringWriter(
         options: JsonWriteOptions
@@ -3310,11 +4192,12 @@ public class YJson {
     }
 
     /**
-     * Releases an acquired generated compact writer when it is reusable.
+     * 将可复用的生成字符串 writer 重置后尝试放回单槽池。
      *
-     * Internal cross-package support API. Do not continue using or share the writer after this call.
+     * 不可复用的 writer 直接返回；池已有 writer 时不替换现有项。调用后不得继续使用、保留或共享此 writer。
      *
-     * @param writer Writer acquired for generated-code use; do not retain it after release.
+     * @group 20-generated-spi 生成代码 SPI
+     * @param writer 由生成 compact 字符串入口取得、当前调用已结束使用的 writer。
      */
     public static func releaseGeneratedCompactStringWriter(
         writer: JsonDirectWriter
@@ -3345,6 +4228,7 @@ public class YJson {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static func parseDocument(text: String,
         config!: JsonReadOptions = JsonReadOptions.defaults): JsonDocument {
@@ -3375,6 +4259,7 @@ public class YJson {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static func parseDocument(bytes: Array<Byte>,
         config!: JsonReadOptions = JsonReadOptions.defaults): JsonDocument {
@@ -3401,6 +4286,7 @@ public class YJson {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static func toJson(value: JsonValueView,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): String {
@@ -3429,6 +4315,7 @@ public class YJson {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static func toJsonBytes(value: JsonValueView,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): Array<Byte> {
@@ -3459,6 +4346,7 @@ public class YJson {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static func writeJson(value: JsonValueView, output: OutputStream,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): Unit {
@@ -3494,6 +4382,7 @@ public class YJson {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static func toJson<T>(value: T,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): String where T <: GeneratedCodecProviderV1<T> {
@@ -3524,6 +4413,7 @@ public class YJson {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static func toJson<T>(value: T,
         codec!: GeneratedCompactCursorWriteCodecV1<T>,
@@ -3556,6 +4446,7 @@ public class YJson {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static func toJson<T>(value: T, codec!: JsonCodec<T>,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): String {
@@ -3585,6 +4476,7 @@ public class YJson {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static func toJsonBytes<T>(value: T,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): Array<Byte> where T <: GeneratedCodecProviderV1<T> {
@@ -3615,6 +4507,7 @@ public class YJson {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static func toJsonBytes<T>(value: T,
         codec!: GeneratedCompactCursorWriteCodecV1<T>,
@@ -3646,6 +4539,7 @@ public class YJson {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static func toJsonBytes<T>(value: T, codec!: JsonCodec<T>,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): Array<Byte> {
@@ -3677,6 +4571,7 @@ public class YJson {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static func writeJson<T>(value: T, output: OutputStream,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): Unit where T <: GeneratedCodecProviderV1<T> {
@@ -3709,6 +4604,7 @@ public class YJson {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static func writeJson<T>(value: T, output: OutputStream, codec!: JsonCodec<T>,
         options!: JsonWriteOptions = JsonWriteOptions.defaults): Unit {
@@ -3743,6 +4639,7 @@ public class YJson {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static func fromJson<T>(text: String,
         options!: JsonReadOptions = JsonReadOptions.defaults): T where T <: GeneratedCodecProviderV1<T> {
@@ -3778,6 +4675,7 @@ public class YJson {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static func fromJson<T>(text: String,
         codec!: GeneratedCompactCursorWriteCodecV1<T>,
@@ -3814,6 +4712,7 @@ public class YJson {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static func fromJson<T>(text: String, codec!: JsonCodec<T>,
         options!: JsonReadOptions = JsonReadOptions.defaults): T {
@@ -3848,6 +4747,7 @@ public class YJson {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static func fromJson<T>(bytes: Array<Byte>,
         options!: JsonReadOptions = JsonReadOptions.defaults): T where T <: GeneratedCodecProviderV1<T> {
@@ -3883,6 +4783,7 @@ public class YJson {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static func fromJson<T>(bytes: Array<Byte>,
         codec!: GeneratedCompactCursorWriteCodecV1<T>,
@@ -3919,6 +4820,7 @@ public class YJson {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static func fromJson<T>(bytes: Array<Byte>, codec!: JsonCodec<T>,
         options!: JsonReadOptions = JsonReadOptions.defaults): T {
@@ -3953,6 +4855,7 @@ public class YJson {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static func fromJson<T>(input: InputStream,
         options!: JsonReadOptions = JsonReadOptions.defaults): T where T <: GeneratedCodecProviderV1<T> {
@@ -3988,6 +4891,7 @@ public class YJson {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static func fromJson<T>(input: InputStream, codec!: JsonCodec<T>,
         options!: JsonReadOptions = JsonReadOptions.defaults): T {
@@ -4184,6 +5088,7 @@ public class YJson {
  * 内置值 codec 与容器 codec 工厂。
  *
  * 将 codec 传入 YJson 的显式 codec 重载。可组合 Option、数组、列表和字符串键映射；不会把任意类型的对象键自动转换成字符串。
+ * @group 10-application 应用 API
  */
 public class JsonCodecs {
     /**
@@ -4203,6 +5108,7 @@ public class JsonCodecs {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static prop bool: JsonCodec<Bool> { get() { BoolJson } }
     /**
@@ -4222,6 +5128,7 @@ public class JsonCodecs {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static prop int64: JsonCodec<Int64> { get() { Int64Json } }
     /**
@@ -4241,6 +5148,7 @@ public class JsonCodecs {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static prop int32: JsonCodec<Int32> { get() { Int32Json } }
     /**
@@ -4260,6 +5168,7 @@ public class JsonCodecs {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static prop int16: JsonCodec<Int16> { get() { Int16Json } }
     /**
@@ -4279,6 +5188,7 @@ public class JsonCodecs {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static prop int8: JsonCodec<Int8> { get() { Int8Json } }
     /**
@@ -4298,6 +5208,7 @@ public class JsonCodecs {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static prop uint64: JsonCodec<UInt64> { get() { UInt64Json } }
     /**
@@ -4317,6 +5228,7 @@ public class JsonCodecs {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static prop uint32: JsonCodec<UInt32> { get() { UInt32Json } }
     /**
@@ -4336,6 +5248,7 @@ public class JsonCodecs {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static prop uint16: JsonCodec<UInt16> { get() { UInt16Json } }
     /**
@@ -4355,6 +5268,7 @@ public class JsonCodecs {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static prop uint8: JsonCodec<UInt8> { get() { UInt8Json } }
     /**
@@ -4375,6 +5289,7 @@ public class JsonCodecs {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static prop float64: JsonCodec<Float64> { get() { Float64Json } }
     /**
@@ -4395,6 +5310,7 @@ public class JsonCodecs {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static prop float32: JsonCodec<Float32> { get() { Float32Json } }
     /**
@@ -4415,6 +5331,7 @@ public class JsonCodecs {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static prop float16: JsonCodec<Float16> { get() { Float16Json } }
     /**
@@ -4434,6 +5351,7 @@ public class JsonCodecs {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static prop string: JsonCodec<String> { get() { StringJson } }
     /**
@@ -4453,6 +5371,7 @@ public class JsonCodecs {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static prop rune: JsonCodec<Rune> { get() { RuneJson } }
     /**
@@ -4472,6 +5391,7 @@ public class JsonCodecs {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static prop bigInt: JsonCodec<BigInt> { get() { BigIntJson } }
     /**
@@ -4491,6 +5411,7 @@ public class JsonCodecs {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static prop decimal: JsonCodec<Decimal> { get() { DecimalJson } }
     /**
@@ -4510,6 +5431,7 @@ public class JsonCodecs {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static prop rfc3339DateTime: JsonCodec<DateTime> { get() { DateTimeJson } }
 
@@ -4532,6 +5454,7 @@ public class JsonCodecs {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static func option<T>(inner: JsonCodec<T>): JsonCodec<Option<T>> {
         match (inner) {
@@ -4560,6 +5483,7 @@ public class JsonCodecs {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static func array<T>(inner: JsonCodec<T>): JsonCodec<Array<T>> {
         match (inner) {
@@ -4588,6 +5512,7 @@ public class JsonCodecs {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static func arrayList<T>(inner: JsonCodec<T>): JsonCodec<ArrayList<T>> {
         match (inner) {
@@ -4618,6 +5543,7 @@ public class JsonCodecs {
      * ```output
      * ok
      * ```
+     * @group 10-application 应用 API
      */
     public static func stringMap<T>(inner: JsonCodec<T>): JsonCodec<HashMap<String, T>> {
         match (inner) {
