@@ -302,6 +302,9 @@ class JsonDirectReader <: JsonReader & GeneratedReadStateV1Owner {
     public func readBool(): Bool {
         let pathPushed = beforeValue()
         try {
+            if (!source.hasMore()) {
+                fail("Unexpected end of input")
+            }
             if (source.peek() == b't') {
                 expectLiteral("true")
                 return true
@@ -524,6 +527,9 @@ class JsonDirectReader <: JsonReader & GeneratedReadStateV1Owner {
                 return
             }
             expectByte(b',')
+            // Field names are parsed without a leading whitespace skip, so the
+            // separator must be followed by whitespace consumption here.
+            skipSpaces()
         }
     }
 

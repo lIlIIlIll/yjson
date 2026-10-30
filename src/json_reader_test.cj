@@ -965,3 +965,167 @@ class DirectReaderErrorHandlingTest {
         @Expect(directReaderReadUInt64NegativeThrows())
     }
 }
+
+// ==================== Issue #15 R07 / R15 Regressions ====================
+
+// R07: skipping an unknown object member must accept every valid JSON
+// whitespace position, including the whitespace after a member separator.
+private let issue15SpacedSkipObject: String = "{\"a\":1, \"b\":2, \"c\":[1, 2, {\"d\":3, \"e\":4}]}"
+private let issue15SpacedSkipEnvelope = "{\"skip\":${issue15SpacedSkipObject},\"after\":7}"
+
+private func issue15ParseErrorCode(action: () -> Unit): String {
+    try {
+        action()
+        ""
+    } catch (error: JsonException) {
+        error.code
+    }
+}
+
+private func issue15AssertRawSkipBoundary(reader: JsonFastReader, skip: () -> Unit): Unit {
+    reader.startRawObject()
+    @Expect(reader.readRawName(true), "skip")
+    skip()
+    @Expect(reader.readRawName(false), "after")
+    @Expect(reader.readRawInt64(), 7)
+    reader.endRawObject()
+    reader.expectEnd()
+}
+
+private func issue15AssertSemanticSkipBoundary(reader: JsonReader): Unit {
+    reader.startArray()
+    reader.skipValue()
+    @Expect(reader.readInt64(), 7)
+    reader.endArray()
+    GeneratedSupportV1.finishReader(reader)
+}
+
+@Test
+class Issue15SkippedObjectWhitespaceTest {
+    @TestCase
+    func fastReaderSyntaxSkipAcceptsSpacedMemberSeparators(): Unit {
+        let reader = JsonFastReader(issue15SpacedSkipEnvelope)
+        issue15AssertRawSkipBoundary(reader, { => reader.skipRaw() })
+        let bounded = JsonFastReader(issue15SpacedSkipEnvelope)
+        issue15AssertRawSkipBoundary(bounded, { => bounded.skipRawWithDepth(4) })
+        let bytesReader = JsonFastReader(makeBytes(issue15SpacedSkipEnvelope).clone())
+        issue15AssertRawSkipBoundary(bytesReader, { => bytesReader.skipRawWithDepth(4) })
+    }
+
+    @TestCase
+    func fastReaderPolicySkipAcceptsSpacedMemberSeparators(): Unit {
+        let reader = JsonFastReader(issue15SpacedSkipEnvelope)
+        issue15AssertRawSkipBoundary(reader, { => reader.skipValue(4) })
+        let bytesReader = JsonFastReader(makeBytes(issue15SpacedSkipEnvelope).clone())
+        issue15AssertRawSkipBoundary(bytesReader, { => bytesReader.skipValue(4) })
+        let leadingSpace = JsonFastReader(" \n\t" + issue15SpacedSkipEnvelope + " \r\n")
+        issue15AssertRawSkipBoundary(leadingSpace, { => leadingSpace.skipValue(4) })
+    }
+
+    @TestCase
+    func directReaderSkipAcceptsSpacedMemberSeparatorsForTextBytesAndChunks(): Unit {
+        let input = "[${issue15SpacedSkipObject},7]"
+        issue15AssertSemanticSkipBoundary(JsonDirectReader(input))
+        issue15AssertSemanticSkipBoundary(JsonDirectReader(makeBytes(input).clone()))
+        // One-byte chunks put every separator and whitespace byte at a boundary.
+        issue15AssertSemanticSkipBoundary(JsonDirectReader(FixedChunkInputStream(input, 1)))
+    }
+
+    @TestCase
+    func directReaderUnknownFieldSkipKeepsDuplicatePolicy(): Unit {
+        let rejecting = JsonDirectReader(
+            "{\"known\":1,\"extra\":{\"a\":1, \"a\":2}}",
+            config: JsonReadOptions(duplicateKeyPolicy: JsonDuplicateKeyPolicy.Reject))
+        rejecting.startObject()
+        @Expect(rejecting.readName(), "known")
+        @Expect(rejecting.readInt64(), 1)
+        @Expect(rejecting.readName(), "extra")
+        @Expect(issue15ParseErrorCode({ => rejecting.skipValue() }), "duplicate_key")
+
+        let spaced = JsonDirectReader(
+            "{\"known\":1,\"extra\":{\"a\":1, \"b\":2}}",
+            config: JsonReadOptions(duplicateKeyPolicy: JsonDuplicateKeyPolicy.Reject))
+        spaced.startObject()
+        @Expect(spaced.readName(), "known")
+        @Expect(spaced.readInt64(), 1)
+        @Expect(spaced.readName(), "extra")
+        spaced.skipValue()
+        spaced.endObject()
+        spaced.expectEnd()
+    }
+
+    @TestCase
+    func skippedObjectsStillRejectTrailingCommasAndMalformedSyntax(): Unit {
+        let invalid = [
+            "{\"a\":1, \"b\":2,}",
+            "{\"a\":1,}",
+            "{\"a\":1, }",
+            "{\"a\":1 \"b\":2}",
+            "{\"a\":1, \"b\":2",
+            "{\"a\":1, ,\"b\":2}",
+            "{\"a\": 1, \"b\": }",
+            "[1, 2,]",
+            "{\"a\":[1, 2, ]}"
+        ]
+        for (text in invalid) {
+            let policyReader = JsonFastReader(text)
+            @Expect(issue15ParseErrorCode({ => policyReader.skipValue(8) }), "parse_error")
+            let syntaxReader = JsonFastReader(text)
+            @Expect(issue15ParseErrorCode({ => syntaxReader.skipRawWithDepth(8) }), "parse_error")
+            @Expect(issue15ParseErrorCode({ =>
+                JsonDirectReader(text).skipValue()
+            }), "parse_error")
+            let chunked = JsonDirectReader(FixedChunkInputStream(text, 2))
+            @Expect(issue15ParseErrorCode({ => chunked.skipValue() }), "parse_error")
+        }
+    }
+}
+
+// R15: the compact boolean reader runs after a consumed field name or array
+// separator, where input may already be exhausted.
+@Test
+class Issue15BooleanTruncationTest {
+    @TestCase
+    func fastReaderBooleanReadsReportTruncationAsParseError(): Unit {
+        for (text in ["", " ", "\n\t", "t", "tru", "tr", "f", "fals"]) {
+            let textReader = JsonFastReader(text)
+            @Expect(issue15ParseErrorCode({ => let _ = textReader.readRawBool() }), "parse_error")
+            let fastReader = JsonFastReader(text)
+            @Expect(issue15ParseErrorCode({ => let _ = fastReader.readRawBoolFast() }), "parse_error")
+            let bytesReader = JsonFastReader(makeBytes(text).clone())
+            @Expect(issue15ParseErrorCode({ => let _ = bytesReader.readRawBool() }), "parse_error")
+        }
+    }
+
+    @TestCase
+    func fastReaderBooleanReadsStillAcceptCompleteLiterals(): Unit {
+        @Expect(JsonFastReader("true").readRawBool(), true)
+        @Expect(JsonFastReader("false").readRawBool(), false)
+        @Expect(JsonFastReader(" \n true ").readRawBool(), true)
+        @Expect(JsonFastReader("false").readRawBoolFast(), false)
+        @Expect(JsonFastReader("true\n").readRawBoolFast(), true)
+        let reader = JsonFastReader("{\"flag\":true}")
+        reader.startRawObject()
+        @Expect(reader.readRawName(true), "flag")
+        @Expect(reader.readRawBool(), true)
+        reader.endRawObject()
+        reader.expectEnd()
+    }
+
+    @TestCase
+    func directReaderBooleanReadReportsTruncationAsParseError(): Unit {
+        for (text in ["", "  ", "t", "tru", "f", "fals"]) {
+            @Expect(issue15ParseErrorCode({ =>
+                let _ = JsonDirectReader(text).readBool()
+            }), "parse_error")
+            @Expect(issue15ParseErrorCode({ =>
+                let _ = JsonDirectReader(makeBytes(text).clone()).readBool()
+            }), "parse_error")
+            // Streaming reaches readBool without a whole-input preflight.
+            let chunked = JsonDirectReader(FixedChunkInputStream(text, 1))
+            @Expect(issue15ParseErrorCode({ => let _ = chunked.readBool() }), "parse_error")
+        }
+        @Expect(JsonDirectReader(" true ").readBool(), true)
+        @Expect(JsonDirectReader(makeBytes("false").clone()).readBool(), false)
+    }
+}

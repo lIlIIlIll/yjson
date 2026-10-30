@@ -869,6 +869,12 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
     }
 
     func readRawBoolCompact(): Bool {
+        // The generated-code fast path calls this after consuming a field name
+        // or array separator, where the cursor may already be at end of input.
+        // Report a parse_error instead of indexing past the buffer.
+        if (!hasMore()) {
+            fail("Unexpected end of input")
+        }
         if (peek() == b't') {
             expectLiteral("true")
             return true
@@ -1990,6 +1996,9 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
                 return
             }
             expectByte(b',')
+            // Member names are scanned without a leading whitespace skip, so
+            // the separator must be followed by whitespace consumption here.
+            skipSpaces()
         }
     }
 
@@ -2082,6 +2091,9 @@ public class JsonFastReader <: GeneratedSupportV1Reader & GeneratedReadStateV1Ow
                 return
             }
             expectByte(b',')
+            // Field names are parsed without a leading whitespace skip, so the
+            // separator must be followed by whitespace consumption here.
+            skipSpaces()
         }
     }
 

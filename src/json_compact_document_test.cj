@@ -247,3 +247,118 @@ class CompactJsonDocumentTest {
         @AssertThrows[JsonException](object.asBool())
     }
 }
+
+// ==================== Issue #15 R14 Regressions ====================
+
+// Inline scalar views keep their payload inside the view and carry index -1,
+// so a wrong-kind read must raise the JsonException family instead of
+// indexing the node arrays at -1.
+private let issue15KindDocumentText: String = "{\"text\":\"value\",\"flag\":true,\"count\":7,\"ratio\":1.5e2}"
+
+private func issue15KindErrorCode(action: () -> Unit): String {
+    try {
+        action()
+        ""
+    } catch (error: JsonException) {
+        error.code
+    }
+}
+
+@Test
+class CompactJsonValueInlineKindTest {
+    @TestCase
+    func documentMemberWrongKindReadsRaiseJsonExceptions(): Unit {
+        let document = YJson.parseDocument(issue15KindDocumentText)
+        let root = document.root()
+
+        let text = root.member("text").getOrThrow()
+        @Expect(text.asString(), "value")
+        @Expect(issue15KindErrorCode({ => let _ = text.asInt64() }), "json_error")
+        @Expect(issue15KindErrorCode({ => let _ = text.asUInt64() }), "type_mismatch")
+        @Expect(issue15KindErrorCode({ => let _ = text.asFloat64() }), "type_mismatch")
+        @Expect(issue15KindErrorCode({ => let _ = text.asBool() }), "json_error")
+        @Expect(issue15KindErrorCode({ => let _ = text.asNumberText() }), "type_mismatch")
+
+        let flag = root.member("flag").getOrThrow()
+        @Expect(flag.asBool(), true)
+        @Expect(issue15KindErrorCode({ => let _ = flag.asInt64() }), "json_error")
+        @Expect(issue15KindErrorCode({ => let _ = flag.asFloat64() }), "type_mismatch")
+        @Expect(issue15KindErrorCode({ => let _ = flag.asString() }), "type_mismatch")
+        @Expect(issue15KindErrorCode({ => let _ = flag.asNumberText() }), "type_mismatch")
+
+        let count = root.member("count").getOrThrow()
+        @Expect(count.asInt64(), 7)
+        @Expect(count.asUInt64(), 7u64)
+        @Expect(count.asFloat64(), 7.0)
+        @Expect(count.asNumberText(), "7")
+        @Expect(issue15KindErrorCode({ => let _ = count.asString() }), "type_mismatch")
+        @Expect(issue15KindErrorCode({ => let _ = count.asBool() }), "json_error")
+
+        let ratio = root.member("ratio").getOrThrow()
+        @Expect(ratio.asNumberText(), "1.5e2")
+        @Expect(ratio.asFloat64(), 150.0)
+        @Expect(issue15KindErrorCode({ => let _ = ratio.asInt64() }), "json_error")
+        @Expect(issue15KindErrorCode({ => let _ = ratio.asBool() }), "json_error")
+        @Expect(issue15KindErrorCode({ => let _ = ratio.asString() }), "type_mismatch")
+
+        // A rejected read leaves the immutable document fully usable.
+        @Expect(document.root().member("text").getOrThrow().asString(), "value")
+        @Expect(JsonNode.parse(document.toString()).asObject()["count"].asInt64(), 7)
+    }
+
+    @TestCase
+    func inlineCollectionElementsWrongKindReadsRaiseJsonExceptions(): Unit {
+        let integerArray = YJson.parseDocument("[1,2]").root()
+        @Expect(integerArray.element(0).getOrThrow().asInt64(), 1)
+        let firstInt = integerArray.element(0).getOrThrow()
+        @Expect(issue15KindErrorCode({ => let _ = firstInt.asString() }), "type_mismatch")
+        let secondInt = integerArray.element(1).getOrThrow()
+        @Expect(issue15KindErrorCode({ => let _ = secondInt.asBool() }), "json_error")
+
+        let stringArray = YJson.parseDocument("[\"a\",\"b\"]").root()
+        @Expect(stringArray.element(0).getOrThrow().asString(), "a")
+        let firstText = stringArray.element(0).getOrThrow()
+        @Expect(issue15KindErrorCode({ => let _ = firstText.asInt64() }), "json_error")
+        @Expect(issue15KindErrorCode({ => let _ = firstText.asNumberText() }), "type_mismatch")
+
+        let boolArray = YJson.parseDocument("[true,false]").root()
+        @Expect(boolArray.element(1).getOrThrow().asBool(), false)
+        let firstFlag = boolArray.element(0).getOrThrow()
+        @Expect(issue15KindErrorCode({ => let _ = firstFlag.asString() }), "type_mismatch")
+
+        let mixed = YJson.parseDocument("{\"items\":[1, {\"k\":\"v\"}]}").root()
+        let items = mixed.member("items").getOrThrow()
+        @Expect(items.element(0).getOrThrow().asInt64(), 1)
+        let nestedInt = items.element(0).getOrThrow()
+        @Expect(issue15KindErrorCode({ => let _ = nestedInt.asString() }), "type_mismatch")
+        @Expect(items.element(1).getOrThrow().member("k").getOrThrow().asString(), "v")
+    }
+
+    @TestCase
+    func compactDocumentInlineAccessorsPreserveValidReads(): Unit {
+        let document = CompactJsonDocument.parseBorrowed(compactBytes(issue15KindDocumentText))
+        let root = document.root()
+        @Expect(root.get("text").getOrThrow().asString(), "value")
+        @Expect(root.get("flag").getOrThrow().asBool(), true)
+        @Expect(root.get("count").getOrThrow().asInt64(), 7)
+        @Expect(root.get("ratio").getOrThrow().asNumberText(), "1.5e2")
+        let text = root.get("text").getOrThrow()
+        @Expect(issue15KindErrorCode({ => let _ = text.asInt64() }), "json_error")
+        let flag = root.get("flag").getOrThrow()
+        @Expect(issue15KindErrorCode({ => let _ = flag.asString() }), "type_mismatch")
+        let count = root.get("count").getOrThrow()
+        @Expect(issue15KindErrorCode({ => let _ = count.asBool() }), "json_error")
+        @Expect(document.materialize().asObject()["flag"].asBool(), true)
+    }
+
+    @TestCase
+    func rootScalarKindErrorsKeepTheirExistingContract(): Unit {
+        // Root scalars are document nodes rather than inline views; their
+        // established error codes must not change.
+        let rootText = YJson.parseDocument("\"text\"").root()
+        @Expect(issue15KindErrorCode({ => let _ = rootText.asInt64() }), "json_error")
+        let rootInt = YJson.parseDocument("7").root()
+        @Expect(issue15KindErrorCode({ => let _ = rootInt.asString() }), "type_mismatch")
+        @Expect(YJson.parseDocument("7").root().asInt64(), 7)
+    }
+}

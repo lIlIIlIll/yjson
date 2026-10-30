@@ -193,16 +193,23 @@ private func schemaAuthority(authority: String, international: Bool): Bool {
 private func schemaUriTemplate(value: String): Bool {
     let plain = StringBuilder()
     var index: Int64 = 0
+    var literalStart: Int64 = 0
     while (index < value.size) {
-        if (value[index] == b'}') { return false }
-        if (value[index] != b'{') { plain.append(Rune(value[index])); index++; continue }
+        let byte = value[index]
+        if (byte == b'}') { return false }
+        if (byte != b'{') { index++; continue }
+        // Append the untouched UTF-8 literal slice: converting one byte at a
+        // time to a Rune would split multi-byte characters and corrupt them.
+        plain.append(value[literalStart..index])
         let closeRelative = value[index + 1..value.size].indexOf("}")
         if (closeRelative.isNone()) { return false }
         let close = index + 1 + closeRelative.getOrThrow()
         if (!schemaUriTemplateExpression(value[index + 1..close])) { return false }
         plain.append("x")
         index = close + 1
+        literalStart = index
     }
+    plain.append(value[literalStart..value.size])
     schemaUriReference(plain.toString(), false, true)
 }
 
@@ -210,7 +217,10 @@ private func schemaUriTemplateExpression(expression: String): Bool {
     if (expression.isEmpty() || expression.contains("{") || expression.contains(" ") || expression.contains("\\")) {
         return false
     }
-    let start: Int64 = if ("+#./;?&".contains(expression[0..1])) { 1 } else { 0 }
+    // The operator prefix is a single ASCII byte; slicing the first byte as a
+    // String would cut a multi-byte character and raise instead of returning
+    // false for a non-ASCII variable name.
+    let start: Int64 = if (schemaUriTemplateOperator(expression[0])) { 1 } else { 0 }
     if (start == expression.size) { return false }
     for (spec in splitAscii(expression[start..expression.size], b',')) {
         if (spec.isEmpty()) { return false }
@@ -228,6 +238,11 @@ private func schemaUriTemplateExpression(expression: String): Bool {
         if (!schemaTemplateVariableName(name)) { return false }
     }
     true
+}
+
+private func schemaUriTemplateOperator(byte: Byte): Bool {
+    byte == b'+' || byte == b'#' || byte == b'.' || byte == b'/' || byte == b';' ||
+        byte == b'?' || byte == b'&'
 }
 
 private func schemaTemplateVariableName(name: String): Bool {

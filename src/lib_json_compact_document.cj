@@ -742,8 +742,23 @@ struct CompactJsonValue <: JsonValueView {
         }
         document.objectValueAt(index, item)
     }
-    public func asString(): String { if (inlineKind == COMPACT_STRING) { document.strings[inlinePayload] } else { document.stringAt(index) } }
-    public func asInt64(): Int64 { if (inlineKind == COMPACT_INT) { inlinePayload } else { document.intAt(index) } }
+    public func asString(): String {
+        if (inlineKind < 0) { return document.stringAt(index) }
+        // Inline scalar views keep their payload in the view and have no node
+        // index, so a wrong-kind read must raise the same JsonException family
+        // as the document-backed accessor instead of indexing index -1.
+        if (inlineKind != COMPACT_STRING) {
+            throw JsonException("Expected string value", code: "type_mismatch")
+        }
+        document.strings[inlinePayload]
+    }
+    public func asInt64(): Int64 {
+        if (inlineKind < 0) { return document.intAt(index) }
+        if (inlineKind != COMPACT_INT) {
+            throw JsonException("Expected int value")
+        }
+        inlinePayload
+    }
     public func asUInt64(): UInt64 {
         let text = asNumberText()
         try { UInt64.parse(text) } catch (_: Exception) {
@@ -752,11 +767,18 @@ struct CompactJsonValue <: JsonValueView {
     }
     public func asFloat64(): Float64 { Float64.parse(asNumberText()) }
     public func asNumberText(): String {
-        if (inlineKind == COMPACT_INT) { inlinePayload.toString() }
-        else if (inlineKind == COMPACT_NUMBER) { document.strings[inlinePayload] }
-        else { document.numberTextAt(index) }
+        if (inlineKind < 0) { return document.numberTextAt(index) }
+        if (inlineKind == COMPACT_INT) { return inlinePayload.toString() }
+        if (inlineKind == COMPACT_NUMBER) { return document.strings[inlinePayload] }
+        throw JsonException("Expected number value", code: "type_mismatch")
     }
-    public func asBool(): Bool { if (inlineKind == COMPACT_BOOL) { inlinePayload != 0 } else { document.boolAt(index) } }
+    public func asBool(): Bool {
+        if (inlineKind < 0) { return document.boolAt(index) }
+        if (inlineKind != COMPACT_BOOL) {
+            throw JsonException("Expected bool value")
+        }
+        inlinePayload != 0
+    }
     public func materialize(): JsonNode { materialize(JSON_NODE_OPERATION_MAX_WORK) }
 
     public func materialize(maxNodes: Int64): JsonNode {

@@ -830,19 +830,31 @@ struct NativeCompactJsonValue <: JsonValueView {
     }
 
     public func asInt64(): Int64 {
-        if (inlineKind == YJ_COMPACT_INT) {
+        // An inline object scalar has no node index (it is stored as node 0),
+        // so every non-integer inline kind must fail instead of answering from
+        // an unrelated node. The resource check stays first so a closed
+        // document reports resource_closed rather than a type mismatch.
+        if (inlineKind >= 0) {
             document.ensureOpen()
+            if (inlineKind != YJ_COMPACT_INT) {
+                throw JsonException("Expected number value", code: "type_mismatch")
+            }
             nativeCompactBitsToInt64(inlinePayload)
+        } else {
+            document.intAt(node)
         }
-        else { document.intAt(node) }
     }
 
     public func asBool(): Bool {
-        if (inlineKind == YJ_COMPACT_BOOL) {
+        if (inlineKind >= 0) {
             document.ensureOpen()
+            if (inlineKind != YJ_COMPACT_BOOL) {
+                throw JsonException("Expected boolean value", code: "type_mismatch")
+            }
             inlinePayload != 0u64
+        } else {
+            document.boolAt(node)
         }
-        else { document.boolAt(node) }
     }
 
     public func asString(): String {
@@ -984,9 +996,14 @@ private func nativeCompactParseError(bytes: Array<Byte>, code: Int32, offset: In
         case code == YJ_COMPACT_VALUE_TOO_LARGE => "Native compact JSON value is too large"
         case _ => "Invalid JSON"
     }
+    // The backend reports a negative offset when the failure has no byte
+    // position (for example a document-level allocation failure). Fabricating
+    // a JsonLocation would replace the classified error with an
+    // IllegalArgumentException from the location invariant checks.
+    if (offset < 0) { return JsonException(message, code: errorCode) }
     var line: Int64 = 1
     var column: Int64 = 1
-    let limit = if (offset < 0) { 0 } else if (offset > bytes.size) { bytes.size } else { offset }
+    let limit = if (offset > bytes.size) { bytes.size } else { offset }
     for (index in 0..limit) {
         if (bytes[index] == b'\n') { line++; column = 1 } else { column++ }
     }

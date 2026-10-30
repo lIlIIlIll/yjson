@@ -179,6 +179,124 @@ signature = "public static func readFastReader(reader: GeneratedSupportV1Reader)
 
 [[api]]
 package = "yjson"
+kind = "generated-read-budget-factory"
+domain = "cangjie"
+symbol = "GeneratedSupportV1.newValidatedFastReader"
+signature = "GeneratedSupportV1.newValidatedFastReader(text: String): JsonFastReader"
+stability = "candidate-protocol-v1"
+compatibility = "additive default-budget factory; raw JsonFastReader constructors remain unchanged"
+contract = "Concrete generated String decoders preflight the same default input, string, buffered-value and depth budgets as generic and byte entrypoints."
+consumer = "Matching yjson_macros generated String decoders"
+
+[[api.declarations]]
+source = "src/lib_json_generated_support_v1.cj"
+owner = "GeneratedSupportV1"
+signature = "public static func newValidatedFastReader(text: String): JsonFastReader"
+
+[[api]]
+package = "yjson"
+kind = "generated-inherited-fields"
+domain = "cangjie"
+symbol = "GeneratedInheritedObjectFieldsV1<T> / GeneratedSupportV1.requireInheritedObjectFields<T> / GeneratedSupportV1.writeInheritedObjectFields<T>"
+signature = "Typed inherited-field dispatch with GeneratedCodecTokenV1<T>"
+stability = "candidate-protocol-v1"
+compatibility = "additive generated-class field protocol; matching macros and runtime must be rebuilt together"
+contract = "Interface supertypes contribute no fields. Annotated class ancestors retain their fields exactly once; real class bases lacking the protocol fail with codec_contract instead of silently losing fields."
+consumer = "Matching yjson_macros inherited object codecs"
+
+[[api.declarations]]
+source = "src/lib_json_generated_support_v1.cj"
+owner = "<top-level>"
+signature = "public interface GeneratedInheritedObjectFieldsV1<T>"
+
+[[api.declarations]]
+source = "src/lib_json_generated_support_v1.cj"
+owner = "GeneratedInheritedObjectFieldsV1"
+signature = "func writeInheritedObjectFieldsV1(_: GeneratedCodecTokenV1<T>, writer: JsonWriter): Unit"
+
+[[api.declarations]]
+source = "src/lib_json_generated_support_v1.cj"
+owner = "GeneratedSupportV1"
+signature = "public static func requireInheritedObjectFields<T>(): Unit"
+
+[[api.declarations]]
+source = "src/lib_json_generated_support_v1.cj"
+owner = "GeneratedSupportV1"
+signature = "public static func writeInheritedObjectFields<T>(value: T, writer: JsonWriter): Unit"
+
+[[api]]
+package = "yjson"
+kind = "generated-codec-lifecycle"
+domain = "cangjie"
+symbol = "GeneratedCodecInitializationV1 / GeneratedCompactCapabilityCacheV1 / GeneratedStableCompactWriteCodecV1 / recursive capability checks"
+signature = "Concrete deferred field state, atomic positive capability proofs, and thread-local recursion checks"
+stability = "candidate-protocol-v1"
+compatibility = "additive generated-code helpers; rebuild matching runtime and macro sources together; existing generated codec types remain unchanged"
+contract = "Provider-dependent field codecs resolve after package initialization and atomically publish one complete immutable state. Only capability results proven permanently true are cached per codec instance. Dynamic custom capabilities and recursive negative results are never cached; recursive queries remain thread-local and preserve semantic fallback."
+consumer = "Matching yjson_macros object and polymorphic codecs"
+
+[[api.declarations]]
+source = "src/lib_json_generated_support_v1.cj"
+owner = "<top-level>"
+signature = "public class GeneratedCodecInitializationV1"
+
+[[api.declarations]]
+source = "src/lib_json_generated_support_v1.cj"
+owner = "GeneratedCodecInitializationV1"
+signature = "public init()"
+
+[[api.declarations]]
+source = "src/lib_json_generated_support_v1.cj"
+owner = "GeneratedCodecInitializationV1"
+signature = "public func isInitialized(): Bool"
+
+[[api.declarations]]
+source = "src/lib_json_generated_support_v1.cj"
+owner = "GeneratedCodecInitializationV1"
+signature = "public func initialize(initialize: () -> Unit): Unit"
+
+[[api.declarations]]
+source = "src/lib_json_generated_support_v1.cj"
+owner = "<top-level>"
+signature = "public struct GeneratedCompactCapabilityCacheV1"
+
+[[api.declarations]]
+source = "src/lib_json_generated_support_v1.cj"
+owner = "GeneratedCompactCapabilityCacheV1"
+signature = "public init()"
+
+[[api.declarations]]
+source = "src/lib_json_generated_support_v1.cj"
+owner = "GeneratedCompactCapabilityCacheV1"
+signature = "public func isSupported(): Bool"
+
+[[api.declarations]]
+source = "src/lib_json_generated_support_v1.cj"
+owner = "GeneratedCompactCapabilityCacheV1"
+signature = "public func markSupported(): Unit"
+
+[[api.declarations]]
+source = "src/lib_json_direct_codec.cj"
+owner = "<top-level>"
+signature = "public interface GeneratedStableCompactWriteCodecV1"
+
+[[api.declarations]]
+source = "src/lib_json_direct_codec.cj"
+owner = "GeneratedStableCompactWriteCodecV1"
+signature = "func supportsStableCompactWrite(): Bool"
+
+[[api.declarations]]
+source = "src/lib_json_generated_support_v1.cj"
+owner = "GeneratedSupportV1"
+signature = "public static func enterCompactCapabilityCheck<T>(codec: GeneratedCodecV1<T>): Bool"
+
+[[api.declarations]]
+source = "src/lib_json_generated_support_v1.cj"
+owner = "GeneratedSupportV1"
+signature = "public static func leaveCompactCapabilityCheck(): Unit"
+
+[[api]]
+package = "yjson"
 kind = "generated-read-protocol"
 domain = "cangjie"
 symbol = "GeneratedDirectFastReadCodecV1<T>"

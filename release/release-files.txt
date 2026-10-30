@@ -47,6 +47,7 @@ docs/performance/results/2026-09-10-main-seven-library.md
 docs/migration/pre-1.0-to-1.0.md
 docs/migration/0.1-to-0.2.md
 docs/implementation/cjdoc-020.md
+docs/implementation/issue-15.md
 docs/release-checklist.md
 docs/schema.md
 benchmarks/README.md
@@ -349,6 +350,12 @@ packages/codec_integration/src/api_documentation_contract_test.cj
 packages/codec_integration/src/codec_render_plan_consumer_test.cj
 packages/codec_integration/src/generated_collections_test.cj
 packages/codec_integration/src/generated_traversal_state_consumer_test.cj
+packages/codec_integration/src/issue15_macro_maps_test.cj
+packages/codec_integration/src/issue15_macro_models_test.cj
+packages/codec_integration/src/issue15_macro_split_nested_test.cj
+packages/codec_integration/src/issue15_macro_write_budget_test.cj
+packages/codec_integration/src/issue15_reader_consumer_test.cj
+packages/codec_integration/src/issue15_runtime_contract_test.cj
 packages/codec_integration/src/main.cj
 packages/codec_integration/src/json_literal_test.cj
 packages/standards_conformance/cjpm.toml

@@ -1,6 +1,7 @@
 package yjson_yyjson
 
 import yjson.*
+import yjson_backends.*
 import std.unittest.*
 import std.unittest.testmacro.*
 
@@ -40,6 +41,53 @@ class YyjsonCompactTests {
         let error = @AssertThrows[JsonException](YyjsonCompactJsonDocument.parse(bytes,
             config: JsonReadOptions(duplicateKeyPolicy: JsonDuplicateKeyPolicy.Reject)))
         @Expect(error.code, "duplicate_key")
+    }
+
+    @TestCase
+    func fallbackInlineMembersRejectMismatchedBooleanAccess(): Unit {
+        // Escaped-equivalent duplicate names under LastWins route the document
+        // to the custom-native fallback, where object scalars stay inline with
+        // no node index. asBool must reject non-boolean inline values instead
+        // of answering from node 0.
+        let text = "{\"a\":1,\"\\u0061\":2,\"flags\":[true],\"text\":\"x\",\"ok\":false}"
+        let options = JsonReadOptions(duplicateKeyPolicy: JsonDuplicateKeyPolicy.LastWins)
+        try (document = YyjsonBackends.yyjson.parseDocument(text, options: options)) {
+            @Expect(document.metadata().name, "custom-native-fallback")
+            let root = document.root()
+            @Expect(@AssertThrows[JsonException](
+                root.member("text").getOrThrow().asBool()).code, "type_mismatch")
+            @Expect(@AssertThrows[JsonException](
+                root.member("a").getOrThrow().asBool()).code, "type_mismatch")
+            @Expect(root.member("ok").getOrThrow().asBool(), false)
+            @Expect(root.member("a").getOrThrow().asInt64(), 2)
+            @Expect(root.member("text").getOrThrow().asString(), "x")
+        }
+    }
+
+    @TestCase
+    func directViewsRejectMismatchedBooleanAccess(): Unit {
+        try (document = YyjsonBackends.yyjson.parseDocument(
+            "{\"flags\":[true],\"text\":\"x\",\"ok\":false}")) {
+            @Expect(document.metadata().name, "yyjson")
+            let root = document.root()
+            @Expect(@AssertThrows[JsonException](
+                root.member("text").getOrThrow().asBool()).code, "type_mismatch")
+            @Expect(root.member("ok").getOrThrow().asBool(), false)
+            @Expect(root.member("flags").getOrThrow().element(0).getOrThrow().asBool(), true)
+        }
+    }
+
+    @TestCase
+    func closedFallbackInlineMembersReportResourceClosed(): Unit {
+        // The resource check stays ahead of the inline kind check, so closing
+        // keeps reporting resource_closed rather than a type mismatch.
+        let options = JsonReadOptions(duplicateKeyPolicy: JsonDuplicateKeyPolicy.LastWins)
+        let document = YyjsonBackends.yyjson.parseDocument(
+            "{\"a\":1,\"\\u0061\":2,\"text\":\"x\"}", options: options)
+        let text = document.root().member("text").getOrThrow()
+        document.close()
+        @Expect(@AssertThrows[JsonException](text.asBool()).code, "resource_closed")
+        @Expect(@AssertThrows[JsonException](text.asInt64()).code, "resource_closed")
     }
 
     @TestCase
@@ -150,6 +198,24 @@ class YyjsonCompactTests {
         @Expect(nativeError.code, pureError.code)
         @Expect(nativeError.location.isSome())
         @Expect(nativeError.location.getOrThrow().byteOffset >= 0)
+    }
+
+    @TestCase
+    func locatedErrorsKeepExactSourceLocations(): Unit {
+        for ((text, offset, line, column) in [
+            ("{\n  \"a\" 1}", 8, 2, 7),
+            ("{\"a\":true} trailing", 11, 1, 12),
+            // yyjson points at the prohibited comma, not the closing bracket.
+            ("[1,\n 2,]", 6, 2, 3)
+        ]) {
+            let error = @AssertThrows[JsonException](YyjsonCompactJsonDocument.parse(
+                yyjsonBytes(text)))
+            @Expect(error.code, "parse_error")
+            let location = error.location.getOrThrow()
+            @Expect(location.byteOffset, offset)
+            @Expect(location.line, line)
+            @Expect(location.column, column)
+        }
     }
 
     @TestCase

@@ -103,13 +103,25 @@ private func jsonSchemaKnownMetaResource(uri: String): Bool {
     uri == "https://json-schema.org/draft/2020-12/schema"
 }
 
+// The three groups below are the single source of truth for recognized
+// child-schema locations. Compilation, regex collection, anchor lookup and
+// construction-time document validation all traverse these same groups.
+// They are package-level constants so traversal allocates nothing per schema.
+let JSON_SCHEMA_SINGLE_CHILD_KEYWORDS: Array<String> = [
+    "additionalProperties", "contains", "contentSchema", "else", "if", "items",
+    "not", "propertyNames", "then", "unevaluatedItems", "unevaluatedProperties"]
+
+let JSON_SCHEMA_ARRAY_CHILD_KEYWORDS: Array<String> = ["allOf", "anyOf", "oneOf", "prefixItems"]
+
+let JSON_SCHEMA_MAP_CHILD_KEYWORDS: Array<String> = [
+    "$defs", "definitions", "dependentSchemas", "patternProperties", "properties"]
+
 func jsonSchemaChildSchemas(objectValue: JsonObject): ArrayList<JsonNode> {
     let result = ArrayList<JsonNode>()
-    for (keyword in ["additionalProperties", "contains", "contentSchema", "else", "if", "items",
-        "not", "propertyNames", "then", "unevaluatedItems", "unevaluatedProperties"]) {
+    for (keyword in JSON_SCHEMA_SINGLE_CHILD_KEYWORDS) {
         match (objectValue.get(keyword)) { case Some(child) => result.add(child); case None => () }
     }
-    for (keyword in ["allOf", "anyOf", "oneOf", "prefixItems"]) {
+    for (keyword in JSON_SCHEMA_ARRAY_CHILD_KEYWORDS) {
         match (objectValue.get(keyword)) {
             case Some(children) =>
                 let array = children.asArray()
@@ -117,7 +129,7 @@ func jsonSchemaChildSchemas(objectValue: JsonObject): ArrayList<JsonNode> {
             case None => ()
         }
     }
-    for (keyword in ["$defs", "definitions", "dependentSchemas", "patternProperties", "properties"]) {
+    for (keyword in JSON_SCHEMA_MAP_CHILD_KEYWORDS) {
         match (objectValue.get(keyword)) {
             case Some(children) =>
                 let object = children.asObject()

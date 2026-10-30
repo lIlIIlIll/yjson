@@ -854,8 +854,13 @@ struct YyjsonJsonValue <: JsonValueView {
     }
 
     public func asBool(): Bool {
-        if (inlineKind == YJ_COMPACT_BOOL) {
+        // Fallback inline members carry no yyjson node, so a non-boolean
+        // inline kind must fail instead of reading the unrelated node-0 value.
+        if (inlineKind >= 0) {
             document.ensureOpen()
+            if (inlineKind != YJ_COMPACT_BOOL) {
+                throw JsonException("Expected boolean value", code: "type_mismatch")
+            }
             inlinePayload != 0u64
         } else {
             document.boolAt(node)
@@ -1027,9 +1032,14 @@ private func yyjsonParseError(bytes: Array<Byte>, code: Int32, offset: Int64): J
         case code == YJ_COMPACT_VALUE_TOO_LARGE => "yyjson JSON value is too large"
         case _ => "Invalid JSON"
     }
+    // The backend reports a negative offset when the failure has no byte
+    // position (for example a yyjson allocator failure). Fabricating a
+    // JsonLocation would replace the classified error with an
+    // IllegalArgumentException from the location invariant checks.
+    if (offset < 0) { return JsonException(message, code: errorCode) }
     var line: Int64 = 1
     var column: Int64 = 1
-    let limit = if (offset < 0) { 0 } else if (offset > bytes.size) { bytes.size } else { offset }
+    let limit = if (offset > bytes.size) { bytes.size } else { offset }
     for (index in 0..limit) {
         if (bytes[index] == b'\n') { line++; column = 1 } else { column++ }
     }

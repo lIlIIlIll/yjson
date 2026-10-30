@@ -63,6 +63,19 @@ let schema = JsonSchema.parse(
 resolver 的 I/O、鉴权、缓存和超时由应用在构造阶段负责。编译器处理循环和重复引用，
 引用解析次数受 `JsonSchemaLimits.maxRefResolutions` 约束。
 
+## 构造阶段的模式检查
+
+`JsonSchema.parse` 和构造器会检查已支持关键词的形状与取值，并递归检查已识别的子模式位置。
+例如，`minItems: "two"`、`multipleOf: 0`、`additionalProperties: 5` 均在构造时拒绝，
+不等到某个实例恰好执行这些规则。未使用的 `$defs`、条件分支和已解析的外部资源也接受检查。
+
+长度和数量约束使用非负 `Int64` 范围整数；`2`、`2.0`、`2e0` 采用相同的整数语义，
+转换不经过 `Float64` 舍入。`type`、组合规则和 `prefixItems` 的数组必须非空；
+`required` 与 `dependentRequired` 的字符串数组不允许重复项。空 `required` 和空 `enum` 保持有效。
+
+这些检查不把未知扩展关键词当作子模式，也不解释未支持的旧方言关键词或纯注解内容。
+模式不合法时抛出 `JsonException`；正则子集和显式方言限制仍使用各自的错误分类。
+
 ## 格式校验
 
 `JsonSchemaFormatMode` 只有两种：

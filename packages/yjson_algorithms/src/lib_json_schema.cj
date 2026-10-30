@@ -630,6 +630,10 @@ public class JsonSchema {
                 code: "unsupported_schema_dialect")
         }
         let frozenDocument = document.materialize()
+        // Shape checks run before resource resolution, regex compilation and
+        // dialect inspection so a malformed keyword is reported once, with its
+        // schema path, instead of surfacing later during instance validation.
+        validateJsonSchemaDocument(frozenDocument, "#")
         let resources = compileJsonSchemaResourceGraph(frozenDocument,
             config.resolver, config.limits)
         let regexes = compileJsonSchemaRegexes(frozenDocument, resources, config.limits)
@@ -665,7 +669,6 @@ public class JsonSchema {
             case _ => ()
         }
         this.validationVocabulary = usesValidationVocabulary
-        validateJsonSchemaDocument(frozenDocument, "#")
     }
 
     /**
@@ -2243,66 +2246,161 @@ func splitJsonSchemaAscii(value: String, separator: Byte): ArrayList<String> {
     }
     result.add(value[start..value.size]); result
 }
+
+private let JSON_SCHEMA_NUMERIC_LIMIT_KEYWORDS: Array<String> = [
+    "minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum"]
+
+private let JSON_SCHEMA_NON_NEGATIVE_INT_KEYWORDS: Array<String> = [
+    "minLength", "maxLength", "minItems", "maxItems", "minProperties", "maxProperties",
+    "minContains", "maxContains"]
+
+private let JSON_SCHEMA_STRING_REFERENCE_KEYWORDS: Array<String> = [
+    "$ref", "$dynamicRef", "$id", "$schema", "$anchor", "$dynamicAnchor"]
+
+/**
+ * Rejects malformed schemas at construction time, before any instance exists.
+ *
+ * Every keyword the validator reads is checked here with the same shape and
+ * value constraints the validator would otherwise rely on, including keywords
+ * in child schemas that a particular instance never reaches. Keywords yjson
+ * does not interpret (`$comment`, `deprecated`, `readOnly`, extensions such as
+ * `x-*`) are deliberately left untouched.
+ */
 func validateJsonSchemaDocument(schemaValue: JsonNode, schemaPath: String): Unit {
     match (schemaValue.kind()) {
         case JsonKind.Boolean => ()
         case JsonKind.Object =>
             let objectValue = schemaValue.asObject()
-            match (objectValue.get("type")) {
-                case Some(typeSchema) => validateJsonSchemaTypeKeyword(typeSchema, appendSchemaPath(schemaPath, "type"))
-                case None => ()
-            }
-            match (objectValue.get("required")) {
-                case Some(requiredSchema) => validateJsonSchemaStringArray(requiredSchema, appendSchemaPath(schemaPath, "required"))
-                case None => ()
-            }
-            validateJsonSchemaDocumentMap(objectValue, "properties", schemaPath)
-            match (objectValue.get("items")) {
-                case Some(itemsSchema) => validateJsonSchemaDocument(itemsSchema, appendSchemaPath(schemaPath, "items"))
-                case None => ()
-            }
+            validateJsonSchemaDocumentKeywords(objectValue, schemaPath)
             validateJsonSchemaDocumentValueKeywords(objectValue, schemaPath)
-            validateJsonSchemaDocumentApplicators(objectValue, schemaPath)
-            validateJsonSchemaDocumentMap(objectValue, "$defs", schemaPath)
-            validateJsonSchemaDocumentMap(objectValue, "definitions", schemaPath)
+            validateJsonSchemaDocumentObjectKeywords(objectValue, schemaPath)
+            validateJsonSchemaDocumentReferenceKeywords(objectValue, schemaPath)
+            // `$comment`, `title`, `description`, `default`, `deprecated`,
+            // `readOnly`, `writeOnly`, `contentMediaType`, `contentEncoding` and
+            // unknown extensions are annotations: yjson never interprets them,
+            // so no shape is enforced and they stay accepted verbatim.
+            // Recognized child-schema locations are traversed through the same
+            // groups compilation and anchor lookup use, so a location can never
+            // be recognized in one place and skipped in another.
+            for (keyword in JSON_SCHEMA_SINGLE_CHILD_KEYWORDS) {
+                validateJsonSchemaDocumentChild(objectValue, keyword, schemaPath)
+            }
+            for (keyword in JSON_SCHEMA_ARRAY_CHILD_KEYWORDS) {
+                validateJsonSchemaDocumentArray(objectValue, keyword, schemaPath)
+            }
+            for (keyword in JSON_SCHEMA_MAP_CHILD_KEYWORDS) {
+                validateJsonSchemaDocumentMap(objectValue, keyword, schemaPath)
+            }
         case _ => throw JsonException("${schemaPath}: schema must be a boolean or object")
     }
 }
 
-private func validateJsonSchemaDocumentValueKeywords(objectValue: JsonObject, schemaPath: String): Unit {
-    match (objectValue.get("enum")) {
-        case Some(enumSchema) =>
-            let _ = enumSchema.asArray()
-        case None => ()
-    }
-    match (objectValue.get("minimum")) {
-        case Some(limitSchema) =>
-            let _ = requireSchemaDecimal(limitSchema, appendSchemaPath(schemaPath, "minimum"))
-        case None => ()
-    }
-    match (objectValue.get("maximum")) {
-        case Some(limitSchema) =>
-            let _ = requireSchemaDecimal(limitSchema, appendSchemaPath(schemaPath, "maximum"))
-        case None => ()
-    }
-    match (objectValue.get("minLength")) {
-        case Some(lengthSchema) =>
-            let _ = requireSchemaNonNegativeInt(lengthSchema, appendSchemaPath(schemaPath, "minLength"))
-        case None => ()
-    }
-    match (objectValue.get("maxLength")) {
-        case Some(lengthSchema) =>
-            let _ = requireSchemaNonNegativeInt(lengthSchema, appendSchemaPath(schemaPath, "maxLength"))
+private func validateJsonSchemaDocumentChild(objectValue: JsonObject, keyword: String, schemaPath: String): Unit {
+    match (objectValue.get(keyword)) {
+        case Some(childSchema) => validateJsonSchemaDocument(childSchema, appendSchemaPath(schemaPath, keyword))
         case None => ()
     }
 }
 
-private func validateJsonSchemaDocumentApplicators(objectValue: JsonObject, schemaPath: String): Unit {
-    validateJsonSchemaDocumentArray(objectValue, "allOf", schemaPath)
-    validateJsonSchemaDocumentArray(objectValue, "anyOf", schemaPath)
-    validateJsonSchemaDocumentArray(objectValue, "oneOf", schemaPath)
-    match (objectValue.get("not")) {
-        case Some(notSchema) => validateJsonSchemaDocument(notSchema, appendSchemaPath(schemaPath, "not"))
+private func validateJsonSchemaDocumentKeywords(objectValue: JsonObject, schemaPath: String): Unit {
+    match (objectValue.get("type")) {
+        case Some(typeSchema) => validateJsonSchemaTypeKeyword(typeSchema, appendSchemaPath(schemaPath, "type"))
+        case None => ()
+    }
+    match (objectValue.get("enum")) {
+        case Some(enumSchema) =>
+            let _ = requireSchemaArray(enumSchema, appendSchemaPath(schemaPath, "enum"))
+        case None => ()
+    }
+    match (objectValue.get("required")) {
+        case Some(requiredSchema) => validateJsonSchemaStringArray(requiredSchema, appendSchemaPath(schemaPath, "required"))
+        case None => ()
+    }
+    match (objectValue.get("format")) {
+        case Some(formatValue) =>
+            validateJsonSchemaDocumentString(formatValue, appendSchemaPath(schemaPath, "format"))
+        case None => ()
+    }
+    match (objectValue.get("pattern")) {
+        case Some(patternValue) =>
+            validateJsonSchemaDocumentString(patternValue, appendSchemaPath(schemaPath, "pattern"))
+        case None => ()
+    }
+}
+
+private func validateJsonSchemaDocumentString(value: JsonNode, schemaPath: String): Unit {
+    if (value.kind() != JsonKind.String) {
+        throw JsonException("${schemaPath}: expected string schema value")
+    }
+}
+
+private func requireSchemaObject(value: JsonNode, schemaPath: String): JsonObject {
+    match (value.kind()) {
+        case JsonKind.Object => value.asObject()
+        case _ => throw JsonException("${schemaPath}: expected object schema value")
+    }
+}
+
+private func requireSchemaArray(value: JsonNode, schemaPath: String): JsonArray {
+    match (value.kind()) {
+        case JsonKind.Array => value.asArray()
+        case _ => throw JsonException("${schemaPath}: expected array schema value")
+    }
+}
+
+private func validateJsonSchemaDocumentValueKeywords(objectValue: JsonObject, schemaPath: String): Unit {
+    for (keyword in JSON_SCHEMA_NUMERIC_LIMIT_KEYWORDS) {
+        match (objectValue.get(keyword)) {
+            case Some(limitSchema) =>
+                let _ = requireSchemaDecimal(limitSchema, appendSchemaPath(schemaPath, keyword))
+            case None => ()
+        }
+    }
+    match (objectValue.get("multipleOf")) {
+        case Some(divisorSchema) =>
+            let divisor = requireSchemaDecimal(divisorSchema, appendSchemaPath(schemaPath, "multipleOf"))
+            if (divisor <= Decimal(0)) {
+                throw JsonException("${appendSchemaPath(schemaPath, "multipleOf")}: expected a positive number")
+            }
+        case None => ()
+    }
+    for (keyword in JSON_SCHEMA_NON_NEGATIVE_INT_KEYWORDS) {
+        match (objectValue.get(keyword)) {
+            case Some(sizeSchema) =>
+                let _ = requireSchemaNonNegativeInt(sizeSchema, appendSchemaPath(schemaPath, keyword))
+            case None => ()
+        }
+    }
+    match (objectValue.get("uniqueItems")) {
+        case Some(uniqueSchema) =>
+            if (uniqueSchema.kind() != JsonKind.Boolean) {
+                throw JsonException("${appendSchemaPath(schemaPath, "uniqueItems")}: expected boolean schema value")
+            }
+        case None => ()
+    }
+}
+
+private func validateJsonSchemaDocumentReferenceKeywords(objectValue: JsonObject, schemaPath: String): Unit {
+    for (keyword in JSON_SCHEMA_STRING_REFERENCE_KEYWORDS) {
+        match (objectValue.get(keyword)) {
+            case Some(referenceValue) =>
+                validateJsonSchemaDocumentString(referenceValue, appendSchemaPath(schemaPath, keyword))
+            case None => ()
+        }
+    }
+    // `$vocabulary` is only read from a resolved meta-schema, where the runtime
+    // checks key presence alone, so no shape constraint is enforced here.
+}
+
+private func validateJsonSchemaDocumentObjectKeywords(objectValue: JsonObject, schemaPath: String): Unit {
+    match (objectValue.get("dependentRequired")) {
+        case Some(dependenciesSchema) =>
+            let keywordPath = appendSchemaPath(schemaPath, "dependentRequired")
+            let dependencies = requireSchemaObject(dependenciesSchema, keywordPath)
+            for (index in 0..dependencies.size()) {
+                validateJsonSchemaStringArray(dependencies.valueAt(index),
+                    appendSchemaPath(keywordPath, dependencies.nameAt(index)))
+            }
         case None => ()
     }
 }
@@ -2310,11 +2408,12 @@ private func validateJsonSchemaDocumentApplicators(objectValue: JsonObject, sche
 private func validateJsonSchemaDocumentMap(objectValue: JsonObject, keyword: String, schemaPath: String): Unit {
     match (objectValue.get(keyword)) {
         case Some(value) =>
-            let schemas = value.asObject()
+            let keywordPath = appendSchemaPath(schemaPath, keyword)
+            let schemas = requireSchemaObject(value, keywordPath)
             for (index in 0..schemas.size()) {
                 let name = schemas.nameAt(index)
                 let childSchema = schemas.valueAt(index)
-                validateJsonSchemaDocument(childSchema, appendSchemaPath(appendSchemaPath(schemaPath, keyword), name))
+                validateJsonSchemaDocument(childSchema, appendSchemaPath(keywordPath, name))
             }
         case None => ()
     }
@@ -2323,32 +2422,49 @@ private func validateJsonSchemaDocumentMap(objectValue: JsonObject, keyword: Str
 private func validateJsonSchemaDocumentArray(objectValue: JsonObject, keyword: String, schemaPath: String): Unit {
     match (objectValue.get(keyword)) {
         case Some(value) =>
-            let schemas = value.asArray()
+            let keywordPath = appendSchemaPath(schemaPath, keyword)
+            let schemas = requireSchemaArray(value, keywordPath)
+            if (schemas.size() == 0) {
+                throw JsonException("${keywordPath}: expected a non-empty schema array")
+            }
             for (index in 0..schemas.size()) {
-                validateJsonSchemaDocument(schemas[index], appendSchemaPath(appendSchemaPath(schemaPath, keyword), index.toString()))
+                validateJsonSchemaDocument(schemas[index], appendSchemaPath(keywordPath, index.toString()))
             }
         case None => ()
     }
 }
 
+
 private func validateJsonSchemaTypeKeyword(typeSchema: JsonNode, schemaPath: String): Unit {
     match (typeSchema.kind()) {
         case JsonKind.String => validateJsonSchemaTypeName(typeSchema.asString(), schemaPath)
         case JsonKind.Array =>
-            let typeNames = typeSchema.asArray()
+            let typeNames = requireSchemaArray(typeSchema, schemaPath)
+            if (typeNames.size() == 0) {
+                throw JsonException("${schemaPath}: expected a non-empty type array")
+            }
+            let names = HashSet<String>()
             for (index in 0..typeNames.size()) {
                 let childPath = appendSchemaPath(schemaPath, index.toString())
+                validateJsonSchemaDocumentString(typeNames[index], childPath)
                 validateJsonSchemaTypeName(typeNames[index].asString(), childPath)
+                if (!names.add(typeNames[index].asString())) {
+                    throw JsonException("${childPath}: duplicate schema type")
+                }
             }
         case _ => throw JsonException("${schemaPath}: type must be a string or string array")
     }
 }
 
 private func validateJsonSchemaStringArray(value: JsonNode, schemaPath: String): Unit {
-    let array = value.asArray()
+    let array = requireSchemaArray(value, schemaPath)
+    let names = HashSet<String>()
     for (index in 0..array.size()) {
         if (array[index].kind() != JsonKind.String) {
             throw JsonException("${appendSchemaPath(schemaPath, index.toString())}: expected string")
+        }
+        if (!names.add(array[index].asString())) {
+            throw JsonException("${appendSchemaPath(schemaPath, index.toString())}: duplicate string")
         }
     }
 }
@@ -2418,11 +2534,8 @@ private func requireSchemaNonNegativeInt(value: JsonNode, schemaPath: String): I
         throw JsonException("${schemaPath}: expected non-negative integer schema value")
     }
     let decoded = try {
-        Int64(Float64.parse(value.asNumberText()))
+        decimal.toInt64()
     } catch (_: Exception) {
-        throw JsonException("${schemaPath}: integer schema value is outside Int64 range")
-    }
-    if (Decimal(decoded) != decimal) {
         throw JsonException("${schemaPath}: integer schema value is outside Int64 range")
     }
     if (decoded < 0) {
