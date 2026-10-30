@@ -1400,3 +1400,26 @@ Pure 的参数证据为已散列的实际 argv 收据，其原始 execve 日志�
 依赖。`DirectBufferWriterTarget` 的构造、重置、取字符串与字节，以及
 `GeneratedWriteStateV1.updateLastField` 是待验证的成员候选。若后续决定收窄，先说明
 影响与迁移，取得明确确认，再同步接口清单和独立消费方测试；不与注释补全混为一项完成。
+
+## PR #17：生成代码消费方契约补验
+
+PR [#17](https://github.com/lIlIIlIll/yjson/pull/17) 首轮 CI
+[`41057576777`](https://github.com/lIlIIlIll/yjson/actions/runs/41057576777)
+在 `Generated code change risk` 失败：三个 SPI 文件的注释变化也属于该门禁的风险范围，
+而本轮 diff 尚未新增外部运行时测试。保留原门禁与首次失败，不豁免注释文件。
+
+在 `packages/codec_integration/src/api_documentation_contract_test.cj` 新增外部使用方测试，
+用包含多字节中文和换行转义的生成 codec 验证字符串、字节数组及流输出：精确 UTF-8
+字节上限成功，少一个字节抛出 `output_too_large`，随后独立调用仍成功。
+测试只通过 `YJson` 应用入口断言结果，不依赖内部调用顺序。
+
+使用 STS `1.2.0`、匹配 stdx、普通 `-O2` 执行
+`bash scripts/ci_job.sh macro-consumer`：41 项测试、集成可执行文件与暂存后的宏外部
+使用方全部通过。首次测试写法中 unsafe 块后直接取属性触发编译器
+`Unsupported major expr kind`；拆为两个局部变量后通过，未修改 SDK、优化参数或断言。
+两次本地日志及托管首次失败日志均保留在任务私有证据目录。
+
+本次仅增加测试和本节记录。逐文件核对确认其不属于文档生成的 145 个输入，也不属于
+产品或性能 harness 输入；`2945d3b` 的本地完整验证及 `ac4f8b9` 的正式测量继续适用。
+为保留这两个冻结身份的可达性，消费方补验使用独立测试提交；托管 CI 将验证更新后的
+精确 PR HEAD。PR、main 和 Pages 的最终状态仍以实际运行结果为准。

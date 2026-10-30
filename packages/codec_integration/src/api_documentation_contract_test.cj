@@ -48,6 +48,32 @@ private class ApiDocumentationPairCodec <: JsonCodec<ApiDocumentationRecord> {
 @Test
 class ApiDocumentationContractConsumerTest {
     @TestCase
+    func generatedWritesApplyUtf8OutputBudgetsAcrossTargets(): Unit {
+        let value = ApiDocumentationRecord(7, Some("中\n"))
+        let expected = "{\"user_id\":7,\"nickname\":\"中\\n\"}"
+        let expectedBytes = unsafe { expected.rawData() }
+        let byteCount = expectedBytes.size
+        let exact = JsonWriteOptions(maxOutputBytes: byteCount)
+        let tooSmall = JsonWriteOptions(maxOutputBytes: byteCount - 1)
+
+        @Expect(YJson.toJson(value, options: exact), expected)
+        @Expect(String.fromUtf8(YJson.toJsonBytes(value, options: exact)), expected)
+        let output = YJsonMemoryOutputStream()
+        YJson.writeJson(value, output, options: exact)
+        @Expect(output.toUtf8String(), expected)
+
+        let stringError = @AssertThrows[JsonException](YJson.toJson(value, options: tooSmall))
+        @Expect(stringError.code, "output_too_large")
+        let bytesError = @AssertThrows[JsonException](YJson.toJsonBytes(value, options: tooSmall))
+        @Expect(bytesError.code, "output_too_large")
+        let streamError = @AssertThrows[JsonException](
+            YJson.writeJson(value, YJsonMemoryOutputStream(), options: tooSmall))
+        @Expect(streamError.code, "output_too_large")
+
+        @Expect(YJson.toJson(value, options: exact), expected)
+    }
+
+    @TestCase
     func handwrittenCodecUsesTheSameUtf8ContractForStringBytesAndStream(): Unit {
         let codec = ApiDocumentationPairCodec()
         let input = "[7,\"\\u4E2D\"]"
