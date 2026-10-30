@@ -18,6 +18,9 @@
 | cjdoc 正式发布运行 | [41029708849 / attempt 2](https://github.com/lIlIIlIll/cjdoc/actions/runs/41029708849/attempts/2)，三平台、性能、打包及原发布器通过 |
 | 工具资格配置 SHA-256 | `dbfcce51f26cb7229ee236ac2a78b692591d21d3170d8bd4ce1db50ba5c6c7d2` |
 | cjdoc 精确源码归档 SHA-256 | `21a6e03a80ff5fcef259c1a80f55401f81e01c0fe33c9390c9409a0cf1f6cc75`；995 个文件及权限与 Git blob 一致 |
+| 主仓本地验证源码 | `2945d3beb0ceb696cd7c673a0adee69b9635d860`，tree `7c0ad7021985a2509d815f4e9cdef157ce62a94f`；完整 strict 与全部 17 个 fresh CI gate 通过 |
+| 正式生成 Doc IR SHA-256 | `fe4eb7b2d7315684f969986bc1529284a45c1dc41a676edc484f5c569c1e691b`；九包 1035 项声明及 333 个实际执行示例通过 |
+| 本地完整离线包 | 16659640 字节，SHA-256 `4c810d798bf27054dfb9c51f4fa93aca11124f72b4e2856ff6f89ff295a9b4b3`；5331 个文件与站点相同，真实断网 query/MCP 及空 cjpm 缓存下全部 333 示例、11 profile 重建通过 |
 
 本地工具资格使用下表中相同的 cjc/cjpm 和普通 static stdx，SDK、构建策略与 wrapper
 摘要不变。两个独立空缓存构建的二进制 SHA-256 分别为
@@ -38,7 +41,9 @@ payload、固定 SDK 及嵌入候选收据均独立检查通过。三个收据�
 main 前两次失败及 Release 首次 macOS `markdown` 依赖的 `llc -O2` 退出 139 均保留。
 用户明确授权完整重跑及同任务后续操作；所有门禁、优化参数和堆配置保持不变。
 Linux 公开二进制与 main attempt 2 的失败二进制相同；后续通过不确定 GC 或 LLVM 故障根因。
-最终主仓冻结输入、三平台文档示例与 yjson Pages 仍单独验收，不以 cjdoc 发布替代。
+本地主仓冻结输入已单独验收；托管三平台文档示例与 yjson Pages 仍待验收，不以 cjdoc
+发布或本地结果替代。随后仅追加本页和实施记录正文，不改变生成器的 145 文件输入、
+工具配置、产品或 harness。托管按最终 PR/main 提交重新生成，本地证据仍绑定 2945d3b。
 
 ## 当前性能输入
 
