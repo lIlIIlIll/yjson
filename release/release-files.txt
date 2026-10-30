@@ -395,3 +395,8 @@ docs/performance/results/2026-10-30-api-contracts-pure.md
 docs/performance/results/2026-10-30-api-contracts-seven-library.md
 benchmarks/results/full-seven-library/2026-10-30-api-contracts/README.md
 benchmarks/results/full-seven-library/2026-10-30-api-contracts/independent-validation.md
+
+# Issue #15 source-bound performance reports
+docs/performance/results/2026-10-30-issue-15-contracts-pure.md
+docs/performance/results/2026-10-30-issue-15-contracts-seven-library.md
+benchmarks/results/full-seven-library/2026-10-30-issue-15-contracts/README.md

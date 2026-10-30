@@ -1,0 +1,148 @@
+{
+  "archiveDirectoriesInspected": 1206,
+  "archiveFilesInspected": 13699,
+  "archives": [
+    {
+      "allPayloadsUtf8": true,
+      "anonymousArchiveOwnerFields": true,
+      "archive": "pure-issue15-first-failure.tar.gz",
+      "directories": 578,
+      "executableMagicFound": false,
+      "regularFiles": 2887,
+      "sha256": "1f8da855d9bbcca5c42c03718ea457e90b7a3ffd4f752bc6e25ab225608abcad",
+      "uncompressedBytes": 4374354,
+      "unsafePathsOrGitMetadataFound": false
+    },
+    {
+      "allPayloadsUtf8": true,
+      "anonymousArchiveOwnerFields": true,
+      "archive": "pure-issue15-qualified.tar.gz",
+      "directories": 628,
+      "executableMagicFound": false,
+      "regularFiles": 3138,
+      "sha256": "9992b2759d83b1f6de2818be238bda0b3a172de3d51709097723eb21f8afaff3",
+      "uncompressedBytes": 4921482,
+      "unsafePathsOrGitMetadataFound": false
+    },
+    {
+      "allPayloadsUtf8": true,
+      "anonymousArchiveOwnerFields": true,
+      "archive": "pure-issue15-source-inputs.tar.gz",
+      "directories": 0,
+      "executableMagicFound": false,
+      "regularFiles": 806,
+      "sha256": "d6c86a783906639ac6cb6beac4e880bddbf44e93753b81dec23cf402980d122d",
+      "uncompressedBytes": 16278611,
+      "unsafePathsOrGitMetadataFound": false
+    },
+    {
+      "allPayloadsUtf8": true,
+      "anonymousArchiveOwnerFields": true,
+      "archive": "seven-library-issue15-batch1.tar.gz",
+      "directories": 0,
+      "executableMagicFound": false,
+      "regularFiles": 3000,
+      "sha256": "acd63e4573f9ae9446cd9f1f7cc57d9060bd945f2e395d85b30d83b4e382099f",
+      "uncompressedBytes": 10391575,
+      "unsafePathsOrGitMetadataFound": false
+    },
+    {
+      "allPayloadsUtf8": true,
+      "anonymousArchiveOwnerFields": true,
+      "archive": "seven-library-issue15-batch2.tar.gz",
+      "directories": 0,
+      "executableMagicFound": false,
+      "regularFiles": 3000,
+      "sha256": "6446fffe5b6eced27fa0288c2e847ed8733bb793e2168e9801463227ff9545b0",
+      "uncompressedBytes": 10392333,
+      "unsafePathsOrGitMetadataFound": false
+    },
+    {
+      "allPayloadsUtf8": true,
+      "anonymousArchiveOwnerFields": true,
+      "archive": "seven-library-issue15-build-audits.tar.gz",
+      "directories": 0,
+      "executableMagicFound": false,
+      "regularFiles": 25,
+      "sha256": "daa5336a538010b3f10436db356026f80c621cb267f466842057ea2b3f797fdb",
+      "uncompressedBytes": 1488071,
+      "unsafePathsOrGitMetadataFound": false
+    },
+    {
+      "allPayloadsUtf8": true,
+      "anonymousArchiveOwnerFields": true,
+      "archive": "seven-library-issue15-harness.tar.gz",
+      "directories": 0,
+      "executableMagicFound": false,
+      "regularFiles": 843,
+      "sha256": "7143898c1ad80d6483668d49ec9426b52aec31ae9b4e8f900f64e4ed0aaa0e41",
+      "uncompressedBytes": 10042699,
+      "unsafePathsOrGitMetadataFound": false
+    }
+  ],
+  "findings": [],
+  "reviewedSyntheticMatches": [
+    {
+      "disposition": "Unchanged synthetic Windows path sanitization test; not a local environment path.",
+      "line": 22,
+      "member": "seven-library-issue15-harness/source-inputs/repo/scripts/test_run_api_doc_examples.py",
+      "patternKind": "unix-user-home"
+    },
+    {
+      "disposition": "Unchanged synthetic Windows path sanitization test; not a local environment path.",
+      "line": 25,
+      "member": "seven-library-issue15-harness/source-inputs/repo/scripts/test_run_api_doc_examples.py",
+      "patternKind": "unix-user-home"
+    },
+    {
+      "disposition": "Unchanged synthetic Windows path sanitization test; not a local environment path.",
+      "line": 26,
+      "member": "seven-library-issue15-harness/source-inputs/repo/scripts/test_run_api_doc_examples.py",
+      "patternKind": "unix-user-home"
+    },
+    {
+      "disposition": "Unchanged synthetic Windows path sanitization test; not a local environment path.",
+      "line": 26,
+      "member": "seven-library-issue15-harness/source-inputs/repo/scripts/test_run_api_doc_examples.py",
+      "patternKind": "unix-user-home"
+    },
+    {
+      "disposition": "Unchanged synthetic Windows path sanitization test; not a local environment path.",
+      "line": 22,
+      "member": "seven-library-issue15-harness/source-inputs/repo/scripts/test_run_api_doc_examples.py",
+      "patternKind": "windows-user-home"
+    },
+    {
+      "disposition": "Unchanged synthetic Windows path sanitization test; not a local environment path.",
+      "line": 24,
+      "member": "seven-library-issue15-harness/source-inputs/repo/scripts/test_run_api_doc_examples.py",
+      "patternKind": "windows-user-home"
+    },
+    {
+      "disposition": "Unchanged synthetic Windows path sanitization test; not a local environment path.",
+      "line": 25,
+      "member": "seven-library-issue15-harness/source-inputs/repo/scripts/test_run_api_doc_examples.py",
+      "patternKind": "windows-user-home"
+    },
+    {
+      "disposition": "Unchanged synthetic Windows path sanitization test; not a local environment path.",
+      "line": 26,
+      "member": "seven-library-issue15-harness/source-inputs/repo/scripts/test_run_api_doc_examples.py",
+      "patternKind": "windows-user-home"
+    },
+    {
+      "disposition": "Unchanged synthetic Windows path sanitization test; not a local environment path.",
+      "line": 26,
+      "member": "seven-library-issue15-harness/source-inputs/repo/scripts/test_run_api_doc_examples.py",
+      "patternKind": "windows-user-home"
+    },
+    {
+      "disposition": "Unchanged synthetic Windows path sanitization test; not a local environment path.",
+      "line": 26,
+      "member": "seven-library-issue15-harness/source-inputs/repo/scripts/test_run_api_doc_examples.py",
+      "patternKind": "windows-user-home"
+    }
+  ],
+  "scope": "All archive payloads, paths, member types, owner and extended-header fields; task-local homes, Unix/Windows home patterns, private IPv4 and private-key material. Non-archive evidence text scanned for local homes, private IPv4 and keys. The synthetic path fixture is explicitly adjudicated, not altered.",
+  "status": "PASS"
+}

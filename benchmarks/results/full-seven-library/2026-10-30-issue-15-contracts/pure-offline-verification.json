@@ -1,0 +1,74 @@
+{
+  "status": "PASS",
+  "originalQualifiedArchive": "optimized-pure-results.tar.gz",
+  "originalQualifiedSha256": "fe8f1f9532a2239f1160047a6d16bea2fafdcebd636ff259581b057efa6f7904",
+  "publicQualifiedArchive": "pure-issue15-qualified.tar.gz",
+  "publicQualifiedSha256": "9992b2759d83b1f6de2818be238bda0b3a172de3d51709097723eb21f8afaff3",
+  "projectionReceipt": "pure-publication-projection.json",
+  "productionMain": "0d4d39a3e92ccaf4d3d0a37367160973dad21dbd",
+  "productionMacro": "2bfd34c08c421c04a0cd8e3d1326140849f1f21b",
+  "qualifiedRuns": {
+    "release-second": {
+      "status": "PASS",
+      "cases": 24,
+      "rounds": 11,
+      "directCells": 528,
+      "preflightCells": 48,
+      "sourceIdentityAndPostBuildCleanliness": true,
+      "rawSidecarTimingFieldsMatched": true,
+      "independentMedianCvRatioAndPairedWins": true,
+      "allRatiosAtMost1_05": true
+    },
+    "head-deep-second": {
+      "status": "PASS",
+      "cases": 2,
+      "rounds": 11,
+      "directCells": 44,
+      "preflightCells": 4,
+      "sourceIdentityAndPostBuildCleanliness": true,
+      "rawSidecarTimingFieldsMatched": true,
+      "independentMedianCvRatioAndPairedWins": true,
+      "allRatiosAtMost1_05": true
+    }
+  },
+  "firstFailedRun": {
+    "originalSha256": "ce41d53f85e2a97839317b0899b9e739a4f9278162daf880a7447cf9005fad24",
+    "publicArchive": "pure-issue15-first-failure.tar.gz",
+    "cases": 24,
+    "rounds": 11,
+    "directCells": 528,
+    "gatePassed": false,
+    "overruns": [
+      {
+        "case": "yjsonStringEncodePerson",
+        "ratio": 1.9529787785293597
+      },
+      {
+        "case": "yjsonStringDecodePerson",
+        "ratio": 1.1122180564041562
+      },
+      {
+        "case": "yjsonStringEncodeProfileBundle",
+        "ratio": 1.4954188910070851
+      },
+      {
+        "case": "yjsonStringDecodeProfileBundle",
+        "ratio": 1.1276729995283117
+      },
+      {
+        "case": "yjsonBytesEncodeProfileBundle",
+        "ratio": 1.4983966094747052
+      },
+      {
+        "case": "yjsonBytesDecodeProfileBundle",
+        "ratio": 1.1375166202611124
+      },
+      {
+        "case": "encodePersonMemory",
+        "ratio": 1.1326006788302758
+      }
+    ],
+    "scope": "Independent ratio rederivation from all stored raw samples; failure retained, not rerun or relabeled."
+  },
+  "scope": "Offline arithmetic, frozen-source and lossless publication-projection verification. No archived program was executed."
+}

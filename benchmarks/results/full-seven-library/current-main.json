@@ -1,49 +1,50 @@
 {
   "candidate": {
-    "identity_sha256": "20ba99ff997c35bc277601c6fd8a4f76fb84ad460925b6c21e4a08f6facdfa22",
-    "lockstep_manifests_sha256": "fc3535a44c7901ba4f5692a3c0577bf4f4093cb9eba4fabb0f34b7a586eefbf9",
+    "identity_sha256": "cd053e16597cd7e0be084a03999b6ddd6d4641bed7bd7e5b00906c310e3fa4d7",
+    "lockstep_manifests_sha256": "e0c1f7f28b959e2f84558b247219fc621d422891c9364119591b2ee08b23b193",
     "package_version": "0.2.0",
     "release_graph_sha256": "27fcf7286a24a009fc10e8eea89aece7286293eba91d28f23e50e69f958a248c",
-    "root_lock_sha256": "4399357237ed3a607a8f3e93b939df8dec6491696255306c439310a63e1f07ff",
-    "root_manifest_sha256": "1b40bd760ee80193608be160c04b448010da5284b6d03d1d837f9f7382296290"
+    "root_lock_sha256": "999a8acc477b499f3f0f3df71bb5e8cdf0dc47c4f400c49b01c5925682d6d3f0",
+    "root_manifest_sha256": "43149fe15c69b7ae93a017d848a972a66e7b5b5f84a3a585d37909234d4fdc4e"
   },
   "checksum_files": [
     "canonical-report-rows.json",
     "download-verification.json",
     "frozen-candidate-binding.json",
-    "independent-validation.md",
-    "original-server-packet-inventory.json",
     "public-harness-archive.json",
     "publication-content-audit.json",
-    "pure-020-source-snapshots.tar.gz",
-    "pure-release-020.tar.gz",
-    "seven-library-020-batch1.tar.gz",
-    "seven-library-020-batch2.tar.gz",
-    "seven-library-020-build-audits.tar.gz",
-    "seven-library-020-harness.tar.gz",
-    "snapshot-export-receipts.json",
-    "source-closure-verification.json",
+    "pure-issue15-first-failure.tar.gz",
+    "pure-issue15-qualified.tar.gz",
+    "pure-issue15-source-inputs.tar.gz",
+    "pure-offline-verification.json",
+    "pure-publication-projection.json",
+    "server-packet-inventory.json",
+    "seven-library-issue15-batch1.tar.gz",
+    "seven-library-issue15-batch2.tar.gz",
+    "seven-library-issue15-build-audits.tar.gz",
+    "seven-library-issue15-harness.tar.gz",
+    "seven-offline-verification.json",
     "strict-verification.json",
     "strict-verification.log"
   ],
-  "effective_harness_sha256": "9d457f09101cb4466a82b000d2494e9c12b2f495b5b16b4fef809811a60d8852",
-  "evidence_dir": "benchmarks/results/full-seven-library/2026-10-30-api-contracts",
+  "effective_harness_sha256": "3f1c2c1de5ae803f99e344a9a283057674ff2de72154cb66389b5b6d833dc8c5",
+  "evidence_dir": "benchmarks/results/full-seven-library/2026-10-30-issue-15-contracts",
   "formal_archives": [
     {
-      "file": "seven-library-020-batch1.tar.gz",
-      "root": "seven-library-020-batch1"
+      "file": "seven-library-issue15-batch1.tar.gz",
+      "root": "seven-library-issue15-batch1"
     },
     {
-      "file": "seven-library-020-batch2.tar.gz",
-      "root": "seven-library-020-batch2"
+      "file": "seven-library-issue15-batch2.tar.gz",
+      "root": "seven-library-issue15-batch2"
     }
   ],
   "harness_archive": {
-    "file": "seven-library-020-harness.tar.gz",
-    "root": "seven-library-020-harness"
+    "file": "seven-library-issue15-harness.tar.gz",
+    "root": "seven-library-issue15-harness"
   },
-  "measured_commit": "ac4f8b987910a473ada7d77f10ce6cd3c12d2248",
-  "product_source_sha256": "4251be5ff98c50a91afdd162ae130d94f8bf2a70c85faf5da6a78304232771af",
-  "result_doc": "docs/performance/results/2026-10-30-api-contracts-seven-library.md",
+  "measured_commit": "0d4d39a3e92ccaf4d3d0a37367160973dad21dbd",
+  "product_source_sha256": "e53700605a8d479abd69b504a138278dc0f9e7be1df6bcd5a8332d0e6e7e5368",
+  "result_doc": "docs/performance/results/2026-10-30-issue-15-contracts-seven-library.md",
   "schema_version": 3
 }

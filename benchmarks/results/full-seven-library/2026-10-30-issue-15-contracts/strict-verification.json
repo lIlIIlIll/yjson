@@ -1,0 +1,21 @@
+{
+  "candidateIdentitySha256": "cd053e16597cd7e0be084a03999b6ddd6d4641bed7bd7e5b00906c310e3fa4d7",
+  "cleanCheckout": true,
+  "command": [
+    "bash",
+    "scripts/ci_job.sh",
+    "perf-evidence-drift",
+    "strict"
+  ],
+  "effectiveHarnessSha256": "3f1c2c1de5ae803f99e344a9a283057674ff2de72154cb66389b5b6d833dc8c5",
+  "exitCode": 0,
+  "indexCalibration": "GitButler setup/teardown mode transition rebuilt the copied workspace index in an isolated archive export.",
+  "laterSourceChanges": "Acceptance status, verification receipts and checksum inventory only; product, effective harness and candidate dependency identity unchanged.",
+  "logNormalization": "None required; public log bytes equal the executed command output.",
+  "logSha256": "a22b2fac2927f4fd725608c9be322403cacf62d70b4029269375995db77c2eab",
+  "macroCommit": "2bfd34c08c421c04a0cd8e3d1326140849f1f21b",
+  "measuredCommit": "0d4d39a3e92ccaf4d3d0a37367160973dad21dbd",
+  "productSourceSha256": "e53700605a8d479abd69b504a138278dc0f9e7be1df6bcd5a8332d0e6e7e5368",
+  "regressionsPassed": 40,
+  "verifiedCommit": "6630fba97bafd52deedc93b02f7638564f1ec838"
+}

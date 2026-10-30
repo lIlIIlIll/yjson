@@ -1,0 +1,31 @@
+{
+  "status": "PASS",
+  "archives": [
+    {
+      "originalArchive": "optimized-pure-results.tar.gz",
+      "originalSha256": "fe8f1f9532a2239f1160047a6d16bea2fafdcebd636ff259581b057efa6f7904",
+      "publicArchive": "pure-issue15-qualified.tar.gz",
+      "publicSha256": "9992b2759d83b1f6de2818be238bda0b3a172de3d51709097723eb21f8afaff3",
+      "publicSizeBytes": 383619,
+      "regularFiles": 3138,
+      "allMemberPayloadsUnchanged": true,
+      "allNamesTypesModesTimesSizesUnchanged": true,
+      "archiveOwnerFieldsNormalized": true,
+      "memberPayloadManifestSha256": "5f1108e3f4f564150cdd9b73b30fba51c2bf311a8081683fbe6c1c6c3ab3f100",
+      "scope": "Only tar owner metadata is anonymized. Original downloads remain private; every file payload and non-owner member attribute was compared byte-for-byte or field-for-field."
+    },
+    {
+      "originalArchive": "release-first.tar.gz",
+      "originalSha256": "ce41d53f85e2a97839317b0899b9e739a4f9278162daf880a7447cf9005fad24",
+      "publicArchive": "pure-issue15-first-failure.tar.gz",
+      "publicSha256": "1f8da855d9bbcca5c42c03718ea457e90b7a3ffd4f752bc6e25ab225608abcad",
+      "publicSizeBytes": 333605,
+      "regularFiles": 2887,
+      "allMemberPayloadsUnchanged": true,
+      "allNamesTypesModesTimesSizesUnchanged": true,
+      "archiveOwnerFieldsNormalized": true,
+      "memberPayloadManifestSha256": "ac34a85bd8e7ae9f785ca32741f50d4e67ac43920642e33eb01866e1467b1f83",
+      "scope": "Only tar owner metadata is anonymized. Original downloads remain private; every file payload and non-owner member attribute was compared byte-for-byte or field-for-field."
+    }
+  ]
+}
