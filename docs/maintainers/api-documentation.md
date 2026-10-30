@@ -5,7 +5,7 @@ API 站点由固定版本的 cjdoc 从发布包图生成。版本和源码校验
 [`release/cjdoc-policy.toml`](../../release/cjdoc-policy.toml)。不要用系统中恰好安装的
 其他 cjdoc 版本替换这条构建链。产品、宏、示例和文档工具统一使用 STS `1.2.0`。
 
-`0.2.0` 文档候选固定使用 cjdoc `0.7.6`。工具资格、真实生成、平台示例和 Pages 的实际结果
+`0.2.0` 文档候选固定使用 cjdoc `0.7.7`。工具资格、真实生成、平台示例和 Pages 的实际结果
 统一记录在[候选实施记录](../implementation/cjdoc-020.md)。
 
 ## 写能够进入页面的注释

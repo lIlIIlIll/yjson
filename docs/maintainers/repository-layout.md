@@ -67,7 +67,7 @@ Pure 核心包、宏、算法、后端接口和加速初始化包不应引入 Na
 ## API 文档生成
 
 `release/cjdoc-tool.toml` 固定 cjdoc 源码、提交、源码归档校验和、STS `1.2.0` 和二进制验证要求。
-`0.2.0` 文档候选固定使用已发布并通过源码资格验证的 cjdoc `0.7.6`。
+`0.2.0` 文档候选固定使用已发布并通过源码资格验证的 cjdoc `0.7.7`。
 `release/cjdoc-policy.toml` 记录经过核对的解析限制，不用隐藏声明代替修复。
 
 `scripts/generate_api_docs.py` 从九包发布图构造隔离的文档 workspace，不维护第二份包清单。
