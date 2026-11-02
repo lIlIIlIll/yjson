@@ -102,9 +102,10 @@ scripts/ci_fresh_checkout.sh
 
 ## 覆盖率
 
-`scripts/coverage.sh` 在临时源码目录中以 `-O0` 编译，合并根包测试、运行时实现选择
-和 Native 加速场景，生成 HTML、JSON、XML 与 `coverage/lcov.info`。覆盖率检查只统计
-`src/lib_*.cj` 产品源码。
+`scripts/coverage.sh` 在临时源码目录中以 `-O0` 编译核心库，采集根包测试、
+`codec_integration` 外部 codec 消费方、运行时实现选择和 Native 加速场景，
+合并为 `coverage/lcov.info`。`coverage/cjcov` 的 HTML、JSON、XML 保留根包原始结果；
+门禁使用合并后的 LCOV，只统计 `src/lib_*.cj` 产品源码。消费方生成代码与宏实现不进入核心覆盖率分母。
 
 [`coverage-baseline.toml`](../../coverage-baseline.toml) 固定：
 

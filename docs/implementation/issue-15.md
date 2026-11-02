@@ -205,3 +205,41 @@ env -u CJPM_CONFIG GIT_CONFIG_COUNT=0 HOME=<empty-home> \
 
 本轮仅提交 Issue #15 的修复、回归、接口清单及验收证据，
 不包含复制到独立工作副本的其他工作树修改。
+
+### PR 首轮门禁与修正
+
+[主仓 PR #20](https://github.com/lIlIIlIll/yjson/pull/20) 的首轮
+[CI 41383879415](https://github.com/lIlIIlIll/yjson/actions/runs/41383879415)
+绑定 `9a5ba39bafddaa10ec0bf582b1c9b8a55d1ffc25`，出现以下失败；这些记录不计为通过：
+
+- API Documentation 的仓库链接集成测试写死了旧性能报告文件名。删除具体文件名集合和文件数量快照，
+  保留当前链接必须进入发布清单、补充材料正文不能成为生成输入、冻结源码可独立构造文档工作区的契约。
+  `python3 scripts/test_generate_api_docs.py` 已通过 51 项；真实冻结与工作区构造冒烟验证了两个新报告链接，
+  并通过临时故障注入证明“读取补充材料正文”仍会被该测试拒绝。
+  记录为 `logs/pr-doc-link-contracts.log` 和 `publication-20261102/doc-link-smoke.log`。
+- Core Coverage 未收集已有的外部 codec 回归。收集器加入 `codec_integration` 的核心库覆盖记录，
+  不新增重复测试，不把消费方或宏源码纳入分母，不改覆盖率门槛。
+- `core` 和 `registry-rehearsal` 的日志明确记录 runner 收到关闭信号，前者退出 143，后者取消；
+  日志中没有对应的源码失败诊断，仍须由后续托管矩阵完成验证。
+
+`bash scripts/coverage.sh` 已实际通过，包含根包 599 项、外部消费方 79 项、十个独立进程场景
+和 Native 加速 13 项。对相同基线 `f632e0951110f1fcaeb2a88deb696174ef16990e` 的产品 diff，
+继续使用原 `coverage-baseline.toml` 检查：
+
+| 指标 | 首轮 CI | 补入消费方后本地结果 | 门槛 |
+| --- | --- | --- | --- |
+| 核心行 | 8672/10449，83.0% | 8853/10449，84.7% | 80% |
+| 核心分支 | 3834/5330，71.9% | 3914/5330，73.4% | 70% |
+| 改动行 | 111/134，82.8% | 132/134，98.5% | 90% |
+| 改动分支 | 54/90，60.0% | 79/90，87.8% | 80% |
+
+命令与结果分别保存为 `logs/pr-consumer-coverage.log` 和 `logs/pr-consumer-patch-coverage.log`；
+LCOV 为独立工作副本的 `coverage/lcov.info`。改动覆盖率命令：
+
+```sh
+python3 scripts/check_patch_coverage.py --diff <task>/publication-20261102/coverage-patch.diff \
+  --lcov coverage/lcov.info --baseline coverage-baseline.toml
+```
+
+本次未修改仓颉产品源码、性能测量脚本或覆盖率门槛；产品与 harness 的逐项输入清单仍与 S1 相同。
+修正后的托管 CI、合并与 Issue 关闭以 PR #20 和 Issue #15 的最终记录为准，不以本地结果替代。
