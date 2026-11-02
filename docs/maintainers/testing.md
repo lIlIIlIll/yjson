@@ -54,6 +54,8 @@ Linux 托管 `core` 和 `registry-rehearsal` 在根包资格检查期间使用�
 容纳 STS `1.2.0` 根包测试编译的内存峰值。工作流只创建和清理本 job 的
 swap 文件，不改已有 swap、`-O2`、优化 pass 或测试集合；准备失败仍使 gate 失败。
 本地执行 `scripts/ci_job.sh` 不会调整宿主机 swap。
+托管 `registry-rehearsal` 的 job 时限为 90 分钟，供同一 job 依次完成暂存根包测试、
+九包构建与 registry 消费验证；其余 Linux matrix job 仍为 45 分钟。此配置不改变测试自身的超时或断言。
 
 checkout、setup、Codecov 和 Pages Action 使用完整 commit SHA。发布证据还要记录 SDK
 归档与安装回执摘要、cjc/cjpm 摘要、stdx 安装清单摘要、运行器镜像、工作流运行 ID 和产物校验和。

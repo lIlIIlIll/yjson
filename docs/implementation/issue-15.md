@@ -290,3 +290,22 @@ CI 候选接线 19 项及 cjdoc 资格检查 12 项通过。候选接线另有 1
 同一公开候选的托管 standards-conformance 已通过。API 清单通过，Linux 工作流完成 YAML 解析及
 三个代表 gate 的 shell 语法检查；这些静态检查不替代新 swap 配置的真实托管运行。
 本次未改变仓颉产品与性能 harness 的逐项输入，不重写 S1 测量身份，也不把本地编译资源测量当作性能资格。
+
+### 第三轮门禁与 registry 时限
+
+[CI 41399934226](https://github.com/lIlIIlIll/yjson/actions/runs/41399934226)
+绑定 `dcd766ab17c44eb65a77a645c882dab843d1ad0f`。27 个 job 成功，包括 Linux `core`、
+API Documentation、Windows/macOS Pure、两个平台的适用文档示例、Core Coverage 和严格性能证据检查。
+Linux `core` 使用新增 swap 后通过 599 项；job 总用时 40 分 13 秒。
+
+唯一未通过的业务 job 为 `registry-rehearsal`：暂存根包 599 项于 07:09:17 UTC 全部通过，
+后续打包编译尚在运行时，于 07:12:29 UTC 被取消。GitHub 注释明确记录：
+`The job has exceeded the maximum execution time of 45m0s`。因此 `CI Required` 失败；
+Pages 部署在 PR 中按既有条件跳过。本轮不计为完整通过，也不自动重跑。
+
+仅将 `registry-rehearsal` 的 job 时限改为 90 分钟，为同一 job 内完整的暂存根包测试、
+九包构建与 registry 消费验证留出时间；其余 Linux matrix job 保持 45 分钟。
+不移除重复环境下必需的暂存源码测试，不修改产品预算、测试自身超时、`-O2` 或失败传播。
+新时限仍须由下一公开提交的完整托管门禁验证。
+原始 job、取消注释及成功根包日志保留在 `publication-20261102/ci-dcd-*.json` 和
+`publication-20261102/ci-dcd-*.log`。

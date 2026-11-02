@@ -137,7 +137,9 @@ jobs:
     name: Tests (${{ matrix.gate }})
     needs: sts
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    # The staged root test build alone takes about 40 minutes with swap.
+    # Registry rehearsal must still build every bundle and run its consumers.
+    timeout-minutes: ${{ matrix.gate == 'registry-rehearsal' && 90 || 45 }}
     strategy:
       fail-fast: false
       matrix:
