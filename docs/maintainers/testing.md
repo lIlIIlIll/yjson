@@ -50,6 +50,11 @@ STS `1.2.0` 的本地 Linux 构建、算法、Native 和格式验证已经执行
 不代表托管三平台通过。各平台仍须保留实际 CI 的命令、优化级别、退出码及首次失败记录，
 未执行的托管验证记为 `NOT RUN`。显式优化级别覆盖只用于单独诊断，不改变发布资格要求。
 
+Linux 托管 `core` 和 `registry-rehearsal` 在根包资格检查期间使用额外的 16 GiB 临时 swap，
+容纳 STS `1.2.0` 根包测试编译的内存峰值。工作流只创建和清理本 job 的
+swap 文件，不改已有 swap、`-O2`、优化 pass 或测试集合；准备失败仍使 gate 失败。
+本地执行 `scripts/ci_job.sh` 不会调整宿主机 swap。
+
 checkout、setup、Codecov 和 Pages Action 使用完整 commit SHA。发布证据还要记录 SDK
 归档与安装回执摘要、cjc/cjpm 摘要、stdx 安装清单摘要、运行器镜像、工作流运行 ID 和产物校验和。
 

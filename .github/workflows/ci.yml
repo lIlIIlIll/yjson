@@ -225,6 +225,28 @@ jobs:
           ulimit -s 131072
           ulimit -s
           echo "cangjie_optimization=$YJSON_CI_DEPENDENCY_OVERRIDE"
+          swap_file=
+          swap_active=false
+          cleanup_root_swap() {
+            if [[ "$swap_active" == true ]]; then
+              sudo swapoff "$swap_file"
+            fi
+            if [[ -n "$swap_file" ]]; then
+              sudo rm -f -- "$swap_file"
+            fi
+          }
+          trap cleanup_root_swap EXIT
+          if [[ "${{ matrix.gate }}" == core || "${{ matrix.gate }}" == registry-rehearsal ]]; then
+            # Full STS root test builds peak above 21 GiB.
+            # Keep full -O2; provision overflow only on these ephemeral runners.
+            swap_file=$(mktemp "$RUNNER_TEMP/yjson-o2-swap.XXXXXX")
+            sudo chown root:root "$swap_file"
+            sudo fallocate -l 16G "$swap_file"
+            sudo mkswap "$swap_file"
+            sudo swapon "$swap_file"
+            swap_active=true
+            free -h
+          fi
           scripts/ci_job.sh "${{ matrix.gate }}"
 
   pure-platforms:

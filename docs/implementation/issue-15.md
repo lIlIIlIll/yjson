@@ -243,3 +243,50 @@ python3 scripts/check_patch_coverage.py --diff <task>/publication-20261102/cover
 
 本次未修改仓颉产品源码、性能测量脚本或覆盖率门槛；产品与 harness 的逐项输入清单仍与 S1 相同。
 修正后的托管 CI、合并与 Issue 关闭以 PR #20 和 Issue #15 的最终记录为准，不以本地结果替代。
+
+### 第二轮门禁与发布前补证
+
+[CI 41388591826](https://github.com/lIlIIlIll/yjson/actions/runs/41388591826)
+绑定 `5b07308d4271694fc3794ac8ed32fe0a8cff0457`。Core Coverage 已通过，托管结果与上表
+“补入消费方后本地结果”一致；Windows、macOS Pure 也通过。本轮仍未满足合并条件：
+
+- API Documentation 已通过修正后的链接测试，但严格分类检查发现 17 个新增生成代码 SPI
+  未进入 `release/api-documentation-required.json`。已按源码现有 `@group 生成代码 SPI`
+  补齐分类，不修改源码分组、文档质量规则或分类门槛。
+- `core` 与 `registry-rehearsal` 再次在根包测试编译期间收到 runner 关闭信号。
+  同一公开提交、同一 STS 编译器的干净本地导出执行 `bash scripts/ci_job.sh core`，
+  599 项通过，峰值 RSS 为 22,182,208 KiB。`cjpm test --no-color -j 2 --verbose`
+  仍通过 599 项，峰值 RSS 为 23,417,052 KiB；包级并行度没有限制单次 CJC 编译内存。
+  在独立临时副本将 CJC 参数设为 `-O2 -j 2`、限制 10 GiB 且禁用 swap 后，
+  进程被该资源域 OOM-kill。此结果只证明本地资源上限不足，不能证明未取得内核日志的托管失败原因。
+- Linux 工作流仅为 `core`、`registry-rehearsal` 创建 16 GiB 临时 swap，并在退出时关闭和清理
+  本 job 创建的文件。保留 `-O2`、128 MiB 栈、全部测试、原超时和失败传播；不修改宿主机已有 swap，
+  不自动重试。新配置的实际托管执行仍须通过后才能合并。
+
+文档补齐后的本地实测：
+
+```sh
+python3 scripts/prepare_cjdoc.py --cache-dir <task>/cjdoc-cache
+python3 scripts/generate_api_docs.py --cjdoc <qualified-cjdoc> --output <task>/api-docs-spi
+python3 scripts/run_api_doc_examples.py <task>/api-docs-spi
+python3 scripts/check_api_documentation.py <task>/api-docs-spi
+```
+
+以上命令启用固定 STS，清除 `CJPM_CONFIG` 和本地 Git 依赖路由；后续三个命令使用独立 HOME。
+cjdoc `0.7.7` 从固定源码 `8cc8f71a296b1c6321e575b56fadbd0c379e242a` 构建并通过资格检查。
+九包的 1,052 个公开声明分类和分组通过，333 个独立消费方示例全部成功，应用覆盖门槛均为 100%。
+通过实际浏览器搜索并打开 `GeneratedCodecInitializationV1`，确认中文契约和“生成代码 SPI”分组。
+Doc IR 收集报告仍为 `partial`，记录 2 个未展开宏调用；未将其改写成无诊断的完整收集报告。
+
+本地文档源码快照摘要为 `ff83c4c76fb1283dab9d5ec1ccb77ab7d4b8c267994c8228609abd4ec24e7ad4`，
+包含本次分类清单改动。其 GitButler 工作区提交与公开 `5b07308` 的 Git 树相同；本地产物不对外发布，
+不据此声称私有工作区提交的远程源码链接可访问。正式托管产物由后续公开提交重新生成。
+日志为 `logs/pr-spi-cjdoc-prepare-clean.log`、`logs/pr-spi-api-doc-generation.log`、
+`logs/pr-spi-api-doc-consumers.log`、`logs/pr-spi-api-doc-final.log`；资源记录及浏览器截图保留在
+`publication-20261102/`。
+
+文档检查器 53 项、生成器 51 项、发布暂存 6 项、发布临时树 15 项、STS 校验 6 项、
+CI 候选接线 19 项及 cjdoc 资格检查 12 项通过。候选接线另有 1 项明确跳过的 SDK 依赖场景；
+同一公开候选的托管 standards-conformance 已通过。API 清单通过，Linux 工作流完成 YAML 解析及
+三个代表 gate 的 shell 语法检查；这些静态检查不替代新 swap 配置的真实托管运行。
+本次未改变仓颉产品与性能 harness 的逐项输入，不重写 S1 测量身份，也不把本地编译资源测量当作性能资格。
