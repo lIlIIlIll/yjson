@@ -10,8 +10,8 @@ baseline_sha256 = "06b7cde26b9eb3b544ad4b4ff62ff5f8885f2d9c4bc556042c8c6b98edfa3
 review_status = "pending-migration-review"
 removed_records = 1
 removed_sha256 = "e134ef33acb59d82749aaac19909839239f2ca78280560347428ea5f199acd4c"
-added_records = 18
-added_sha256 = "1057e1e867d87439c79a0d54e327f9f6405f08055aec26d331f0adaa9733a257"
+added_records = 35
+added_sha256 = "8469a5e4907691b4b49be12194768dd4ee72fe75ee4688f497ab7786c972ba78"
 inventory_correction_artifact = "release/0.2.0/enum-case-inventory.json"
 inventory_correction_sha256 = "2259b8d5588a5eac284a85ac872c71d6050017e98992f7491ce20a930ade041d"
 
@@ -50,4 +50,30 @@ removed = [
   "yjson_macros|packages/yjson_macros/src/json_literal.cj|<top-level>|public macro JsonValue(input: Tokens): Tokens",
 ]
 added = [
+]
+
+[[review_groups]]
+classification = "typed-generated-spi"
+rationale = "Freeze the v1 generated bridge on GeneratedCodecProviderV1<T> -> JsonCodec<T>; remove Any erasure, reification adapters, casts, and the previous raw codec interfaces."
+review_status = "pending-migration-review"
+removed = [
+]
+added = [
+  "yjson|src/lib_json_direct_codec.cj|<top-level>|public interface GeneratedStableCompactWriteCodecV1",
+  "yjson|src/lib_json_direct_codec.cj|GeneratedStableCompactWriteCodecV1|func supportsStableCompactWrite(): Bool",
+  "yjson|src/lib_json_generated_support_v1.cj|<top-level>|public class GeneratedCodecInitializationV1",
+  "yjson|src/lib_json_generated_support_v1.cj|<top-level>|public interface GeneratedInheritedObjectFieldsV1<T>",
+  "yjson|src/lib_json_generated_support_v1.cj|<top-level>|public struct GeneratedCompactCapabilityCacheV1",
+  "yjson|src/lib_json_generated_support_v1.cj|GeneratedCodecInitializationV1|public func initialize(initialize: () -> Unit): Unit",
+  "yjson|src/lib_json_generated_support_v1.cj|GeneratedCodecInitializationV1|public func isInitialized(): Bool",
+  "yjson|src/lib_json_generated_support_v1.cj|GeneratedCodecInitializationV1|public init()",
+  "yjson|src/lib_json_generated_support_v1.cj|GeneratedCompactCapabilityCacheV1|public func isSupported(): Bool",
+  "yjson|src/lib_json_generated_support_v1.cj|GeneratedCompactCapabilityCacheV1|public func markSupported(): Unit",
+  "yjson|src/lib_json_generated_support_v1.cj|GeneratedCompactCapabilityCacheV1|public init()",
+  "yjson|src/lib_json_generated_support_v1.cj|GeneratedInheritedObjectFieldsV1|func writeInheritedObjectFieldsV1(_: GeneratedCodecTokenV1<T>, writer: JsonWriter): Unit",
+  "yjson|src/lib_json_generated_support_v1.cj|GeneratedSupportV1|public static func enterCompactCapabilityCheck<T>(codec: GeneratedCodecV1<T>): Bool",
+  "yjson|src/lib_json_generated_support_v1.cj|GeneratedSupportV1|public static func leaveCompactCapabilityCheck(): Unit",
+  "yjson|src/lib_json_generated_support_v1.cj|GeneratedSupportV1|public static func newValidatedFastReader(text: String): JsonFastReader",
+  "yjson|src/lib_json_generated_support_v1.cj|GeneratedSupportV1|public static func requireInheritedObjectFields<T>(): Unit",
+  "yjson|src/lib_json_generated_support_v1.cj|GeneratedSupportV1|public static func writeInheritedObjectFields<T>(value: T, writer: JsonWriter): Unit",
 ]

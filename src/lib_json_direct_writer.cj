@@ -2668,13 +2668,7 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
                 if (rawRootPreclaimed) { rawRootPreclaimed = false }
                 else { beforeValue() }
             }
-            if (rawDepth >= config.maxDepth) {
-                throw JsonException(
-                    "Maximum JSON depth ${config.maxDepth} exceeded",
-                    code: "max_depth",
-                    path: ""
-                )
-            }
+            ensureContainerDepth()
             rawDepth++
             bufferTarget.writeByte(b'{')
             return
@@ -3074,7 +3068,7 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
     public func writeRawObjectEntryKnownNameInt64ArrayMapBuffer(
         first: Bool, name: String, values: HashMap<String, Array<Int64>>
     ): Bool {
-        ensureContainerDepth()
+        ensureContainerDepth(additionalDepth: if (values.isEmpty()) { 1 } else { 2 })
         bufferTarget.writeObjectEntryNameInt64ArrayMapNoEscape(first, name, values)
     }
 
@@ -3093,7 +3087,7 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
     public func writeRawObjectEntryKnownNameInt64ArrayMapKnownAsciiBuffer(
         first: Bool, name: String, values: HashMap<String, Array<Int64>>
     ): Bool {
-        ensureContainerDepth()
+        ensureContainerDepth(additionalDepth: if (values.isEmpty()) { 1 } else { 2 })
         bufferTarget.writeObjectEntryNameInt64ArrayMapKnownAsciiKeys(first, name, values)
     }
 
@@ -3365,7 +3359,7 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
     public func writeRawObjectEntryKnownNameInt64ArrayMap(
         first: Bool, name: String, values: HashMap<String, Array<Int64>>
     ): Bool {
-        ensureContainerDepth()
+        ensureContainerDepth(additionalDepth: if (values.isEmpty()) { 1 } else { 2 })
         let next = writeRawObjectEntryKnownName(first, name)
         rawTargetWriteByte(b'{')
         var mapFirst = true
@@ -3788,7 +3782,7 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         if (multiline || config.useSpaceAfterSeparators || config.htmlSafe) {
             return false
         }
-        ensureContainerDepth()
+        ensureContainerDepth(additionalDepth: if (values.isEmpty()) { 1 } else { 2 })
         beginRawValue()
         rawDepth++
         try {
@@ -4234,8 +4228,8 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
         pathPushed
     }
 
-    private func ensureContainerDepth(): Unit {
-        if (currentContainerDepth() >= config.maxDepth) {
+    private func ensureContainerDepth(additionalDepth!: Int64 = 1): Unit {
+        if (currentContainerDepth() > config.maxDepth - additionalDepth) {
             throw JsonException(
                 "Maximum JSON depth ${config.maxDepth} exceeded",
                 code: "max_depth",

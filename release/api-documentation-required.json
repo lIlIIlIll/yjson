@@ -477,6 +477,18 @@
     "yjson.GeneratedBulkWriterV1|interface|public interface GeneratedBulkWriterV1": {
       "category": "generated-spi"
     },
+    "yjson.GeneratedCodecInitializationV1.initialize|function|public func initialize(initialize: () -> Unit): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCodecInitializationV1.init|constructor|public init()": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCodecInitializationV1.isInitialized|function|public func isInitialized(): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCodecInitializationV1|class|public class GeneratedCodecInitializationV1": {
+      "category": "generated-spi"
+    },
     "yjson.GeneratedCodecProviderV1.generatedCodecV1|function|static func generatedCodecV1(_: GeneratedCodecTokenV1<T>): JsonCodec<T>": {
       "category": "generated-spi"
     },
@@ -496,6 +508,18 @@
       "category": "generated-spi"
     },
     "yjson.GeneratedCompactArrayListElementCodecV1|interface|public interface GeneratedCompactArrayListElementCodecV1<T>": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCompactCapabilityCacheV1.init|constructor|public init()": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCompactCapabilityCacheV1.isSupported|function|public func isSupported(): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCompactCapabilityCacheV1.markSupported|function|public func markSupported(): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedCompactCapabilityCacheV1|struct|public struct GeneratedCompactCapabilityCacheV1": {
       "category": "generated-spi"
     },
     "yjson.GeneratedCompactCodecProviderV1.generatedCompactRawV1|function|static func generatedCompactRawV1(value: T, writer: JsonDirectWriter): Unit": {
@@ -549,6 +573,12 @@
     "yjson.GeneratedDirectWriteCodecV1|interface|public interface GeneratedDirectWriteCodecV1<T> <: JsonCodec<T>": {
       "category": "generated-spi"
     },
+    "yjson.GeneratedInheritedObjectFieldsV1.writeInheritedObjectFieldsV1|function|func writeInheritedObjectFieldsV1(_: GeneratedCodecTokenV1<T>, writer: JsonWriter): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedInheritedObjectFieldsV1|interface|public interface GeneratedInheritedObjectFieldsV1<T>": {
+      "category": "generated-spi"
+    },
     "yjson.GeneratedObjectCodecProviderV1.generatedObjectCodecV1|function|static func generatedObjectCodecV1(_: GeneratedCodecTokenV1<T>): GeneratedObjectCodecV1<T>": {
       "category": "generated-spi"
     },
@@ -597,13 +627,25 @@
     "yjson.GeneratedReplayValueV1|interface|public interface GeneratedReplayValueV1 <: Resource": {
       "category": "generated-spi"
     },
+    "yjson.GeneratedStableCompactWriteCodecV1.supportsStableCompactWrite|function|func supportsStableCompactWrite(): Bool": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedStableCompactWriteCodecV1|interface|public interface GeneratedStableCompactWriteCodecV1": {
+      "category": "generated-spi"
+    },
     "yjson.GeneratedSupportV1.captureValue|function|public static func captureValue(reader: JsonReader, maxBytes: Int64): GeneratedReplayValueV1": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.enterCompactCapabilityCheck|function|public static func enterCompactCapabilityCheck<T>(codec: GeneratedCodecV1<T>): Bool": {
       "category": "generated-spi"
     },
     "yjson.GeneratedSupportV1.enterGeneratedEntry|function|public static func enterGeneratedEntry(): Unit": {
       "category": "generated-spi"
     },
     "yjson.GeneratedSupportV1.finishReader|function|public static func finishReader(reader: JsonReader): Unit": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.leaveCompactCapabilityCheck|function|public static func leaveCompactCapabilityCheck(): Unit": {
       "category": "generated-spi"
     },
     "yjson.GeneratedSupportV1.newFastReader|function|public static func newFastReader(bytes: Array<Byte>): GeneratedSupportV1Reader": {
@@ -616,6 +658,9 @@
       "category": "generated-spi"
     },
     "yjson.GeneratedSupportV1.newSemanticReader|function|public static func newSemanticReader(text: String, config: JsonReadOptions): JsonReader": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.newValidatedFastReader|function|public static func newValidatedFastReader(text: String): JsonFastReader": {
       "category": "generated-spi"
     },
     "yjson.GeneratedSupportV1.newWriter|function|public static func newWriter(): GeneratedSupportV1Writer": {
@@ -672,6 +717,9 @@
     "yjson.GeneratedSupportV1.readWith|function|public static func readWith<T>(codec: JsonCodec<T>, reader: GeneratedSupportV1Reader): T": {
       "category": "generated-spi"
     },
+    "yjson.GeneratedSupportV1.requireInheritedObjectFields|function|public static func requireInheritedObjectFields<T>(): Unit": {
+      "category": "generated-spi"
+    },
     "yjson.GeneratedSupportV1.requireProtocolVersion|function|public static func requireProtocolVersion(expected: Int64): Unit": {
       "category": "generated-spi"
     },
@@ -703,6 +751,9 @@
       "category": "generated-spi"
     },
     "yjson.GeneratedSupportV1.writeCursor|function|public static func writeCursor(writer: GeneratedSupportV1Writer): GeneratedSupportV1WriteCursor": {
+      "category": "generated-spi"
+    },
+    "yjson.GeneratedSupportV1.writeInheritedObjectFields|function|public static func writeInheritedObjectFields<T>(value: T, writer: JsonWriter): Unit": {
       "category": "generated-spi"
     },
     "yjson.GeneratedSupportV1.writeNested|function|public static func writeNested<T>(codec: JsonCodec<T>, value: T, writer: GeneratedSupportV1Writer): Unit": {

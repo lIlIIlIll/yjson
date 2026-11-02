@@ -56,6 +56,47 @@ class NativeDocumentBackendTest {
     }
 
     @TestCase
+    func mismatchedInlineScalarsRejectInsteadOfReadingNodeZero(): Unit {
+        // Inline object scalars live in the object-entry store with node index
+        // 0, so each mismatch used to answer from the first stored node
+        // (1 -> asInt64 returned 1, true -> asBool returned true).
+        try (document = NativeBackends.customNative.parseDocument(
+            "{\"values\":[1],\"text\":\"x\",\"n\":5,\"ok\":false}")) {
+            let root = document.root()
+            @Expect(@AssertThrows[JsonException](
+                root.member("text").getOrThrow().asInt64()).code, "type_mismatch")
+            @Expect(@AssertThrows[JsonException](
+                root.member("ok").getOrThrow().asInt64()).code, "type_mismatch")
+            @Expect(root.member("n").getOrThrow().asInt64(), 5)
+            @Expect(root.member("text").getOrThrow().asString(), "x")
+            @Expect(root.member("values").getOrThrow().element(0).getOrThrow().asInt64(), 1)
+        }
+        try (document = NativeBackends.customNative.parseDocument(
+            "{\"flags\":[true],\"n\":5,\"ok\":false}")) {
+            let root = document.root()
+            @Expect(@AssertThrows[JsonException](
+                root.member("n").getOrThrow().asBool()).code, "type_mismatch")
+            @Expect(root.member("ok").getOrThrow().asBool(), false)
+            @Expect(root.member("n").getOrThrow().asInt64(), 5)
+            @Expect(root.member("flags").getOrThrow().element(0).getOrThrow().asBool(), true)
+        }
+    }
+
+    @TestCase
+    func closedDocumentKeepsResourceClosedForInlineScalars(): Unit {
+        // The resource check must stay ahead of the inline kind check so a
+        // closed document reports resource_closed rather than a mismatch.
+        let document = NativeBackends.customNative.parseDocument("{\"text\":\"x\",\"n\":5}")
+        let root = document.root()
+        let text = root.member("text").getOrThrow()
+        let number = root.member("n").getOrThrow()
+        document.close()
+        @Expect(@AssertThrows[JsonException](text.asInt64()).code, "resource_closed")
+        @Expect(@AssertThrows[JsonException](number.asBool()).code, "resource_closed")
+        @Expect(@AssertThrows[JsonException](number.asInt64()).code, "resource_closed")
+    }
+
+    @TestCase
     func concurrentReadsAndCloseAreLinearizable(): Unit {
         let document = NativeBackends.customNative.parseDocument("{\"id\":42,\"items\":[1,2,3]}")
         let root = document.root()

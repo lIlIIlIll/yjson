@@ -37,6 +37,28 @@ class NativeCompactDocumentTest {
     }
 
     @TestCase
+    func locatedParseErrorsKeepExactByteOffsets(): Unit {
+        // Failures that do report a byte position must keep that position in
+        // the public error after the unknown-offset guard.
+        let structural = @AssertThrows[JsonException](NativeCompactJsonDocument.parse(
+            nativeCompactBytes("{\n  \"a\" 1}")))
+        @Expect(structural.code, "parse_error")
+        let structuralLocation = structural.location.getOrThrow()
+        @Expect(structuralLocation.byteOffset, 8)
+        @Expect(structuralLocation.line, 2)
+        @Expect(structuralLocation.column, 7)
+        let trailing = @AssertThrows[JsonException](NativeCompactJsonDocument.parse(
+            nativeCompactBytes("{\"a\":true} trailing")))
+        @Expect(trailing.location.getOrThrow().byteOffset, 11)
+        @Expect(trailing.location.getOrThrow().line, 1)
+        @Expect(trailing.location.getOrThrow().column, 12)
+        let truncated = @AssertThrows[JsonException](NativeCompactJsonDocument.parse(
+            nativeCompactBytes("[1,\n 2,]")))
+        @Expect(truncated.code, "parse_error")
+        @Expect(truncated.location.getOrThrow().byteOffset, 7)
+    }
+
+    @TestCase
     func duplicateSemanticEqualityMatchesCompactBackend(): Unit {
         let text = "{\"a\":1,\"\\u0061\":2,\"中\":3,\"\\u4e2d\":4}"
         let lastWins = JsonReadOptions(duplicateKeyPolicy: JsonDuplicateKeyPolicy.LastWins)

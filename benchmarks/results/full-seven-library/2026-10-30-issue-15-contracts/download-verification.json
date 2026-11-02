@@ -1,0 +1,38 @@
+{
+  "status": "PASS",
+  "archives": [
+    {
+      "allSourcePayloadsUnchanged": true,
+      "archive": "seven-library-issue15-batch1.tar.gz",
+      "archiveOwnerFieldsAnonymous": true,
+      "regularFiles": 3000,
+      "root": "seven-library-issue15-batch1",
+      "sha256": "acd63e4573f9ae9446cd9f1f7cc57d9060bd945f2e395d85b30d83b4e382099f",
+      "sizeBytes": 1103910,
+      "downloadHashMatched": true,
+      "allMemberHashesMatched": true
+    },
+    {
+      "allSourcePayloadsUnchanged": true,
+      "archive": "seven-library-issue15-batch2.tar.gz",
+      "archiveOwnerFieldsAnonymous": true,
+      "regularFiles": 3000,
+      "root": "seven-library-issue15-batch2",
+      "sha256": "6446fffe5b6eced27fa0288c2e847ed8733bb793e2168e9801463227ff9545b0",
+      "sizeBytes": 1103004,
+      "downloadHashMatched": true,
+      "allMemberHashesMatched": true
+    },
+    {
+      "allSourcePayloadsUnchanged": true,
+      "archive": "seven-library-issue15-build-audits.tar.gz",
+      "archiveOwnerFieldsAnonymous": true,
+      "regularFiles": 25,
+      "root": "seven-library-issue15-build-audits",
+      "sha256": "daa5336a538010b3f10436db356026f80c621cb267f466842057ea2b3f797fdb",
+      "sizeBytes": 155823,
+      "downloadHashMatched": true,
+      "allMemberHashesMatched": true
+    }
+  ]
+}

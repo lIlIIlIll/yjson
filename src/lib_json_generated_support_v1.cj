@@ -2,7 +2,120 @@ package yjson
 
 import std.collection.*
 import std.math.numeric.*
+import std.sync.*
 import std.time.*
+
+/**
+ * 供生成类按声明类型合并祖先和自身对象字段的协议。
+ *
+ * 每个生成类只实现自身 T 的实例；类型标记使祖先与子类的方法形成不同重载，避免递归分派到子类。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ */
+public interface GeneratedInheritedObjectFieldsV1<T> {
+    /**
+     * 向已开始的对象写入 T 的祖先字段及自身字段。
+     *
+     * 不写对象开始或结束标记；实现须保留字段 codec、路径和预算检查。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param _ 区分继承链上 T 的无状态类型标记。
+     * @param writer 已开始对象、可继续接收字段的语义写入器。
+     * @throws JsonException 继承协议不匹配、字段编码失败或写入预算耗尽。
+     */
+    func writeInheritedObjectFieldsV1(_: GeneratedCodecTokenV1<T>, writer: JsonWriter): Unit
+}
+
+// Conditional token conformances distinguish classes from interfaces without reflection.
+private interface GeneratedClassTypeTokenV1 {}
+private interface GeneratedInheritedFieldsTokenV1 {}
+extend<T> GeneratedCodecTokenV1<T> <: GeneratedClassTypeTokenV1 where T <: Object {}
+extend<T> GeneratedCodecTokenV1<T> <: GeneratedInheritedFieldsTokenV1
+    where T <: GeneratedInheritedObjectFieldsV1<T> {}
+
+/**
+ * 供生成 codec 延迟发布字段状态的初始化门。
+ *
+ * 字段状态保留在生成类的具体类型中。本类只保证初始化成功后的并发发布，不存储或转换模型数据。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ */
+public class GeneratedCodecInitializationV1 {
+    private let mutex = Mutex()
+    private let ready = AtomicBool(false)
+
+    /**
+     * 创建尚未初始化的发布门。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     */
+    public init() {}
+
+    /**
+     * 检查一次初始化是否已成功完成。
+     *
+     * 返回 true 后可读取初始化回调发布的不可变字段状态。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 初始化已经成功完成时返回 true。
+     */
+    public func isInitialized(): Bool { ready.load() }
+
+    /**
+     * 在互斥锁内执行至多一次成功初始化。
+     *
+     * 失败不发布完成标记；回调不得递归进入同一个门。调用方仅在 isInitialized 返回 false 时构造回调。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param initialize 完整构造并发布字段状态的回调。
+     * @throws Exception 回调异常原样传播，后续调用仍可重新初始化。
+     */
+    public func initialize(initialize: () -> Unit): Unit {
+        synchronized(mutex) {
+            if (!ready.load()) {
+                initialize()
+                ready.store(true)
+            }
+        }
+    }
+}
+
+/**
+ * 保存生成 codec 已证明的、在实例生命周期内不变的 compact 写入能力。
+ *
+ * 只缓存肯定结果。尚未证明、动态能力和递归查询中的暂时否定结果不得写入此缓存。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ */
+public struct GeneratedCompactCapabilityCacheV1 {
+    private let proven = AtomicBool(false)
+
+    /**
+     * 创建尚未证明能力的缓存。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     */
+    public init() {}
+
+    /**
+     * 检查本实例的稳定 compact 能力是否已经得到证明。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 已发布肯定证明时返回 true。
+     */
+    public func isSupported(): Bool { proven.load() }
+
+    /**
+     * 发布稳定能力的肯定证明。
+     *
+     * 调用方必须已确认当前能力为 true，且全部参与依赖均提供不会失效的稳定能力证明。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     */
+    public func markSupported(): Unit { proven.store(true) }
+}
+
+private let generatedCompactCapabilityChecksV1 = ThreadLocal<ArrayList<Any>>()
 
 /**
  * 供宏生成 codec 使用的版本化 raw 读取接口。
@@ -1703,9 +1816,15 @@ private class FastSemanticReadContext {
     let objectContext: Bool
     var first = true
     var expectingValue = false
+    let seenNames: Option<HashSet<String>>
 
     init(objectContext: Bool) {
         this.objectContext = objectContext
+        this.seenNames = if (objectContext) {
+            Some(HashSet<String>())
+        } else {
+            None<HashSet<String>>
+        }
     }
 }
 
@@ -1789,6 +1908,11 @@ class FastSemanticReaderAdapter <: JsonReader & GeneratedReadStateV1Owner {
             throw error("Expected object field value", "parse_error")
         }
         let name = reader.readRawName(context.first)
+        if (let Some(names) <- context.seenNames) {
+            if (!names.add(name)) {
+                throw error("Duplicate object key '${name}'", "duplicate_key")
+            }
+        }
         context.first = false
         context.expectingValue = true
         name
@@ -1845,6 +1969,8 @@ class FastSemanticReaderAdapter <: JsonReader & GeneratedReadStateV1Owner {
     }
 
     public func readNode(): JsonNode {
+        beforeValue()
+        valuePrefixReady = true
         match (reader.peekRawKind()) {
             case JsonKind.Null => readNull(); JsonNullValue()
             case JsonKind.Boolean => JsonBoolValue(readBool())
@@ -1929,6 +2055,83 @@ public class GeneratedSupportV1 {
     public static func enterGeneratedEntry(): Unit {
         requireProtocolVersion(1)
         freezeYJsonRuntime()
+    }
+
+
+    /**
+     * 开始检查生成类型 T 的嵌套 compact 能力。
+     *
+     * 检查栈属于当前仓颉线程。遇到正在检查的同一生成类型时返回 false，调用方保守使用语义写入，
+     * 不假设同类型 codec 的不同实例具有相同能力。按类型识别回边，也能结束每次构造新实例的泛型模型探测。
+     * 本方法不缓存能力结果；后续独立查询仍检查当前 codec 状态。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param codec 当前生成类型的 codec。
+     * @return 入栈时返回 true，须在 finally 中调用 leaveCompactCapabilityCheck；回边返回 false，不入栈。
+     */
+    public static func enterCompactCapabilityCheck<T>(codec: GeneratedCodecV1<T>): Bool {
+        let stack = match (generatedCompactCapabilityChecksV1.get()) {
+            case Some(current) => current
+            case None =>
+                let current = ArrayList<Any>()
+                generatedCompactCapabilityChecksV1.set(Some(current))
+                current
+        }
+        for (active in stack) {
+            if (active is GeneratedCodecV1<T>) { return false }
+        }
+        stack.add(codec)
+        true
+    }
+
+    /**
+     * 结束本线程最近一次成功入栈的 compact 能力检查。
+     *
+     * 仅与返回 true 的 enterCompactCapabilityCheck 配对；退出后不保留 codec 引用。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     */
+    public static func leaveCompactCapabilityCheck(): Unit {
+        let stack = generatedCompactCapabilityChecksV1.get().getOrThrow()
+        stack.remove(at: stack.size - 1)
+    }
+
+    /**
+     * 检查声明的父类型 T 是否具有生成字段协议。
+     *
+     * 接口没有父类字段，检查直接通过；类必须由匹配版本的宏生成字段协议。本方法不冻结运行时，也不创建模型实例。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @throws JsonException T 是类但未提供继承字段协议，错误码为 codec_contract。
+     */
+    public static func requireInheritedObjectFields<T>(): Unit {
+        let token = GeneratedCodecTokenV1<T>()
+        if (token is GeneratedClassTypeTokenV1 && !(token is GeneratedInheritedFieldsTokenV1)) {
+            throw JsonException("Base class does not provide the generated inherited-field protocol",
+                code: "codec_contract")
+        }
+    }
+
+    /**
+     * 将声明父类型 T 的全部继承字段写入当前对象。
+     *
+     * 通过 T 专属的类型标记调用字段协议，接口父类型不写字段。真实父类缺失协议时拒绝写入，不静默丢弃父类字段。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param value 正在编码、包含父类型字段的模型实例。
+     * @param writer 当前对象已开始的语义写入器。
+     * @throws JsonException value 不提供类 T 的继承字段协议时使用 codec_contract；字段编码和预算错误原样传播。
+     */
+    public static func writeInheritedObjectFields<T>(value: T, writer: JsonWriter): Unit {
+        match (value) {
+            case inherited: GeneratedInheritedObjectFieldsV1<T> =>
+                inherited.writeInheritedObjectFieldsV1(GeneratedCodecTokenV1<T>(), writer)
+            case _ =>
+                if (GeneratedCodecTokenV1<T>() is GeneratedClassTypeTokenV1) {
+                    throw JsonException("Base class does not provide the generated inherited-field protocol",
+                        code: "codec_contract", path: writer.path())
+                }
+        }
     }
 
     /**
@@ -2236,6 +2439,29 @@ public class GeneratedSupportV1 {
      */
     public static func usesDefaultFastReadOptions(options: JsonReadOptions): Bool {
         jsonReadOptionsUsesDefaultFastPath(options)
+    }
+
+    /**
+     * 使用默认资源预算从字符串创建快速读取器。
+     *
+     * 冻结或沿用当前引擎选择，先证明完整输入满足深度、输入字节、字符串字节和缓冲值字节预算，再创建尚未消费根值的读取器。输入长度无法直接界定所有预算时执行完整资源预检；调用方仍须解析值并调用 expectEnd 检查文档结束。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @param text 要读取的 JSON 字符串。
+     * @return 使用默认预算完成预检的快速读取器。
+     * @throws JsonException 引擎冻结失败，或输入超过默认资源预算；预算错误码包括 max_depth、document_too_large、string_too_large 和 buffered_value_too_large。
+     */
+    public static func newValidatedFastReader(text: String): JsonFastReader {
+        freezeYJsonRuntime()
+        let options = JsonReadOptions.defaults
+        // Even malformed input cannot open more containers than it has bytes.
+        // A decoded JSON string and any captured span cannot exceed that same
+        // byte count. Larger inputs retain the exact scanner and its errors.
+        if (text.size > options.maxDepth || text.size > options.maxInputBytes ||
+            text.size > options.maxStringBytes || text.size > options.maxBufferedValueBytes) {
+            validateJsonResourceLimits(unsafe { text.rawData() }, options)
+        }
+        JsonFastReader(text)
     }
 
     /**

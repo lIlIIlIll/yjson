@@ -1405,6 +1405,25 @@ public interface GeneratedCompactWriteCodecV1<T> <: GeneratedDirectWriteCodecV1<
 }
 
 /**
+ * 为 compact 写入能力提供可缓存的肯定证明。
+ *
+ * 返回 true 时必须实现至少一种 compact 写入协议，并承诺已实现的 raw/cursor 能力始终为 true。
+ * 返回 false 仅表示尚无稳定性证明，不代表当前不能写入。此查询不得递归执行能力检测；
+ * 动态自定义 codec 不应提供肯定证明，普通能力查询仍按原契约实时执行。
+ *
+ * @group 20-generated-spi 生成代码 SPI
+ */
+public interface GeneratedStableCompactWriteCodecV1 {
+    /**
+     * 查询实例生命周期内不会失效的 compact 写入肯定证明。
+     *
+     * @group 20-generated-spi 生成代码 SPI
+     * @return 已证明所实现的 compact 写入能力恒为 true 时返回 true，否则返回 false。
+     */
+    func supportsStableCompactWrite(): Bool
+}
+
+/**
  * 为 codec 提供复用现有 writer cursor 的 compact 写入能力。
  *
  * 自定义 codec 和递归 codec 可复用同一个 cursor。调用方先查询能力，并另行检查 writer 是否允许 compact 输出。
@@ -2263,7 +2282,7 @@ private func resolvedGeneratedCodecV1<T>(codec: JsonCodec<T>): GeneratedCodecV1<
 
 private class OptionJsonCodec<T> <: GeneratedCodecV1<Option<T>> &
     GeneratedCursorReadCodecV1<Option<T>> & GeneratedCompactWriteCodecV1<Option<T>> &
-    GeneratedCursorWriteCodecV1<Option<T>> {
+    GeneratedCursorWriteCodecV1<Option<T>> & GeneratedStableCompactWriteCodecV1 {
     private let inner: JsonCodec<T>
     private let directInner: Option<GeneratedDirectWriteCodecV1<T>>
     private let compactRawInner: Option<GeneratedCompactWriteCodecV1<T>>
@@ -2333,6 +2352,13 @@ private class OptionJsonCodec<T> <: GeneratedCodecV1<Option<T>> &
         match (compactRawInner) {
             case Some(raw) => raw.supportsCompactRaw()
             case None => false
+        }
+    }
+
+    public func supportsStableCompactWrite(): Bool {
+        match (inner) {
+            case stable: GeneratedStableCompactWriteCodecV1 => stable.supportsStableCompactWrite()
+            case _ => false
         }
     }
 
@@ -2544,7 +2570,7 @@ private class Int64ArrayJsonCodec <: GeneratedCodecV1<Array<Int64>> &
 private class ArrayJsonCodec<T> <: GeneratedCodecV1<Array<T>> &
     GeneratedDirectFastReadCodecV1<Array<T>> &
     GeneratedCursorReadCodecV1<Array<T>> & GeneratedCompactWriteCodecV1<Array<T>> &
-    GeneratedCursorWriteCodecV1<Array<T>> {
+    GeneratedCursorWriteCodecV1<Array<T>> & GeneratedStableCompactWriteCodecV1 {
     private let inner: JsonCodec<T>
     private let fastInner: GeneratedCodecV1<T>
     private let directFastInner: Option<GeneratedDirectFastReadCodecV1<T>>
@@ -2652,6 +2678,13 @@ private class ArrayJsonCodec<T> <: GeneratedCodecV1<Array<T>> &
         match (compactRawInner) {
             case Some(raw) => raw.supportsCompactRaw()
             case None => false
+        }
+    }
+
+    public func supportsStableCompactWrite(): Bool {
+        match (inner) {
+            case stable: GeneratedStableCompactWriteCodecV1 => stable.supportsStableCompactWrite()
+            case _ => false
         }
     }
 
@@ -2823,7 +2856,7 @@ private class ArrayJsonCodec<T> <: GeneratedCodecV1<Array<T>> &
 private class ArrayListJsonCodec<T> <: GeneratedCodecV1<ArrayList<T>> &
     GeneratedDirectFastReadCodecV1<ArrayList<T>> &
     GeneratedCursorReadCodecV1<ArrayList<T>> & GeneratedCompactWriteCodecV1<ArrayList<T>> &
-    GeneratedCursorWriteCodecV1<ArrayList<T>> {
+    GeneratedCursorWriteCodecV1<ArrayList<T>> & GeneratedStableCompactWriteCodecV1 {
     private let inner: JsonCodec<T>
     private let fastInner: GeneratedCodecV1<T>
     private let directFastInner: Option<GeneratedDirectFastReadCodecV1<T>>
@@ -2940,6 +2973,13 @@ private class ArrayListJsonCodec<T> <: GeneratedCodecV1<ArrayList<T>> &
         match (compactRawInner) {
             case Some(raw) => raw.supportsCompactRaw()
             case None => false
+        }
+    }
+
+    public func supportsStableCompactWrite(): Bool {
+        match (inner) {
+            case stable: GeneratedStableCompactWriteCodecV1 => stable.supportsStableCompactWrite()
+            case _ => false
         }
     }
 
@@ -3490,7 +3530,7 @@ private class HashMapJsonCodec<T> <: GeneratedCodecV1<HashMap<String, T>> &
     GeneratedDirectFastReadCodecV1<HashMap<String, T>> &
     GeneratedCursorReadCodecV1<HashMap<String, T>> &
     GeneratedCompactWriteCodecV1<HashMap<String, T>> &
-    GeneratedCursorWriteCodecV1<HashMap<String, T>> {
+    GeneratedCursorWriteCodecV1<HashMap<String, T>> & GeneratedStableCompactWriteCodecV1 {
     private let inner: JsonCodec<T>
     private let fastInner: GeneratedCodecV1<T>
     private let directFastInner: Option<GeneratedDirectFastReadCodecV1<T>>
@@ -3627,6 +3667,13 @@ private class HashMapJsonCodec<T> <: GeneratedCodecV1<HashMap<String, T>> &
         match (compactRawInner) {
             case Some(raw) => raw.supportsCompactRaw()
             case None => false
+        }
+    }
+
+    public func supportsStableCompactWrite(): Bool {
+        match (inner) {
+            case stable: GeneratedStableCompactWriteCodecV1 => stable.supportsStableCompactWrite()
+            case _ => false
         }
     }
 
@@ -3961,21 +4008,26 @@ private class Int64HashMapJsonCodec <: GeneratedCodecV1<HashMap<String, Int64>> 
                 return HashMap<String, Int64>()
             }
             let result = HashMap<String, Int64>(cursor.suggestRawObjectCapacity())
-            var first = true
-            while (cursor.hasRawObjectField(first)) {
-                let name = cursor.readRawName(first)
-                let decoded = cursor.readRawInt64()
-                context.updateLastField(name)
-                match (result.add(name, decoded)) {
-                    case Some(_) =>
-                        throw JsonException("Duplicate object key '${name}'", code: "duplicate_key",
-                            path: context.currentPath())
-                    case None => ()
+            context.pushField("")
+            try {
+                var first = true
+                while (cursor.hasRawObjectField(first)) {
+                    let name = cursor.readRawName(first)
+                    context.updateLastField(name)
+                    let decoded = cursor.readRawInt64()
+                    match (result.add(name, decoded)) {
+                        case Some(_) =>
+                            throw JsonException("Duplicate object key '${name}'", code: "duplicate_key",
+                                path: context.currentPath())
+                        case None => ()
+                    }
+                    first = false
                 }
-                first = false
+                cursor.endRawObject()
+                return result
+            } finally {
+                context.popPath()
             }
-            cursor.endRawObject()
-            return result
         } finally {
             context.leaveValue()
         }
@@ -4068,21 +4120,26 @@ public func __yJsonReadFastInt64HashMap(reader: GeneratedSupportV1Reader): HashM
             return HashMap<String, Int64>()
         }
         let result = HashMap<String, Int64>(reader.suggestRawObjectCapacity())
-        var first = true
-        while (reader.hasRawObjectField(first)) {
-            let name = reader.readRawName(first)
-            context.updateLastField(name)
-            let decoded = reader.readRawInt64()
-            match (result.add(name, decoded)) {
-                case Some(_) =>
-                    throw JsonException("Duplicate object key '${name}'", code: "duplicate_key",
-                        path: context.currentPath())
-                case None => ()
+        context.pushField("")
+        try {
+            var first = true
+            while (reader.hasRawObjectField(first)) {
+                let name = reader.readRawName(first)
+                context.updateLastField(name)
+                let decoded = reader.readRawInt64()
+                match (result.add(name, decoded)) {
+                    case Some(_) =>
+                        throw JsonException("Duplicate object key '${name}'", code: "duplicate_key",
+                            path: context.currentPath())
+                    case None => ()
+                }
+                first = false
             }
-            first = false
+            reader.endRawObject()
+            result
+        } finally {
+            context.popPath()
         }
-        reader.endRawObject()
-        result
     } finally {
         context.leaveValue()
     }
@@ -4904,7 +4961,7 @@ public class YJson {
         GeneratedSupportV1.enterGeneratedEntry()
         let writer = acquireGeneratedCompactWriter(options)
         try {
-            if (writer.tryBeginGeneratedCompactRawValue()) {
+            if (codec.supportsCompactRaw() && writer.tryBeginGeneratedCompactRawValue()) {
                 codec.writeCompactRawWithWriter(value, writer)
                 return writer.finishGeneratedCompactString()
             }
@@ -4922,7 +4979,7 @@ public class YJson {
         GeneratedSupportV1.enterGeneratedEntry()
         let writer = acquireGeneratedCompactWriter(options)
         try {
-            if (writer.tryBeginGeneratedCompactRawValue()) {
+            if (codec.supportsCompactRaw() && writer.tryBeginGeneratedCompactRawValue()) {
                 T.generatedCompactRawV1(value, writer)
                 return writer.finishGeneratedCompactString()
             }
@@ -4946,7 +5003,7 @@ public class YJson {
         options: JsonWriteOptions): Array<Byte> {
         GeneratedSupportV1.enterGeneratedEntry()
         let writer = JsonDirectWriter.bytes(config: options)
-        if (writer.tryBeginGeneratedCompactRawValue()) {
+        if (codec.supportsCompactRaw() && writer.tryBeginGeneratedCompactRawValue()) {
             codec.writeCompactRawWithWriter(value, writer)
             return writer.finishBytes()
         }
@@ -4991,10 +5048,12 @@ public class YJson {
         writer: JsonDirectWriter): Unit {
         match (codec) {
             case compact: GeneratedCompactCursorWriteCodecV1<T> =>
-                if (writer.tryBeginGeneratedCompactRawValue()) {
+                if (compact.supportsCompactRaw() && writer.tryBeginGeneratedCompactRawValue()) {
                     compact.writeCompactRawWithCursor(value, writer, writer.generatedCursorV1())
-                    return
+                } else {
+                    compact.write(value, writer)
                 }
+                return
             case _ => ()
         }
         match (codec) {

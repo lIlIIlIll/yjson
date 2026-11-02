@@ -170,10 +170,10 @@ let name = document.root().member("name").getOrThrow().asString()
 
 ## 性能
 
-生产源码 `ac4f8b9` 在 STS `1.2.0` 下通过 Pure 回退检查：24 项、528 个计时样本，
-最大候选/基线比率为 1.017936，全部不超过原有 `1.05` 门槛。
-七库两批各 770 个单元，第一批 9/10、第二批 7/10 workload 满足七库全部 `CV <= 5%`；
-噪声行完整保留，没有第三批。干净检出 `d8859ee` 的完整 strict 检查与 40 项回归已通过。
+修复候选 `0d4d39a` 在 STS `1.2.0` 下通过完整 Pure 回退检查：24 项、528 个计时样本，
+最大候选/基线比率为 1.043291，全部不超过原有 `1.05` 门槛。
+七库两批各 770 个单元，两批均有 7/10 workload 满足七库全部 `CV <= 5%`；
+噪声行完整保留，没有第三批。计时前后核验源码、SDK 和产物身份一致。
 
 下表只列第二批七库均稳定的七项，单位为微秒/操作、中位数。
 仓颉测量构建使用显式 `-O2`，CHIR 函数内联保持启用；进程配置为
@@ -181,16 +181,16 @@ let name = document.root().member("name").getOrThrow().asString()
 
 | Workload | yjson | stdx.json | cangjieJSON | json4cj | cjfast_json | Jackson | fastjson2 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Address decode | 0.249 | 1.868 | 0.562 | 1.783 | 0.691 | 0.323 | 0.071 |
-| Person encode | 1.070 | 4.057 | 5.675 | 2.228 | 3.733 | 0.568 | 0.268 |
-| Person decode | 1.536 | 7.115 | 4.929 | 6.195 | 4.695 | 1.129 | 0.419 |
-| Large Array encode | 18.582 | 37.966 | 80.448 | 37.735 | 34.564 | 9.125 | 4.140 |
-| Large Map decode | 11.876 | 53.624 | 58.784 | 50.266 | 49.766 | 5.393 | 3.991 |
-| Deep Nested encode | 20.732 | 29.896 | 51.346 | 28.971 | 26.081 | 4.572 | 2.493 |
-| Deep Nested decode | 46.830 | 48.643 | 36.399 | 44.246 | 32.868 | 10.362 | 3.424 |
+| Address encode | 0.386 | 1.039 | 0.901 | 0.999 | 0.902 | 0.174 | 0.066 |
+| Address decode | 0.250 | 1.845 | 0.562 | 1.819 | 0.691 | 0.326 | 0.073 |
+| Person encode | 1.109 | 3.992 | 5.667 | 2.229 | 3.739 | 0.568 | 0.271 |
+| Person decode | 1.664 | 7.151 | 4.934 | 6.198 | 4.707 | 1.128 | 0.420 |
+| Large Array encode | 18.810 | 37.362 | 80.475 | 37.687 | 34.618 | 9.015 | 4.157 |
+| Large Map decode | 11.806 | 53.696 | 58.696 | 50.575 | 49.653 | 5.421 | 3.932 |
+| Deep Nested encode | 20.833 | 29.326 | 51.278 | 29.049 | 25.997 | 4.468 | 2.468 |
 
-完整波动、RSS、输入身份与历史记录见[七库报告](docs/performance/results/2026-10-30-api-contracts-seven-library.md)
-和 [Pure 报告](docs/performance/results/2026-10-30-api-contracts-pure.md)。两种协议不拼接样本；本次不发布 yjson，
+完整波动、RSS、输入身份与历史记录见[七库报告](docs/performance/results/2026-10-30-issue-15-contracts-seven-library.md)
+和 [Pure 报告](docs/performance/results/2026-10-30-issue-15-contracts-pure.md)。两种协议不拼接样本；本次不发布 yjson，
 不外推到 Native、默认并发配置、其他平台或其他 SDK。方法见[性能文档](docs/performance/README.md)。
 
 ## 文档

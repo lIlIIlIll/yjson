@@ -268,6 +268,7 @@ def _classify_cangjie_delta_record(record: str) -> str:
         "JsonReplayValue", "JsonAnyCodec", "GeneratedSupportV1", "GeneratedCodecProviderV1",
         "GeneratedCodecV1", "GeneratedObjectCodecV1", "GeneratedObjectCodecProviderV1",
         "GeneratedDirectWriteCodecV1", "GeneratedCompactWriteCodecV1",
+        "GeneratedStableCompactWriteCodecV1",
         "GeneratedCompactArrayListElementCodecV1", "GeneratedBulkWriterV1",
         "GeneratedReplayValueV1", "GeneratedReadStateV1", "GeneratedWriteStateV1",
     }

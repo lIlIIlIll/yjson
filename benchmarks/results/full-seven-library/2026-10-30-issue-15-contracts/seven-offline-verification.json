@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "productionMain": "0d4d39a3e92ccaf4d3d0a37367160973dad21dbd",
+  "productionMacro": "2bfd34c08c421c04a0cd8e3d1326140849f1f21b",
+  "formalCellsPerBatch": 770,
+  "formalBatches": 2,
+  "rawReportsRederivedWithTrustedCheckout": true,
+  "fixedWorkAndRssSidecarsValidated": true,
+  "sourceCaseBindingsValidated": true,
+  "stableMetadataAcrossBatches": true,
+  "fixedWorkIdenticalAcrossBatches": true,
+  "canonicalReadmeRows": 7,
+  "scope": "Offline raw-report and metadata verification. This is not the final clean-checkout strict gate. No archived program was executed."
+}

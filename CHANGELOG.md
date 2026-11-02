@@ -16,6 +16,13 @@
   生成协议、ABI 错配校验、预算与资源生命周期语义保留。
 - 修复 `@JsonCodec` 无参 struct 解码生成代码的字段赋值编译错误。
 - 修复 JSON Pointer URI fragment 的百分号编码，空白、控制字符和 UTF-8 字节使用两位大写十六进制。
+- 修复生成 Map、嵌套自定义 codec 和未知字段跳过路径的重复键策略；统一生成入口的读取预算，
+  修复转义输出容量、混合写入深度、布尔 EOF、skip 空白、嵌套节点消费和 map 错误路径。
+- 修复跨文件嵌套模型的 codec 查找与初始化，保留并发首次使用和递归模型的语义写入回退；
+  延迟字段状态保留具体类型，仅缓存已证明恒定的 compact 肯定能力，动态自定义能力仍实时查询。
+  仅实现接口的模型不再误当作继承 JSON 对象字段。
+- 修复 Pure/Native/yyjson 标量类型错误及无定位 OOM 的异常分类；Schema 构造时校验未使用分支，
+  URI template 检查保留 Unicode literal。逐项验收与边界见 [Issue #15 实施记录](docs/implementation/issue-15.md)。
 - Custom Native 及 yyjson 的 Custom Native 回退路径在 backend metadata 中报告候选包版本 `0.2.0`。
 - 文档候选要求九包统一站点、八个应用包的中文契约与逐入口可执行示例，交付 HTML、
   Markdown、Doc IR v16 和完整 Agent 离线包。不建设旧 URL、Doc IR 或产物布局兼容层。

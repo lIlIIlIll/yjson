@@ -50,6 +50,14 @@ STS `1.2.0` 的本地 Linux 构建、算法、Native 和格式验证已经执行
 不代表托管三平台通过。各平台仍须保留实际 CI 的命令、优化级别、退出码及首次失败记录，
 未执行的托管验证记为 `NOT RUN`。显式优化级别覆盖只用于单独诊断，不改变发布资格要求。
 
+Linux 托管 `core` 和 `registry-rehearsal` 在根包资格检查期间使用额外的 16 GiB 临时 swap，
+容纳 STS `1.2.0` 根包测试编译的内存峰值。工作流只创建和清理本 job 的
+swap 文件，不改已有 swap、`-O2`、优化 pass 或测试集合；准备失败仍使 gate 失败。
+本地执行 `scripts/ci_job.sh` 不会调整宿主机 swap。
+托管 `core` 与 `registry-rehearsal` 的 job 时限为 90 分钟，供根包编译、测试及 swap 清理完成；
+`registry-rehearsal` 还须依次完成九包构建与 registry 消费验证。
+其余 Linux matrix job 仍为 45 分钟。此配置不改变测试自身的超时或断言。
+
 checkout、setup、Codecov 和 Pages Action 使用完整 commit SHA。发布证据还要记录 SDK
 归档与安装回执摘要、cjc/cjpm 摘要、stdx 安装清单摘要、运行器镜像、工作流运行 ID 和产物校验和。
 
@@ -102,9 +110,10 @@ scripts/ci_fresh_checkout.sh
 
 ## 覆盖率
 
-`scripts/coverage.sh` 在临时源码目录中以 `-O0` 编译，合并根包测试、运行时实现选择
-和 Native 加速场景，生成 HTML、JSON、XML 与 `coverage/lcov.info`。覆盖率检查只统计
-`src/lib_*.cj` 产品源码。
+`scripts/coverage.sh` 在临时源码目录中以 `-O0` 编译核心库，采集根包测试、
+`codec_integration` 外部 codec 消费方、运行时实现选择和 Native 加速场景，
+合并为 `coverage/lcov.info`。`coverage/cjcov` 的 HTML、JSON、XML 保留根包原始结果；
+门禁使用合并后的 LCOV，只统计 `src/lib_*.cj` 产品源码。消费方生成代码与宏实现不进入核心覆盖率分母。
 
 [`coverage-baseline.toml`](../../coverage-baseline.toml) 固定：
 
