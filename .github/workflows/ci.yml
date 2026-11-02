@@ -137,9 +137,9 @@ jobs:
     name: Tests (${{ matrix.gate }})
     needs: sts
     runs-on: ubuntu-24.04
-    # The staged root test build alone takes about 40 minutes with swap.
-    # Registry rehearsal must still build every bundle and run its consumers.
-    timeout-minutes: ${{ matrix.gate == 'registry-rehearsal' && 90 || 45 }}
+    # Full O2 root test builds need swap and can approach 45 minutes.
+    # Leave headroom for test completion, cleanup and staged bundle consumers.
+    timeout-minutes: ${{ (matrix.gate == 'core' || matrix.gate == 'registry-rehearsal') && 90 || 45 }}
     strategy:
       fail-fast: false
       matrix:

@@ -309,3 +309,27 @@ Pages 部署在 PR 中按既有条件跳过。本轮不计为完整通过，也�
 新时限仍须由下一公开提交的完整托管门禁验证。
 原始 job、取消注释及成功根包日志保留在 `publication-20261102/ci-dcd-*.json` 和
 `publication-20261102/ci-dcd-*.log`。
+
+### 第四轮门禁与独立工具链问题
+
+[CI 41406381323](https://github.com/lIlIIlIll/yjson/actions/runs/41406381323)
+绑定 `69f6673a3d7014b4cad977c484e000af5ecc1db4`。`registry-rehearsal` 已在 50 分 21 秒内完整通过。
+Linux `core` 于 08:12:23 UTC 通过 599 项，但 job 在收尾时被 45 分钟上限取消；
+其 GitHub 注释明确确认超时，因此不把该 job 计为通过。
+
+仅将同样依赖 swap 的 `core` 时限也设为 90 分钟；`registry-rehearsal` 保持 90 分钟，
+其余 Linux matrix job 保持 45 分钟。完整 `-O2`、测试自身超时、断言和产品资源预算不变。
+
+本轮另有 Windows 文档消费方编译失败：STS `1.2.0` 的 `llc.exe` 在
+`MachineRegisterInfo::addRegOperandToUseList` / `SelectionDAGISel` 中发生 `0xC0000005`，
+对应 `backends` profile 的根库 `yjson` 编译，尚未运行示例。
+未修改的基线 `f632e09` 的运行 `41184612902` 已有相同崩溃栈；
+上一轮候选的相同冻结源码、示例、profile、编译参数、编译器摘要和 SDK 回执又曾成功。
+该既有工具链问题已独立登记为 [Issue #21](https://github.com/lIlIIlIll/yjson/issues/21)，
+不扩大为 R01–R19 的修复条款，不声称已确定 LLVM 内部根因或完成修复。
+
+本轮共 26 个 job 成功，`core` 取消、Windows 示例与 `CI Required` 失败、PR Pages 按条件跳过。
+保留首次失败及成功对照；不更换 SDK、不禁用优化 pass、不重跑失败 job。
+后续完整 CI 由 `core` 时限的实质修正触发；即使新候选通过，也不据此关闭 #21 或声称编译器问题消失。
+记录为 `publication-20261102/ci-69f-*.json`、`publication-20261102/ci-69f-*.log`、
+`publication-20261102/ci-windows-identical-consumer-comparison.json` 及 Issue #21 引用的已校验原始产物。
