@@ -12,6 +12,8 @@
   保持 Draft。其完整 Pure 资格失败，后续编码热路径修复仍须重新冻结和验收。
 - C2：`87f37a76ff02d1214158c787ca6732aaa97ecbd6`，仍为 Draft；完整 Pure 再次失败，
   新增的固定上界优化在 Int64 Map 编码路径出现稳定回退，已撤回该实验。
+- 当前冻结 C3：`aa128768beaaa4383586ae306ab0c0d2f74ce172`；保留容量 span 短路，
+  撤回固定上界实验；原 PR 保持 Draft，最终交付仍须以下完整资格。
 - 宏 pin：`2bfd34c08c421c04a0cd8e3d1326140849f1f21b`；九包候选 `0.2.0`，
   SDK STS `1.2.0`，文档工具 cjdoc `0.7.7`。本轮运行结果不得由下方旧 SDK 证据替代。
 - 历史 [CI run 37011774364](https://github.com/lIlIIlIll/yjson/actions/runs/37011774364)
@@ -31,8 +33,8 @@
 | 006 | 006，必需 | 超限分配前拒绝；合法输入拥有式复制 | parseOwned；writer/document 测试 | 已实现；8 MiB/limit64 分配 1032 bytes、GC=0；所有权 smoke 通过 | 最终干净检出与托管门禁 |
 | 007 | 007，必需 | F16/F32 目标舍入；Pure/Native/yyjson；负零生命周期 | target float、builtin、tape、Native C/CJ 与测试 | 已实现；collection、两完整后端、各 7869 个 oracle 向量通过 | 最终干净检出、coverage 与托管门禁 |
 | 008 | 008，必需 | 流错误真实 byte offset/line/column，无坐标不伪造 | parser cursor、resource helper、resource tests | 已实现；跨窗口与转义测试通过 | 最终干净检出与托管门禁 |
-| CI | 交付要求，必需 | O2 core/consumer/native/standards/coverage/打包与全部 Required | ci_job、fresh checkout、hosted CI | C1 的 Windows/macOS Pure 与多项 Linux 门禁通过；C2 干净 O2 core/consumer 通过 | 最终干净检出、完整 Required 与新源码的受影响验证 |
-| 性能 | 交付要求，必需 | Pure 24 项、Deep Nested 2 项、两批七库及 strict freshness | 服务器源绑定测量与可信离线复算 | C1 六项编码超限；C2 仅 Int64 Map 编码超限，均保持 FAIL | 撤回有害实验后重新冻结并执行完整资格；不重标历史结果 |
+| CI | 交付要求，必需 | O2 core/consumer/native/standards/coverage/打包与全部 Required | ci_job、fresh checkout、hosted CI | C3 干净 O2 core/consumer、专项 oracle 与 scaling 通过；历史平台结果单列 | 最终完整 fresh checkout 与该 HEAD 的全部 Required |
+| 性能 | 交付要求，必需 | Pure 24 项、Deep Nested 2 项、两批七库及 strict freshness | 服务器源绑定测量与可信离线复算 | C3 Pure/HEAD、两批七库和可信离线复算通过；C1/C2 均保持 FAIL | 证据提交后的最终 strict |
 
 ### 本轮实际验证（冻结前）
 
@@ -161,6 +163,66 @@ C1 的六项超限均回到门槛内，但 `yjsonStringEncodeLargeInt64Map` 的 
 | --- | --- | --- |
 | 完整 coverage 与原 patch gate | 项目行 9225/10601=87.0%、分支 4121/5508=74.8%；patch 行 270/281=96.1%、分支 177/220=80.5%；所有门槛通过 | 仅保留公开数值测试，core/consumer/runtime/accel 全部通过 |
 | O2 外部 consumer clean build 后运行 | 上述全部公开 API 输出、溢出后内容与精确坐标断言通过，exit 0 | 8192 KiB native 栈，默认 managed 栈；不代替完整资格 |
+
+### 冻结 C3 的已执行验证
+
+C3 的产品摘要为 `a0ca74e163e77bf33a0c48267b2b0dc0f51e81b85178dc7a6eba1a20c0bd34c6`，
+生产 harness 为 `0f16fde97703cf34328a37cbbdfa37ceb6d20d636e0a48f3ea8a2de2beefad8e`；
+临时测量快照使用同一完整 path/lock overlay，不改变生产宏 pin。
+
+| 检查 | 实际结果 | 证据边界 |
+| --- | --- | --- |
+| 干净 C3 的 O2 `core` 与 `macro-consumer` | 629/629、84/84，均 0 skipped/errors/failed；真实 integration executable 和暂存后的独立 macro consumer 通过 | STS 1.2.0、九包 0.2.0，不代替最终 17 门禁 |
+| C3 的 `check_target_float_rounding.py` 与 `--native` | 各 7869 向量、0 mismatches，exit 0 | O2、8192 KiB native 栈、默认 managed 栈；Native 模式只覆盖 primitives |
+| C3 的 `check_skip_work_scaling.py` | 15/15，128/256/512 键分别同量 hash、0 equality，errors=[] | 五条实际 parser 路径，O2、8192 KiB native 栈；不声明恶意 hash 碰撞复杂度 |
+| `release_temp_tree.py --enforce-clean` 与 generated risk | 396 文件；changed=36、risk=4；exit 0 | 精确 C3 与正确宏的独立干净导出 |
+| C3 正式 Pure release 第一批 | 完整 24 项、11 轮、528 计时与 48 预检；全部 C/B≤1.05、全部单侧 CV≤5%；实际 O2 审计通过 | 服务器；无 CV 噪声重跑条件，HEAD 与七库另行验收 |
+| C3 对本轮 BASE 的 Deep Nested 第一批 | String/bytes 两项各 11 轮，44 计时与 4 预检；C/B 分别约 0.997 / 1.002，双方 CV 均小于 1%；独立 gates 与实际 O2 审计通过 | 未传 `--enforce`；检查 gates 和前后源码、宏、SDK 身份，未仅凭 exit 0 判断 |
+
+七库两批已顺序完成，各 770 个唯一单元，全部 RSS 为正、各 110 份 fixed-work 证明通过。
+第一批 10/10 稳定，第二批 6/10 稳定、4/10 noisy；原样保留两批，不补单元、不第三批追分。
+可信 checkout 独立重算全部 1540 单元、七个源码树、完整生产闭包、SDK 清单和实际生产 execve。
+完整 Pure 572 计时及 52 预检也从日志/RSS/sidecar 复算，所有比率仍在原门槛内。
+九个公开存档共 18262 个普通文件，完整内容审计的 58 项匹配均逐项绑定 SDK 或匿名 namespace 源证据。
+报告与重放入口见[本轮 Pure](../performance/results/2026-11-03-issue-9-contracts-pure.md)、
+[七库](../performance/results/2026-11-03-issue-9-contracts-seven-library.md)和
+[证据索引](../../benchmarks/results/full-seven-library/2026-11-03-issue-9-contracts/README.md)。
+历史诊断公开包保留 1638 个普通文件，全部载荷和非 owner 属性逐成员一致，
+仅匿名化 owner/compression metadata；measurementStatus 为 `DIAGNOSTIC_ONLY`。
+内容审计的 12 项匹配均为冻结 SDK 中的 unittest mock 库标识，已逐项核验并保留原字节。
+
+C3 的托管 [CI run 41585591000](https://github.com/lIlIIlIll/yjson/actions/runs/41585591000)
+已结束：Windows/macOS Pure 与 API 示例、API Documentation、Core Coverage、
+全部 Linux Tests、STS、guardrails、generated risk 与 Stream evidence drift 成功。
+Seven-library evidence drift 失败，CI Required 汇总失败；PR 上 Pages 部署按条件 skipped。
+这是精确 C3 的实际结果，不替代更新性能证据后最终 HEAD 的全部 Required。
+
+### E 的托管 CI 与 Ready 前本地评审
+
+证据提交 `9b7ec549ea15508bbbc0feb8853277a697cd90a1` 的托管
+[CI run 41609265583](https://github.com/lIlIIlIll/yjson/actions/runs/41609265583)
+已结束：29 个 job 成功，PR Pages 部署按条件 skipped，CI Required 成功。
+该结果只适用于 E，不替代后续修复的本地验证与最终 HEAD 托管 CI。
+
+Ready 前必须完成本地 subagent 评审、修复及增量复审，直到没有未解决问题。
+首轮三片评审覆盖核心 reader/writer/数值转换、算法及 Native 生命周期、性能证据闭包；
+核心片未发现可操作问题，其余两片确认以下三项。PR 仍保持 Draft。
+
+| 评审 ID | 公开可观察问题 | 修复与实际验证 | 当前状态 |
+| --- | --- | --- | --- |
+| PR10-AN-01 | yyjson 负零 `asInt64()` 与 `close()` 竞争，把 `resource_closed` 映射为 `number_out_of_range` | 外部 STS 1.2.0、`-O2` 使用方在第 0 轮实际复现；数字文本读取移出转换异常捕获。修复后直接运行使用方：2000 轮、14640179 次成功读取、退出 0；`ci_job.sh yyjson-native` 26/26、暂存外部使用方通过 | 源码增量复审 resolved；待最终提交连续性确认 |
+| EVID-01 | README 的 `verify-seven.py --trusted .` 因子进程改变工作目录而找不到汇总器 | 参数路径先绝对化；完整两批七库数据以相对 trusted 路径重放成功，仅 verifier hash 变化 | 源码增量复审 resolved；待最终提交连续性确认 |
+| EVID-02 | Pure verifier 对空结果目录或缺 HEAD Deep Nested 矩阵错误返回 PASS | 必须包含资格声明中的两个不同矩阵，且实际目录集合完全一致；两种不完整输入修复前均错误通过、修复后均退出 1 且不写 PASS，完整矩阵重放通过 | 源码增量复审 resolved；待最终提交连续性确认 |
+
+上述 Pure 空目录及缺矩阵的修复前 PASS 是合成不完整输入的错误接受证明，不是测量资格结果。
+重放程序来自可信检出，不执行归档中的程序；九份原始测量/诊断归档及数值样本未修改。
+
+当前修复不改变 `product_manifest()` 或 `harness_manifest()` 的任何输入；摘要仍分别为
+`a0ca74e163e77bf33a0c48267b2b0dc0f51e81b85178dc7a6eba1a20c0bd34c6` 和
+`0f16fde97703cf34328a37cbbdfa37ceb6d20d636e0a48f3ea8a2de2beefad8e`。
+`packages/benchmarks/cjpm.toml` 仅依赖 yjson、宏和 algorithms，不依赖独立 yyjson 包。
+因此 C3 的 Pure/七库测量闭包可复用；原始完整 repo 快照摘要仍指 C3，不冒称最终仓库整树相同。
+yyjson 生命周期行为则必须以上述新运行及最终 HEAD 门禁验收，不复用旧后端结果。
 
 ## 历史记录：2026-10-02 / STS 1.1.3
 

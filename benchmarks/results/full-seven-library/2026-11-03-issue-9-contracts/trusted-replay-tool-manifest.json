@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "executionPolicy": "Run these reviewed, version-controlled files from the trusted checkout; programs inside evidence archives remain data only.",
+  "files": {
+    "audit-pure-build.py": "e7e7802c28a346abf70ce402ba192e47a43681e176fce01b73b83434ea8e1d87",
+    "offline_compiler_audit.py": "aaa72f7a80993a46b97a86c2fe66fbefbd618212738276b7c907a53ebc863fa8",
+    "project-archives.py": "167484072ad2e8cdafa1c5ab92538f3b315092d8ee3c7617e7ceef238a4652e7",
+    "verify-failed-pure.py": "9b6b213a8c874b9b287e6515da7a16540c619e4962b49e53d9e7ee2d020a0ae3",
+    "verify-history.py": "0afe27b69305d410e957f5f9d2d743eccf67e5f38f7658bc94c569a839df62d6",
+    "verify-pure.py": "6718650a449bb856d1e4e1ad6c46df1b29432da458e38d6d94d7dbaed7cd7a3c",
+    "verify-seven.py": "f8747c69c9dfd6550d20338ad1020836009a7a54765d7c3800e5319abe9bdd02"
+  }
+}

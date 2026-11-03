@@ -65,14 +65,15 @@ harness。正式 Doc IR 仅将本地输入的精确源码链接由 2945d3b 更�
 
 | 输入 | 固定身份 |
 | --- | --- |
-| 生产测量候选 | `ac4f8b987910a473ada7d77f10ce6cd3c12d2248`；宏仓 D819 |
-| 产品源码摘要 | `4251be5ff98c50a91afdd162ae130d94f8bf2a70c85faf5da6a78304232771af` |
-| 生产 harness 摘要 | `9d457f09101cb4466a82b000d2494e9c12b2f495b5b16b4fef809811a60d8852` |
+| 生产测量候选 | `aa128768beaaa4383586ae306ab0c0d2f74ce172`；宏 `2bfd34c08c421c04a0cd8e3d1326140849f1f21b` |
+| 产品源码摘要 | `a0ca74e163e77bf33a0c48267b2b0dc0f51e81b85178dc7a6eba1a20c0bd34c6` |
+| 生产 harness 摘要 | `0f16fde97703cf34328a37cbbdfa37ceb6d20d636e0a48f3ea8a2de2beefad8e` |
 
-Pure 24 项、11 轮正式测量通过；七库两批共 1540 单元，全部噪声行保留。
-完整公开证据及独立重放见[本轮 Pure](../../docs/performance/results/2026-10-30-api-contracts-pure.md)
-和[七库报告](../../docs/performance/results/2026-10-30-api-contracts-seven-library.md)。
-工具配置与验收记录更新不属于已冻结的产品或 harness 输入。
+Pure 24 项、11 轮正式测量及额外 HEAD Deep Nested 两项通过原门槛；
+七库两批共 1540 单元，所有噪声行、C1/C2 正式失败和诊断保留。
+完整公开证据及可信重放见[本轮 Pure](../../docs/performance/results/2026-11-03-issue-9-contracts-pure.md)
+和[七库报告](../../docs/performance/results/2026-11-03-issue-9-contracts-seven-library.md)。
+工具配置与验收记录正文更新不属于已冻结的产品或 harness 输入；不据此宣称发布资格通过。
 
 ## 历史工具链与源码（cjdoc 0.7.6）
 

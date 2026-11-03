@@ -1,0 +1,45 @@
+{
+  "status": "PASS",
+  "productionMain": "aa128768beaaa4383586ae306ab0c0d2f74ce172",
+  "downloadBytesUnchanged": true,
+  "allMemberPayloadsMatchedServerInventory": true,
+  "archivedProgramsExecuted": false,
+  "archives": [
+    {
+      "archive": "seven-library-issue9-batch1.tar.gz",
+      "sha256": "b7023e7caaff734a23baff0c5272d23456b5a59f2787e21be17178fdcb2bc029",
+      "regularFiles": 3000,
+      "sizeBytes": 1162648
+    },
+    {
+      "archive": "seven-library-issue9-batch2.tar.gz",
+      "sha256": "75579a23c51e00ca3ef97b153236998dd0fd40bb1e277909375d4ca30d52c000",
+      "regularFiles": 3000,
+      "sizeBytes": 1163444
+    },
+    {
+      "archive": "seven-library-issue9-build-audits.tar.gz",
+      "sha256": "a7ecdde99cf3b0109511d51bf03f2ff785d1b5913427b8436ccd4722d7eb4280",
+      "regularFiles": 25,
+      "sizeBytes": 161407
+    },
+    {
+      "archive": "pure-issue9-qualified.tar.gz",
+      "sha256": "13e6d79179df35b47b916d75447e380262fb10ca5a226e94827583e4ae4563e3",
+      "regularFiles": 3151,
+      "sizeBytes": 702581
+    },
+    {
+      "archive": "pure-issue9-source-inputs.tar.gz",
+      "sha256": "878e77872b068264e999310dbf1f55a15c0e8105be77376104bc8a50a25f32ad",
+      "regularFiles": 404,
+      "sizeBytes": 1759516
+    },
+    {
+      "archive": "seven-library-issue9-harness.tar.gz",
+      "sha256": "ba6999dfbb4f550621a16d6fb81213c07a0ee8cd076d19a27f6bbcd624eba296",
+      "regularFiles": 585,
+      "sizeBytes": 1036296
+    }
+  ]
+}

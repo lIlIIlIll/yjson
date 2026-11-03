@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "productionMain": "aa128768beaaa4383586ae306ab0c0d2f74ce172",
+  "productionMacro": "2bfd34c08c421c04a0cd8e3d1326140849f1f21b",
+  "allowedChanges": [
+    "uid/gid set to zero; uname/gname and corresponding PAX owner fields removed",
+    "gzip header made anonymous; recompression changes archive bytes"
+  ],
+  "orderingPreserved": true,
+  "archivedProgramsExecuted": false,
+  "contentAudit": "Separate full-payload and metadata content audit required before commit.",
+  "archives": [
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "root": "issue-9-diagnostic-history",
+      "privateOriginalSha256": "5c510e52cda5e83f988f449e9a6a0cb11254b0b065859cc1f2744ff6219b6a54",
+      "publicSha256": "38e9f069088574ad0fb35790de991f7e3631447f8782383570da1935a1ea5941",
+      "regularFiles": 1638,
+      "publicBytes": 3193919,
+      "allPayloadsByteIdentical": true,
+      "allNonOwnerMemberAttributesIdentical": true,
+      "publicOwnerFieldsAnonymous": true,
+      "publicCompressionHeaderAnonymous": true
+    }
+  ],
+  "measurementStatus": "DIAGNOSTIC_ONLY"
+}

@@ -1,0 +1,128 @@
+{
+  "status": "PASS",
+  "measurementStatus": "DIAGNOSTIC_ONLY",
+  "archiveSha256": "38e9f069088574ad0fb35790de991f7e3631447f8782383570da1935a1ea5941",
+  "verifierSha256": "0afe27b69305d410e957f5f9d2d743eccf67e5f38f7658bc94c569a839df62d6",
+  "archivedProgramsExecuted": false,
+  "sourceVariants": 4,
+  "adjacentChangesWriterOnly": true,
+  "pairedMatrices": [
+    {
+      "summary": "issue-9-diagnostic-history/diagnostics/capacity-fit-constant-limit/causal-memory/summary.json",
+      "rounds": 3,
+      "cases": 1,
+      "originalGates": {
+        "gate_mode": "release",
+        "all_ratios_at_most_1_05": true,
+        "target_gate_required": false,
+        "stability_gate_required": false,
+        "targets_meet_improvement_and_5_of_11_wins": null,
+        "both_cv_at_most_5_percent": true,
+        "passed": true
+      }
+    },
+    {
+      "summary": "issue-9-diagnostic-history/diagnostics/capacity-fit-constant-limit/release-six/summary.json",
+      "rounds": 3,
+      "cases": 6,
+      "originalGates": {
+        "gate_mode": "release",
+        "all_ratios_at_most_1_05": true,
+        "target_gate_required": false,
+        "stability_gate_required": false,
+        "targets_meet_improvement_and_5_of_11_wins": null,
+        "both_cv_at_most_5_percent": false,
+        "passed": true
+      }
+    },
+    {
+      "summary": "issue-9-diagnostic-history/diagnostics/capacity-fit-one-change/paired/summary.json",
+      "rounds": 3,
+      "cases": 3,
+      "originalGates": {
+        "gate_mode": "release",
+        "all_ratios_at_most_1_05": true,
+        "target_gate_required": false,
+        "stability_gate_required": false,
+        "targets_meet_improvement_and_5_of_11_wins": null,
+        "both_cv_at_most_5_percent": true,
+        "passed": true
+      }
+    },
+    {
+      "summary": "issue-9-diagnostic-history/diagnostics/capacity-fit-pair-release-check/summary.json",
+      "rounds": 3,
+      "cases": 6,
+      "originalGates": {
+        "gate_mode": "release",
+        "all_ratios_at_most_1_05": false,
+        "target_gate_required": false,
+        "stability_gate_required": false,
+        "targets_meet_improvement_and_5_of_11_wins": null,
+        "both_cv_at_most_5_percent": true,
+        "passed": false
+      }
+    },
+    {
+      "summary": "issue-9-diagnostic-history/diagnostics/capacity-fit-pair/paired/summary.json",
+      "rounds": 3,
+      "cases": 3,
+      "originalGates": {
+        "gate_mode": "release",
+        "all_ratios_at_most_1_05": true,
+        "target_gate_required": false,
+        "stability_gate_required": false,
+        "targets_meet_improvement_and_5_of_11_wins": null,
+        "both_cv_at_most_5_percent": true,
+        "passed": true
+      }
+    },
+    {
+      "summary": "issue-9-diagnostic-history/diagnostics/map-reservation-isolation/stage-1/summary.json",
+      "rounds": 3,
+      "cases": 2,
+      "originalGates": {
+        "gate_mode": "release",
+        "all_ratios_at_most_1_05": true,
+        "target_gate_required": false,
+        "stability_gate_required": false,
+        "targets_meet_improvement_and_5_of_11_wins": null,
+        "both_cv_at_most_5_percent": true,
+        "passed": true
+      }
+    },
+    {
+      "summary": "issue-9-diagnostic-history/diagnostics/map-reservation-isolation/stage-2/summary.json",
+      "rounds": 3,
+      "cases": 2,
+      "originalGates": {
+        "gate_mode": "release",
+        "all_ratios_at_most_1_05": true,
+        "target_gate_required": false,
+        "stability_gate_required": false,
+        "targets_meet_improvement_and_5_of_11_wins": null,
+        "both_cv_at_most_5_percent": true,
+        "passed": true
+      }
+    },
+    {
+      "summary": "issue-9-diagnostic-history/diagnostics/map-reservation-isolation/stage-3/summary.json",
+      "rounds": 3,
+      "cases": 2,
+      "originalGates": {
+        "gate_mode": "release",
+        "all_ratios_at_most_1_05": false,
+        "target_gate_required": false,
+        "stability_gate_required": false,
+        "targets_meet_improvement_and_5_of_11_wins": null,
+        "both_cv_at_most_5_percent": true,
+        "passed": false
+      }
+    }
+  ],
+  "timedCells": 150,
+  "preflightCells": 50,
+  "rawTimingSidecarsRssAffinityAndStatisticsRecomputed": true,
+  "intrusiveStackLogs": "Retained verbatim, not treated as timings or causal proof.",
+  "qualification": "No formal qualification inferred from these diagnostics; original gates retained."
+}

@@ -1,0 +1,14 @@
+{
+  "candidate": {
+    "identity_sha256": "44031890bd8a2f07ffacd8698bc1ac82225adbb0f4f8f8426156066bf3635cc0",
+    "lockstep_manifests_sha256": "e0c1f7f28b959e2f84558b247219fc621d422891c9364119591b2ee08b23b193",
+    "package_version": "0.2.0",
+    "release_graph_sha256": "27fcf7286a24a009fc10e8eea89aece7286293eba91d28f23e50e69f958a248c",
+    "root_lock_sha256": "999a8acc477b499f3f0f3df71bb5e8cdf0dc47c4f400c49b01c5925682d6d3f0",
+    "root_manifest_sha256": "43149fe15c69b7ae93a017d848a972a66e7b5b5f84a3a585d37909234d4fdc4e"
+  },
+  "effective_harness_sha256": "0f16fde97703cf34328a37cbbdfa37ceb6d20d636e0a48f3ea8a2de2beefad8e",
+  "measured_commit": "aa128768beaaa4383586ae306ab0c0d2f74ce172",
+  "product_source_sha256": "a0ca74e163e77bf33a0c48267b2b0dc0f51e81b85178dc7a6eba1a20c0bd34c6",
+  "schema_version": 3
+}

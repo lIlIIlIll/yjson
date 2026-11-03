@@ -1,0 +1,50 @@
+{
+  "status": "PASS",
+  "productionMain": "aa128768beaaa4383586ae306ab0c0d2f74ce172",
+  "productionMacro": "2bfd34c08c421c04a0cd8e3d1326140849f1f21b",
+  "qualifiedRuns": {
+    "pure-head-deep-issue9-batch1": {
+      "status": "PASS",
+      "cases": 2,
+      "rounds": 11,
+      "directCells": 44,
+      "preflightCells": 4,
+      "sourceIdentityAndPostBuildCleanliness": true,
+      "rawSidecarTimingFieldsMatched": true,
+      "threadAffinityAndFrozenWorkValidated": true,
+      "independentMedianCvRatioAndPairedWins": true,
+      "allRatiosAtMost1_05": true,
+      "compilerAuditReplay": {
+        "status": "PASS",
+        "rawExecveRecomputed": true,
+        "allMeasuredCompilerInvocationsExplicitO2": true,
+        "noChirInliningDisabled": true,
+        "compilerAuditorSha256": "e7e7802c28a346abf70ce402ba192e47a43681e176fce01b73b83434ea8e1d87",
+        "replayHelperSha256": "aaa72f7a80993a46b97a86c2fe66fbefbd618212738276b7c907a53ebc863fa8",
+        "archivedProgramsExecuted": false
+      }
+    },
+    "pure-release-issue9-batch1": {
+      "status": "PASS",
+      "cases": 24,
+      "rounds": 11,
+      "directCells": 528,
+      "preflightCells": 48,
+      "sourceIdentityAndPostBuildCleanliness": true,
+      "rawSidecarTimingFieldsMatched": true,
+      "threadAffinityAndFrozenWorkValidated": true,
+      "independentMedianCvRatioAndPairedWins": true,
+      "allRatiosAtMost1_05": true,
+      "compilerAuditReplay": {
+        "status": "PASS",
+        "rawExecveRecomputed": true,
+        "allMeasuredCompilerInvocationsExplicitO2": true,
+        "noChirInliningDisabled": true,
+        "compilerAuditorSha256": "e7e7802c28a346abf70ce402ba192e47a43681e176fce01b73b83434ea8e1d87",
+        "replayHelperSha256": "aaa72f7a80993a46b97a86c2fe66fbefbd618212738276b7c907a53ebc863fa8",
+        "archivedProgramsExecuted": false
+      }
+    }
+  },
+  "scope": "Independent arithmetic, retained raw log/RSS/sidecar and affinity replay plus source closure verification using trusted checkout code only. No archived program executed."
+}

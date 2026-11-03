@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "productionMain": "87f37a76ff02d1214158c787ca6732aaa97ecbd6",
+  "productionMacro": "2bfd34c08c421c04a0cd8e3d1326140849f1f21b",
+  "allowedChanges": [
+    "uid/gid set to zero; uname/gname and corresponding PAX owner fields removed",
+    "gzip header made anonymous; recompression changes archive bytes"
+  ],
+  "orderingPreserved": true,
+  "archivedProgramsExecuted": false,
+  "contentAudit": "Separate full-payload and metadata content audit required before commit.",
+  "archives": [
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "root": "pure-issue9-failure-C2",
+      "privateOriginalSha256": "9fa8757bbf75be34350f7f8938e96bc482984cb818e36a76083c41d8f9109929",
+      "publicSha256": "39e5b84d9e19498969489f7d87059c85b90aaeb2622430c3e91d732ee422becf",
+      "regularFiles": 3247,
+      "publicBytes": 2131771,
+      "allPayloadsByteIdentical": true,
+      "allNonOwnerMemberAttributesIdentical": true,
+      "publicOwnerFieldsAnonymous": true,
+      "publicCompressionHeaderAnonymous": true
+    }
+  ],
+  "measurementStatus": "FAIL"
+}

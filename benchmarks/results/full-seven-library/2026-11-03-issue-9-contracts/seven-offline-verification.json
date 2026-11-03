@@ -1,0 +1,34 @@
+{
+  "status": "PASS",
+  "productionMain": "aa128768beaaa4383586ae306ab0c0d2f74ce172",
+  "productionMacro": "2bfd34c08c421c04a0cd8e3d1326140849f1f21b",
+  "productSourceSha256": "a0ca74e163e77bf33a0c48267b2b0dc0f51e81b85178dc7a6eba1a20c0bd34c6",
+  "effectiveHarnessSha256": "0f16fde97703cf34328a37cbbdfa37ceb6d20d636e0a48f3ea8a2de2beefad8e",
+  "formalCells": 1540,
+  "positiveRssCells": 1540,
+  "fixedWorkCells": 220,
+  "allSevenSourceDigestsRecomputed": true,
+  "completeProductAndHarnessPayloadsVerified": true,
+  "rawSummariesIndependentlyRegenerated": true,
+  "productionExecveRecomputed": true,
+  "productionAndReusedPeerCompilerArgvExplicitO2": true,
+  "sdkManifestSha256": "ea7984dc5c37c02acf7f7119c24d7633a3b655f0c71350a8aa910c87abe00b5a",
+  "batches": [
+    {
+      "batch": 1,
+      "startedAtUtc": "2026-11-03T06:33:14.925030+00:00",
+      "finishedAtUtc": "2026-11-03T07:26:50.325639+00:00",
+      "stableRows": 10,
+      "noisyRows": 0
+    },
+    {
+      "batch": 2,
+      "startedAtUtc": "2026-11-03T07:27:24.183192+00:00",
+      "finishedAtUtc": "2026-11-03T08:21:01.823774+00:00",
+      "stableRows": 6,
+      "noisyRows": 4
+    }
+  ],
+  "archivedProgramsExecuted": false,
+  "verifierSha256": "f8747c69c9dfd6550d20338ad1020836009a7a54765d7c3800e5319abe9bdd02"
+}

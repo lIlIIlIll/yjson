@@ -1,0 +1,102 @@
+{
+  "status": "REVIEW_REQUIRED",
+  "scope": "Every ordinary file payload, path, link target, PAX/global metadata, owner fields and gzip header. Findings require explicit source-bound review; no payload rewriting.",
+  "archivedProgramsExecuted": false,
+  "archives": [
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "sha256": "38e9f069088574ad0fb35790de991f7e3631447f8782383570da1935a1ea5941",
+      "regularFiles": 1638,
+      "payloadBytes": 22860304,
+      "allMembersAndPayloadsInspected": true,
+      "ownerAndCompressionMetadataAnonymous": true,
+      "noGitHistoryOrExecutablePayloads": true
+    }
+  ],
+  "findings": [
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "member": "issue-9-diagnostic-history/diagnostics/capacity-fit-constant-limit/compiler-capacity-fit-limit.execve",
+      "rule": "internal-domain",
+      "location": 21332,
+      "sha256": "be4e773d179c3c7fa6f1bf7d96f03451962debc89c0f0c0c86de7f73160e83e1"
+    },
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "member": "issue-9-diagnostic-history/diagnostics/capacity-fit-constant-limit/compiler-capacity-fit-limit.execve",
+      "rule": "internal-domain",
+      "location": 22106,
+      "sha256": "0b54aa8590a507dd245cc59d854cd196ed855b1ef82a2711536870dac3f568c6"
+    },
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "member": "issue-9-diagnostic-history/diagnostics/capacity-fit-constant-limit/compiler-capacity-fit-pair.execve",
+      "rule": "internal-domain",
+      "location": 21352,
+      "sha256": "7487704dd673a1289188ccb74f327c49e6599e41f1d9ef14a94f7e164ca2c338"
+    },
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "member": "issue-9-diagnostic-history/diagnostics/capacity-fit-constant-limit/compiler-capacity-fit-pair.execve",
+      "rule": "internal-domain",
+      "location": 22124,
+      "sha256": "99c98f4aaee6c4d687777b98f62f816e4dc2dc034cdd46fc8cda0209ab4f357c"
+    },
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "member": "issue-9-diagnostic-history/diagnostics/capacity-fit-one-change/compiler-capacity-fit.execve",
+      "rule": "internal-domain",
+      "location": 21340,
+      "sha256": "5ce9b58d6368c4c5a0d3a660ddf165a323a6743d213f6152bea3a4e9360921e2"
+    },
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "member": "issue-9-diagnostic-history/diagnostics/capacity-fit-one-change/compiler-capacity-fit.execve",
+      "rule": "internal-domain",
+      "location": 22114,
+      "sha256": "e9e20d1727902177d945a5530c120a236e8dbc3b5cdf069bded916f722521bd8"
+    },
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "member": "issue-9-diagnostic-history/diagnostics/capacity-fit-one-change/compiler-pure-candidate.execve",
+      "rule": "internal-domain",
+      "location": 21443,
+      "sha256": "6f70dde25ecf1bf0c329c83e4699d774414f41c85d0646ad775851227c649e07"
+    },
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "member": "issue-9-diagnostic-history/diagnostics/capacity-fit-one-change/compiler-pure-candidate.execve",
+      "rule": "internal-domain",
+      "location": 22214,
+      "sha256": "f65712b34d0be12eedfd3131e125e6e945538a8f6ee72ba3d98e4a857b78517f"
+    },
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "member": "issue-9-diagnostic-history/diagnostics/capacity-fit-pair/compiler-capacity-fit-pair.execve",
+      "rule": "internal-domain",
+      "location": 21352,
+      "sha256": "7487704dd673a1289188ccb74f327c49e6599e41f1d9ef14a94f7e164ca2c338"
+    },
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "member": "issue-9-diagnostic-history/diagnostics/capacity-fit-pair/compiler-capacity-fit-pair.execve",
+      "rule": "internal-domain",
+      "location": 22124,
+      "sha256": "99c98f4aaee6c4d687777b98f62f816e4dc2dc034cdd46fc8cda0209ab4f357c"
+    },
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "member": "issue-9-diagnostic-history/diagnostics/capacity-fit-pair/compiler-capacity-fit.execve",
+      "rule": "internal-domain",
+      "location": 21340,
+      "sha256": "5ce9b58d6368c4c5a0d3a660ddf165a323a6743d213f6152bea3a4e9360921e2"
+    },
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "member": "issue-9-diagnostic-history/diagnostics/capacity-fit-pair/compiler-capacity-fit.execve",
+      "rule": "internal-domain",
+      "location": 22114,
+      "sha256": "e9e20d1727902177d945a5530c120a236e8dbc3b5cdf069bded916f722521bd8"
+    }
+  ]
+}

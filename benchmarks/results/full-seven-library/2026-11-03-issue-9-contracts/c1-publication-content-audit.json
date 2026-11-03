@@ -1,0 +1,46 @@
+{
+  "status": "REVIEW_REQUIRED",
+  "scope": "Every ordinary file payload, path, link target, PAX/global metadata, owner fields and gzip header. Findings require explicit source-bound review; no payload rewriting.",
+  "archivedProgramsExecuted": false,
+  "archives": [
+    {
+      "archive": "pure-issue9-first-failure-C.tar.gz",
+      "sha256": "2f83629215703566b1c21043a308ee27ee40bdaf7d0484a440416653132083e9",
+      "regularFiles": 3212,
+      "payloadBytes": 15426359,
+      "allMembersAndPayloadsInspected": true,
+      "ownerAndCompressionMetadataAnonymous": true,
+      "noGitHistoryOrExecutablePayloads": true
+    }
+  ],
+  "findings": [
+    {
+      "archive": "pure-issue9-first-failure-C.tar.gz",
+      "member": "pure-issue9-first-failure-C/results/pure-release-issue9-batch1/compiler-pure-baseline.execve",
+      "rule": "internal-domain",
+      "location": 21430,
+      "sha256": "e9e7417438b3fd9caeeb97a6c7ba0475521c735bbdec9853b400c00954be1630"
+    },
+    {
+      "archive": "pure-issue9-first-failure-C.tar.gz",
+      "member": "pure-issue9-first-failure-C/results/pure-release-issue9-batch1/compiler-pure-baseline.execve",
+      "rule": "internal-domain",
+      "location": 22204,
+      "sha256": "b7a976a089fe626e494f494ce4760ed2c213db524811eeae839fdf4137a03b64"
+    },
+    {
+      "archive": "pure-issue9-first-failure-C.tar.gz",
+      "member": "pure-issue9-first-failure-C/results/pure-release-issue9-batch1/compiler-pure-candidate.execve",
+      "rule": "internal-domain",
+      "location": 21443,
+      "sha256": "6f70dde25ecf1bf0c329c83e4699d774414f41c85d0646ad775851227c649e07"
+    },
+    {
+      "archive": "pure-issue9-first-failure-C.tar.gz",
+      "member": "pure-issue9-first-failure-C/results/pure-release-issue9-batch1/compiler-pure-candidate.execve",
+      "rule": "internal-domain",
+      "location": 22214,
+      "sha256": "f65712b34d0be12eedfd3131e125e6e945538a8f6ee72ba3d98e4a857b78517f"
+    }
+  ]
+}
