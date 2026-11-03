@@ -30,6 +30,7 @@
 - 零容量 buffer writer 从最小正容量增长，负容量拒绝，容量加乘溢出报告 `output_too_large`；
   bytes 文档在拥有式复制前拒绝超限输入，合法输入仍拥有独立副本。
 - Float16 与 Float32 按完整数字文本直接舍入到目标精度；Pure、Native 和 yyjson 保留负零。
+  yyjson `asInt64()` 与 `close()` 竞争时保留 `resource_closed`，不再误报数值越界。
   逐项实现与实际验收见 [Issue #9 验证记录](docs/maintainers/issue-9-verification.md)。
 - Custom Native 及 yyjson 的 Custom Native 回退路径在 backend metadata 中报告候选包版本 `0.2.0`。
 - 文档候选要求九包统一站点、八个应用包的中文契约与逐入口可执行示例，交付 HTML、
