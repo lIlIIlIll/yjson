@@ -1,7 +1,10 @@
 # Issue 9 修复与验证记录
 
 关联 [issue #9](https://github.com/lIlIIlIll/yjson/issues/9) 与
-[PR #10](https://github.com/lIlIIlIll/yjson/pull/10)。当前结论：**未完整完成**。
+[PR #10](https://github.com/lIlIIlIll/yjson/pull/10)。当前结论：**实现与冻结候选 F 的验收完整完成**。
+本页记录已执行的候选证据；后续仅记录变更不改变其源码与测量闭包。
+最终发布分支 HEAD 仍须全部 Required 成功、本地复审无未解决问题且无冲突，才允许转 Ready；
+实际状态见 PR 页面。不自动合并，不关闭 Issue。
 
 ## 当前 STS 1.2.0 候选验收
 
@@ -10,10 +13,10 @@
   合并发布清单增量并保留 main 的逗号后空白处理。
 - 首次冻结源码 C1：`57cfddb61834fb1d3c5c2e573ff6d986124045e2`，已受保护推送到原 PR，
   保持 Draft。其完整 Pure 资格失败，后续编码热路径修复仍须重新冻结和验收。
-- C2：`87f37a76ff02d1214158c787ca6732aaa97ecbd6`，仍为 Draft；完整 Pure 再次失败，
+- C2：`87f37a76ff02d1214158c787ca6732aaa97ecbd6`，当时保持 Draft；完整 Pure 再次失败，
   新增的固定上界优化在 Int64 Map 编码路径出现稳定回退，已撤回该实验。
-- 当前冻结 C3：`aa128768beaaa4383586ae306ab0c0d2f74ce172`；保留容量 span 短路，
-  撤回固定上界实验；原 PR 保持 Draft，最终交付仍须以下完整资格。
+- 性能冻结 C3：`aa128768beaaa4383586ae306ab0c0d2f74ce172`；保留容量 span 短路，
+  撤回固定上界实验；实现验收与本地评审源码 F 为 `89829b9e5400b003bed17026cef81146c150b1f4`。
 - 宏 pin：`2bfd34c08c421c04a0cd8e3d1326140849f1f21b`；九包候选 `0.2.0`，
   SDK STS `1.2.0`，文档工具 cjdoc `0.7.7`。本轮运行结果不得由下方旧 SDK 证据替代。
 - 历史 [CI run 37011774364](https://github.com/lIlIIlIll/yjson/actions/runs/37011774364)
@@ -25,16 +28,16 @@
 
 | 需求 ID | 来源/必需性 | 可观察验收 | 实现与测试 | 版本/状态 | 剩余缺口 |
 | --- | --- | --- | --- | --- | --- |
-| 001 | 001，必需 | 解码键判重、作用域独立；15 组合线性工作量 | direct/fast reader；issue9 skip 与 consumer；scaling script | 已实现，聚焦验证通过 | 最终干净检出与托管门禁 |
-| 002 | 002，必需 | 合法空白所有分块读到后续值，非法语法仍拒绝 | main Issue15 与 issue9 skip 测试 | 已实现，聚焦验证通过 | 最终干净检出与托管门禁 |
-| 003 | 003，必需 | 预算前置；cycle/depth/DAG；输入不变 | algorithms patch；work_limits_test | 已实现，71 项算法测试、标准套件通过 | 最终干净检出与托管门禁 |
-| 004 | 004，必需 | 零容量前进；负数拒绝；溢出不写入 | direct writer；writer/document 测试 | 已实现，core 与公开 API smoke 通过 | 最终干净检出与托管门禁 |
-| 005 | 005，必需 | 同路径 move 必须验证源存在 | jsonPatchMove；pointer patch 测试 | 已实现，算法、标准套件与外部 smoke 通过 | 最终干净检出与托管门禁 |
-| 006 | 006，必需 | 超限分配前拒绝；合法输入拥有式复制 | parseOwned；writer/document 测试 | 已实现；8 MiB/limit64 分配 1032 bytes、GC=0；所有权 smoke 通过 | 最终干净检出与托管门禁 |
-| 007 | 007，必需 | F16/F32 目标舍入；Pure/Native/yyjson；负零生命周期 | target float、builtin、tape、Native C/CJ 与测试 | 已实现；collection、两完整后端、各 7869 个 oracle 向量通过 | 最终干净检出、coverage 与托管门禁 |
-| 008 | 008，必需 | 流错误真实 byte offset/line/column，无坐标不伪造 | parser cursor、resource helper、resource tests | 已实现；跨窗口与转义测试通过 | 最终干净检出与托管门禁 |
-| CI | 交付要求，必需 | O2 core/consumer/native/standards/coverage/打包与全部 Required | ci_job、fresh checkout、hosted CI | C3 干净 O2 core/consumer、专项 oracle 与 scaling 通过；历史平台结果单列 | 最终完整 fresh checkout 与该 HEAD 的全部 Required |
-| 性能 | 交付要求，必需 | Pure 24 项、Deep Nested 2 项、两批七库及 strict freshness | 服务器源绑定测量与可信离线复算 | C3 Pure/HEAD、两批七库和可信离线复算通过；C1/C2 均保持 FAIL | 证据提交后的最终 strict |
+| 001 | 001，必需 | 解码键判重、作用域独立；15 组合线性工作量 | direct/fast reader；issue9 skip 与 consumer；scaling script | 验收通过；F 托管 core/consumer 与同摘要专项 | 无功能缺口；交付门禁另列 |
+| 002 | 002，必需 | 合法空白所有分块读到后续值，非法语法仍拒绝 | main Issue15 与 issue9 skip 测试 | 验收通过；F 托管 core/consumer | 无功能缺口；交付门禁另列 |
+| 003 | 003，必需 | 预算前置；cycle/depth/DAG；输入不变 | algorithms patch；work_limits_test | 验收通过；71 项算法测试、F 两套标准套件 | 无功能缺口；交付门禁另列 |
+| 004 | 004，必需 | 零容量前进；负数拒绝；溢出不写入 | direct writer；writer/document 测试 | 验收通过；F 托管 core/consumer、同摘要公开 API smoke | 无功能缺口；交付门禁另列 |
+| 005 | 005，必需 | 同路径 move 必须验证源存在 | jsonPatchMove；pointer patch 测试 | 验收通过；F 算法/标准套件、同摘要外部 smoke | 无功能缺口；交付门禁另列 |
+| 006 | 006，必需 | 超限分配前拒绝；合法输入拥有式复制 | parseOwned；writer/document 测试 | 验收通过；F core；同摘要 8 MiB/limit64 分配 1032 bytes、GC=0 与所有权 smoke | 无功能缺口；交付门禁另列 |
+| 007 | 007，必需 | F16/F32 目标舍入；Pure/Native/yyjson；负零生命周期 | target float、builtin、tape、Native C/CJ 与测试 | 验收通过；F 两完整后端/coverage、同摘要各 7869 oracle；新并发使用方 2000 轮通过 | 无功能缺口；交付门禁另列 |
+| 008 | 008，必需 | 流错误真实 byte offset/line/column，无坐标不伪造 | parser cursor、resource helper、resource tests | 验收通过；F core/consumer、同摘要跨窗口与转义场景 | 无功能缺口；交付门禁另列 |
+| CI | 交付要求，必需 | O2 core/consumer/native/standards/coverage/打包与全部 Required | ci_job、fresh checkout、hosted CI | 验收通过（F）；托管 29 项与 CI Required、完整本地默认 17 项、额外 co-link/Stream 全部通过 | 后续仅记录提交也须全部 Required；Ready 门禁见页首 |
+| 性能 | 交付要求，必需 | Pure 24 项、Deep Nested 2 项、两批七库及 strict freshness | 服务器源绑定测量与可信离线复算 | 验收通过；C3 完整测量、F README 全重放与 strict；C1/C2 均保持 FAIL | 测量闭包不变；不声明独立 Native 性能 |
 
 ### 本轮实际验证（冻结前）
 
@@ -206,13 +209,13 @@ Seven-library evidence drift 失败，CI Required 汇总失败；PR 上 Pages �
 
 Ready 前必须完成本地 subagent 评审、修复及增量复审，直到没有未解决问题。
 首轮三片评审覆盖核心 reader/writer/数值转换、算法及 Native 生命周期、性能证据闭包；
-核心片未发现可操作问题，其余两片确认以下三项。PR 仍保持 Draft。
+核心片未发现可操作问题，其余两片确认以下三项；首轮评审时 PR 保持 Draft。
 
 | 评审 ID | 公开可观察问题 | 修复与实际验证 | 当前状态 |
 | --- | --- | --- | --- |
-| PR10-AN-01 | yyjson 负零 `asInt64()` 与 `close()` 竞争，把 `resource_closed` 映射为 `number_out_of_range` | 外部 STS 1.2.0、`-O2` 使用方在第 0 轮实际复现；数字文本读取移出转换异常捕获。修复后直接运行使用方：2000 轮、14640179 次成功读取、退出 0；`ci_job.sh yyjson-native` 26/26、暂存外部使用方通过 | 源码增量复审 resolved；待最终提交连续性确认 |
-| EVID-01 | README 的 `verify-seven.py --trusted .` 因子进程改变工作目录而找不到汇总器 | 参数路径先绝对化；完整两批七库数据以相对 trusted 路径重放成功，仅 verifier hash 变化 | 源码增量复审 resolved；待最终提交连续性确认 |
-| EVID-02 | Pure verifier 对空结果目录或缺 HEAD Deep Nested 矩阵错误返回 PASS | 必须包含资格声明中的两个不同矩阵，且实际目录集合完全一致；两种不完整输入修复前均错误通过、修复后均退出 1 且不写 PASS，完整矩阵重放通过 | 源码增量复审 resolved；待最终提交连续性确认 |
+| PR10-AN-01 | yyjson 负零 `asInt64()` 与 `close()` 竞争，把 `resource_closed` 映射为 `number_out_of_range` | 外部 STS 1.2.0、`-O2` 使用方在第 0 轮实际复现；数字文本读取移出转换异常捕获。修复后直接运行使用方：2000 轮、14640179 次成功读取、退出 0；`ci_job.sh yyjson-native` 26/26、暂存外部使用方通过 | resolved；复审确认 F 的精确提交与测试字节 |
+| EVID-01 | README 的 `verify-seven.py --trusted .` 因子进程改变工作目录而找不到汇总器 | 参数路径先绝对化；完整两批七库数据以相对 trusted 路径重放成功，仅 verifier hash 变化 | resolved；复审确认 F 的程序与绑定 |
+| EVID-02 | Pure verifier 对空结果目录或缺 HEAD Deep Nested 矩阵错误返回 PASS | 必须包含资格声明中的两个不同矩阵，且实际目录集合完全一致；两种不完整输入修复前均错误通过、修复后均退出 1 且不写 PASS，完整矩阵重放通过 | resolved；复审确认 F 的完整性守卫 |
 
 上述 Pure 空目录及缺矩阵的修复前 PASS 是合成不完整输入的错误接受证明，不是测量资格结果。
 重放程序来自可信检出，不执行归档中的程序；九份原始测量/诊断归档及数值样本未修改。
@@ -223,6 +226,37 @@ Ready 前必须完成本地 subagent 评审、修复及增量复审，直到没�
 `packages/benchmarks/cjpm.toml` 仅依赖 yjson、宏和 algorithms，不依赖独立 yyjson 包。
 因此 C3 的 Pure/七库测量闭包可复用；原始完整 repo 快照摘要仍指 C3，不冒称最终仓库整树相同。
 yyjson 生命周期行为则必须以上述新运行及最终 HEAD 门禁验收，不复用旧后端结果。
+
+### F 的已执行最终验证
+
+F 的 [CI run 41637282656](https://github.com/lIlIIlIll/yjson/actions/runs/41637282656)
+已结束：30 个 job 中 29 个成功，仅 PR Pages 部署按条件 skipped，CI Required 成功。
+覆盖 Windows/macOS Pure 与 API examples、Linux 全部测试、文档、coverage、
+STS、guardrails、generated risk、strict 与 Stream drift。未合并，未关闭 Issue。
+
+本地从 F 干净检出逐字执行性能证据 README 命令：40 个 checksum、Pure 两矩阵、
+七库两批、C1/C2 保留失败和诊断历史全部重放通过；strict 的 40 项测试与 freshness 通过。
+Generated change-risk 为 changed=85、risk=4。三片本地评审均确认精确 F，
+三个稳定 finding ID 全部 resolved，无未解决问题；该结论不替代执行门禁。
+
+F 的九包文档已实际生成并通过资格检查：1052 个可见声明，
+333/333 个独立消费方示例执行，0 failures，无 partial profile selection。
+浏览器实际完成入口跳转、API 搜索、Float32 codec 中文目标舍入契约与示例导航，
+无控制台错误；这是本地生成站点，不是已发布 Pages。
+
+首次最终本地执行因外层 3600 秒 deadline 在 core 编译阶段被中断；
+此前 strict、api-inventory、cjdoc-qualification、api-docs 与 runtime-freeze 已通过。
+保留原日志，不把中断记为完整通过，也未降级优化或缩减矩阵。
+取消外层 deadline 后，原样完整默认 17 项、strict、额外 co-link 与 Stream 检查全部完成；
+每个顶层命令返回零后，`set -euo pipefail` 才输出对应的 `FINAL_GATE_PASS`。
+完整默认 jobs 列表与四个成功标记均保留，异常及非零失败计数扫描无未处理失败。
+
+私有汇总 wrapper 在所有门禁完成后因 fuzz 诊断含非 UTF-8 原始输入而解码失败，外层退出 1；
+这不是门禁失败。只恢复失败的日志读取/汇总步骤，对分析视图转义不可解码字节，
+不修改原始日志、不重跑已完成门禁，也不伪造丢失的外层子进程退出码。
+完整运行的九包文档再次 qualified、333/333 示例通过；浏览器已检查的四个页面与其字节相同。
+更早的命名空间账号映射导致 fixture 触发全局隐私钩子的失败同样保留；
+改用当前用户映射，未跳过或放宽任何钩子。
 
 ## 历史记录：2026-10-02 / STS 1.1.3
 
