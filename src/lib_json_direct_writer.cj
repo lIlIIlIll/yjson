@@ -157,6 +157,40 @@ abstract class JsonDirectWriterTarget {
 
 }
 
+private func jsonDirectBufferAddSize(left: Int64, right: Int64): Int64 {
+    if (left < 0 || right < 0) {
+        throw IllegalArgumentException("Buffer size must not be negative")
+    }
+    let remaining = Int64.Max - left
+    if (right > remaining) {
+        throw JsonException("JSON output exceeds addressable buffer size", code: "output_too_large")
+    }
+    left + right
+}
+
+private func jsonDirectBufferMultiplySize(count: Int64, width: Int64): Int64 {
+    if (count < 0 || width < 0) {
+        throw IllegalArgumentException("Buffer size must not be negative")
+    }
+    if (width != 0 && count > Int64.Max / width) {
+        throw JsonException("JSON output exceeds addressable buffer size", code: "output_too_large")
+    }
+    count * width
+}
+
+private func jsonDirectBufferGrowthCapacity(current: Int64, required: Int64): Int64 {
+    if (current < 0 || required < 0) {
+        throw IllegalArgumentException("Buffer capacity must not be negative")
+    }
+    if (required <= current) { return current }
+    var capacity = max(current, 1)
+    while (capacity < required) {
+        if (capacity > Int64.Max / 2) { return required }
+        capacity *= 2
+    }
+    capacity
+}
+
 /**
  * 为生成代码的字符串和字节写出路径保存 UTF-8 输出缓冲。
  *
@@ -171,13 +205,15 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
     /**
      * 创建供生成代码写出 UTF-8 内容的内存缓冲目标。
      *
-     * 只分配初始缓冲区，不写入 JSON 内容。实际写入路径要求初始容量为正数。容量 0 用于流写出器的占位目标。
+     * 只分配初始缓冲区，不写入 JSON 内容。零容量规范化为 1；负容量抛出 IllegalArgumentException。
+     * 扩容前检查尺寸加法和乘法，溢出时抛出 code 为 output_too_large 的 JsonException，不尝试该次扩容分配。
      *
      * @group 30-first-party-internal 第一方内部接口
-     * @param capacity 初始缓冲区字节容量，默认 128。实际写入时使用正数。
+     * @param capacity 初始缓冲区字节容量，默认 128；允许 0，不允许负数。
      */
     public init(capacity!: Int64 = JSON_DIRECT_BYTES_INITIAL_CAPACITY) {
-        buffer = Array<Byte>(capacity, repeat: 0)
+        if (capacity < 0) { throw IllegalArgumentException("Buffer capacity must not be negative") }
+        buffer = Array<Byte>(max(capacity, 1), repeat: 0)
     }
     /**
      * 清除已写长度并复用已经分配的缓冲区。
@@ -217,7 +253,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         if (size <= 0) {
             return
         }
-        ensureCapacity(used + size)
+        ensureAdditionalCapacity(size)
         unsafe {
             value.rawData().copyTo(buffer, start, used, size)
         }
@@ -233,7 +269,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
      * @param value 要原样追加的字节。
      */
     public func writeByte(value: Byte): Unit {
-        ensureCapacity(used + 1)
+        ensureAdditionalCapacity(1)
         writeRawByteNoEnsure(value)
     }
 
@@ -247,7 +283,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
      */
     public func writeBytes(value: Array<Byte>): Unit {
         if (value.isEmpty()) { return }
-        ensureCapacity(used + value.size)
+        ensureAdditionalCapacity(value.size)
         value.copyTo(buffer, 0, used, value.size)
         used += value.size
     }
@@ -265,7 +301,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
     public func writeBytesRange(value: Array<Byte>, start: Int64, end: Int64): Unit {
         let size = end - start
         if (size <= 0) { return }
-        ensureCapacity(used + size)
+        ensureAdditionalCapacity(size)
         value.copyTo(buffer, start, used, size)
         used += size
     }
@@ -280,7 +316,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
      */
     public func reserveCapacity(additional: Int64): Unit {
         if (additional > 0) {
-            ensureCapacity(used + additional)
+            ensureAdditionalCapacity(additional)
         }
     }
 
@@ -296,8 +332,8 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
      */
     public func tryWriteNativeInt64Array(values: ArrayList<Int64>): Bool {
         if (values.size < YJSON_NATIVE_MIN_WRITER_INT64_COUNT) { return false }
-        let required = values.size * 21 + 1
-        ensureCapacity(used + required)
+        let required = jsonDirectBufferAddSize(jsonDirectBufferMultiplySize(values.size, 21), 1)
+        ensureAdditionalCapacity(required)
         if (let Some(written) <- jsonNativeFormatInt64ArrayInto(values, buffer, used)) {
             used += written
             return true
@@ -314,7 +350,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
      * @param value 不需要 JSON 转义的字符串内容。
      */
     public func writeStringLiteralNoEscape(value: String): Unit {
-        ensureCapacity(used + value.size + 2)
+        ensureAdditionalCapacity(value.size, 2)
         buffer[used] = b'"'
         used++
         unsafe {
@@ -334,7 +370,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
      * @param value 不需要 JSON 转义的字段名。
      */
     public func writeStringLiteralNoEscapeName(value: String): Unit {
-        ensureCapacity(used + value.size + 3)
+        ensureAdditionalCapacity(value.size, 3)
         buffer[used] = b'"'
         used++
         unsafe {
@@ -356,7 +392,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
      * @param value 有效 UTF-8 且不需要 JSON 转义的字段名字节。
      */
     public func writeStringLiteralNoEscapeName(value: Array<Byte>): Unit {
-        ensureCapacity(used + value.size + 3)
+        ensureAdditionalCapacity(value.size, 3)
         buffer[used] = b'"'
         used++
         value.copyTo(buffer, 0, used, value.size)
@@ -378,7 +414,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
      * @param htmlSafe 是否同时转义小于号、大于号、与号、等号和单引号。
      */
     public func writeEscapedStringLiteralFromFirstEscape(value: String, firstEscape: Int64, htmlSafe: Bool): Unit {
-        ensureCapacity(used + value.size + 8)
+        ensureAdditionalCapacity(value.size, 8)
         writeRawByteNoEnsure(b'"')
         var segmentStart: Int64 = 0
         if (!htmlSafe) {
@@ -387,12 +423,12 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
                 if (byte > 127 || !(byte < 32 || byte == Int64(b'"') || byte == Int64(b'\\'))) {
                     continue
                 }
-                ensureCapacity(used + (index - segmentStart) + 6 + (value.size - index) + 1)
+                ensureAdditionalCapacity(value.size - segmentStart, 7)
                 copyTextRangeNoEnsure(value, segmentStart, index)
                 writeAsciiEscapeNoEnsure(byte)
                 segmentStart = index + 1
             }
-            ensureCapacity(used + (value.size - segmentStart) + 1)
+            ensureAdditionalCapacity(value.size - segmentStart, 1)
             copyTextRangeNoEnsure(value, segmentStart, value.size)
             writeRawByteNoEnsure(b'"')
             return
@@ -402,12 +438,12 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
             if (byte > 127 || !shouldEscapeJsonAscii(byte, htmlSafe)) {
                 continue
             }
-            ensureCapacity(used + (index - segmentStart) + 6 + (value.size - index) + 1)
+            ensureAdditionalCapacity(value.size - segmentStart, 7)
             copyTextRangeNoEnsure(value, segmentStart, index)
             writeAsciiEscapeNoEnsure(byte)
             segmentStart = index + 1
         }
-        ensureCapacity(used + (value.size - segmentStart) + 1)
+        ensureAdditionalCapacity(value.size - segmentStart, 1)
         copyTextRangeNoEnsure(value, segmentStart, value.size)
         writeRawByteNoEnsure(b'"')
     }
@@ -422,7 +458,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
      * @param value 不需要 JSON 转义的字符串内容。
      */
     public func writeTextStringLiteralNoEscape(prefix: String, value: String): Unit {
-        ensureCapacity(used + prefix.size + value.size + 2)
+        ensureAdditionalCapacity(prefix.size, value.size, 2)
         copyTextNoEnsure(prefix)
         writeRawByteNoEnsure(b'"')
         copyTextNoEnsure(value)
@@ -440,7 +476,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
      * @param totalStringSize 所有字符串的 UTF-8 字节数之和，必须足以覆盖实际内容。
      */
     public func writeTextStringArrayListNoEscape(prefix: String, values: ArrayList<String>, totalStringSize: Int64): Unit {
-        ensureCapacity(used + prefix.size + totalStringSize + values.size * 3 + 2)
+        ensureAdditionalCapacity(prefix.size, totalStringSize, jsonDirectBufferMultiplySize(values.size, 3), 2)
         copyTextNoEnsure(prefix)
         writeRawByteNoEnsure(b'[')
         if (values.size != 0) {
@@ -468,14 +504,14 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
      */
     public func writeCompactInt64Map(prefix: String, values: HashMap<String, Int64>): Unit {
         reserveCapacity(jsonRawInt64MapReserveHint(prefix.size, values.size))
-        ensureCapacity(used + prefix.size + 1)
+        ensureAdditionalCapacity(prefix.size, 1)
         copyTextNoEnsure(prefix)
         writeRawByteNoEnsure(b'{')
         var first = true
         for ((key, item) in values) {
             let firstEscape = jsonRawCompactStringEscapeIndex(key)
             if (firstEscape < 0) {
-                ensureCapacity(used + key.size + 24)
+                ensureAdditionalCapacity(key.size, 24)
                 if (!first) {
                     writeRawByteNoEnsure(b',')
                 }
@@ -489,7 +525,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
                     writeByte(b',')
                 }
                 writeEscapedStringLiteralFromFirstEscape(key, firstEscape, false)
-                ensureCapacity(used + 21)
+                ensureAdditionalCapacity(21)
                 writeRawByteNoEnsure(b':')
                 writeInt64NoEnsure(item)
             }
@@ -508,12 +544,12 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
      * @throws JsonException 启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
      */
     public func writeCompactInt64Array(values: Array<Int64>): Unit {
-        ensureCapacity(used + values.size * 4 + 2)
+        ensureAdditionalCapacity(jsonDirectBufferMultiplySize(values.size, 4), 2)
         if (let Some(written) <- jsonNativeFormatInt64ArrayInto(values, buffer, used)) {
             used += written
             return
         }
-        ensureCapacity(used + values.size * 21 + 1)
+        ensureAdditionalCapacity(jsonDirectBufferMultiplySize(values.size, 21), 1)
         writeRawByteNoEnsure(b'[')
         if (!values.isEmpty()) {
             writeInt64NoEnsure(values[0])
@@ -535,21 +571,21 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
      * @throws JsonException 启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
      */
     public func writeCompactFloat64Array(values: Array<Float64>): Unit {
-        reserveCapacity(values.size * 20 + 2)
+        reserveCapacity(jsonDirectBufferAddSize(jsonDirectBufferMultiplySize(values.size, 20), 2))
         if (let Some(written) <- jsonNativeFormatFloat64ArrayInto(values, buffer, used)) {
             used += written
             return
         }
-        reserveCapacity(values.size * 42 + 2)
+        reserveCapacity(jsonDirectBufferAddSize(jsonDirectBufferMultiplySize(values.size, 42), 2))
         writeRawByteNoEnsure(b'[')
         if (!values.isEmpty()) {
             var text = values[0].toString()
-            ensureCapacity(used + text.size)
+            ensureAdditionalCapacity(text.size)
             copyTextNoEnsure(text)
             for (index in 1..values.size) {
                 writeRawByteNoEnsure(b',')
                 text = values[index].toString()
-                ensureCapacity(used + text.size)
+                ensureAdditionalCapacity(text.size)
                 copyTextNoEnsure(text)
             }
         }
@@ -567,7 +603,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
      * @param depth 缩进重复次数，必须非负。
      */
     public func writeNewlineAndIndent(newline: String, indent: String, depth: Int64): Unit {
-        ensureCapacity(used + newline.size + indent.size * depth)
+        ensureAdditionalCapacity(newline.size, jsonDirectBufferMultiplySize(indent.size, depth))
         copyTextNoEnsure(newline)
         for (_ in 0..depth) {
             copyTextNoEnsure(indent)
@@ -586,7 +622,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
      * @return 恒为 false，供调用方作为后续字段的 first 状态。
      */
     public func writeObjectEntryNameInt64NoEscape(first: Bool, name: String, value: Int64): Bool {
-        ensureCapacity(used + name.size + 24)
+        ensureAdditionalCapacity(name.size, 24)
         if (!first) {
             writeRawByteNoEnsure(b',')
         }
@@ -610,7 +646,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
      * @return 恒为 false，供调用方作为后续字段的 first 状态。
      */
     public func writeObjectEntryNameInt64NoEscape(first: Bool, name: Array<Byte>, value: Int64): Bool {
-        ensureCapacity(used + name.size + 24)
+        ensureAdditionalCapacity(name.size, 24)
         if (!first) {
             writeRawByteNoEnsure(b',')
         }
@@ -661,7 +697,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
     public func writeObjectEntryNameStringNoEscape(
         first: Bool, name: String, value: String
     ): Bool {
-        ensureCapacity(used + name.size + value.size + 6)
+        ensureAdditionalCapacity(name.size, value.size, 6)
         if (!first) { writeRawByteNoEnsure(b',') }
         writeRawByteNoEnsure(b'"')
         copyTextNoEnsure(name)
@@ -687,7 +723,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
     public func writeObjectEntryNameStringNoEscape(
         first: Bool, name: Array<Byte>, value: String
     ): Bool {
-        ensureCapacity(used + name.size + value.size + 6)
+        ensureAdditionalCapacity(name.size, value.size, 6)
         if (!first) { writeRawByteNoEnsure(b',') }
         writeRawByteNoEnsure(b'"')
         name.copyTo(buffer, 0, used, name.size)
@@ -754,7 +790,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         // escape workload has eight such fields, so the fused form removes a
         // measurable amount of per-field dispatch without changing escaping.
         if (!first) { writeRawByteNoEnsure(b',') }
-        ensureCapacity(used + name.size + value.size * 6 + 8)
+        ensureAdditionalCapacity(name.size, jsonDirectBufferMultiplySize(value.size, 6), 8)
         writeRawByteNoEnsure(b'"')
         unsafe { name.rawData().copyTo(buffer, 0, used, name.size) }
         used += name.size
@@ -805,7 +841,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         first: Bool, name: Array<Byte>, value: String, firstEscape: Int64, htmlSafe: Bool
     ): Bool {
         if (!first) { writeRawByteNoEnsure(b',') }
-        ensureCapacity(used + name.size + value.size * 6 + 8)
+        ensureAdditionalCapacity(name.size, jsonDirectBufferMultiplySize(value.size, 6), 8)
         writeRawByteNoEnsure(b'"')
         name.copyTo(buffer, 0, used, name.size)
         used += name.size
@@ -853,7 +889,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
     public func writeObjectEntryNameBoolNoEscape(
         first: Bool, name: String, value: Bool
     ): Bool {
-        ensureCapacity(used + name.size + 8)
+        ensureAdditionalCapacity(name.size, 8)
         if (!first) { writeRawByteNoEnsure(b',') }
         writeRawByteNoEnsure(b'"')
         unsafe { name.rawData().copyTo(buffer, 0, used, name.size) }
@@ -889,7 +925,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
     public func writeObjectEntryNameBoolNoEscape(
         first: Bool, name: Array<Byte>, value: Bool
     ): Bool {
-        ensureCapacity(used + name.size + 8)
+        ensureAdditionalCapacity(name.size, 8)
         if (!first) { writeRawByteNoEnsure(b',') }
         writeRawByteNoEnsure(b'"')
         name.copyTo(buffer, 0, used, name.size)
@@ -959,7 +995,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
     public func writeObjectEntryNameUInt64NoEscape(
         first: Bool, name: String, value: UInt64
     ): Bool {
-        ensureCapacity(used + name.size + 24)
+        ensureAdditionalCapacity(name.size, 24)
         if (!first) { writeRawByteNoEnsure(b',') }
         writeRawByteNoEnsure(b'"')
         unsafe { name.rawData().copyTo(buffer, 0, used, name.size) }
@@ -984,7 +1020,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
     public func writeObjectEntryNameUInt64NoEscape(
         first: Bool, name: Array<Byte>, value: UInt64
     ): Bool {
-        ensureCapacity(used + name.size + 24)
+        ensureAdditionalCapacity(name.size, 24)
         if (!first) { writeRawByteNoEnsure(b',') }
         writeRawByteNoEnsure(b'"')
         name.copyTo(buffer, 0, used, name.size)
@@ -1034,7 +1070,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         first: Bool, name: String, value: Float64
     ): Bool {
         ensureFiniteJsonFloat(value)
-        ensureCapacity(used + name.size + 44)
+        ensureAdditionalCapacity(name.size, 44)
         if (!first) { writeRawByteNoEnsure(b',') }
         writeRawByteNoEnsure(b'"')
         unsafe { name.rawData().copyTo(buffer, 0, used, name.size) }
@@ -1065,7 +1101,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         first: Bool, name: Array<Byte>, value: Float64
     ): Bool {
         ensureFiniteJsonFloat(value)
-        ensureCapacity(used + name.size + 44)
+        ensureAdditionalCapacity(name.size, 44)
         if (!first) { writeRawByteNoEnsure(b',') }
         writeRawByteNoEnsure(b'"')
         name.copyTo(buffer, 0, used, name.size)
@@ -1131,7 +1167,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         first: Bool, name: String, values: Array<Int64>
     ): Bool {
         if (values.size >= YJSON_NATIVE_MIN_WRITER_INT64_COUNT) {
-            ensureCapacity(used + name.size + 4)
+            ensureAdditionalCapacity(name.size, 4)
             if (!first) { writeRawByteNoEnsure(b',') }
             writeRawByteNoEnsure(b'"')
             unsafe { name.rawData().copyTo(buffer, 0, used, name.size) }
@@ -1141,7 +1177,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
             writeCompactInt64Array(values)
             return false
         }
-        ensureCapacity(used + name.size + values.size * 21 + 6)
+        ensureAdditionalCapacity(name.size, jsonDirectBufferMultiplySize(values.size, 21), 6)
         if (!first) { writeRawByteNoEnsure(b',') }
         writeRawByteNoEnsure(b'"')
         unsafe { name.rawData().copyTo(buffer, 0, used, name.size) }
@@ -1176,7 +1212,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         first: Bool, name: Array<Byte>, values: Array<Int64>
     ): Bool {
         if (values.size >= YJSON_NATIVE_MIN_WRITER_INT64_COUNT) {
-            ensureCapacity(used + name.size + 4)
+            ensureAdditionalCapacity(name.size, 4)
             if (!first) { writeRawByteNoEnsure(b',') }
             writeRawByteNoEnsure(b'"')
             name.copyTo(buffer, 0, used, name.size)
@@ -1186,7 +1222,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
             writeCompactInt64Array(values)
             return false
         }
-        ensureCapacity(used + name.size + values.size * 21 + 6)
+        ensureAdditionalCapacity(name.size, jsonDirectBufferMultiplySize(values.size, 21), 6)
         if (!first) { writeRawByteNoEnsure(b',') }
         writeRawByteNoEnsure(b'"')
         name.copyTo(buffer, 0, used, name.size)
@@ -1219,7 +1255,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
     public func writeObjectEntryNameInt64MapNoEscape(
         first: Bool, name: String, values: HashMap<String, Int64>
     ): Bool {
-        ensureCapacity(used + name.size + 4)
+        ensureAdditionalCapacity(name.size, 4)
         if (!first) { writeRawByteNoEnsure(b',') }
         writeRawByteNoEnsure(b'"')
         unsafe { name.rawData().copyTo(buffer, 0, used, name.size) }
@@ -1249,7 +1285,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
     public func writeObjectEntryNameInt64MapKnownAsciiKeys(
         first: Bool, name: String, values: HashMap<String, Int64>
     ): Bool {
-        ensureCapacity(used + name.size + 4)
+        ensureAdditionalCapacity(name.size, 4)
         if (!first) { writeRawByteNoEnsure(b',') }
         writeRawByteNoEnsure(b'"')
         unsafe { name.rawData().copyTo(buffer, 0, used, name.size) }
@@ -1260,12 +1296,12 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         // bounded per-entry budget up front so medium maps do not grow while
         // copying each key/value pair; individual checks below still protect
         // arbitrary key/value sizes.
-        reserveCapacity(values.size * 32 + 2)
+        reserveCapacity(jsonDirectBufferAddSize(jsonDirectBufferMultiplySize(values.size, 32), 2))
         reserveCapacity(jsonRawInt64MapReserveHint(0, values.size))
         writeRawByteNoEnsure(b'{')
         var mapFirst = true
         for ((mapName, value) in values) {
-            ensureCapacity(used + mapName.size + 24)
+            ensureAdditionalCapacity(mapName.size, 24)
             if (!mapFirst) { writeRawByteNoEnsure(b',') }
             writeRawByteNoEnsure(b'"')
             unsafe { mapName.rawData().copyTo(buffer, 0, used, mapName.size) }
@@ -1293,19 +1329,19 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
     public func writeObjectEntryNameInt64MapKnownAsciiKeys(
         first: Bool, name: Array<Byte>, values: HashMap<String, Int64>
     ): Bool {
-        ensureCapacity(used + name.size + 4)
+        ensureAdditionalCapacity(name.size, 4)
         if (!first) { writeRawByteNoEnsure(b',') }
         writeRawByteNoEnsure(b'"')
         name.copyTo(buffer, 0, used, name.size)
         used += name.size
         writeRawByteNoEnsure(b'"')
         writeRawByteNoEnsure(b':')
-        reserveCapacity(values.size * 32 + 2)
+        reserveCapacity(jsonDirectBufferAddSize(jsonDirectBufferMultiplySize(values.size, 32), 2))
         reserveCapacity(jsonRawInt64MapReserveHint(0, values.size))
         writeRawByteNoEnsure(b'{')
         var mapFirst = true
         for ((mapName, value) in values) {
-            ensureCapacity(used + mapName.size + 24)
+            ensureAdditionalCapacity(mapName.size, 24)
             if (!mapFirst) { writeRawByteNoEnsure(b',') }
             writeRawByteNoEnsure(b'"')
             unsafe { mapName.rawData().copyTo(buffer, 0, used, mapName.size) }
@@ -1334,14 +1370,14 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
     public func writeObjectEntryNameInt64ArrayMapNoEscape(
         first: Bool, name: String, values: HashMap<String, Array<Int64>>
     ): Bool {
-        ensureCapacity(used + name.size + 4)
+        ensureAdditionalCapacity(name.size, 4)
         if (!first) { writeRawByteNoEnsure(b',') }
         writeRawByteNoEnsure(b'"')
         unsafe { name.rawData().copyTo(buffer, 0, used, name.size) }
         used += name.size
         writeRawByteNoEnsure(b'"')
         writeRawByteNoEnsure(b':')
-        reserveCapacity(values.size * 64 + 2)
+        reserveCapacity(jsonDirectBufferAddSize(jsonDirectBufferMultiplySize(values.size, 64), 2))
         reserveCapacity(jsonRawInt64MapReserveHint(0, values.size))
         writeRawByteNoEnsure(b'{')
         var mapFirst = true
@@ -1379,14 +1415,14 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
     public func writeObjectEntryNameInt64ArrayMapKnownAsciiKeys(
         first: Bool, name: String, values: HashMap<String, Array<Int64>>
     ): Bool {
-        ensureCapacity(used + name.size + 4)
+        ensureAdditionalCapacity(name.size, 4)
         if (!first) { writeRawByteNoEnsure(b',') }
         writeRawByteNoEnsure(b'"')
         unsafe { name.rawData().copyTo(buffer, 0, used, name.size) }
         used += name.size
         writeRawByteNoEnsure(b'"')
         writeRawByteNoEnsure(b':')
-        reserveCapacity(values.size * 64 + 2)
+        reserveCapacity(jsonDirectBufferAddSize(jsonDirectBufferMultiplySize(values.size, 64), 2))
         reserveCapacity(jsonRawInt64MapReserveHint(0, values.size))
         writeRawByteNoEnsure(b'{')
         var mapFirst = true
@@ -1403,7 +1439,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
                 // The generated nested-collection workload uses small
                 // arrays. Inline that case to avoid the generic array
                 // reserve/native-probe pair for every map entry.
-                ensureCapacity(used + value.size * 21 + 2)
+                ensureAdditionalCapacity(jsonDirectBufferMultiplySize(value.size, 21), 2)
                 writeRawByteNoEnsure(b'[')
                 if (!value.isEmpty()) {
                     writeInt64NoEnsure(value[0])
@@ -1435,14 +1471,14 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
     public func writeObjectEntryNameInt64ArrayMapKnownAsciiKeys(
         first: Bool, name: Array<Byte>, values: HashMap<String, Array<Int64>>
     ): Bool {
-        ensureCapacity(used + name.size + 4)
+        ensureAdditionalCapacity(name.size, 4)
         if (!first) { writeRawByteNoEnsure(b',') }
         writeRawByteNoEnsure(b'"')
         name.copyTo(buffer, 0, used, name.size)
         used += name.size
         writeRawByteNoEnsure(b'"')
         writeRawByteNoEnsure(b':')
-        reserveCapacity(values.size * 64 + 2)
+        reserveCapacity(jsonDirectBufferAddSize(jsonDirectBufferMultiplySize(values.size, 64), 2))
         reserveCapacity(jsonRawInt64MapReserveHint(0, values.size))
         writeRawByteNoEnsure(b'{')
         var mapFirst = true
@@ -1456,7 +1492,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
             if (value.size >= YJSON_NATIVE_MIN_WRITER_INT64_COUNT) {
                 writeCompactInt64Array(value)
             } else {
-                ensureCapacity(used + value.size * 21 + 2)
+                ensureAdditionalCapacity(jsonDirectBufferMultiplySize(value.size, 21), 2)
                 writeRawByteNoEnsure(b'[')
                 if (!value.isEmpty()) {
                     writeInt64NoEnsure(value[0])
@@ -1493,7 +1529,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
      * @param value 要写出的有符号整数。
      */
     public func writeInt64Text(value: Int64): Unit {
-        ensureCapacity(used + 21)
+        ensureAdditionalCapacity(21)
         writeInt64NoEnsure(value)
     }
 
@@ -1517,7 +1553,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
      * @throws JsonException 启用的 Native 写出路径检查失败，错误码为 acceleration_writer_failure。
      */
     public func writeFloat64Text(value: Float64): Unit {
-        ensureCapacity(used + 40)
+        ensureAdditionalCapacity(40)
         if (let Some(written) <- jsonNativeFormatFloat64Into(value, buffer, used)) {
             used += written
             return
@@ -1525,14 +1561,36 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
         writeText(value.toString())
     }
 
+    private func ensureAdditionalCapacity(additional: Int64): Unit {
+        // A fit in the remaining span proves that the required size is
+        // representable; only growth needs the checked sum and allocation path.
+        if (additional >= 0 && additional <= buffer.size - used) {
+            return
+        }
+        ensureCapacity(jsonDirectBufferAddSize(used, additional))
+    }
+
+    private func ensureAdditionalCapacity(first: Int64, second: Int64): Unit {
+        let remaining = buffer.size - used
+        if (first >= 0 && second >= 0 && first <= remaining && second <= remaining - first) {
+            return
+        }
+        ensureAdditionalCapacity(jsonDirectBufferAddSize(first, second))
+    }
+
+    private func ensureAdditionalCapacity(first: Int64, second: Int64, third: Int64): Unit {
+        ensureAdditionalCapacity(jsonDirectBufferAddSize(first, second), third)
+    }
+
+    private func ensureAdditionalCapacity(first: Int64, second: Int64, third: Int64, fourth: Int64): Unit {
+        ensureAdditionalCapacity(jsonDirectBufferAddSize(first, second), third, fourth)
+    }
+
     private func ensureCapacity(required: Int64): Unit {
         if (required <= buffer.size) {
             return
         }
-        var newCapacity = buffer.size * 2
-        while (newCapacity < required) {
-            newCapacity *= 2
-        }
+        let newCapacity = jsonDirectBufferGrowthCapacity(buffer.size, required)
         let newBuffer = Array<Byte>(newCapacity, repeat: 0)
         buffer.copyTo(newBuffer, 0, 0, used)
         buffer = newBuffer
@@ -1544,7 +1602,7 @@ public class DirectBufferWriterTarget <: JsonDirectWriterTarget {
     }
 
     private func writeUInt64Digits(value: UInt64): Unit {
-        ensureCapacity(used + 20)
+        ensureAdditionalCapacity(20)
         writeUInt64DigitsNoEnsure(value)
     }
 
@@ -1896,7 +1954,9 @@ class DirectStreamWriterTarget <: JsonDirectWriterTarget {
     }
 
     public func writeTextStringArrayListNoEscape(prefix: String, values: ArrayList<String>, totalStringSize: Int64): Unit {
-        reserveCapacity(prefix.size + totalStringSize + values.size * 3 + 2)
+        reserveCapacity(jsonDirectBufferAddSize(
+            jsonDirectBufferAddSize(prefix.size, totalStringSize),
+            jsonDirectBufferAddSize(jsonDirectBufferMultiplySize(values.size, 3), 2)))
         writeText(prefix)
         writeRawByte(b'[')
         if (values.size != 0) {
@@ -1932,7 +1992,7 @@ class DirectStreamWriterTarget <: JsonDirectWriterTarget {
     }
 
     public func writeCompactInt64Array(values: Array<Int64>): Unit {
-        reserveCapacity(values.size * 21 + 1)
+        reserveCapacity(jsonDirectBufferAddSize(jsonDirectBufferMultiplySize(values.size, 21), 1))
         writeRawByte(b'[')
         if (!values.isEmpty()) {
             writeInt64Text(values[0])
@@ -1945,7 +2005,7 @@ class DirectStreamWriterTarget <: JsonDirectWriterTarget {
     }
 
     public func writeCompactFloat64Array(values: Array<Float64>): Unit {
-        reserveCapacity(values.size * 24 + 2)
+        reserveCapacity(jsonDirectBufferAddSize(jsonDirectBufferMultiplySize(values.size, 24), 2))
         writeRawByte(b'[')
         if (!values.isEmpty()) {
             writeFloat64Text(values[0])
@@ -3493,7 +3553,7 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
                 writeRawStringArrayListFallback(prefix, values)
                 return
             }
-            totalStringSize += value.size
+            totalStringSize = jsonDirectBufferAddSize(totalStringSize, value.size)
         }
         target.writeTextStringArrayListNoEscape(prefix, values, totalStringSize)
     }
@@ -3666,9 +3726,9 @@ public class JsonDirectWriter <: GeneratedSupportV1Writer & GeneratedWriteStateV
             if (target.tryWriteNativeInt64Array(values)) { return true }
             var totalValueSize: Int64 = 0
             for (item in values) {
-                totalValueSize += jsonRawInt64Size(item)
+                totalValueSize = jsonDirectBufferAddSize(totalValueSize, jsonRawInt64Size(item))
             }
-            target.reserveCapacity(totalValueSize + values.size + 1)
+            target.reserveCapacity(jsonDirectBufferAddSize(jsonDirectBufferAddSize(totalValueSize, values.size), 1))
             target.writeByte(b'[')
             if (!values.isEmpty()) {
                 target.writeInt64Text(values[0])

@@ -1,0 +1,57 @@
+{
+  "allPayloadsRetained": true,
+  "archivedProgramsExecuted": false,
+  "archives": [
+    {
+      "allMembersAndPayloadsInspected": true,
+      "archive": "pure-issue9-first-failure-C.tar.gz",
+      "noGitHistoryOrExecutablePayloads": true,
+      "ownerAndCompressionMetadataAnonymous": true,
+      "payloadBytes": 15426359,
+      "regularFiles": 3212,
+      "sha256": "2f83629215703566b1c21043a308ee27ee40bdaf7d0484a440416653132083e9"
+    }
+  ],
+  "measurementStatus": "FAIL",
+  "reviewedFindings": [
+    {
+      "archive": "pure-issue9-first-failure-C.tar.gz",
+      "disposition": "SAFE_SDK_LIBRARY_IDENTIFIER",
+      "location": 21430,
+      "member": "pure-issue9-first-failure-C/results/pure-release-issue9-batch1/compiler-pure-baseline.execve",
+      "reason": "The match is the standard Cangjie unittest SDK library basename inside compiler/linker argv, not a network domain or local machine identifier. The unchanged SDK contains this library. No payload modified.",
+      "rule": "internal-domain",
+      "sha256": "e9e7417438b3fd9caeeb97a6c7ba0475521c735bbdec9853b400c00954be1630"
+    },
+    {
+      "archive": "pure-issue9-first-failure-C.tar.gz",
+      "disposition": "SAFE_SDK_LIBRARY_IDENTIFIER",
+      "location": 22204,
+      "member": "pure-issue9-first-failure-C/results/pure-release-issue9-batch1/compiler-pure-baseline.execve",
+      "reason": "The match is the standard Cangjie unittest SDK library basename inside compiler/linker argv, not a network domain or local machine identifier. The unchanged SDK contains this library. No payload modified.",
+      "rule": "internal-domain",
+      "sha256": "b7a976a089fe626e494f494ce4760ed2c213db524811eeae839fdf4137a03b64"
+    },
+    {
+      "archive": "pure-issue9-first-failure-C.tar.gz",
+      "disposition": "SAFE_SDK_LIBRARY_IDENTIFIER",
+      "location": 21443,
+      "member": "pure-issue9-first-failure-C/results/pure-release-issue9-batch1/compiler-pure-candidate.execve",
+      "reason": "The match is the standard Cangjie unittest SDK library basename inside compiler/linker argv, not a network domain or local machine identifier. The unchanged SDK contains this library. No payload modified.",
+      "rule": "internal-domain",
+      "sha256": "6f70dde25ecf1bf0c329c83e4699d774414f41c85d0646ad775851227c649e07"
+    },
+    {
+      "archive": "pure-issue9-first-failure-C.tar.gz",
+      "disposition": "SAFE_SDK_LIBRARY_IDENTIFIER",
+      "location": 22214,
+      "member": "pure-issue9-first-failure-C/results/pure-release-issue9-batch1/compiler-pure-candidate.execve",
+      "reason": "The match is the standard Cangjie unittest SDK library basename inside compiler/linker argv, not a network domain or local machine identifier. The unchanged SDK contains this library. No payload modified.",
+      "rule": "internal-domain",
+      "sha256": "f65712b34d0be12eedfd3131e125e6e945538a8f6ee72ba3d98e4a857b78517f"
+    }
+  ],
+  "sourceAuditSha256": "a37e0341c3edcba6a2997dc166d837d08672dcd0e92745c3c38b0715aeca80ff",
+  "status": "PASS",
+  "unresolvedFindings": 0
+}

@@ -139,7 +139,7 @@ public class JsonPatchLimits {
      */
     public let maxPointerSegments: Int64
     /**
-     * 允许复制的节点预算；JSON Patch 累计初始副本和操作值等复制，Merge Patch 检查输入合计与结果节点数。 `0` 表示不限制。
+     * 允许复制的节点预算；JSON Patch 累计初始副本和操作值等复制，Merge Patch 在复制前累计检查目标和 Patch 的节点数，共享子树按每次出现分别计费。`0` 表示不限制。
      *
      * @group 10-application 应用 API
      */
@@ -149,7 +149,7 @@ public class JsonPatchLimits {
      *
      * @param maxOperations JSON Patch 允许执行的操作数，Merge Patch 不使用此维度。 默认值见签名；`0` 表示不限制。
      * @param maxPointerSegments JSON Patch 每个目标指针及来源指针允许的令牌数。 默认值见签名；`0` 表示不限制。
-     * @param maxCopiedNodes 允许复制的节点预算；JSON Patch 累计初始副本和操作值等复制，Merge Patch 检查输入合计与结果节点数。 默认值见签名；`0` 表示不限制。
+     * @param maxCopiedNodes 允许复制的节点预算；JSON Patch 累计初始副本和操作值等复制，Merge Patch 在复制前累计检查目标和 Patch 的节点数，共享子树按每次出现分别计费。默认值见签名；`0` 表示不限制。
      * @throws IllegalArgumentException 任一预算为负数。
      *
      * @example 用法（profile: algorithms） {run}

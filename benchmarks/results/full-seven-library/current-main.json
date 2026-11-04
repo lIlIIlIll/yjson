@@ -1,6 +1,6 @@
 {
   "candidate": {
-    "identity_sha256": "cd053e16597cd7e0be084a03999b6ddd6d4641bed7bd7e5b00906c310e3fa4d7",
+    "identity_sha256": "44031890bd8a2f07ffacd8698bc1ac82225adbb0f4f8f8426156066bf3635cc0",
     "lockstep_manifests_sha256": "e0c1f7f28b959e2f84558b247219fc621d422891c9364119591b2ee08b23b193",
     "package_version": "0.2.0",
     "release_graph_sha256": "27fcf7286a24a009fc10e8eea89aece7286293eba91d28f23e50e69f958a248c",
@@ -8,43 +8,65 @@
     "root_manifest_sha256": "43149fe15c69b7ae93a017d848a972a66e7b5b5f84a3a585d37909234d4fdc4e"
   },
   "checksum_files": [
+    "all-publication-content-audit.json",
+    "all-publication-content-review.json",
+    "audit-pure-build.py",
+    "c1-offline-verification.json",
+    "c1-publication-content-audit.json",
+    "c1-publication-content-review.json",
+    "c1-publication-projection.json",
+    "c2-offline-verification.json",
+    "c2-publication-content-audit.json",
+    "c2-publication-content-review.json",
+    "c2-publication-projection.json",
     "canonical-report-rows.json",
+    "diagnostic-history-content-audit.json",
+    "diagnostic-history-content-review.json",
+    "diagnostic-history-offline-verification.json",
+    "diagnostic-history-projection.json",
     "download-verification.json",
     "frozen-candidate-binding.json",
-    "public-harness-archive.json",
+    "issue-9-diagnostic-history.raw.tar.gz",
+    "offline_compiler_audit.py",
+    "project-archives.py",
     "publication-content-audit.json",
-    "pure-issue15-first-failure.tar.gz",
-    "pure-issue15-qualified.tar.gz",
-    "pure-issue15-source-inputs.tar.gz",
+    "publication-content-review.json",
+    "publication-projection.json",
+    "pure-issue9-failure-C2.tar.gz",
+    "pure-issue9-first-failure-C.tar.gz",
+    "pure-issue9-qualified.tar.gz",
+    "pure-issue9-source-inputs.tar.gz",
     "pure-offline-verification.json",
-    "pure-publication-projection.json",
     "server-packet-inventory.json",
-    "seven-library-issue15-batch1.tar.gz",
-    "seven-library-issue15-batch2.tar.gz",
-    "seven-library-issue15-build-audits.tar.gz",
-    "seven-library-issue15-harness.tar.gz",
+    "seven-library-issue9-batch1.tar.gz",
+    "seven-library-issue9-batch2.tar.gz",
+    "seven-library-issue9-build-audits.tar.gz",
+    "seven-library-issue9-harness.tar.gz",
     "seven-offline-verification.json",
-    "strict-verification.json",
-    "strict-verification.log"
+    "trusted-replay-tool-manifest.json",
+    "verify-failed-pure.py",
+    "verify-history.py",
+    "verify-pure.py",
+    "verify-seven.py"
   ],
-  "effective_harness_sha256": "3f1c2c1de5ae803f99e344a9a283057674ff2de72154cb66389b5b6d833dc8c5",
-  "evidence_dir": "benchmarks/results/full-seven-library/2026-10-30-issue-15-contracts",
+  "effective_harness_sha256": "0f16fde97703cf34328a37cbbdfa37ceb6d20d636e0a48f3ea8a2de2beefad8e",
+  "evidence_dir": "benchmarks/results/full-seven-library/2026-11-03-issue-9-contracts",
   "formal_archives": [
     {
-      "file": "seven-library-issue15-batch1.tar.gz",
-      "root": "seven-library-issue15-batch1"
+      "file": "seven-library-issue9-batch1.tar.gz",
+      "root": "seven-library-issue9-batch1"
     },
     {
-      "file": "seven-library-issue15-batch2.tar.gz",
-      "root": "seven-library-issue15-batch2"
+      "file": "seven-library-issue9-batch2.tar.gz",
+      "root": "seven-library-issue9-batch2"
     }
   ],
   "harness_archive": {
-    "file": "seven-library-issue15-harness.tar.gz",
-    "root": "seven-library-issue15-harness"
+    "file": "seven-library-issue9-harness.tar.gz",
+    "root": "seven-library-issue9-harness"
   },
-  "measured_commit": "0d4d39a3e92ccaf4d3d0a37367160973dad21dbd",
-  "product_source_sha256": "e53700605a8d479abd69b504a138278dc0f9e7be1df6bcd5a8332d0e6e7e5368",
-  "result_doc": "docs/performance/results/2026-10-30-issue-15-contracts-seven-library.md",
+  "measured_commit": "aa128768beaaa4383586ae306ab0c0d2f74ce172",
+  "product_source_sha256": "a0ca74e163e77bf33a0c48267b2b0dc0f51e81b85178dc7a6eba1a20c0bd34c6",
+  "result_doc": "docs/performance/results/2026-11-03-issue-9-contracts-seven-library.md",
   "schema_version": 3
 }

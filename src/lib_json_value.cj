@@ -685,7 +685,7 @@ public interface JsonValueView {
     /**
      * 读取可精确表示为 UInt64 的非负整数。
      *
-     * @return UInt64 整数；要求非负整数表示，不接受负数、小数或指数写法。
+     * @return UInt64 整数；要求非负整数表示，精确字面量 -0 也返回 0；其他负数、小数或指数写法不接受。
      * @throws JsonException 值类型不符或整数文本超出范围。
      *
      * @example 调用并检查结果 {run}
@@ -1330,7 +1330,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
     /**
      * 读取可精确表示为 UInt64 的非负整数。
      *
-     * @return UInt64 整数；要求非负整数表示，不接受负数、小数或指数写法。
+     * @return UInt64 整数；要求非负整数表示，精确字面量 -0 也返回 0；其他负数、小数或指数写法不接受。
      * @throws JsonException 值类型不符或整数文本超出范围。
      *
      * @example 调用并检查结果 {run}
@@ -1352,6 +1352,7 @@ public abstract class JsonNode <: ToString & JsonValueView {
                 }
                 UInt64(value.value)
             case value: JsonNumberLiteralValue =>
+                if (value.literal == "-0") { return 0u64 }
                 try { UInt64.parse(value.literal) } catch (_: Exception) {
                     throw JsonException("Expected an exact UInt64 value", code: "number_out_of_range")
                 }

@@ -751,7 +751,7 @@ public struct GeneratedSupportV1ReadCursor {
     /**
      * 读取 JSON 数字并转换为 Float32。
      *
-     * 先扫描 JSON 数字文本，再使用 Float64 数值解析；已安装的 Native 浮点解析能力不可用或未接受 token 时使用标准库解析。随后转换为 Float32，转换不增加有限值检查。
+     * 扫描完整 JSON 数字文本，按 Float32 目标格式采用最近值、平局取偶数舍入，避免先解析为 Float64 后窄化的双重舍入。保留负零，不额外拒绝溢出得到的无穷大。
      *
      * @group 20-generated-spi 生成代码 SPI
      * @return 按上述解析及转换规则得到的 Float32 值。
@@ -762,7 +762,7 @@ public struct GeneratedSupportV1ReadCursor {
     /**
      * 读取 JSON 数字并转换为 Float16。
      *
-     * 先扫描 JSON 数字文本，再使用 Float64 数值解析；已安装的 Native 浮点解析能力不可用或未接受 token 时使用标准库解析。随后转换为 Float16，转换不增加有限值检查。
+     * 扫描完整 JSON 数字文本，按 Float16 目标格式采用最近值、平局取偶数舍入，避免先解析为 Float64 后窄化的双重舍入。保留负零，不额外拒绝溢出得到的无穷大。
      *
      * @group 20-generated-spi 生成代码 SPI
      * @return 按上述解析及转换规则得到的 Float16 值。

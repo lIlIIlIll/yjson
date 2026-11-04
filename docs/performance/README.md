@@ -5,14 +5,14 @@
 
 ## 当前候选状态
 
-Issue #15 修复候选 `0d4d39a` 使用 STS `1.2.0`，宏固定为 `2bfd34c`。
+Issue #9 修复候选 `aa12876` 使用 STS `1.2.0`，宏固定为 `2bfd34c`。
 完整 Pure 24 项 × 11 轮，共 528 个正式样本和 48 个预检进程，通过原有回退门禁；
-最大比率为 1.043291，最大单侧 CV 为 2.275%。相对修复前 HEAD 的 Deep Nested 对照也在原门槛内。
-七库两批各 770 个单元，两批各有 7/10 workload 满足原稳定性标准。
-所有噪声行与初次 Pure 失败均保留；源码、SDK 和产物在计时前后核验一致。
+最大比率为 1.039888，最大单侧 CV 为 3.561%。相对本轮修复前 HEAD 的两项 Deep Nested 对照也通过原门槛。
+七库两批各 770 个单元，第一批 10/10、第二批 6/10 workload 满足原稳定性标准。
+全部噪声行、C1/C2 正式失败和因果诊断保留；计时前后核验源码、SDK 和产物身份一致。
 
-测量条件、完整结果和输入见[本轮七库报告](results/2026-10-30-issue-15-contracts-seven-library.md)
-和 [Pure 报告](results/2026-10-30-issue-15-contracts-pure.md)。本次不发布 yjson，不声明跨 SDK 或 Native 性能。
+测量条件、完整结果和输入见[本轮七库报告](results/2026-11-03-issue-9-contracts-seven-library.md)
+和 [Pure 报告](results/2026-11-03-issue-9-contracts-pure.md)。本次不发布 yjson，不声明跨 SDK 或 Native 性能。
 
 发布前至少完成以下检查：
 
@@ -32,14 +32,15 @@ Issue #15 修复候选 `0d4d39a` 使用 STS `1.2.0`，宏固定为 `2bfd34c`。
 
 当前证据分开阅读：
 
-- [本轮 Pure 对照](results/2026-10-30-issue-15-contracts-pure.md)：同 SDK、实际 O2 的完整 24 项与修复前 HEAD 对照，保留失败记录和原始样本。
-- [本轮七库](results/2026-10-30-issue-15-contracts-seven-library.md)：两批全部 1540 个单元，保留噪声行、真实生产构建和对照库复用身份。
+- [本轮 Pure 对照](results/2026-11-03-issue-9-contracts-pure.md)：同 SDK、实际 O2 的完整 24 项与修复前 HEAD 对照，保留两次正式失败和原始样本。
+- [本轮七库](results/2026-11-03-issue-9-contracts-seven-library.md)：两批全部 1540 个单元，保留噪声行、真实生产构建和对照库复用身份。
 - [0.2.0 发布候选记录](../../release/0.2.0/evidence.md)：既有发布资格与剩余门禁，不随本次修复改写为发布通过。
 
 ## 历史证据
 
 以下页面记录了旧版本或开发快照的结果，可用来查看历史数据或选择测试基线：
 
+- [2026-10-30 Issue #15 契约候选](results/2026-10-30-issue-15-contracts-seven-library.md)与其 [Pure 报告](results/2026-10-30-issue-15-contracts-pure.md)：原测量、失败与输入身份保持不变。
 - [2026-10-30 API 注释候选](results/2026-10-30-api-contracts-seven-library.md)与其 [Pure 报告](results/2026-10-30-api-contracts-pure.md)：原源码、测量和 strict 记录保留。
 - [2026-10-26 文档工具候选](results/2026-10-26-cjdoc-020-seven-library.md)：原测量、失败与 strict 结果按原提交保留。
 

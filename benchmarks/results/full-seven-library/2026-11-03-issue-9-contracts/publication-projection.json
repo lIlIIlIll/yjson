@@ -1,0 +1,87 @@
+{
+  "status": "PASS",
+  "productionMain": "aa128768beaaa4383586ae306ab0c0d2f74ce172",
+  "productionMacro": "2bfd34c08c421c04a0cd8e3d1326140849f1f21b",
+  "allowedChanges": [
+    "uid/gid set to zero; uname/gname and corresponding PAX owner fields removed",
+    "gzip header made anonymous; recompression changes archive bytes"
+  ],
+  "orderingPreserved": true,
+  "archivedProgramsExecuted": false,
+  "contentAudit": "Separate full-payload and metadata content audit required before commit.",
+  "archives": [
+    {
+      "archive": "seven-library-issue9-batch1.tar.gz",
+      "root": "seven-library-issue9-batch1",
+      "privateOriginalSha256": "b7023e7caaff734a23baff0c5272d23456b5a59f2787e21be17178fdcb2bc029",
+      "publicSha256": "df2ab51276187f394557c88c9f52342d96296879462b2d98d8dd6cda7557f039",
+      "regularFiles": 3000,
+      "publicBytes": 1162964,
+      "allPayloadsByteIdentical": true,
+      "allNonOwnerMemberAttributesIdentical": true,
+      "publicOwnerFieldsAnonymous": true,
+      "publicCompressionHeaderAnonymous": true
+    },
+    {
+      "archive": "seven-library-issue9-batch2.tar.gz",
+      "root": "seven-library-issue9-batch2",
+      "privateOriginalSha256": "75579a23c51e00ca3ef97b153236998dd0fd40bb1e277909375d4ca30d52c000",
+      "publicSha256": "53c628dacc5354421f3728430db99481bffa18c1511a9ffa2a81e4d34629160b",
+      "regularFiles": 3000,
+      "publicBytes": 1163686,
+      "allPayloadsByteIdentical": true,
+      "allNonOwnerMemberAttributesIdentical": true,
+      "publicOwnerFieldsAnonymous": true,
+      "publicCompressionHeaderAnonymous": true
+    },
+    {
+      "archive": "seven-library-issue9-build-audits.tar.gz",
+      "root": "seven-library-issue9-build-audits",
+      "privateOriginalSha256": "a7ecdde99cf3b0109511d51bf03f2ff785d1b5913427b8436ccd4722d7eb4280",
+      "publicSha256": "06bbb4bf1d44302405fb16a2022b4b62a6be865cb22e6d435ef5a3f3fe656189",
+      "regularFiles": 25,
+      "publicBytes": 161293,
+      "allPayloadsByteIdentical": true,
+      "allNonOwnerMemberAttributesIdentical": true,
+      "publicOwnerFieldsAnonymous": true,
+      "publicCompressionHeaderAnonymous": true
+    },
+    {
+      "archive": "pure-issue9-qualified.tar.gz",
+      "root": "pure-issue9-qualified",
+      "privateOriginalSha256": "13e6d79179df35b47b916d75447e380262fb10ca5a226e94827583e4ae4563e3",
+      "publicSha256": "7e3c6ef81f8175d3a39d44c0a93e36e3ad77706481acf197c58a582ff69c8b9d",
+      "regularFiles": 3151,
+      "publicBytes": 702627,
+      "allPayloadsByteIdentical": true,
+      "allNonOwnerMemberAttributesIdentical": true,
+      "publicOwnerFieldsAnonymous": true,
+      "publicCompressionHeaderAnonymous": true
+    },
+    {
+      "archive": "pure-issue9-source-inputs.tar.gz",
+      "root": "pure-issue9-source-inputs",
+      "privateOriginalSha256": "878e77872b068264e999310dbf1f55a15c0e8105be77376104bc8a50a25f32ad",
+      "publicSha256": "36cb346f1cf7415db92cb834953f086c4d894250efd5955b71d01f9d103f95c5",
+      "regularFiles": 404,
+      "publicBytes": 1758898,
+      "allPayloadsByteIdentical": true,
+      "allNonOwnerMemberAttributesIdentical": true,
+      "publicOwnerFieldsAnonymous": true,
+      "publicCompressionHeaderAnonymous": true
+    },
+    {
+      "archive": "seven-library-issue9-harness.tar.gz",
+      "root": "seven-library-issue9-harness",
+      "privateOriginalSha256": "ba6999dfbb4f550621a16d6fb81213c07a0ee8cd076d19a27f6bbcd624eba296",
+      "publicSha256": "610e257db293f2b24ebac56c6daf35b283afcb1d0cbf3cbd066bb2c5ab036cb7",
+      "regularFiles": 585,
+      "publicBytes": 1036006,
+      "allPayloadsByteIdentical": true,
+      "allNonOwnerMemberAttributesIdentical": true,
+      "publicOwnerFieldsAnonymous": true,
+      "publicCompressionHeaderAnonymous": true
+    }
+  ],
+  "measurementStatus": "PASS"
+}

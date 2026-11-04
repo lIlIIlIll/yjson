@@ -77,8 +77,9 @@ class YyjsonDocumentBackendTest {
         // Readers must complete at least one successful read before close can
         // be triggered; afterwards every operation fails with resource_closed.
         // Polling is deadline-bounded, never an unbounded busy wait.
-        let document = YyjsonBackends.yyjson.parseDocument("{\"id\":42,\"items\":[1,2,3]}")
+        let document = YyjsonBackends.yyjson.parseDocument("{\"id\":42,\"negativeZero\":-0,\"items\":[1,2,3]}")
         let root = document.root()
+        let negativeZero = root.member("negativeZero").getOrThrow()
         let readerCount: Int64 = 8
         let ready = AtomicInt64(0)
         let start = AtomicInt64(0)
@@ -94,7 +95,7 @@ class YyjsonDocumentBackendTest {
                 var completed: Int64 = 0
                 try {
                     for (_ in 0..500) {
-                        if (root.member("id").getOrThrow().asInt64() != 42) {
+                        if (root.member("id").getOrThrow().asInt64() != 42 || negativeZero.asInt64() != 0) {
                             throw Exception("immutable yyjson view changed during concurrent read")
                         }
                         completed++

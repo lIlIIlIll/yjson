@@ -1,0 +1,33 @@
+{
+  "allRowsStable": true,
+  "archivedProgramsExecuted": false,
+  "cases": 24,
+  "compilerAuditReplay": {
+    "allMeasuredCompilerInvocationsExplicitO2": true,
+    "archivedProgramsExecuted": false,
+    "compilerAuditorSha256": "e7e7802c28a346abf70ce402ba192e47a43681e176fce01b73b83434ea8e1d87",
+    "noChirInliningDisabled": true,
+    "rawExecveRecomputed": true,
+    "replayHelperSha256": "aaa72f7a80993a46b97a86c2fe66fbefbd618212738276b7c907a53ebc863fa8",
+    "status": "PASS"
+  },
+  "directCells": 528,
+  "independentMedianCvRatioAndPairedWins": true,
+  "measurementStatus": "FAIL",
+  "overruns": {
+    "yjsonStringEncodeLargeInt64Map": {
+      "candidate_wins": 0,
+      "improvement_percent": -9.667818516754,
+      "ratio": 1.09667818516754
+    }
+  },
+  "preflightCells": 48,
+  "productionMacro": "2bfd34c08c421c04a0cd8e3d1326140849f1f21b",
+  "productionMain": "87f37a76ff02d1214158c787ca6732aaa97ecbd6",
+  "rawLogRssSidecarAndAffinityReplay": true,
+  "rounds": 11,
+  "scope": "Trusted-checkout parsing and independent arithmetic reproduce the retained complete stable regression. PASS describes verification only; qualification remains FAIL.",
+  "sourceIdentityAndPostBuildCleanliness": true,
+  "status": "PASS",
+  "verifierSha256": "9b6b213a8c874b9b287e6515da7a16540c619e4962b49e53d9e7ee2d020a0ae3"
+}

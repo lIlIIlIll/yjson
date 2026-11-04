@@ -170,27 +170,26 @@ let name = document.root().member("name").getOrThrow().asString()
 
 ## 性能
 
-修复候选 `0d4d39a` 在 STS `1.2.0` 下通过完整 Pure 回退检查：24 项、528 个计时样本，
-最大候选/基线比率为 1.043291，全部不超过原有 `1.05` 门槛。
-七库两批各 770 个单元，两批均有 7/10 workload 满足七库全部 `CV <= 5%`；
-噪声行完整保留，没有第三批。计时前后核验源码、SDK 和产物身份一致。
-
-下表只列第二批七库均稳定的七项，单位为微秒/操作、中位数。
+Issue #9 修复候选 `aa12876` 在 STS `1.2.0` 下通过完整 Pure 回退检查：24 项、528 个计时样本，
+最大候选/基线比率为 1.039888，全部不超过原有 `1.05` 门槛。
+额外对修复前 HEAD 的两项 Deep Nested 对照也通过原门槛。
+七库两批各 770 个单元，第一批 10/10、第二批 6/10 workload 满足七库全部 `CV <= 5%`；
+噪声行、C1/C2 正式失败和诊断均保留，没有第三批。计时前后核验输入身份一致。
+下表只列第二批七库均稳定的六项，单位为微秒/操作、中位数。
 仓颉测量构建使用显式 `-O2`，CHIR 函数内联保持启用；进程配置为
 `cjProcessorNum=1`、`cjHeapSize=128MB`，七库单核绑定。
 
 | Workload | yjson | stdx.json | cangjieJSON | json4cj | cjfast_json | Jackson | fastjson2 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Address encode | 0.386 | 1.039 | 0.901 | 0.999 | 0.902 | 0.174 | 0.066 |
-| Address decode | 0.250 | 1.845 | 0.562 | 1.819 | 0.691 | 0.326 | 0.073 |
-| Person encode | 1.109 | 3.992 | 5.667 | 2.229 | 3.739 | 0.568 | 0.271 |
-| Person decode | 1.664 | 7.151 | 4.934 | 6.198 | 4.707 | 1.128 | 0.420 |
-| Large Array encode | 18.810 | 37.362 | 80.475 | 37.687 | 34.618 | 9.015 | 4.157 |
-| Large Map decode | 11.806 | 53.696 | 58.696 | 50.575 | 49.653 | 5.421 | 3.932 |
-| Deep Nested encode | 20.833 | 29.326 | 51.278 | 29.049 | 25.997 | 4.468 | 2.468 |
+| Address encode | 0.380 | 1.042 | 0.901 | 0.997 | 0.904 | 0.176 | 0.066 |
+| Address decode | 0.214 | 1.858 | 0.562 | 1.809 | 0.690 | 0.325 | 0.070 |
+| Person encode | 1.082 | 4.034 | 5.659 | 2.230 | 3.762 | 0.574 | 0.269 |
+| Person decode | 1.634 | 7.230 | 4.946 | 6.199 | 4.723 | 1.131 | 0.418 |
+| Large Map decode | 11.976 | 55.017 | 58.603 | 50.336 | 49.665 | 5.439 | 3.943 |
+| Deep Nested encode | 20.940 | 29.834 | 51.273 | 29.016 | 26.056 | 4.469 | 2.467 |
 
-完整波动、RSS、输入身份与历史记录见[七库报告](docs/performance/results/2026-10-30-issue-15-contracts-seven-library.md)
-和 [Pure 报告](docs/performance/results/2026-10-30-issue-15-contracts-pure.md)。两种协议不拼接样本；本次不发布 yjson，
+完整波动、RSS、输入身份与失败记录见[七库报告](docs/performance/results/2026-11-03-issue-9-contracts-seven-library.md)
+和 [Pure 报告](docs/performance/results/2026-11-03-issue-9-contracts-pure.md)。两种协议不拼接样本；本次不发布 yjson，
 不外推到 Native、默认并发配置、其他平台或其他 SDK。方法见[性能文档](docs/performance/README.md)。
 
 ## 文档

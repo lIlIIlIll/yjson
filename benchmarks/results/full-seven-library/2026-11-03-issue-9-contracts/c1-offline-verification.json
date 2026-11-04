@@ -1,0 +1,58 @@
+{
+  "allRowsStable": true,
+  "archivedProgramsExecuted": false,
+  "cases": 24,
+  "compilerAuditReplay": {
+    "allMeasuredCompilerInvocationsExplicitO2": true,
+    "archivedProgramsExecuted": false,
+    "compilerAuditorSha256": "e7e7802c28a346abf70ce402ba192e47a43681e176fce01b73b83434ea8e1d87",
+    "noChirInliningDisabled": true,
+    "rawExecveRecomputed": true,
+    "replayHelperSha256": "aaa72f7a80993a46b97a86c2fe66fbefbd618212738276b7c907a53ebc863fa8",
+    "status": "PASS"
+  },
+  "directCells": 528,
+  "independentMedianCvRatioAndPairedWins": true,
+  "measurementStatus": "FAIL",
+  "overruns": {
+    "encodePersonMemory": {
+      "candidate_wins": 0,
+      "improvement_percent": -5.695744428358185,
+      "ratio": 1.0569574442835818
+    },
+    "yjsonBytesEncodeEscapedUnicodeString": {
+      "candidate_wins": 0,
+      "improvement_percent": -8.474599247576142,
+      "ratio": 1.0847459924757614
+    },
+    "yjsonBytesEncodeProfileBundle": {
+      "candidate_wins": 0,
+      "improvement_percent": -8.15825743007954,
+      "ratio": 1.0815825743007954
+    },
+    "yjsonStringEncodeDeepNestedProfiles": {
+      "candidate_wins": 0,
+      "improvement_percent": -6.910693663497813,
+      "ratio": 1.0691069366349781
+    },
+    "yjsonStringEncodeLargeProfileArray": {
+      "candidate_wins": 0,
+      "improvement_percent": -12.083841038004483,
+      "ratio": 1.1208384103800448
+    },
+    "yjsonStringEncodePerson": {
+      "candidate_wins": 0,
+      "improvement_percent": -18.450147764434345,
+      "ratio": 1.1845014776443434
+    }
+  },
+  "preflightCells": 48,
+  "productionMacro": "2bfd34c08c421c04a0cd8e3d1326140849f1f21b",
+  "productionMain": "57cfddb61834fb1d3c5c2e573ff6d986124045e2",
+  "rawLogRssSidecarAndAffinityReplay": true,
+  "rounds": 11,
+  "scope": "Trusted-checkout parsing and independent arithmetic reproduce the retained complete stable regression. PASS describes verification only; qualification remains FAIL.",
+  "sourceIdentityAndPostBuildCleanliness": true,
+  "status": "PASS",
+  "verifierSha256": "9b6b213a8c874b9b287e6515da7a16540c619e4962b49e53d9e7ee2d020a0ae3"
+}

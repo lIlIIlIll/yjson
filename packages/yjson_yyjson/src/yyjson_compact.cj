@@ -882,7 +882,8 @@ struct YyjsonJsonValue <: JsonValueView {
         } else if (code() == YJ_COMPACT_INT) {
             document.intAt(node)
         } else if (code() == YJ_COMPACT_NUMBER) {
-            try { Int64.parse(asNumberText()) } catch (_: Exception) {
+            let text = asNumberText()
+            try { Int64.parse(text) } catch (_: Exception) {
                 throw JsonException("JSON number is outside Int64 range",
                     code: "number_out_of_range")
             }
@@ -893,6 +894,7 @@ struct YyjsonJsonValue <: JsonValueView {
 
     public func asUInt64(): UInt64 {
         let text = asNumberText()
+        if (text == "-0") { return 0u64 }
         try { UInt64.parse(text) } catch (_: Exception) {
             throw JsonException("JSON number is outside UInt64 range",
                 code: "number_out_of_range")

@@ -1,0 +1,116 @@
+{
+  "status": "REVIEW_REQUIRED",
+  "scope": "Every ordinary file payload, path, link target, PAX/global metadata, owner fields and gzip header. Findings require explicit source-bound review; no payload rewriting.",
+  "archivedProgramsExecuted": false,
+  "archives": [
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "sha256": "39e5b84d9e19498969489f7d87059c85b90aaeb2622430c3e91d732ee422becf",
+      "regularFiles": 3247,
+      "payloadBytes": 15860802,
+      "allMembersAndPayloadsInspected": true,
+      "ownerAndCompressionMetadataAnonymous": true,
+      "noGitHistoryOrExecutablePayloads": true
+    }
+  ],
+  "findings": [
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/build-receipts/sdk-manifest.json",
+      "rule": "internal-domain",
+      "location": 1058,
+      "sha256": "f8ea2f53bd251c3ff6ccf477037b53bb9187beb45bcc8878a1e44bd6a9fa633c"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/build-receipts/sdk-manifest.json",
+      "rule": "internal-domain",
+      "location": 1274,
+      "sha256": "522ec6a80ecbd409d6d45eea5ad2e4ec664004da8c8d39a86f8dfdf5529e4d84"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/build-receipts/sdk-manifest.json",
+      "rule": "internal-domain",
+      "location": 1436,
+      "sha256": "7c33b45f84d5ad9a133ac1d64f129f69faffd7cd0a76b6507a7a04c4f2b8017a"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/build-receipts/sdk-manifest.json",
+      "rule": "internal-domain",
+      "location": 1574,
+      "sha256": "2bbd7965c26cecf65775edf9264846ef620b13089d76ca4e1c75c7afb59a5193"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/build-receipts/sdk-manifest.json",
+      "rule": "internal-domain",
+      "location": 1715,
+      "sha256": "b3abc8b2f30407fbdc7b552b9ac06472782e43472337ce6652fcfd5289d73579"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/build-receipts/sdk-manifest.json",
+      "rule": "internal-domain",
+      "location": 1853,
+      "sha256": "73317b063f2de6bb8b6acb311f1a8a1c6bd03e5ab069ebed203e8a20a3d162ae"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/build-receipts/sdk-manifest.json",
+      "rule": "internal-domain",
+      "location": 2024,
+      "sha256": "7370ea7b89b0b65e6076daf063d036f469d23209d1c4bd86c03f59da220279ea"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/build-receipts/yjson-compiler-argv.json",
+      "rule": "private-home-path",
+      "location": 39,
+      "sha256": "fa098b5243f8b37b20beccf748a7f41e1644e221d47afb7c03ad4d8d3d5797fa"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/build-receipts/yjson-compiler-argv.json",
+      "rule": "private-home-path",
+      "location": 533,
+      "sha256": "fa098b5243f8b37b20beccf748a7f41e1644e221d47afb7c03ad4d8d3d5797fa"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/build-receipts/yjson-compiler-argv.json",
+      "rule": "private-home-path",
+      "location": 1057,
+      "sha256": "fa098b5243f8b37b20beccf748a7f41e1644e221d47afb7c03ad4d8d3d5797fa"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/results/pure-release-issue9-batch1/compiler-pure-baseline.execve",
+      "rule": "internal-domain",
+      "location": 21434,
+      "sha256": "0250758c8df06ff0453f8fa8331fbd66fc397189335acc073f88af3d79d64ca2"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/results/pure-release-issue9-batch1/compiler-pure-baseline.execve",
+      "rule": "internal-domain",
+      "location": 22211,
+      "sha256": "fbea8b5e069d3392e1c52d3c3a80c0b23b15c14e591bfb04efb9519987957e66"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/results/pure-release-issue9-batch1/compiler-pure-candidate.execve",
+      "rule": "internal-domain",
+      "location": 21442,
+      "sha256": "01e8b352b3a6c638c89fe42b332a76af23ee215e2450f7c39194b32c6c11d219"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/results/pure-release-issue9-batch1/compiler-pure-candidate.execve",
+      "rule": "internal-domain",
+      "location": 22221,
+      "sha256": "e2c80abbc46ad1cbd7cd971d0de6b88d90febc9c320639731b5b3b4a6b6e5bfe"
+    }
+  ]
+}

@@ -5354,7 +5354,7 @@ public class JsonCodecs {
     /**
      * 以 JSON 数字表示 Float32 的 codec。
      *
-     * 浮点编码拒绝 NaN 与无穷大；解码按目标浮点精度转换。
+     * 浮点编码拒绝 NaN 与无穷大；解码按完整十进制原文直接舍入到 Float32，采用最近值、平局取偶数，保留负零，溢出可得到无穷大。
      *
      * @return 可传给 YJson 显式 codec 重载的 codec。
      *
@@ -5375,7 +5375,7 @@ public class JsonCodecs {
     /**
      * 以 JSON 数字表示 Float16 的 codec。
      *
-     * 浮点编码拒绝 NaN 与无穷大；解码按目标浮点精度转换。
+     * 浮点编码拒绝 NaN 与无穷大；解码按完整十进制原文直接舍入到 Float16，采用最近值、平局取偶数，保留负零，溢出可得到无穷大。
      *
      * @return 可传给 YJson 显式 codec 重载的 codec。
      *

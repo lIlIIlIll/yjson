@@ -1,0 +1,496 @@
+{
+  "status": "REVIEW_REQUIRED",
+  "scope": "Every ordinary file payload, path, link target, PAX/global metadata, owner fields and gzip header. Findings require explicit source-bound review; no payload rewriting.",
+  "archivedProgramsExecuted": false,
+  "archives": [
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "sha256": "38e9f069088574ad0fb35790de991f7e3631447f8782383570da1935a1ea5941",
+      "regularFiles": 1638,
+      "payloadBytes": 22860304,
+      "allMembersAndPayloadsInspected": true,
+      "ownerAndCompressionMetadataAnonymous": true,
+      "noGitHistoryOrExecutablePayloads": true
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "sha256": "39e5b84d9e19498969489f7d87059c85b90aaeb2622430c3e91d732ee422becf",
+      "regularFiles": 3247,
+      "payloadBytes": 15860802,
+      "allMembersAndPayloadsInspected": true,
+      "ownerAndCompressionMetadataAnonymous": true,
+      "noGitHistoryOrExecutablePayloads": true
+    },
+    {
+      "archive": "pure-issue9-first-failure-C.tar.gz",
+      "sha256": "2f83629215703566b1c21043a308ee27ee40bdaf7d0484a440416653132083e9",
+      "regularFiles": 3212,
+      "payloadBytes": 15426359,
+      "allMembersAndPayloadsInspected": true,
+      "ownerAndCompressionMetadataAnonymous": true,
+      "noGitHistoryOrExecutablePayloads": true
+    },
+    {
+      "archive": "pure-issue9-qualified.tar.gz",
+      "sha256": "7e3c6ef81f8175d3a39d44c0a93e36e3ad77706481acf197c58a582ff69c8b9d",
+      "regularFiles": 3151,
+      "payloadBytes": 8687236,
+      "allMembersAndPayloadsInspected": true,
+      "ownerAndCompressionMetadataAnonymous": true,
+      "noGitHistoryOrExecutablePayloads": true
+    },
+    {
+      "archive": "pure-issue9-source-inputs.tar.gz",
+      "sha256": "36cb346f1cf7415db92cb834953f086c4d894250efd5955b71d01f9d103f95c5",
+      "regularFiles": 404,
+      "payloadBytes": 10962602,
+      "allMembersAndPayloadsInspected": true,
+      "ownerAndCompressionMetadataAnonymous": true,
+      "noGitHistoryOrExecutablePayloads": true
+    },
+    {
+      "archive": "seven-library-issue9-batch1.tar.gz",
+      "sha256": "df2ab51276187f394557c88c9f52342d96296879462b2d98d8dd6cda7557f039",
+      "regularFiles": 3000,
+      "payloadBytes": 10390726,
+      "allMembersAndPayloadsInspected": true,
+      "ownerAndCompressionMetadataAnonymous": true,
+      "noGitHistoryOrExecutablePayloads": true
+    },
+    {
+      "archive": "seven-library-issue9-batch2.tar.gz",
+      "sha256": "53c628dacc5354421f3728430db99481bffa18c1511a9ffa2a81e4d34629160b",
+      "regularFiles": 3000,
+      "payloadBytes": 10389430,
+      "allMembersAndPayloadsInspected": true,
+      "ownerAndCompressionMetadataAnonymous": true,
+      "noGitHistoryOrExecutablePayloads": true
+    },
+    {
+      "archive": "seven-library-issue9-build-audits.tar.gz",
+      "sha256": "06bbb4bf1d44302405fb16a2022b4b62a6be865cb22e6d435ef5a3f3fe656189",
+      "regularFiles": 25,
+      "payloadBytes": 1428773,
+      "allMembersAndPayloadsInspected": true,
+      "ownerAndCompressionMetadataAnonymous": true,
+      "noGitHistoryOrExecutablePayloads": true
+    },
+    {
+      "archive": "seven-library-issue9-harness.tar.gz",
+      "sha256": "610e257db293f2b24ebac56c6daf35b283afcb1d0cbf3cbd066bb2c5ab036cb7",
+      "regularFiles": 585,
+      "payloadBytes": 6800422,
+      "allMembersAndPayloadsInspected": true,
+      "ownerAndCompressionMetadataAnonymous": true,
+      "noGitHistoryOrExecutablePayloads": true
+    }
+  ],
+  "findings": [
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "member": "issue-9-diagnostic-history/diagnostics/capacity-fit-constant-limit/compiler-capacity-fit-limit.execve",
+      "rule": "internal-domain",
+      "location": 21332,
+      "sha256": "be4e773d179c3c7fa6f1bf7d96f03451962debc89c0f0c0c86de7f73160e83e1"
+    },
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "member": "issue-9-diagnostic-history/diagnostics/capacity-fit-constant-limit/compiler-capacity-fit-limit.execve",
+      "rule": "internal-domain",
+      "location": 22106,
+      "sha256": "0b54aa8590a507dd245cc59d854cd196ed855b1ef82a2711536870dac3f568c6"
+    },
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "member": "issue-9-diagnostic-history/diagnostics/capacity-fit-constant-limit/compiler-capacity-fit-pair.execve",
+      "rule": "internal-domain",
+      "location": 21352,
+      "sha256": "7487704dd673a1289188ccb74f327c49e6599e41f1d9ef14a94f7e164ca2c338"
+    },
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "member": "issue-9-diagnostic-history/diagnostics/capacity-fit-constant-limit/compiler-capacity-fit-pair.execve",
+      "rule": "internal-domain",
+      "location": 22124,
+      "sha256": "99c98f4aaee6c4d687777b98f62f816e4dc2dc034cdd46fc8cda0209ab4f357c"
+    },
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "member": "issue-9-diagnostic-history/diagnostics/capacity-fit-one-change/compiler-capacity-fit.execve",
+      "rule": "internal-domain",
+      "location": 21340,
+      "sha256": "5ce9b58d6368c4c5a0d3a660ddf165a323a6743d213f6152bea3a4e9360921e2"
+    },
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "member": "issue-9-diagnostic-history/diagnostics/capacity-fit-one-change/compiler-capacity-fit.execve",
+      "rule": "internal-domain",
+      "location": 22114,
+      "sha256": "e9e20d1727902177d945a5530c120a236e8dbc3b5cdf069bded916f722521bd8"
+    },
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "member": "issue-9-diagnostic-history/diagnostics/capacity-fit-one-change/compiler-pure-candidate.execve",
+      "rule": "internal-domain",
+      "location": 21443,
+      "sha256": "6f70dde25ecf1bf0c329c83e4699d774414f41c85d0646ad775851227c649e07"
+    },
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "member": "issue-9-diagnostic-history/diagnostics/capacity-fit-one-change/compiler-pure-candidate.execve",
+      "rule": "internal-domain",
+      "location": 22214,
+      "sha256": "f65712b34d0be12eedfd3131e125e6e945538a8f6ee72ba3d98e4a857b78517f"
+    },
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "member": "issue-9-diagnostic-history/diagnostics/capacity-fit-pair/compiler-capacity-fit-pair.execve",
+      "rule": "internal-domain",
+      "location": 21352,
+      "sha256": "7487704dd673a1289188ccb74f327c49e6599e41f1d9ef14a94f7e164ca2c338"
+    },
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "member": "issue-9-diagnostic-history/diagnostics/capacity-fit-pair/compiler-capacity-fit-pair.execve",
+      "rule": "internal-domain",
+      "location": 22124,
+      "sha256": "99c98f4aaee6c4d687777b98f62f816e4dc2dc034cdd46fc8cda0209ab4f357c"
+    },
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "member": "issue-9-diagnostic-history/diagnostics/capacity-fit-pair/compiler-capacity-fit.execve",
+      "rule": "internal-domain",
+      "location": 21340,
+      "sha256": "5ce9b58d6368c4c5a0d3a660ddf165a323a6743d213f6152bea3a4e9360921e2"
+    },
+    {
+      "archive": "issue-9-diagnostic-history.raw.tar.gz",
+      "member": "issue-9-diagnostic-history/diagnostics/capacity-fit-pair/compiler-capacity-fit.execve",
+      "rule": "internal-domain",
+      "location": 22114,
+      "sha256": "e9e20d1727902177d945a5530c120a236e8dbc3b5cdf069bded916f722521bd8"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/build-receipts/sdk-manifest.json",
+      "rule": "internal-domain",
+      "location": 1058,
+      "sha256": "f8ea2f53bd251c3ff6ccf477037b53bb9187beb45bcc8878a1e44bd6a9fa633c"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/build-receipts/sdk-manifest.json",
+      "rule": "internal-domain",
+      "location": 1274,
+      "sha256": "522ec6a80ecbd409d6d45eea5ad2e4ec664004da8c8d39a86f8dfdf5529e4d84"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/build-receipts/sdk-manifest.json",
+      "rule": "internal-domain",
+      "location": 1436,
+      "sha256": "7c33b45f84d5ad9a133ac1d64f129f69faffd7cd0a76b6507a7a04c4f2b8017a"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/build-receipts/sdk-manifest.json",
+      "rule": "internal-domain",
+      "location": 1574,
+      "sha256": "2bbd7965c26cecf65775edf9264846ef620b13089d76ca4e1c75c7afb59a5193"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/build-receipts/sdk-manifest.json",
+      "rule": "internal-domain",
+      "location": 1715,
+      "sha256": "b3abc8b2f30407fbdc7b552b9ac06472782e43472337ce6652fcfd5289d73579"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/build-receipts/sdk-manifest.json",
+      "rule": "internal-domain",
+      "location": 1853,
+      "sha256": "73317b063f2de6bb8b6acb311f1a8a1c6bd03e5ab069ebed203e8a20a3d162ae"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/build-receipts/sdk-manifest.json",
+      "rule": "internal-domain",
+      "location": 2024,
+      "sha256": "7370ea7b89b0b65e6076daf063d036f469d23209d1c4bd86c03f59da220279ea"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/build-receipts/yjson-compiler-argv.json",
+      "rule": "private-home-path",
+      "location": 39,
+      "sha256": "fa098b5243f8b37b20beccf748a7f41e1644e221d47afb7c03ad4d8d3d5797fa"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/build-receipts/yjson-compiler-argv.json",
+      "rule": "private-home-path",
+      "location": 533,
+      "sha256": "fa098b5243f8b37b20beccf748a7f41e1644e221d47afb7c03ad4d8d3d5797fa"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/build-receipts/yjson-compiler-argv.json",
+      "rule": "private-home-path",
+      "location": 1057,
+      "sha256": "fa098b5243f8b37b20beccf748a7f41e1644e221d47afb7c03ad4d8d3d5797fa"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/results/pure-release-issue9-batch1/compiler-pure-baseline.execve",
+      "rule": "internal-domain",
+      "location": 21434,
+      "sha256": "0250758c8df06ff0453f8fa8331fbd66fc397189335acc073f88af3d79d64ca2"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/results/pure-release-issue9-batch1/compiler-pure-baseline.execve",
+      "rule": "internal-domain",
+      "location": 22211,
+      "sha256": "fbea8b5e069d3392e1c52d3c3a80c0b23b15c14e591bfb04efb9519987957e66"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/results/pure-release-issue9-batch1/compiler-pure-candidate.execve",
+      "rule": "internal-domain",
+      "location": 21442,
+      "sha256": "01e8b352b3a6c638c89fe42b332a76af23ee215e2450f7c39194b32c6c11d219"
+    },
+    {
+      "archive": "pure-issue9-failure-C2.tar.gz",
+      "member": "pure-issue9-failure-C2/results/pure-release-issue9-batch1/compiler-pure-candidate.execve",
+      "rule": "internal-domain",
+      "location": 22221,
+      "sha256": "e2c80abbc46ad1cbd7cd971d0de6b88d90febc9c320639731b5b3b4a6b6e5bfe"
+    },
+    {
+      "archive": "pure-issue9-first-failure-C.tar.gz",
+      "member": "pure-issue9-first-failure-C/results/pure-release-issue9-batch1/compiler-pure-baseline.execve",
+      "rule": "internal-domain",
+      "location": 21430,
+      "sha256": "e9e7417438b3fd9caeeb97a6c7ba0475521c735bbdec9853b400c00954be1630"
+    },
+    {
+      "archive": "pure-issue9-first-failure-C.tar.gz",
+      "member": "pure-issue9-first-failure-C/results/pure-release-issue9-batch1/compiler-pure-baseline.execve",
+      "rule": "internal-domain",
+      "location": 22204,
+      "sha256": "b7a976a089fe626e494f494ce4760ed2c213db524811eeae839fdf4137a03b64"
+    },
+    {
+      "archive": "pure-issue9-first-failure-C.tar.gz",
+      "member": "pure-issue9-first-failure-C/results/pure-release-issue9-batch1/compiler-pure-candidate.execve",
+      "rule": "internal-domain",
+      "location": 21443,
+      "sha256": "6f70dde25ecf1bf0c329c83e4699d774414f41c85d0646ad775851227c649e07"
+    },
+    {
+      "archive": "pure-issue9-first-failure-C.tar.gz",
+      "member": "pure-issue9-first-failure-C/results/pure-release-issue9-batch1/compiler-pure-candidate.execve",
+      "rule": "internal-domain",
+      "location": 22214,
+      "sha256": "f65712b34d0be12eedfd3131e125e6e945538a8f6ee72ba3d98e4a857b78517f"
+    },
+    {
+      "archive": "pure-issue9-qualified.tar.gz",
+      "member": "pure-issue9-qualified/results/pure-head-deep-issue9-batch1/compiler-pure-candidate.execve",
+      "rule": "internal-domain",
+      "location": 21459,
+      "sha256": "97be507a5f122d491a89b73e0399c795eb3220a329958cc64eaf65f2faef83c9"
+    },
+    {
+      "archive": "pure-issue9-qualified.tar.gz",
+      "member": "pure-issue9-qualified/results/pure-head-deep-issue9-batch1/compiler-pure-candidate.execve",
+      "rule": "internal-domain",
+      "location": 22235,
+      "sha256": "739396e6022fd3604f0223753d37cedf51a7d9178994cee5b3e0b03ee2aa3410"
+    },
+    {
+      "archive": "pure-issue9-qualified.tar.gz",
+      "member": "pure-issue9-qualified/results/pure-head-deep-issue9-batch1/compiler-pure-head.execve",
+      "rule": "internal-domain",
+      "location": 21434,
+      "sha256": "93876960f84932759bcaa626d99c1eba39f9083d1d03b788cbff755a7adb0553"
+    },
+    {
+      "archive": "pure-issue9-qualified.tar.gz",
+      "member": "pure-issue9-qualified/results/pure-head-deep-issue9-batch1/compiler-pure-head.execve",
+      "rule": "internal-domain",
+      "location": 22208,
+      "sha256": "f4874c2c81215d918402b437f2330bc1d8e8c4ce01d15d9138374c6295831a3a"
+    },
+    {
+      "archive": "pure-issue9-qualified.tar.gz",
+      "member": "pure-issue9-qualified/results/pure-release-issue9-batch1/compiler-pure-baseline.execve",
+      "rule": "internal-domain",
+      "location": 21431,
+      "sha256": "cce98cec63870372b70fccd50da26c101aec38d2244454e70041d6f9915fa441"
+    },
+    {
+      "archive": "pure-issue9-qualified.tar.gz",
+      "member": "pure-issue9-qualified/results/pure-release-issue9-batch1/compiler-pure-baseline.execve",
+      "rule": "internal-domain",
+      "location": 22205,
+      "sha256": "e0831382e6c8489ace4ba4aea020065285492270f652fadc6235d3b72ddca804"
+    },
+    {
+      "archive": "pure-issue9-qualified.tar.gz",
+      "member": "pure-issue9-qualified/results/pure-release-issue9-batch1/compiler-pure-candidate.execve",
+      "rule": "internal-domain",
+      "location": 21444,
+      "sha256": "008eb4aa7fc223a92ff3cb69b961ed508504a9f4669124a8faa3394d7aeb3702"
+    },
+    {
+      "archive": "pure-issue9-qualified.tar.gz",
+      "member": "pure-issue9-qualified/results/pure-release-issue9-batch1/compiler-pure-candidate.execve",
+      "rule": "internal-domain",
+      "location": 22220,
+      "sha256": "1e1015562989f97aaf8ae03d2dc9a1688107bc92e2ea7cb9f5d6c5c720ad04b2"
+    },
+    {
+      "archive": "seven-library-issue9-build-audits.tar.gz",
+      "member": "seven-library-issue9-build-audits/seven-build-audit/receipts/sdk-manifest.json",
+      "rule": "internal-domain",
+      "location": 1058,
+      "sha256": "f8ea2f53bd251c3ff6ccf477037b53bb9187beb45bcc8878a1e44bd6a9fa633c"
+    },
+    {
+      "archive": "seven-library-issue9-build-audits.tar.gz",
+      "member": "seven-library-issue9-build-audits/seven-build-audit/receipts/sdk-manifest.json",
+      "rule": "internal-domain",
+      "location": 1274,
+      "sha256": "522ec6a80ecbd409d6d45eea5ad2e4ec664004da8c8d39a86f8dfdf5529e4d84"
+    },
+    {
+      "archive": "seven-library-issue9-build-audits.tar.gz",
+      "member": "seven-library-issue9-build-audits/seven-build-audit/receipts/sdk-manifest.json",
+      "rule": "internal-domain",
+      "location": 1436,
+      "sha256": "7c33b45f84d5ad9a133ac1d64f129f69faffd7cd0a76b6507a7a04c4f2b8017a"
+    },
+    {
+      "archive": "seven-library-issue9-build-audits.tar.gz",
+      "member": "seven-library-issue9-build-audits/seven-build-audit/receipts/sdk-manifest.json",
+      "rule": "internal-domain",
+      "location": 1574,
+      "sha256": "2bbd7965c26cecf65775edf9264846ef620b13089d76ca4e1c75c7afb59a5193"
+    },
+    {
+      "archive": "seven-library-issue9-build-audits.tar.gz",
+      "member": "seven-library-issue9-build-audits/seven-build-audit/receipts/sdk-manifest.json",
+      "rule": "internal-domain",
+      "location": 1715,
+      "sha256": "b3abc8b2f30407fbdc7b552b9ac06472782e43472337ce6652fcfd5289d73579"
+    },
+    {
+      "archive": "seven-library-issue9-build-audits.tar.gz",
+      "member": "seven-library-issue9-build-audits/seven-build-audit/receipts/sdk-manifest.json",
+      "rule": "internal-domain",
+      "location": 1853,
+      "sha256": "73317b063f2de6bb8b6acb311f1a8a1c6bd03e5ab069ebed203e8a20a3d162ae"
+    },
+    {
+      "archive": "seven-library-issue9-build-audits.tar.gz",
+      "member": "seven-library-issue9-build-audits/seven-build-audit/receipts/sdk-manifest.json",
+      "rule": "internal-domain",
+      "location": 2024,
+      "sha256": "7370ea7b89b0b65e6076daf063d036f469d23209d1c4bd86c03f59da220279ea"
+    },
+    {
+      "archive": "seven-library-issue9-build-audits.tar.gz",
+      "member": "seven-library-issue9-build-audits/seven-build-audit/receipts/yjson-compiler-argv.json",
+      "rule": "private-home-path",
+      "location": 39,
+      "sha256": "fa098b5243f8b37b20beccf748a7f41e1644e221d47afb7c03ad4d8d3d5797fa"
+    },
+    {
+      "archive": "seven-library-issue9-build-audits.tar.gz",
+      "member": "seven-library-issue9-build-audits/seven-build-audit/receipts/yjson-compiler-argv.json",
+      "rule": "private-home-path",
+      "location": 473,
+      "sha256": "fa098b5243f8b37b20beccf748a7f41e1644e221d47afb7c03ad4d8d3d5797fa"
+    },
+    {
+      "archive": "seven-library-issue9-build-audits.tar.gz",
+      "member": "seven-library-issue9-build-audits/seven-build-audit/receipts/yjson-compiler-argv.json",
+      "rule": "private-home-path",
+      "location": 997,
+      "sha256": "fa098b5243f8b37b20beccf748a7f41e1644e221d47afb7c03ad4d8d3d5797fa"
+    },
+    {
+      "archive": "seven-library-issue9-build-audits.tar.gz",
+      "member": "seven-library-issue9-build-audits/seven-build-audit/yjson-build.execve.log",
+      "rule": "private-home-path",
+      "location": 988,
+      "sha256": "aabcb36252490e221fbff4e3526de3f854026271f4a558bbb8db676d5ef8a0ce"
+    },
+    {
+      "archive": "seven-library-issue9-build-audits.tar.gz",
+      "member": "seven-library-issue9-build-audits/seven-build-audit/yjson-build.execve.log",
+      "rule": "private-home-path",
+      "location": 998,
+      "sha256": "1929bcad4c53f925ba5684fd34a283b4d0079c623bab9a45954cb8cdc94ab6c2"
+    },
+    {
+      "archive": "seven-library-issue9-build-audits.tar.gz",
+      "member": "seven-library-issue9-build-audits/seven-build-audit/yjson-build.execve.log",
+      "rule": "private-home-path",
+      "location": 1015,
+      "sha256": "2fda23f5b2aecada67a8476bc6167bf6e973d1cea199213cab216274db427853"
+    },
+    {
+      "archive": "seven-library-issue9-build-audits.tar.gz",
+      "member": "seven-library-issue9-build-audits/seven-build-audit/yjson-build.execve.log",
+      "rule": "private-home-path",
+      "location": 1016,
+      "sha256": "67d6f102531d9ba7872e8446008a610244a6ee2567729d02511667ed0351cb0b"
+    },
+    {
+      "archive": "seven-library-issue9-build-audits.tar.gz",
+      "member": "seven-library-issue9-build-audits/seven-build-audit/yjson-build.execve.log",
+      "rule": "private-home-path",
+      "location": 5445,
+      "sha256": "dc3f98024cba76967e2aeccb3899f644af0d43d98385ad8ca0ac0ff99c22c3f8"
+    },
+    {
+      "archive": "seven-library-issue9-build-audits.tar.gz",
+      "member": "seven-library-issue9-build-audits/seven-build-audit/yjson-build.execve.log",
+      "rule": "private-home-path",
+      "location": 5446,
+      "sha256": "fb22ef731ac4aafb59e68a19747bda5c6cf1bb29f8f9536f3a813309337358d4"
+    },
+    {
+      "archive": "seven-library-issue9-build-audits.tar.gz",
+      "member": "seven-library-issue9-build-audits/seven-build-audit/yjson-build.execve.log",
+      "rule": "private-home-path",
+      "location": 9873,
+      "sha256": "caf98abd0d9c3e1c7bf4ea50409401774ed35fbce8cd77bf5ac6c88d57851a8b"
+    },
+    {
+      "archive": "seven-library-issue9-build-audits.tar.gz",
+      "member": "seven-library-issue9-build-audits/seven-build-audit/yjson-build.execve.log",
+      "rule": "private-home-path",
+      "location": 9874,
+      "sha256": "d8e11d84eab9497bc54a136e9e48e185e8c846d9779444754e89d0c0aea80c29"
+    },
+    {
+      "archive": "seven-library-issue9-build-audits.tar.gz",
+      "member": "seven-library-issue9-build-audits/seven-build-audit/yjson-build.execve.log",
+      "rule": "internal-domain",
+      "location": 21421,
+      "sha256": "5e0ecfe745e7c6c16161bfd6539537c40c5b73e31d12da6dafd5789323c1c271"
+    },
+    {
+      "archive": "seven-library-issue9-build-audits.tar.gz",
+      "member": "seven-library-issue9-build-audits/seven-build-audit/yjson-build.execve.log",
+      "rule": "internal-domain",
+      "location": 22196,
+      "sha256": "cb7054a767f8d0f824181b6c3e489b916a12847b4b632eda305f2c78705ee116"
+    }
+  ]
+}
